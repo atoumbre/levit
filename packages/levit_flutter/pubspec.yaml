@@ -1,7 +1,7 @@
 name: levit_flutter
 description: Flutter widgets for the Levit framework - bridges reactive state and DI to the Flutter widget tree.
-version: 0.0.2
 repository: https://github.com/softilab/levit
+version: 0.0.2
 
 environment:
   sdk: ^3.0.0

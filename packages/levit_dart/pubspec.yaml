@@ -1,7 +1,7 @@
 name: levit_dart
 description: The core framework for pure Dart applications. Aggregates dependency injection and reactivity.
-version: 0.0.2
 repository: https://github.com/softilab/levit
+version: 0.0.2
 
 environment:
   sdk: ^3.0.0
