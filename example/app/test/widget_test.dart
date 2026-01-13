@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:levit_flutter/levit_flutter.dart';
 import 'dart:async';
 import 'package:stream_channel/stream_channel.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -16,9 +17,9 @@ void main() {
     // Manual DI setup equivalent to main() but with control
     // We register dependencies before the test pumps the widget
     Levit.lazyPut(() => AuthController());
-    Levit.put(PresenceController());
-    Levit.put(NexusEngine()); // Required by ProjectController
-    Levit.put(ProjectController(channel: FakeWebSocketChannel()));
+    Levit.put(() => PresenceController());
+    Levit.put(() => NexusEngine()); // Required by ProjectController
+    Levit.put(() => ProjectController(channel: FakeWebSocketChannel()));
   });
 
   // Set large screen size to avoid overflow

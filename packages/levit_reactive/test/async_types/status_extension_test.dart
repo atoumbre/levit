@@ -3,9 +3,9 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('AsyncStatusReactiveExtensions', () {
-    test('works on raw Lx<AsyncStatus<T>>', () {
-      final statusLx = Lx<AsyncStatus<int>>(const AsyncIdle());
+  group('LxStatusReactiveExtensions', () {
+    test('works on raw LxVal<LxStatus<T>>', () {
+      final statusLx = LxVal<LxStatus<int>>(const LxIdle());
 
       // Initial state (Idle)
       expect(statusLx.isIdle, isTrue);
@@ -16,13 +16,13 @@ void main() {
       expect(statusLx.errorOrNull, isNull);
 
       // Transition to Waiting
-      statusLx.value = const AsyncWaiting();
+      statusLx.value = const LxWaiting();
       expect(statusLx.isIdle, isFalse);
       expect(statusLx.isLoading, isTrue);
       expect(statusLx.isWaiting, isTrue);
 
       // Transition to Success
-      statusLx.value = const AsyncSuccess(42);
+      statusLx.value = const LxSuccess(42);
       expect(statusLx.isLoading, isFalse);
       expect(statusLx.hasValue, isTrue);
       expect(statusLx.isSuccess, isTrue);
@@ -31,7 +31,7 @@ void main() {
 
       // Transition to Error
       final error = Exception('oops');
-      statusLx.value = AsyncError(error, StackTrace.empty, 42);
+      statusLx.value = LxError(error, StackTrace.empty, 42);
       expect(statusLx.hasValue, isFalse);
       expect(statusLx.isError, isTrue);
       expect(statusLx.errorOrNull, error);

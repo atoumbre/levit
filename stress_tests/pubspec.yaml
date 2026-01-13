@@ -17,5 +17,8 @@ dependencies:
     path: ../packages/levit_di
   levit_flutter:
     path: ../packages/levit_flutter
+  levit_dart:
+    path: ../packages/levit_dart
   test: ^1.24.0
+  rxdart:
 

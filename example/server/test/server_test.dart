@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
+import 'package:levit_dart/levit_dart.dart';
 import 'package:nexus_server/server.dart';
 import 'package:shared/shared.dart';
 import 'package:test/test.dart';
@@ -113,9 +114,9 @@ void main() {
 
   setUp(() {
     Levit.reset(force: true);
-    engine = Levit.put(NexusEngine());
+    engine = Levit.put(() => NexusEngine(), permanent: true);
     // Auto-start false to prevent binding port
-    server = Levit.put(ServerController(autoStart: false));
+    server = Levit.put(() => ServerController(autoStart: false));
   });
 
   test('seedData seeds data if empty', () {
@@ -299,7 +300,8 @@ void main() {
   test('startServer seeding and startup', () async {
     // Re-create controller with adapter
     final adapter = FakeServerAdapter();
-    server = Levit.put(ServerController(autoStart: false, adapter: adapter),
+    server = Levit.put(
+        () => ServerController(autoStart: false, adapter: adapter),
         permanent: true);
 
     // Force empty logic verification

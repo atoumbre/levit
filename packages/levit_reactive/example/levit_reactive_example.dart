@@ -24,7 +24,7 @@ void main() {
   // 5. Build an async computation
   final asyncValue = (() async {
     await Future.delayed(Duration(milliseconds: 100));
-    return count.value * 10 + doubleCount.value;
+    return count.value * 10 + doubleCount.computedValue;
   }).lx;
 
   // Listen to async status

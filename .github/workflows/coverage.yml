@@ -46,12 +46,6 @@ jobs:
              echo "No coverage files found to merge."
            fi
            
-      - name: Publish Test Report
-        if: always()
-        run: |
-           if [ -f "assets/reports/packages_test_coverage.md" ]; then
-             cat assets/reports/packages_test_coverage.md >> $GITHUB_STEP_SUMMARY
-           fi
           
       # Upload INDIVIDUAL reports with flags to support separate badges
       - name: Upload levit_dart Coverage

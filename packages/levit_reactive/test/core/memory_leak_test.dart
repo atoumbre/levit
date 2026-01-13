@@ -8,7 +8,7 @@ void main() {
     test('Lx is garbage collected when no listeners exist', () async {
       // 1. Create a weak reference to an Lx object
       // ignore: unused_local_variable
-      WeakReference<Lx<int>>? ref;
+      WeakReference<LxInt>? ref;
 
       void create() {
         final lx = 0.lx;
@@ -32,7 +32,7 @@ void main() {
 
     test('Lx raw callbacks work', () async {
       bool active = false;
-      final lx = Lx(0, onListen: () {
+      final lx = LxVal(0, onListen: () {
         active = true;
       }, onCancel: () {
         active = false;
@@ -66,7 +66,7 @@ void main() {
           reason: 'LxComputed should NOT subscribe actively if no listeners');
 
       // Verify Value Access (Pull) works
-      expect(computed.value, 0); // initial value
+      expect(computed.computedValue, 0); // initial value
 
       // ACT: Listen to computed
       final sub = computed.stream.listen((_) {});
@@ -190,7 +190,7 @@ void main() {
   });
 }
 
-class _MockObserver implements LxObserver {
+class _MockObserver implements LevitStateObserver {
   final List<StreamSubscription> subscriptions = [];
   final List<void Function()> disposers = [];
 
@@ -200,9 +200,14 @@ class _MockObserver implements LxObserver {
   }
 
   @override
-  void addNotifier(LxNotifier notifier) {
+  void addNotifier(LevitStateNotifier notifier) {
     void listener() {}
     notifier.addListener(listener);
     disposers.add(() => notifier.removeListener(listener));
+  }
+
+  @override
+  void addReactive(LxReactive reactive) {
+    // No-op for this mock
   }
 }

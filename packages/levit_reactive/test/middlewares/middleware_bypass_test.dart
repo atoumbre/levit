@@ -1,26 +1,25 @@
 import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
-class _TrackingMiddleware extends LxMiddleware {
+class TestTrackingMiddleware extends LevitStateMiddleware {
   int beforeCount = 0;
   int afterCount = 0;
 
   @override
-  bool onBeforeChange<T>(StateChange<T> change) {
-    beforeCount++;
-    return true;
-  }
+  LxOnSet? get onSet => (next, reactive, change) {
+        return (value) {
+          beforeCount++;
+          try {
+            next(value);
+          } finally {
+            afterCount++;
+          }
+        };
+      };
 
+  // Pass-through batch
   @override
-  void onAfterChange<T>(StateChange<T> change) {
-    afterCount++;
-  }
-
-  @override
-  void onBatchStart() {}
-
-  @override
-  void onBatchEnd() {}
+  LxOnBatch? get onBatch => (next, change) => next;
 
   void reset() {
     beforeCount = 0;
@@ -30,16 +29,16 @@ class _TrackingMiddleware extends LxMiddleware {
 
 void main() {
   group('Middleware Bypass', () {
-    late _TrackingMiddleware tracker;
+    late TestTrackingMiddleware tracker;
 
     setUp(() {
-      tracker = _TrackingMiddleware();
-      Lx.middlewares.clear();
-      Lx.middlewares.add(tracker);
+      tracker = TestTrackingMiddleware();
+      Lx.clearMiddlewares();
+      Lx.addMiddleware(tracker);
     });
 
     tearDown(() {
-      Lx.middlewares.clear();
+      Lx.clearMiddlewares();
     });
 
     test('runWithoutMiddleware prevents middleware execution', () {
@@ -76,11 +75,12 @@ void main() {
       expect(listenerCount, equals(1));
     });
 
-    test('Undo with LxHistoryMiddleware does not trigger other middlewares',
+    test(
+        'Undo with LevitStateHistoryMiddleware does not trigger other middlewares',
         () {
-      final history = LxHistoryMiddleware();
+      final history = LevitStateHistoryMiddleware();
       // Add tracker AFTER history to ensure it would normally catch events
-      Lx.middlewares.add(history);
+      Lx.addMiddleware(history);
 
       final count = 0.lx;
       count.value = 1;
@@ -93,7 +93,7 @@ void main() {
       tracker.reset();
 
       // Undo should bypass normal middleware recording loop because
-      // LxHistoryMiddleware uses runWithoutMiddleware internally now
+      // LevitStateHistoryMiddleware uses runWithoutMiddleware internally now
       history.undo();
 
       expect(count.value, equals(0));

@@ -10,7 +10,7 @@
 
 `levit_dart` is the **non-UI core framework** of the Levit ecosystem. It composes the reactive primitives from `levit_reactive` and the dependency-management model from `levit_di` into a coherent foundation for building **scalable, deterministic Dart applications**—without any Flutter dependency.
 
-It is designed for shared business logic, servers, background workers, CLI tools, and any environment where application structure and lifecycle discipline matter.
+It is designed for shared business logic, servers, background watchers, CLI tools, and any environment where application structure and lifecycle discipline matter.
 
 > **Note**
 > For Flutter applications, use [`levit_flutter`](../levit_flutter), which includes this package and integrates it with the widget tree.

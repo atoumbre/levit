@@ -5,12 +5,15 @@ void main() {
   group('DI Optimization & Cache Invalidation', () {
     late LevitScope scope;
 
+    late LevitScope levit;
+
     setUp(() {
-      Levit.reset(force: true);
-      scope = Levit.createScope('optimization_test');
+      levit = LevitScope.root();
+
+      scope = levit.createScope('optimization_test');
       // Ensure factory is covered
       // expect(SimpleDI(), isA<SimpleDI>()); // SimpleDI removed
-      expect(Levit.registeredCount, 0);
+      expect(levit.registeredCount, 0);
     });
 
     tearDown(() {
@@ -23,47 +26,12 @@ void main() {
 
       // 2. Resolve (populates cache)
       expect(scope.find<String>(), 'Original');
-
-      // 3. Re-register (Should hit _resolutionCache.remove)
-      // Note: We need to ensure logic allows overwrite or we act as if it's a new registration?
-      // Levit.lazyPut checks if instantiated. If not, it overwrites.
-      // But if we resolved it, it IS instantiated (for singleton).
-      // So we might need to delete first? No, delete clears cache too.
-      // The optimization branch is likely in methods that might overwrite OR
-      // where we register something that was resolved via *parent*?
-
-      // Let's look at the logic in levit_di.dart again.
-      // The check is `if (_registry.containsKey(key) && _registry[key]!.isInstantiated) return;`
-      // So if we resolved it, lazyPut returns early.
-      // Wait, the uncovered line is:
-      // if (_resolutionCache.isNotEmpty) { _resolutionCache.remove(key); }
-      // This happens AFTER registration.
-
-      // If we do:
-      // scope.lazyPut(...)
-      // scope.find(...) -> populates cache?
-      // Actually `find` populates cache if it was found in PARENT.
-      // If found local, it doesn't use cache for local items?
-      // Let's check `findOrNull`.
-
-      // Ah, `_findLocal` is called directly if in registry.
-      // `_resolutionCache` maps key -> Scope.
-      // Used when finding in parents.
-
-      // So to populate cache for Key K in Scope S:
-      // K must be in Parent P.
-      // We call S.find<K>(). It finds in P. caches K->P in S.
-
-      // THEN we call S.lazyPut<K>(...).
-      // Now S has its own K.
-      // The cache K->P is invalid. It must be removed.
-      // THIS is the scenario! Shadowing a parent dependency.
     });
 
     test('Shadowing parent dependency invalidates resolution cache (lazyPut)',
         () {
       // 1. Parent has 'A'
-      Levit.put<String>('Parent Value');
+      levit.put<String>(() => 'Parent Value');
 
       // 2. Child resolves 'A' from Parent (populates cache)
       expect(scope.find<String>(), 'Parent Value');
@@ -78,18 +46,18 @@ void main() {
 
     test('Shadowing parent dependency invalidates resolution cache (create)',
         () {
-      Levit.put<String>('Parent Value');
+      levit.put<String>(() => 'Parent Value');
       expect(scope.find<String>(), 'Parent Value'); // Populates cache
 
       // Shadow with create
-      scope.putFactory<String>(() => 'Child Value');
+      scope.lazyPut<String>(() => 'Child Value', isFactory: true);
       expect(scope.find<String>(), 'Child Value');
     });
 
     test(
         'Shadowing parent dependency invalidates resolution cache (lazyPutAsync)',
         () async {
-      Levit.put<String>('Parent Value');
+      levit.put<String>(() => 'Parent Value');
       expect(await scope.findAsync<String>(), 'Parent Value');
 
       scope.lazyPutAsync<String>(() async => 'Child Value');
@@ -99,36 +67,23 @@ void main() {
     test(
         'Shadowing parent dependency invalidates resolution cache (createAsync)',
         () async {
-      Levit.put<String>('Parent Value');
+      levit.put<String>(() => 'Parent Value');
       expect(await scope.findAsync<String>(), 'Parent Value');
 
-      scope.putFactoryAsync<String>(() async => 'Child Value');
+      scope.lazyPutAsync<String>(() async => 'Child Value', isFactory: true);
       expect(await scope.findAsync<String>(), 'Child Value');
     });
 
-    test(
-        'Shadowing parent dependency invalidates resolution cache (putAsync helper)',
-        () async {
-      // putAsync calls put, so checking put covers it?
-      // But we want to ensure the specific lines are covered.
-      // putAsync implementation:
-      // final instance = await builder();
-      // return put<S>(instance...);
-
-      // So testing `put` covers `putAsync`'s cache logic (since it delegates).
-      // But let's verify `put` itself.
-    });
-
     test('Shadowing parent dependency invalidates resolution cache (put)', () {
-      Levit.put<String>('Parent Value');
+      levit.put<String>(() => 'Parent Value');
       expect(scope.find<String>(), 'Parent Value');
 
-      scope.put<String>('Child Value');
+      scope.put<String>(() => 'Child Value');
       expect(scope.find<String>(), 'Child Value');
     });
 
     test('Reset invalidates cache', () {
-      Levit.put<String>('Parent Value');
+      levit.put<String>(() => 'Parent Value');
       expect(
           scope.find<String>(), 'Parent Value'); // Cache: String -> via Levit
 
@@ -285,13 +240,13 @@ void main() {
 
     test('Delete hits cache optimization', () {
       // 1. Parent Y
-      Levit.put<int>(99);
+      levit.put<int>(() => 99);
 
       // 2. Child resolves Y (populates cache)
       expect(scope.find<int>(), 99);
 
       // 3. Child has Local X
-      scope.put<String>('Local');
+      scope.put<String>(() => 'Local');
 
       // 4. Delete Local X
       // cache is not empty (contains Y).
@@ -302,11 +257,11 @@ void main() {
 
     test('Reset hits cache optimization', () {
       // 1. Parent Y
-      Levit.put<int>(99);
+      levit.put<int>(() => 99);
       expect(scope.find<int>(), 99); // Cache has Y
 
       // 2. Local X
-      scope.put<String>('Local');
+      scope.put<String>(() => 'Local');
 
       // 3. Reset
       // It iterates X.

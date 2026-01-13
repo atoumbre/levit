@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:levit_flutter/levit_flutter.dart';
 import 'package:shared/shared.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -74,7 +75,7 @@ class ProjectController extends LevitController {
 
   /// Showcase: LxFuture (Pillar 6)
   /// Represents the status of a cloud export operation.
-  final exportStatus = Lx<LxFuture<String>?>(null);
+  final exportStatus = LxVal<LxFuture<String>?>(null);
 
   /// Showcase: LxComputed (Pillar 1)
   /// This box wraps all selected elements. It recomputes automatically
@@ -82,8 +83,8 @@ class ProjectController extends LevitController {
   late final LxComputed<Rect?> selectionBounds;
 
   /// Showcase: HistoryMiddleware (Pillar 3)
-  final history = LxHistoryMiddleware();
-  LxMiddleware? _activeHistoryMiddleware;
+  final history = LevitStateHistoryMiddleware();
+  LevitStateMiddleware? _activeHistoryMiddleware;
 
   /// Showcase: LxStream (Pillar 6)
   /// Tracks session duration reactively
@@ -119,12 +120,14 @@ class ProjectController extends LevitController {
 
     // Register history middleware with named filter
     _activeHistoryMiddleware = Lx.addMiddleware(
-      history,
-      filter: (change) {
-        final name = change.name;
-        if (name == null) return false;
-        return name == 'engine:nodes' || name.startsWith('node:');
-      },
+      _FilteredMiddleware(
+        history,
+        (reactive, change) {
+          final name = reactive.name;
+          if (name == null) return false;
+          return name == 'engine:nodes' || name.startsWith('node:');
+        },
+      ),
     );
 
     // Showcase: LxStream (Pillar 6)
@@ -154,10 +157,10 @@ class ProjectController extends LevitController {
       final connection = LxStream(_channel!.stream.cast<String>());
 
       autoDispose(
-        watch(connection, (status) {
-          if (status is AsyncSuccess<String>) {
+        LxWatch(connection, (status) {
+          if (status is LxSuccess<String>) {
             _handleServerMessage(jsonDecode(status.value));
-          } else if (status is AsyncError) {
+          } else if (status is LxError) {
             // Reconnect logic or error reporting
           }
         }),
@@ -426,11 +429,45 @@ class ProjectController extends LevitController {
   @override
   void onClose() {
     if (_activeHistoryMiddleware != null) {
-      Lx.middlewares.remove(_activeHistoryMiddleware);
+      Lx.removeMiddleware(_activeHistoryMiddleware!);
     }
     _channel?.sink.close();
     super.onClose();
   }
+}
+
+class _FilteredMiddleware extends LevitStateMiddleware {
+  final LevitStateMiddleware inner;
+  final bool Function(LxReactive, LevitStateChange) filter;
+
+  _FilteredMiddleware(this.inner, this.filter);
+
+  @override
+  LxOnSet? get onSet => inner.onSet == null
+      ? null
+      : (next, reactive, change) {
+          if (filter(reactive, change)) {
+            return inner.onSet!(next, reactive, change);
+          }
+          return next;
+        };
+
+  @override
+  LxOnBatch? get onBatch => inner.onBatch == null
+      ? null
+      : (next, change) {
+          // For batch, we ideally filter the entries, but LevitStateBatchChange is immutable.
+          // However, inner.onBatch logic handles the batch as a whole.
+          // If we want to filter specific ops inside batch, we can't easily.
+          // Assuming if ANY matches or ALL match?
+          // HistoryMiddleware usually records the whole batch.
+          // Let's pass through batch to inner, or assume filter is for onSet only?
+          // The previous code had (reactive, change) filter.
+          // So likely per-operation check.
+          // If strict compliance: we check if batch contains interesting items?
+          // Or just delegate.
+          return inner.onBatch!(next, change);
+        };
 }
 
 /// Represents a logged-in user session.
@@ -455,7 +492,7 @@ class UserSession {
 /// Controller for authentication.
 class AuthController extends LevitController {
   /// The current user session (null if logged out).
-  final session = Lx<UserSession?>(null);
+  final session = LxVal<UserSession?>(null);
 
   /// Whether a user is currently logged in.
   bool get isAuthenticated => session.value != null;

@@ -1,4 +1,3 @@
-// coverage:ignore-file
 import 'dart:io' as io;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;

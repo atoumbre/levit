@@ -126,8 +126,8 @@ State is decomposed into individually observable properties rather than monolith
 
 ```dart
 class NodeModel {
-  final Lx<Vec2> position;
-  final Lx<int> color;
+  final LxVal<Vec2> position;
+  final LxInt color;
 
   NodeModel(...)
       : position = pos.lx,
@@ -166,7 +166,7 @@ Batching ensures a single notification cycle even for thousands of updates.
 Undo and redo are implemented via middleware, not manual bookkeeping.
 
 ```dart
-final history = LxHistoryMiddleware();
+final history = LevitStateHistoryMiddleware();
 
 Lx.addMiddleware(
   history,

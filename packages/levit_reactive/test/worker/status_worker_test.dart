@@ -2,14 +2,14 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('AsyncStatus Workers', () {
+  group('LxStatus Watchers', () {
     test('watchStatus fires onSuccess', () async {
       final f = LxFuture<int>.idle();
       int? result;
 
-      watchStatus<int>(f, onSuccess: (value) => result = value);
+      LxWatch.status<int>(f, onSuccess: (value) => result = value);
 
-      f.refresh(Future.value(42));
+      f.restart(Future.value(42));
       await Future.microtask(() {});
       expect(result, 42);
     });
@@ -18,10 +18,10 @@ void main() {
       final f = LxFuture<int>.idle();
       int? result;
 
-      watchStatus<int>(f, onSuccess: (value) => result = value);
+      LxWatch.status<int>(f, onSuccess: (value) => result = value);
 
       // Transition to Waiting
-      f.refresh(Future.delayed(Duration(seconds: 1), () => 10));
+      f.restart(Future.delayed(Duration(seconds: 1), () => 10));
       await Future.microtask(() {});
       expect(result, null);
     });
@@ -30,9 +30,9 @@ void main() {
       final f = LxFuture<int>.idle();
       Object? error;
 
-      watchStatus<int>(f, onError: (e) => error = e);
+      LxWatch.status<int>(f, onError: (e) => error = e);
 
-      f.refresh(Future.error('Run failed'));
+      f.restart(Future.error('Run failed'));
       await Future.microtask(() {});
       expect(error, 'Run failed');
     });
@@ -41,22 +41,22 @@ void main() {
       final f = LxFuture<int>.idle();
       var waiting = false;
 
-      watchStatus<int>(f, onWaiting: () => waiting = true);
+      LxWatch.status<int>(f, onWaiting: () => waiting = true);
 
-      f.refresh(Future.delayed(Duration(milliseconds: 50), () => 1));
+      f.restart(Future.delayed(Duration(milliseconds: 50), () => 1));
       await Future.microtask(() {});
       expect(waiting, true);
     });
 
     test('watchStatus fires onIdle', () async {
       // Harder to test with LxFuture since it doesn't go back to idle easily
-      // Use raw Lx<AsyncStatus<int>>
-      final s = Lx<AsyncStatus<int>>(AsyncWaiting());
+      // Use raw LxVal<LxStatus<int>>
+      final s = LxVal<LxStatus<int>>(LxWaiting());
       var idle = false;
 
-      watchStatus<int>(s, onIdle: () => idle = true);
+      LxWatch.status<int>(s, onIdle: () => idle = true);
 
-      s.value = AsyncIdle();
+      s.value = LxIdle();
       await Future.microtask(() {});
       expect(idle, true);
     });
@@ -65,15 +65,15 @@ void main() {
       final f = LxFuture<int>.idle();
       var count = 0;
 
-      final dispose = watchStatus<int>(f, onSuccess: (_) => count++);
+      final dispose = LxWatch.status<int>(f, onSuccess: (_) => count++);
 
-      f.refresh(Future.value(1));
+      f.restart(Future.value(1));
       await Future.microtask(() {});
       expect(count, 1);
 
-      dispose();
+      dispose.close();
 
-      f.refresh(Future.value(2));
+      f.restart(Future.value(2));
       await Future.microtask(() {});
       expect(count, 1);
     });
@@ -82,7 +82,7 @@ void main() {
       final f = LxFuture<int>.idle();
       var log = <String>[];
 
-      watchStatus<int>(
+      LxWatch.status<int>(
         f,
         onIdle: () => log.add('idle'),
         onWaiting: () => log.add('waiting'),
@@ -92,34 +92,34 @@ void main() {
 
       // Verify transitions.
 
-      f.refresh(Future.value(1)); // waiting -> success
+      f.restart(Future.value(1)); // waiting -> success
       await Future.microtask(() {});
       expect(log, contains('waiting'));
       expect(log.last, 'success: 1');
 
       log.clear();
-      f.refresh(Future.error('fail')); // waiting -> error
+      f.restart(Future.error('fail')); // waiting -> error
       await Future.microtask(() {});
       expect(log, contains('waiting'));
       expect(log.last, 'error: fail');
     });
     test('watchStatus alias coverage', () async {
-      final lx = Lx<AsyncStatus<int>>(const AsyncIdle<int>());
+      final lx = LxVal<LxStatus<int>>(const LxIdle<int>());
       bool successCalled = false;
       bool waitingCalled = false;
 
-      final unwatch = watchStatus<int>(
+      final unwatch = LxWatch.status<int>(
         lx,
         onSuccess: (v) => successCalled = true,
         onWaiting: () => waitingCalled = true,
       );
 
       // Transitions
-      lx.value = const AsyncWaiting<int>();
+      lx.value = const LxWaiting<int>();
       await Future.microtask(() {});
       expect(waitingCalled, true);
 
-      lx.value = const AsyncSuccess<int>(42);
+      lx.value = const LxSuccess<int>(42);
       await Future.microtask(() {});
       expect(successCalled, true);
 

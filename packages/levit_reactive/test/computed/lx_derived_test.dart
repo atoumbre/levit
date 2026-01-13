@@ -3,41 +3,41 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('AsyncStatus sealed class', () {
-    test('AsyncIdle has correct properties', () {
-      const status = AsyncIdle<int>();
+  group('LxStatus sealed class', () {
+    test('LxIdle has correct properties', () {
+      const status = LxIdle<int>();
       expect(status.isLoading, false);
       expect(status.hasValue, false);
       expect(status.hasError, false);
       expect(status.valueOrNull, null);
       expect(status.errorOrNull, null);
-      expect(status.toString(), contains('AsyncIdle'));
+      expect(status.toString(), contains('LxIdle'));
     });
 
-    test('AsyncWaiting has correct properties', () {
-      const status = AsyncWaiting<int>();
+    test('LxWaiting has correct properties', () {
+      const status = LxWaiting<int>();
       expect(status.isLoading, true);
       expect(status.hasValue, false);
       expect(status.hasError, false);
       expect(status.valueOrNull, null);
       expect(status.errorOrNull, null);
-      expect(status.toString(), contains('AsyncWaiting'));
+      expect(status.toString(), contains('LxWaiting'));
     });
 
-    test('AsyncSuccess has correct properties', () {
-      const status = AsyncSuccess<int>(42);
+    test('LxSuccess has correct properties', () {
+      const status = LxSuccess<int>(42);
       expect(status.isLoading, false);
       expect(status.hasValue, true);
       expect(status.hasError, false);
       expect(status.value, 42);
       expect(status.valueOrNull, 42);
       expect(status.errorOrNull, null);
-      expect(status.toString(), contains('AsyncSuccess'));
+      expect(status.toString(), contains('LxSuccess'));
       expect(status.toString(), contains('42'));
     });
 
-    test('AsyncError has correct properties', () {
-      final status = AsyncError<int>('error', StackTrace.current);
+    test('LxError has correct properties', () {
+      final status = LxError<int>('error', StackTrace.current);
       expect(status.isLoading, false);
       expect(status.hasValue, false);
       expect(status.hasError, true);
@@ -45,28 +45,26 @@ void main() {
       expect(status.stackTrace, isNotNull);
       expect(status.valueOrNull, null);
       expect(status.errorOrNull, 'error');
-      expect(status.toString(), contains('AsyncError'));
+      expect(status.toString(), contains('LxError'));
     });
 
-    test('AsyncStatus equality', () {
-      expect(const AsyncIdle<int>(), equals(const AsyncIdle<int>()));
-      expect(const AsyncWaiting<int>(), equals(const AsyncWaiting<int>()));
-      expect(const AsyncSuccess<int>(42), equals(const AsyncSuccess<int>(42)));
-      expect(const AsyncSuccess<int>(42),
-          isNot(equals(const AsyncSuccess<int>(43))));
-      expect(const AsyncError<int>('a'), equals(const AsyncError<int>('a')));
-      expect(const AsyncError<int>('a'),
-          isNot(equals(const AsyncError<int>('b'))));
+    test('LxStatus equality', () {
+      expect(const LxIdle<int>(), equals(const LxIdle<int>()));
+      expect(const LxWaiting<int>(), equals(const LxWaiting<int>()));
+      expect(const LxSuccess<int>(42), equals(const LxSuccess<int>(42)));
+      expect(const LxSuccess<int>(42), isNot(equals(const LxSuccess<int>(43))));
+      expect(const LxError<int>('a'), equals(const LxError<int>('a')));
+      expect(const LxError<int>('a'), isNot(equals(const LxError<int>('b'))));
     });
 
     test('exhaustive pattern matching', () {
-      AsyncStatus<int> status = const AsyncSuccess(42);
+      LxStatus<int> status = const LxSuccess(42);
 
       final result = switch (status) {
-        AsyncIdle() => 'idle',
-        AsyncWaiting() => 'waiting',
-        AsyncSuccess(:final value) => 'success: $value',
-        AsyncError(:final error) => 'error: $error',
+        LxIdle() => 'idle',
+        LxWaiting() => 'waiting',
+        LxSuccess(:final value) => 'success: $value',
+        LxError(:final error) => 'error: $error',
       };
 
       expect(result, 'success: 42');
@@ -78,7 +76,7 @@ void main() {
       final completer = Completer<String>();
       final future = LxFuture(completer.future);
 
-      expect(future.status, isA<AsyncWaiting<String>>());
+      expect(future.status, isA<LxWaiting<String>>());
       expect(future.isWaiting, true);
       expect(future.isLoading, true);
       expect(future.valueOrNull, null);
@@ -93,7 +91,7 @@ void main() {
       completer.complete('Result');
       await Future.delayed(Duration.zero);
 
-      expect(future.status, isA<AsyncSuccess<String>>());
+      expect(future.status, isA<LxSuccess<String>>());
       expect(future.isSuccess, true);
       expect(future.valueOrNull, 'Result');
       expect(future.hasValue, true);
@@ -106,7 +104,7 @@ void main() {
       completer.completeError('Oops');
       await Future.delayed(Duration.zero);
 
-      expect(future.status, isA<AsyncError<String>>());
+      expect(future.status, isA<LxError<String>>());
       expect(future.isError, true);
       expect(future.errorOrNull, 'Oops');
       expect(future.stackTraceOrNull, isNotNull);
@@ -117,7 +115,7 @@ void main() {
       final future = LxFuture(completer.future, initial: 42);
 
       expect(future.valueOrNull, 42);
-      expect(future.status, isA<AsyncSuccess<int>>());
+      expect(future.status, isA<LxSuccess<int>>());
 
       completer.complete(100);
     });
@@ -125,7 +123,7 @@ void main() {
     test('idle factory starts in idle state', () {
       final future = LxFuture<int>.idle();
 
-      expect(future.status, isA<AsyncIdle<int>>());
+      expect(future.status, isA<LxIdle<int>>());
       expect(future.isIdle, true);
     });
 
@@ -138,7 +136,7 @@ void main() {
       expect(future.valueOrNull, 1);
 
       final completer2 = Completer<int>();
-      future.refresh(completer2.future);
+      future.restart(completer2.future);
 
       expect(future.isWaiting, true);
 
@@ -179,7 +177,7 @@ void main() {
       final controller = StreamController<int>();
       final lxStream = LxStream(controller.stream);
 
-      expect(lxStream.status, isA<AsyncWaiting<int>>());
+      expect(lxStream.status, isA<LxWaiting<int>>());
       expect(lxStream.valueOrNull, null);
 
       controller.close();
@@ -194,7 +192,7 @@ void main() {
 
       controller.add(1);
       await Future.delayed(Duration.zero);
-      expect(lxStream.status, isA<AsyncSuccess<int>>());
+      expect(lxStream.status, isA<LxSuccess<int>>());
       expect(lxStream.valueOrNull, 1);
 
       controller.add(2);
@@ -214,7 +212,7 @@ void main() {
       controller.addError('Stream error');
       await Future.delayed(Duration.zero);
 
-      expect(lxStream.status, isA<AsyncError<int>>());
+      expect(lxStream.status, isA<LxError<int>>());
       expect(lxStream.errorOrNull, 'Stream error');
 
       await controller.close();
@@ -225,7 +223,7 @@ void main() {
       final lxStream = LxStream(controller.stream, initial: 42);
 
       expect(lxStream.valueOrNull, 42);
-      expect(lxStream.status, isA<AsyncSuccess<int>>());
+      expect(lxStream.status, isA<LxSuccess<int>>());
 
       controller.close();
     });
@@ -233,7 +231,7 @@ void main() {
     test('idle factory starts in idle state', () {
       final lxStream = LxStream<int>.idle();
 
-      expect(lxStream.status, isA<AsyncIdle<int>>());
+      expect(lxStream.status, isA<LxIdle<int>>());
       expect(lxStream.isIdle, true);
     });
 
@@ -250,7 +248,7 @@ void main() {
 
       // Bind to new stream
       final controller2 = StreamController<int>.broadcast();
-      lxStream.bind(controller2.stream);
+      lxStream.bindStream(controller2.stream);
 
       expect(lxStream.isWaiting, true);
 
@@ -282,7 +280,7 @@ void main() {
       final count = 0.lx;
       final doubled = LxComputed(() => count.value * 2);
 
-      expect(doubled.value, 0);
+      expect(doubled.computedValue, 0);
     });
 
     test('recomputes when dependency changes', () async {
@@ -293,12 +291,12 @@ void main() {
       doubled.stream.listen((_) {});
       await Future.microtask(() {});
 
-      expect(doubled.value, 0);
+      expect(doubled.computedValue, 0);
 
       count.value = 5;
       await Future.delayed(Duration.zero);
 
-      expect(doubled.value, 10);
+      expect(doubled.computedValue, 10);
     });
 
     test('tracks multiple dependencies', () async {
@@ -306,21 +304,22 @@ void main() {
       final b = 2.lx;
       final sum = LxComputed(() => a.value + b.value);
 
-      expect(sum.value, 3);
+      expect(sum.computedValue, 3);
 
       a.value = 10;
       await Future.delayed(Duration.zero);
-      expect(sum.value, 12);
+      expect(sum.computedValue, 12);
 
       b.value = 20;
       await Future.delayed(Duration.zero);
-      expect(sum.value, 30);
+      expect(sum.computedValue, 30);
     });
 
     test('handles computation errors', () {
       // Access value to trigger computation in pull-mode (throws in constructor)
-      expect(() => LxComputed<int>(() => throw 'Computation error'),
-          throwsA('Computation error'));
+      final c = LxComputed<int>(() => throw 'Computation error');
+      expect(c.isError, isTrue);
+      expect(c.errorOrNull, 'Computation error');
     });
 
     test('close stops recomputation', () async {
@@ -332,7 +331,7 @@ void main() {
       doubled.stream.listen((_) => notifyCount++);
       await Future.delayed(Duration(milliseconds: 10));
 
-      expect(doubled.value, 0);
+      expect(doubled.computedValue, 0);
 
       doubled.close();
       notifyCount = 0; // Reset count
@@ -346,7 +345,7 @@ void main() {
       // Wait, if closed, does it compute?
       // _SyncComputed calls _statusLx.close().
       // If pull-on-read calls _compute(), it returns value.
-      expect(doubled.value, 10);
+      expect(doubled.computedValue, 10);
     });
 
     test('listeners are notified on recomputation', () async {
@@ -383,31 +382,31 @@ void main() {
     });
   });
 
-  group('AsyncStatus hashCode', () {
-    test('AsyncIdle hashCode is consistent', () {
-      const idle1 = AsyncIdle<int>();
-      const idle2 = AsyncIdle<int>();
+  group('LxStatus hashCode', () {
+    test('LxIdle hashCode is consistent', () {
+      const idle1 = LxIdle<int>();
+      const idle2 = LxIdle<int>();
       expect(idle1.hashCode, equals(idle2.hashCode));
     });
 
-    test('AsyncWaiting hashCode is consistent', () {
-      const waiting1 = AsyncWaiting<int>();
-      const waiting2 = AsyncWaiting<int>();
+    test('LxWaiting hashCode is consistent', () {
+      const waiting1 = LxWaiting<int>();
+      const waiting2 = LxWaiting<int>();
       expect(waiting1.hashCode, equals(waiting2.hashCode));
     });
 
-    test('AsyncSuccess hashCode includes value', () {
-      const success1 = AsyncSuccess<int>(42);
-      const success2 = AsyncSuccess<int>(42);
-      const success3 = AsyncSuccess<int>(43);
+    test('LxSuccess hashCode includes value', () {
+      const success1 = LxSuccess<int>(42);
+      const success2 = LxSuccess<int>(42);
+      const success3 = LxSuccess<int>(43);
       expect(success1.hashCode, equals(success2.hashCode));
       expect(success1.hashCode, isNot(equals(success3.hashCode)));
     });
 
-    test('AsyncError hashCode includes error', () {
-      const error1 = AsyncError<int>('error');
-      const error2 = AsyncError<int>('error');
-      const error3 = AsyncError<int>('other');
+    test('LxError hashCode includes error', () {
+      const error1 = LxError<int>('error');
+      const error2 = LxError<int>('error');
+      const error3 = LxError<int>('other');
       expect(error1.hashCode, equals(error2.hashCode));
       expect(error1.hashCode, isNot(equals(error3.hashCode)));
     });
@@ -419,7 +418,7 @@ void main() {
 
       await Future.delayed(Duration.zero);
 
-      expect(future.status, isA<AsyncSuccess<int>>());
+      expect(future.status, isA<LxSuccess<int>>());
       expect(future.valueOrNull, 42);
     });
 
@@ -427,14 +426,14 @@ void main() {
       final completer = Completer<int>();
       final future = LxFuture(completer.future);
 
-      final statuses = <AsyncStatus<int>>[];
+      final statuses = <LxStatus<int>>[];
       future.stream.listen((s) => statuses.add(s));
 
       completer.complete(42);
       await Future.delayed(Duration.zero);
 
       expect(statuses, isNotEmpty);
-      expect(statuses.last, isA<AsyncSuccess<int>>());
+      expect(statuses.last, isA<LxSuccess<int>>());
     });
 
     test('LxFuture removeListener stops notifications', () async {
@@ -533,7 +532,7 @@ void main() {
       final computed = LxComputed(() => count.value * 2);
 
       // Access value to trigger computation
-      expect(computed.value, 10);
+      expect(computed.computedValue, 10);
 
       computed.close();
     });
@@ -550,7 +549,9 @@ void main() {
       final computed = LxComputed(() => count.value * 2);
 
       final values = <int>[];
-      computed.stream.listen((s) => values.add(s));
+      computed.stream.listen((s) {
+        if (s.hasValue) values.add(s.valueOrNull!);
+      });
 
       count.value = 5;
       await Future.delayed(Duration.zero);
@@ -567,7 +568,7 @@ void main() {
       final future = LxFuture(Future.value(42));
 
       await Future.delayed(Duration.zero);
-      expect(future.status, isA<AsyncSuccess<int>>());
+      expect(future.status, isA<LxSuccess<int>>());
 
       // Should not throw after completion
       future.close();
@@ -583,7 +584,7 @@ void main() {
       await Future.delayed(Duration(milliseconds: 10));
 
       // Status should be error with a stack trace
-      expect(stream.status, isA<AsyncError<int>>());
+      expect(stream.status, isA<LxError<int>>());
       expect(stream.stackTraceOrNull, isNotNull);
       stream.close();
     });
@@ -598,9 +599,9 @@ void main() {
   _lxReactiveCoverageTests();
 }
 
-class _MockObserver implements LxObserver {
+class _MockObserver implements LevitStateObserver {
   final List<Stream> streams;
-  final List<LxNotifier> notifiers = [];
+  final List<LevitStateNotifier> notifiers = [];
   _MockObserver(this.streams);
 
   @override
@@ -609,8 +610,13 @@ class _MockObserver implements LxObserver {
   }
 
   @override
-  void addNotifier(LxNotifier notifier) {
+  void addNotifier(LevitStateNotifier notifier) {
     notifiers.add(notifier);
+  }
+
+  @override
+  void addReactive(LxReactive reactive) {
+    // No-op for this mock
   }
 }
 
@@ -622,8 +628,8 @@ void _lxReactiveCoverageTests() {
       final doubled = LxComputed(() => count.value * 2);
       final results = <int>[];
 
-      final unwatch = watch(doubled, (val) {
-        results.add(val);
+      final unwatch = LxWatch(doubled, (val) {
+        if (val.hasValue) results.add(val.valueOrNull!);
       });
 
       // Wait for watch to activate
@@ -643,13 +649,13 @@ void _lxReactiveCoverageTests() {
 
       // value should return same as status
       expect(future.value, equals(future.status));
-      expect(future.value, isA<AsyncWaiting<int>>());
+      expect(future.value, isA<LxWaiting<int>>());
 
       completer.complete(42);
       await Future.delayed(Duration.zero);
 
-      expect(future.value, isA<AsyncSuccess<int>>());
-      expect((future.value as AsyncSuccess<int>).value, 42);
+      expect(future.value, isA<LxSuccess<int>>());
+      expect((future.value as LxSuccess<int>).value, 42);
     });
 
     test('LxStream.value getter returns status', () async {
@@ -663,8 +669,8 @@ void _lxReactiveCoverageTests() {
       controller.add(42);
       await Future.delayed(Duration.zero);
 
-      expect(stream.value, isA<AsyncSuccess<int>>());
-      expect((stream.value as AsyncSuccess<int>).value, 42);
+      expect(stream.value, isA<LxSuccess<int>>());
+      expect((stream.value as LxSuccess<int>).value, 42);
 
       controller.close();
     });
@@ -674,7 +680,7 @@ void _lxReactiveCoverageTests() {
       final lxStream = controller.stream.lx;
 
       expect(lxStream, isA<LxStream<String>>());
-      expect(lxStream.status, isA<AsyncWaiting<String>>());
+      expect(lxStream.status, isA<LxWaiting<String>>());
 
       lxStream.valueStream.listen((_) {});
       controller.add('hello');
@@ -687,7 +693,7 @@ void _lxReactiveCoverageTests() {
 
     test('Lx.bind handles stream errors', () async {
       final controller = StreamController<int>.broadcast();
-      final lx = Lx<int>(0);
+      final lx = LxInt(0);
 
       lx.bind(controller.stream);
 

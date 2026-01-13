@@ -1,14 +1,17 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 Future<void> main() async {
-  print('Running stress tests and generating report...');
+  print('Running internal stress tests and generating report...');
 
   final process = await Process.start(
       'flutter',
       [
         'test',
-        'lib/',
+        'lib/levit_reactive',
+        'lib/levit_di',
+        'lib/levit_flutter',
         '-r',
         'json',
       ],
@@ -19,9 +22,19 @@ Future<void> main() async {
   final suites = <int, String>{};
   final descriptions = <int, String>{};
 
+  Timer? watchdog;
+  void resetWatchdog() {
+    watchdog?.cancel();
+    watchdog = Timer(const Duration(seconds: 30), () {
+      print('[Watchdog] No output for 30s. Killing process...');
+      process.kill();
+    });
+  }
+
   // Transform stdout to lines
   process.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen(
     (line) {
+      resetWatchdog();
       if (line.trim().isEmpty) return;
       try {
         final event = jsonDecode(line);
@@ -38,6 +51,8 @@ Future<void> main() async {
         } else if (type == 'testStart') {
           final test = event['test'];
           tests[test['id']] = test;
+        } else if (type == 'testDone') {
+          // Track completion if needed
         } else if (type == 'print') {
           final int? testId = event['testID'];
           final message = event['message'].toString();
@@ -49,7 +64,8 @@ Future<void> main() async {
             }
           } else if (message.contains('took') ||
               message.contains(' in ') ||
-              (message.contains(':') && message.contains('ms')) ||
+              (message.contains(':') &&
+                  (message.contains('ms') || message.contains('us'))) ||
               message.contains('Completed') ||
               message.contains('Captured') ||
               message.contains('time:')) {
@@ -66,12 +82,25 @@ Future<void> main() async {
             });
             print('[Metric] [$suitePath] $message');
           }
+        } else if (type == 'done') {
+          // Some test runners might hang even after 'done', force exit to be safe
+          process.kill();
         }
       } catch (e) {
         // Ignore non-json lines or parse errors
       }
     },
   );
+
+  // Close stdin to ensure the subprocess doesn't wait for input
+  process.stdin.close();
+
+  // Consume stderr to prevent the process from hanging if the buffer fills up
+
+  // Consume stderr to prevent the process from hanging if the buffer fills up
+  process.stderr.transform(utf8.decoder).listen((line) {
+    stderr.write(line);
+  });
 
   // Ensure we wait for the process to fully exit
   final exitCode = await process.exitCode;
@@ -88,15 +117,7 @@ Future<void> main() async {
 }
 
 Future<void> _generateMarkdownReport(List<Map<String, String>> metrics) async {
-  final buffer = StringBuffer();
-  buffer.writeln('# 🚀 Levit Framework Stress Test Report');
-  buffer.writeln();
-  buffer.writeln(
-    '> **Generated on:** ${DateTime.now().toIso8601String().split('T')[0]}',
-  );
-  buffer.writeln();
-
-  // Group metrics by package
+  // Group metrics by category
   final reactiveMetrics =
       metrics.where((m) => m['suite']!.contains('levit_reactive')).toList();
   final diMetrics =
@@ -104,35 +125,45 @@ Future<void> _generateMarkdownReport(List<Map<String, String>> metrics) async {
   final flutterMetrics =
       metrics.where((m) => m['suite']!.contains('levit_flutter')).toList();
 
-  buffer.writeln('## 📊 Performance Summary');
-  buffer.writeln();
-
-  _writeMetricsTable(buffer, '🟦 Levit Reactive (Core)', reactiveMetrics);
-  buffer.writeln();
-  _writeMetricsTable(buffer, '🟨 Levit DI (Dependency Injection)', diMetrics);
-  buffer.writeln();
-  _writeMetricsTable(buffer, '🟪 Levit Flutter (UI Binding)', flutterMetrics);
-
-  buffer.writeln();
-  buffer.writeln('## 📜 Raw Execution Logs');
-  buffer.writeln('<details>');
-  buffer.writeln('<summary>Click to view full logs</summary>');
-  buffer.writeln();
-  buffer.writeln('```text');
-  for (final item in metrics) {
-    buffer.writeln('[${item['suite']}] [${item['test']}] ${item['message']}');
-  }
-  buffer.writeln('```');
-  buffer.writeln('</details>');
-
-  final reportDir = Directory('assets/reports');
+  final reportDir = Directory('reports');
   if (!await reportDir.exists()) {
     await reportDir.create(recursive: true);
   }
 
-  final file = File('assets/reports/stress_test_report.md');
-  await file.writeAsString(buffer.toString());
-  print('Report generated: ${file.absolute.path}');
+  // Generate Stress Test Report
+  final stressBuffer = StringBuffer();
+  stressBuffer.writeln('# Levit Framework Stress Test Report');
+  stressBuffer.writeln();
+  stressBuffer.writeln(
+    '> **Generated on:** ${DateTime.now().toIso8601String().split('T')[0]}',
+  );
+  stressBuffer.writeln();
+  stressBuffer.writeln('## Performance Summary');
+  stressBuffer.writeln();
+  _writeMetricsTable(stressBuffer, 'Levit Reactive (Core)', reactiveMetrics);
+  stressBuffer.writeln();
+  _writeMetricsTable(
+      stressBuffer, 'Levit DI (Dependency Injection)', diMetrics);
+  stressBuffer.writeln();
+  _writeMetricsTable(
+      stressBuffer, 'Levit Flutter (UI Binding)', flutterMetrics);
+
+  stressBuffer.writeln();
+  stressBuffer.writeln('## Raw Execution Logs');
+  stressBuffer.writeln('<details>');
+  stressBuffer.writeln('<summary>Click to view full logs</summary>');
+  stressBuffer.writeln();
+  stressBuffer.writeln('```text');
+  for (final item in metrics) {
+    stressBuffer
+        .writeln('[${item['suite']}] [${item['test']}] ${item['message']}');
+  }
+  stressBuffer.writeln('```');
+  stressBuffer.writeln('</details>');
+
+  final stressFile = File('reports/stress_test_report.md');
+  await stressFile.writeAsString(stressBuffer.toString());
+  print('Stress Test Report generated: ${stressFile.absolute.path}');
 }
 
 void _writeMetricsTable(

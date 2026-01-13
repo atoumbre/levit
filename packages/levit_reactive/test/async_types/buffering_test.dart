@@ -8,7 +8,7 @@ void main() {
       final completer = Completer<int>();
       final future = LxFuture(completer.future);
 
-      expect(future.status, isA<AsyncWaiting<int>>());
+      expect(future.status, isA<LxWaiting<int>>());
       expect(future.lastValue, isNull);
 
       completer.complete(42);
@@ -16,16 +16,16 @@ void main() {
       expect(future.lastValue, 42);
 
       final nextCompleter = Completer<int>();
-      future.refresh(nextCompleter.future);
+      future.restart(nextCompleter.future);
 
-      expect(future.status, isA<AsyncWaiting<int>>());
+      expect(future.status, isA<LxWaiting<int>>());
       expect(future.lastValue, 42,
           reason: 'Waiting status should carry last successful value');
 
       nextCompleter.completeError('oops');
       await Future.delayed(Duration.zero);
 
-      expect(future.status, isA<AsyncError<int>>());
+      expect(future.status, isA<LxError<int>>());
       expect(future.lastValue, 42,
           reason: 'Error status should carry last successful value');
     });
@@ -44,7 +44,7 @@ void main() {
       controller.addError('fail');
       await Future.delayed(Duration.zero);
 
-      expect(stream.status, isA<AsyncError<int>>());
+      expect(stream.status, isA<LxError<int>>());
       expect(stream.lastValue, 1,
           reason: 'Stream error should preserve last value');
 

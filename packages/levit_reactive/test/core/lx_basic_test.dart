@@ -4,14 +4,14 @@ import 'package:levit_reactive/levit_reactive.dart';
 import '../helpers.dart';
 
 void main() {
-  group('Lx<T>', () {
+  group('LxVal<T>', () {
     test('initial value is accessible', () {
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       expect(count.value, equals(0));
     });
 
     test('setting value triggers stream event', () async {
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       final triggered = <int>[];
       count.stream.listen((v) => triggered.add(v));
       count.value = 1;
@@ -22,7 +22,7 @@ void main() {
     });
 
     test('setting same value does not trigger stream', () async {
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       final triggered = <int>[];
       count.stream.listen((v) => triggered.add(v));
       count.value = 0;
@@ -32,7 +32,7 @@ void main() {
     });
 
     test('refresh triggers stream event without value change', () async {
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       final triggered = <int>[];
       count.stream.listen((v) => triggered.add(v));
 
@@ -43,7 +43,7 @@ void main() {
     });
 
     test('notify is alias for refresh', () async {
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       final triggered = <int>[];
       count.stream.listen((v) => triggered.add(v));
 
@@ -54,12 +54,12 @@ void main() {
     });
 
     test('toString returns value string', () {
-      final count = Lx<int>(42);
+      final count = LxInt(42);
       expect(count.toString(), equals('42'));
     });
 
     test('addListener and removeListener work', () {
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       var notified = 0;
       void listener() => notified++;
 
@@ -73,20 +73,20 @@ void main() {
     });
 
     test('call() updates/returns value', () {
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       expect(count(), equals(0));
       expect(count(5), equals(5));
       expect(count.value, equals(5));
     });
 
     test('updateValue transforms value', () {
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       count.updateValue((v) => v + 1);
       expect(count.value, equals(1));
     });
 
     test('mutate updates value in place and notifies', () {
-      final user = Lx<MutableUser>(MutableUser('Alice', 30));
+      final user = LxVal<MutableUser>(MutableUser('Alice', 30));
       bool notified = false;
       user.addListener(() => notified = true);
 
@@ -98,31 +98,33 @@ void main() {
       expect(notified, isTrue);
     });
 
-    test('equality checks', () {
-      final count = Lx<int>(42);
+    test('equality is identity-based', () {
+      final count = LxInt(42);
+      final sameValue = LxInt(42);
       expect(count == count, isTrue);
+      expect(count == sameValue, isFalse);
       // ignore: unrelated_type_equality_checks
-      expect(count == 42, isTrue);
-      // ignore: unrelated_type_equality_checks
-      expect(count == 43, isFalse);
+      expect(count == 42, isFalse);
     });
 
-    test('hashCode equals value hashCode', () {
-      final count = Lx<int>(42);
-      expect(count.hashCode, equals(42.hashCode));
+    test('hashCode is identity-based', () {
+      final count = LxInt(42);
+      final sameValue = LxInt(42);
+      expect(count.hashCode, isNot(equals(42.hashCode)));
+      expect(count.hashCode, isNot(equals(sameValue.hashCode)));
     });
   });
 
   group('.lx extension', () {
     test('works on int', () {
       final count = 0.lx;
-      expect(count, isA<Lx<int>>());
+      expect(count, isA<LxInt>());
       expect(count.value, equals(0));
     });
 
     test('works on String', () {
       final name = 'John'.lx;
-      expect(name, isA<Lx<String>>());
+      expect(name, isA<LxVal<String>>());
       expect(name.value, equals('John'));
     });
 
@@ -134,7 +136,7 @@ void main() {
 
     test('works on custom objects', () {
       final user = User('John', 30).lx;
-      expect(user, isA<Lx<User>>());
+      expect(user, isA<LxVal<User>>());
       expect(user.value.name, equals('John'));
     });
   });
@@ -142,7 +144,7 @@ void main() {
   group('edge cases for coverage', () {
     test('bind forwards values from external stream', () async {
       final controller = StreamController<int>.broadcast();
-      final lx = Lx<int>(0);
+      final lx = LxInt(0);
 
       lx.bind(controller.stream);
 
@@ -160,7 +162,7 @@ void main() {
 
     test('bind forwards errors from external stream', () async {
       final controller = StreamController<int>.broadcast();
-      final lx = Lx<int>(0);
+      final lx = LxInt(0);
       lx.bind(controller.stream);
 
       final errors = <Object>[];
@@ -190,12 +192,12 @@ void main() {
 
       expect(transformed, isA<LxStream<String>>());
       // Initial status is waiting
-      expect(lxStream.status, isA<AsyncWaiting<int>>());
+      expect(lxStream.status, isA<LxWaiting<int>>());
 
       expectLater(
         transformed.valueStream,
         emitsInOrder([
-          startsWith('Status: AsyncSuccess'),
+          startsWith('Status: LxSuccess'),
         ]),
       );
 
@@ -216,12 +218,41 @@ void main() {
       controller.add(3);
       await controller.close();
 
-      // LxFuture.value returns AsyncStatus<T>
+      // LxFuture.value returns LxStatus<T>
       expect(future.value.valueOrNull, equals(6));
 
       // We can also await the underlying future if exposed, but confirm LxFuture API first.
       // Assuming we want to check the reactive state value:
-      expect(future.value, isA<AsyncSuccess<int>>());
+      expect(future.value, isA<LxSuccess<int>>());
+    });
+  });
+
+  group('LxIdle Coverage', () {
+    test('LxIdle equality and hashCode', () {
+      const idle1 = LxIdle<int>(0);
+      const idle2 = LxIdle<int>(0);
+      const idle3 = LxIdle<int>(1);
+
+      expect(idle1 == idle2, isTrue);
+      expect(idle1 == idle3, isFalse);
+      expect(idle1.hashCode, equals(idle2.hashCode));
+      expect(idle1.toString(), contains('LxIdle'));
+    });
+  });
+
+  group('LxBase Internal Coverage', () {
+    test('LxBase _checkActive coverage', () {
+      final rx = 0.lx;
+      // Triger _checkActive via listener addition/removal
+      rx.addListener(() {});
+      rx.removeListener(() {});
+    });
+
+    test('LxBase isDisposed coverage', () {
+      final rx = 0.lx;
+      expect(rx.isDisposed, isFalse);
+      rx.close();
+      expect(rx.isDisposed, isTrue);
     });
   });
 }

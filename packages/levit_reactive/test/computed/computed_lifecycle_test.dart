@@ -24,7 +24,7 @@ void main() {
       // Verify computation is working
       count.value = 5;
       expect(notified, isTrue);
-      expect(computed.value, 10);
+      expect(computed.computedValue, 10);
 
       // This should trigger line 173: _onInactive()
       // because after removal, !hasListener && _isActive

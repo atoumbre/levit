@@ -26,7 +26,7 @@ It is intentionally framework-agnostic and can be used as a standalone reactive 
   Only the exact dependencies accessed during evaluation are tracked and recomputed.
 
 * **First-Class Async State**
-  Futures and Streams are modeled as reactive state via `AsyncStatus` (Idle, Waiting, Success, Error).
+  Futures and Streams are modeled as reactive state via `LxStatus` (Idle, Waiting, Success, Error).
 
 * **Deterministic Computed Values**
   Computeds are lazy, cached, and recompute only when their dependencies change.
@@ -101,13 +101,13 @@ print(fullName.value); // Jane Doe
 final userState = LxFuture(fetchUserById(123));
 
 switch (userState.status) {
-  case AsyncWaiting():
+  case LxWaiting():
     print('Loading...');
-  case AsyncSuccess(:final value):
+  case LxSuccess(:final value):
     print('User loaded: ${value.name}');
-  case AsyncError(:final error):
+  case LxError(:final error):
     print('Failed: $error');
-  case AsyncIdle():
+  case LxIdle():
     print('Not started');
 }
 

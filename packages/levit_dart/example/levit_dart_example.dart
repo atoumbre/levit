@@ -10,6 +10,7 @@ class CounterController extends LevitController {
 
   @override
   void onInit() {
+    super.onInit();
     print('CounterController initialized');
     // React to changes
     void listener() {
@@ -19,8 +20,8 @@ class CounterController extends LevitController {
     count.addListener(listener);
     autoDispose(() => count.removeListener(listener));
 
-    autoDispose(
-        watch(doubleCount, (value) => print('DoubleCount changed to: $value')));
+    autoDispose(LxWatch(
+        doubleCount, (value) => print('DoubleCount changed to: $value')));
   }
 
   @override
@@ -36,7 +37,7 @@ void main() {
   print('--- App Start ---');
 
   // 1. Register the controller
-  Levit.put(CounterController());
+  Levit.put(() => CounterController());
 
   // 2. Resolve the controller
   final controller = Levit.find<CounterController>();

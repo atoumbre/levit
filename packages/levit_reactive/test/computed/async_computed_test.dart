@@ -13,7 +13,7 @@ void main() {
 
       // Add listener to activate
       doubled.stream.listen((_) {});
-      expect(doubled.value, isA<AsyncWaiting<int>>());
+      expect(doubled.value, isA<LxWaiting<int>>());
 
       await Future.delayed(Duration(milliseconds: 50));
       expect(doubled.valueOrNull, 20);
@@ -58,7 +58,7 @@ void main() {
       });
 
       doubled.stream.listen((status) {
-        if (status is AsyncSuccess<int>) {
+        if (status is LxSuccess<int>) {
           results.add(status.value);
         }
       });
@@ -93,7 +93,7 @@ void main() {
       count.value = -1;
       await Future.delayed(Duration(milliseconds: 50));
 
-      expect(computed.value, isA<AsyncError<int>>());
+      expect(computed.value, isA<LxError<int>>());
       expect(computed.lastValue, 2,
           reason: 'Should preserve last successful value on error');
     });
@@ -117,17 +117,17 @@ void main() {
     });
 
     test('LxAsyncComputed constructor coverage', () {
-      const computed = _TestAsyncComputed();
+      final computed = _TestAsyncComputed();
       expect(computed, isA<LxAsyncComputed<int>>());
     });
   });
 }
 
 class _TestAsyncComputed extends LxAsyncComputed<int> {
-  const _TestAsyncComputed();
+  _TestAsyncComputed() : super(() async => 0);
 
   @override
-  AsyncStatus<int> get status => AsyncIdle();
+  LxStatus<int> get status => LxIdle();
 
   @override
   bool get hasListener => false;
@@ -139,10 +139,10 @@ class _TestAsyncComputed extends LxAsyncComputed<int> {
   void close() {}
 
   @override
-  AsyncStatus<int> get value => status;
+  LxStatus<int> get value => status;
 
   @override
-  Stream<AsyncStatus<int>> get stream => const Stream.empty();
+  Stream<LxStatus<int>> get stream => const Stream.empty();
 
   @override
   Function() addListener(void Function() listener) => () {};
@@ -151,14 +151,14 @@ class _TestAsyncComputed extends LxAsyncComputed<int> {
   void removeListener(void Function() listener) {}
 
   @override
-  Map<String, dynamic> get flags => {};
-
-  @override
-  set flags(Map<String, dynamic> f) {}
-
-  @override
   LxStream<R> transform<R>(
-      Stream<R> Function(Stream<AsyncStatus<int>> stream) transformer) {
+      Stream<R> Function(Stream<LxStatus<int>> stream) transformer) {
     throw UnimplementedError();
   }
+
+  @override
+  String? name;
+
+  @override
+  String? ownerId;
 }

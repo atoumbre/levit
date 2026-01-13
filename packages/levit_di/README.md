@@ -108,10 +108,10 @@ Scopes enable clear ownership and predictable teardown of resources.
 
 ## Lifecycle Management
 
-Services can opt into lifecycle hooks by implementing `LevitDisposable`.
+Services can opt into lifecycle hooks by implementing `LevitScopeDisposable`.
 
 ```dart
-class MyService implements LevitDisposable {
+class MyService implements LevitScopeDisposable {
   @override
   void onInit() {
     print('Service initialized');

@@ -17,7 +17,7 @@ void main() {
       memo.stream.listen((_) {});
       await Future.microtask(() {});
 
-      expect(memo.value, 0);
+      expect(memo.computedValue, 0);
       final initialCount = computeCount;
 
       // Change 0 -> 1, result stays 0
@@ -30,12 +30,12 @@ void main() {
       // Change 1 -> 2, result becomes 1
       source.value = 2;
       await Future.delayed(Duration(milliseconds: 10));
-      expect(memo.value, 1);
+      expect(memo.computedValue, 1);
     });
 
     test('uses custom equality function', () async {
       final source = [1, 2, 3].lx;
-      var valueChanges = <List<int>>[];
+      var valueChanges = <LxStatus<List<int>>>[];
 
       final memo = LxComputed(
         () => source.value.toList(),
@@ -65,7 +65,7 @@ void main() {
       source.value = [1, 2, 3, 4];
       await Future.delayed(Duration(milliseconds: 20));
       expect(valueChanges.length, greaterThan(countAfterSame));
-      expect(valueChanges.last, [1, 2, 3, 4]);
+      expect(valueChanges.last.lastValue!, [1, 2, 3, 4]);
     });
 
     test('handles errors', () async {
@@ -80,21 +80,21 @@ void main() {
       memo.stream.listen((_) {});
       await Future.microtask(() {});
 
-      expect(memo.value, 10);
+      expect(memo.computedValue, 10);
 
-      expect(() => source.value = 0, throwsA(isA<Exception>()));
+      source.value = 0;
       await Future.delayed(Duration(milliseconds: 10));
 
       // Should throw on access
-      expect(() => memo.value, throwsA(isA<Exception>()));
+      expect(() => memo.computedValue, throwsA(isA<Exception>()));
     });
 
     test('rethrows error on access (construction)', () async {
-      expect(
-          () => LxComputed(() {
-                throw Exception('fail');
-              }),
-          throwsA(isA<Exception>()));
+      final memo = LxComputed(() {
+        throw Exception('fail');
+      });
+      expect(memo.isError, isTrue);
+      expect(memo.errorOrNull, isA<Exception>());
     });
 
     test('close cancels subscriptions', () async {
@@ -149,8 +149,8 @@ void main() {
 
   test('reconciles stream dependencies (removing unused)', () async {
     final useA = true.lx;
-    final sourceA = 10.lx..flags['name'] = 'A';
-    final sourceB = 20.lx..flags['name'] = 'B';
+    final sourceA = 10.lx;
+    final sourceB = 20.lx;
 
     // Force stream creation on sourceA so it is tracked as a stream dependency
     final subA = sourceA.stream.listen((_) {});
@@ -167,13 +167,13 @@ void main() {
     // Activate computed
     final subC = computed.stream.listen((_) {});
     await Future.microtask(() {});
-    expect(computed.value, 10);
+    expect(computed.computedValue, 10);
 
     // Now switch to B
     useA.value = false;
     await Future.microtask(() {}); // Let useA update propagate
 
-    expect(computed.value, 20);
+    expect(computed.computedValue, 20);
 
     // Cleanup
     subA.cancel();

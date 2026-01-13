@@ -137,7 +137,7 @@ void main() {
           child: Builder(
             builder: (c) {
               final ctrl = TestController();
-              c.levit.put<TestController>(ctrl, tag: 'dynamic');
+              c.levit.put<TestController>(() => ctrl, tag: 'dynamic');
               final found = c.levit.find<TestController>(tag: 'dynamic');
               return Text('Found: ${found == ctrl}');
             },
@@ -182,8 +182,9 @@ void main() {
         MaterialApp(
           home: LMultiScope(
             scopes: [
-              ScopeBinding<TestController>(() => TestController()..count = 1),
-              ScopeBinding<AnotherController>(
+              LMultiScopeBinding<TestController>(
+                  () => TestController()..count = 1),
+              LMultiScopeBinding<AnotherController>(
                   () => AnotherController()..name = 'Test'),
             ],
             child: Builder(
@@ -206,7 +207,9 @@ void main() {
         child: LScope<TestController>(
           init: () => TestController(),
           child: LMultiScope(
-            scopes: [ScopeBinding<TestController>(() => TestController())],
+            scopes: [
+              LMultiScopeBinding<TestController>(() => TestController())
+            ],
             child: Container(),
           ),
         ),

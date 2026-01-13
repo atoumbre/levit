@@ -1,7 +1,37 @@
+import 'async_types.dart';
 import 'core.dart';
 
 // ============================================================================
-// LxBool
+// LxVal - Base Reactive Type that holds a mutable value
+// ============================================================================
+
+/// A reactive wrapper for a value of type [T].
+///
+/// [LxVal] is the core primitive of Levit's reactive system. It notifies
+/// listeners whenever its value changes.
+class LxVal<T> extends LxBase<T> {
+  /// Creates a reactive wrapper around [initial].
+  LxVal(super.initial, {super.onListen, super.onCancel, super.name});
+
+  /// Sets the value and notifies listeners.
+  set value(T val) => setValueInternal(val);
+
+  /// Functional update override to support setting value.
+  @override
+  T call([T? v]) {
+    if (v is T) {
+      value = v;
+    }
+    return value;
+  }
+
+  LxStream<R> transform<R>(Stream<R> Function(Stream<T> stream) transformer) {
+    return LxStream<R>(transformer(stream));
+  }
+}
+
+// ============================================================================
+// LxBool - Specialized reactive boolean
 // ============================================================================
 
 /// A reactive boolean with helper methods for common operations.
@@ -14,11 +44,11 @@ import 'core.dart';
 /// final isVisible = LxBool(false);
 /// isVisible.toggle();
 /// ```
-class LxBool extends Lx<bool> {
+class LxBool extends LxVal<bool> {
   /// Creates a reactive boolean.
   ///
   /// [initial] defaults to `false`.
-  LxBool([super.initial = false]);
+  LxBool([super.initial = false, String? name]) : super(name: name);
 
   /// Toggles the value between `true` and `false`.
   void toggle() => value = !value;
@@ -37,7 +67,7 @@ class LxBool extends Lx<bool> {
 }
 
 // ============================================================================
-// LxNum - Numeric Operations
+// LxNum - Specialized reactive number
 // ============================================================================
 
 /// A reactive number with arithmetic helper methods.
@@ -50,9 +80,9 @@ class LxBool extends Lx<bool> {
 /// final count = LxInt(0);
 /// count.increment();
 /// ```
-class LxNum<T extends num> extends Lx<T> {
+class LxNum<T extends num> extends LxVal<T> {
   /// Creates a reactive number.
-  LxNum(super.initial);
+  LxNum(super.initial, {super.name});
 
   /// Increments the value by 1.
   void increment() => value = (value + 1) as T;
@@ -105,10 +135,10 @@ extension LxExtension<T> on T {
   /// final count = 0.lx;
   /// final name = 'Levit'.lx;
   /// ```
-  Lx<T> get lx => Lx<T>(this);
+  LxVal<T> get lx => LxVal<T>(this);
 
   /// Creates a nullable reactive wrapper around this value.
-  Lx<T?> get lxNullable => Lx<T?>(this);
+  LxVal<T?> get lxNullable => LxVal<T?>(this);
 }
 
 /// Extensions for boolean specific reactivity.

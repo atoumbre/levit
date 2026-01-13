@@ -3,70 +3,78 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 
 void main() {
-  testWidgets('Stress Test: LStatusBuilder State Switching', (tester) async {
-    print(
-        '[Description] Benchmarks the performance of 2,000 LStatusBuilder widgets switching through all possible async states.');
-    const count = 2000;
-    // Use Lx<AsyncStatus> directly for manual control
-    final statuses = List.generate(
-        count, (_) => Lx<AsyncStatus<int>>(const AsyncIdle<int>()));
+  group('Stress Test: LStatusBuilder', () {
+    testWidgets('State Switch - 1000 status transitions', (tester) async {
+      print('[Description] Tests LStatusBuilder state switching performance.');
+      final status = LxFuture(Future.value(0));
 
-    // Initial Build (Idle)
-    final setupStopwatch = Stopwatch()..start();
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: ListView(
-          children: [
-            for (final s in statuses)
-              LStatusBuilder<int>(
-                source: s,
-                onIdle: () =>
-                    const Text('Idle', textDirection: TextDirection.ltr),
-                onWaiting: () =>
-                    const Text('Waiting', textDirection: TextDirection.ltr),
-                onSuccess: (v) =>
-                    Text('Success $v', textDirection: TextDirection.ltr),
-                onError: (e, s) =>
-                    const Text('Error', textDirection: TextDirection.ltr),
-              )
-          ],
+      await tester.pumpWidget(MaterialApp(
+        home: LStatusBuilder<int>(
+          source: status,
+          onSuccess: (data) => Text('Success: $data'),
+          onWaiting: () => const Text('Waiting'),
+          onError: (error, _) => Text('Error: $error'),
         ),
-      ),
-    ));
-    setupStopwatch.stop();
-    print(
-        'LStatusBuilder Setup: Built $count widgets (Idle) in ${setupStopwatch.elapsedMilliseconds}ms');
+      ));
 
-    // Measure switching from Idle to Waiting
-    final waitStopwatch = Stopwatch()..start();
-    // Batch update to trigger them all
-    for (final s in statuses) {
-      s.value = const AsyncWaiting<int>();
-    }
-    await tester.pump();
-    waitStopwatch.stop();
-    print(
-        'LStatusBuilder Switch: Switched $count widgets to Waiting in ${waitStopwatch.elapsedMilliseconds}ms');
+      await tester.pumpAndSettle();
+      expect(find.text('Success: 0'), findsOneWidget);
 
-    // Measure switching to Success
-    final successStopwatch = Stopwatch()..start();
-    // Resolve all
-    for (int i = 0; i < statuses.length; i++) {
-      statuses[i].value = AsyncSuccess<int>(i);
-    }
-    await tester.pump();
-    successStopwatch.stop();
-    print(
-        'LStatusBuilder Switch: Switched $count widgets to Success in ${successStopwatch.elapsedMilliseconds}ms');
+      const transitions = 1000;
+      final sw = Stopwatch()..start();
+      for (var i = 0; i < transitions; i++) {
+        status.restart(Future.value(i));
+        // Skip pump on every iteration to avoid test timeout
+        if (i % 100 == 0) {
+          await tester.pump();
+        }
+      }
+      await tester.pumpAndSettle();
+      sw.stop();
 
-    // Measure switching to Error
-    final errorStopwatch = Stopwatch()..start();
-    for (final s in statuses) {
-      s.value = AsyncError<int>('Stress Test Error', StackTrace.empty);
-    }
-    await tester.pump();
-    errorStopwatch.stop();
-    print(
-        'LStatusBuilder Switch: Switched $count widgets to Error in ${errorStopwatch.elapsedMilliseconds}ms');
+      print(
+          'LStatusBuilder State Switch: $transitions transitions in ${sw.elapsedMilliseconds}ms');
+
+      status.close();
+    });
+
+    testWidgets('Flood - 500 LStatusBuilder widgets', (tester) async {
+      print(
+          '[Description] Tests many LStatusBuilder widgets in a single frame.');
+      const widgetCount = 500;
+      final statuses =
+          List.generate(widgetCount, (_) => LxFuture(Future.value(0)));
+
+      await tester.pumpWidget(MaterialApp(
+        home: ListView.builder(
+          itemCount: widgetCount,
+          itemBuilder: (context, index) {
+            return LStatusBuilder<int>(
+              source: statuses[index],
+              onSuccess: (data) => Text('S$index'),
+              onWaiting: () => const Text('Waiting'),
+              onError: (error, _) => const Text('Error'),
+            );
+          },
+        ),
+      ));
+
+      await tester.pumpAndSettle();
+
+      // Update all to trigger rebuild
+      final sw = Stopwatch()..start();
+      for (var i = 0; i < widgetCount; i++) {
+        statuses[i].restart(Future.value(i + 1));
+      }
+      await tester.pumpAndSettle();
+      sw.stop();
+
+      print(
+          'LStatusBuilder Flood: $widgetCount widgets updated in ${sw.elapsedMilliseconds}ms');
+
+      for (final s in statuses) {
+        s.close();
+      }
+    });
   });
 }

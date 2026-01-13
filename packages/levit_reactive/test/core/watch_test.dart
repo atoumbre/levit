@@ -7,7 +7,7 @@ void main() {
     test('watch fires on every change', () async {
       final count = 0.lx;
       final values = <int>[];
-      watch(count, (v) => values.add(v));
+      LxWatch(count, (v) => values.add(v));
 
       count.value = 1;
       count.value = 2;
@@ -20,8 +20,8 @@ void main() {
     test('watch with takeFirst fires only on first change', () async {
       final count = 0.lx;
       final values = <int>[];
-      watch(count.transform((s) => s.transform(_takeFirst())), (v) {
-        if (v is AsyncSuccess<int>) values.add(v.value);
+      LxWatch(count.transform((s) => s.transform(_takeFirst())), (v) {
+        if (v is LxSuccess<int>) values.add(v.value);
       });
 
       count.value = 1;
@@ -35,10 +35,10 @@ void main() {
     test('debounce transform waits for value to settle', () async {
       final query = ''.lx;
       final values = <String>[];
-      watch(
+      LxWatch(
           query.transform(
               (s) => s.transform(_debounce(Duration(milliseconds: 50)))), (v) {
-        if (v is AsyncSuccess<String>) values.add(v.value);
+        if (v is LxSuccess<String>) values.add(v.value);
       });
 
       query.value = 'a';
@@ -57,10 +57,10 @@ void main() {
     test('throttle transform limits callback frequency', () async {
       final scroll = 0.lx;
       final values = <int>[];
-      watch(
+      LxWatch(
           scroll.transform(
               (s) => s.transform(_throttle(Duration(milliseconds: 50)))), (v) {
-        if (v is AsyncSuccess<int>) values.add(v.value);
+        if (v is LxSuccess<int>) values.add(v.value);
       });
 
       scroll.value = 1;
@@ -78,13 +78,15 @@ void main() {
     test('watch returns dispose closure', () async {
       final count = 0.lx;
       final values = <int>[];
-      final dispose = watch(count, (v) => values.add(v));
+      final watcher = LxWatch(count, (v) {
+        values.add(v);
+      });
 
       count.value = 1;
       await Future.delayed(Duration.zero);
       expect(values, equals([1]));
 
-      dispose();
+      watcher.close();
 
       count.value = 2;
       await Future.delayed(Duration.zero);
@@ -94,16 +96,16 @@ void main() {
     test('debounce dispose cancels timer', () async {
       final count = 0.lx;
       final values = <int>[];
-      final dispose = watch(
+      final dispose = LxWatch(
         count.transform(
             (s) => s.transform(_debounce(Duration(milliseconds: 50)))),
         (v) {
-          if (v is AsyncSuccess<int>) values.add(v.value);
+          if (v is LxSuccess<int>) values.add(v.value);
         },
       );
 
       count.value = 1;
-      dispose();
+      dispose.close();
 
       await Future.delayed(Duration(milliseconds: 100));
       expect(values, isEmpty); // Debounce was cancelled
@@ -113,7 +115,7 @@ void main() {
       final source = _ErrorReactive<int>(0);
 
       Object? receivedError;
-      final unwatch = watch<int>(
+      final unwatch = LxWatch(
         source,
         (_) {},
         onError: (e, s) => receivedError = e,
@@ -123,7 +125,7 @@ void main() {
       await Future.delayed(Duration.zero);
       expect(receivedError, 'test error');
 
-      unwatch();
+      unwatch.close();
       source.close();
     });
   });
@@ -133,8 +135,9 @@ void main() {
       final count = 0.lx;
       final values = <int>[];
 
-      final dispose = watch(count.transform((s) => s.transform(_skip(2))), (v) {
-        if (v is AsyncSuccess<int>) values.add(v.value);
+      final dispose =
+          LxWatch(count.transform((s) => s.transform(_skip(2))), (v) {
+        if (v is LxSuccess<int>) values.add(v.value);
       });
 
       count.value = 1;
@@ -146,7 +149,7 @@ void main() {
 
       expect(values, equals([3, 4])); // First 2 skipped
 
-      dispose();
+      dispose.close();
     });
 
     test('watch with distinct emits only distinct values', () async {
@@ -154,8 +157,8 @@ void main() {
       final values = <int>[];
 
       final dispose =
-          watch(count.transform((s) => s.transform(_distinct())), (v) {
-        if (v is AsyncSuccess<int>) values.add(v.value);
+          LxWatch(count.transform((s) => s.transform(_distinct())), (v) {
+        if (v is LxSuccess<int>) values.add(v.value);
       });
 
       count.value = 1;
@@ -168,7 +171,7 @@ void main() {
 
       expect(values, equals([1, 2, 3]));
 
-      dispose();
+      dispose.close();
     });
 
     test('debounce handles source stream completion', () async {
@@ -286,7 +289,9 @@ StreamTransformer<T, T> _throttle<T>(Duration d) {
 class _ErrorReactive<T> implements LxReactive<T> {
   final _controller = StreamController<T>.broadcast();
   T _value;
+
   _ErrorReactive(this._value);
+
   @override
   T get value => _value;
   set value(T v) {
@@ -296,18 +301,24 @@ class _ErrorReactive<T> implements LxReactive<T> {
 
   @override
   Stream<T> get stream => _controller.stream;
+
   @override
   void addListener(void Function() l) {}
+
   @override
   void removeListener(void Function() l) {}
+
   @override
   void close() => _controller.close();
+
   void addError(Object e) => _controller.addError(e, StackTrace.current);
 
   @override
-  Map<String, dynamic> flags = {};
+  String? name;
+
   @override
-  LxStream<R> transform<R>(Stream<R> Function(Stream<T> stream) transformer) {
-    return LxStream<R>(transformer(stream));
-  }
+  String? ownerId;
+
+  @override
+  final int id = 0;
 }

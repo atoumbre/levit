@@ -22,7 +22,8 @@ library;
 
 export 'package:levit_dart/levit_dart.dart';
 
-export 'src/scope.dart';
+export 'src/scope.dart'
+    hide LMultiScopeElement, LScopedViewElement, LScopeElement;
 export 'src/status_builder.dart';
 export 'src/view.dart';
-export 'src/watch.dart';
+export 'src/watch.dart' hide LValueElement, LWatchElement;

@@ -22,74 +22,23 @@ class _ScopeProvider extends InheritedWidget {
   bool updateShouldNotify(_ScopeProvider oldWidget) => scope != oldWidget.scope;
 }
 
-/// Mixin that provides common scope initialization and disposal logic.
-mixin _ScopeMixin<T extends StatefulWidget> on State<T> {
-  late final LevitScope _scope;
-  bool _scopeInitialized = false;
-
-  /// Creates a child scope from the parent scope (or global Levit).
-  LevitScope _createScope(BuildContext context, String scopeName) {
-    final parentScope = _ScopeProvider.of(context);
-    if (parentScope != null) {
-      return parentScope.createScope(scopeName);
-    }
-    return Levit.createScope(scopeName);
+// Logic to create a scope from context
+LevitScope _createChildScope(BuildContext context, String scopeName) {
+  final parentScope = _ScopeProvider.of(context);
+  if (parentScope != null) {
+    return parentScope.createScope(scopeName);
   }
-
-  /// Wraps a child with the scope provider. Call after scope is initialized.
-  Widget wrapWithScope(Widget child) {
-    return _ScopeProvider(scope: _scope, child: child);
-  }
-
-  /// Disposes the scope if initialized.
-  void disposeScope() {
-    if (_scopeInitialized) {
-      _scope.reset(force: true);
-    }
-  }
+  return Levit.createScope(scopeName);
 }
 
 /// A widget that creates and manages a dependency injection scope.
-///
-/// [LScope] establishes a new [LevitScope] as a child of the nearest parent scope
-/// (or the global [Levit] container). It registers a single dependency of type [T]
-/// within this scope.
-///
-/// When the [LScope] is disposed (removed from the widget tree), its scope is
-/// automatically closed, triggering the disposal of any registered objects
-/// that implement [LevitDisposable].
-///
-/// Use this widget to provide a local controller or service to a specific
-/// part of your UI, ensuring it is cleaned up when no longer needed.
-///
-/// ## Usage
-/// ```dart
-/// LScope<ProductController>(
-///   init: () => ProductController(),
-///   child: ProductPage(),
-/// )
-/// ```
-class LScope<T> extends StatefulWidget {
-  /// The factory function to create the dependency.
+class LScope<T> extends Widget {
   final T Function() init;
-
-  /// The child widget tree that will have access to this scope.
   final Widget child;
-
-  /// An optional tag to identify the dependency.
   final String? tag;
-
-  /// Whether the dependency should persist even after reset (defaults to false).
-  ///
-  /// Note: The scope itself is destroyed when the widget is disposed, so
-  /// this flag is less relevant for [LScope] than for global registration,
-  /// but it prevents accidental deletion if manual `delete` calls are made.
   final bool permanent;
-
-  /// An optional name for the scope (useful for debugging).
   final String? name;
 
-  /// Creates a scoped dependency provider.
   const LScope({
     super.key,
     required this.init,
@@ -100,71 +49,63 @@ class LScope<T> extends StatefulWidget {
   });
 
   @override
-  State<LScope<T>> createState() => _LScopeState<T>();
+  Element createElement() => LScopeElement<T>(this);
+
+  /// Retrieves the nearest [LevitScope] from the widget tree.
+  static LevitScope? of(BuildContext context) => _ScopeProvider.of(context);
 }
 
-class _LScopeState<T> extends State<LScope<T>> with _ScopeMixin<LScope<T>> {
-  void _initScope(BuildContext context) {
+class LScopeElement<T> extends ComponentElement {
+  LScopeElement(LScope<T> super.widget);
+
+  late LevitScope _scope;
+  bool _scopeInitialized = false;
+
+  void _initScope() {
     if (_scopeInitialized) return;
+    final widget = this.widget as LScope<T>;
     final scopeName = widget.name ?? 'LScope<${T.toString()}>';
-    _scope = _createScope(context, scopeName);
-    _scope.put<T>(widget.init(), tag: widget.tag, permanent: widget.permanent);
+    _scope = _createChildScope(this, scopeName);
+    _scope.put<T>(widget.init, tag: widget.tag, permanent: widget.permanent);
     _scopeInitialized = true;
   }
 
   @override
-  void didUpdateWidget(LScope<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.tag != oldWidget.tag || widget.name != oldWidget.name) {
-      // Ideally, we should recreate scope, but that loses state.
-      // For now, at least warn in debug.
+  void update(LScope<T> newWidget) {
+    final oldWidget = widget as LScope<T>;
+    super.update(newWidget);
+    if (newWidget.tag != oldWidget.tag || newWidget.name != oldWidget.name) {
       assert(() {
         debugPrint(
             'WARNING: LScope tag/name changed but scope cannot be updated dynamically.');
         return true;
       }());
     }
+    markNeedsBuild();
+    rebuild();
   }
 
   @override
-  Widget build(BuildContext context) {
-    _initScope(context);
-    return wrapWithScope(widget.child);
+  Widget build() {
+    _initScope();
+    return _ScopeProvider(scope: _scope, child: (widget as LScope<T>).child);
   }
 
   @override
-  void dispose() {
-    disposeScope();
-    super.dispose();
+  void unmount() {
+    if (_scopeInitialized) {
+      _scope.reset(force: true);
+    }
+    super.unmount();
   }
 }
 
 /// A widget that manages multiple dependency injection bindings in a single scope.
-///
-/// Use [LMultiScope] when you need to provide multiple controllers or services
-/// to a subtree without nesting multiple [LScope] widgets.
-///
-/// ## Usage
-/// ```dart
-/// LMultiScope(
-///   scopes: [
-///     ScopeBinding(() => AuthController()),
-///     ScopeBinding(() => UserController()),
-///   ],
-///   child: MyApp(),
-/// )
-/// ```
-class LMultiScope extends StatefulWidget {
-  /// The list of bindings to register in the scope.
-  final List<ScopeBinding> scopes;
-
-  /// The child widget tree.
+class LMultiScope extends Widget {
+  final List<LMultiScopeBinding> scopes;
   final Widget child;
-
-  /// An optional name for the scope (useful for debugging).
   final String? name;
 
-  /// Creates a multi-binding scope provider.
   const LMultiScope({
     super.key,
     required this.scopes,
@@ -173,15 +114,20 @@ class LMultiScope extends StatefulWidget {
   });
 
   @override
-  State<LMultiScope> createState() => _LMultiScopeState();
+  Element createElement() => LMultiScopeElement(this);
 }
 
-class _LMultiScopeState extends State<LMultiScope>
-    with _ScopeMixin<LMultiScope> {
-  void _initScope(BuildContext context) {
+class LMultiScopeElement extends ComponentElement {
+  LMultiScopeElement(LMultiScope super.widget);
+
+  late LevitScope _scope;
+  bool _scopeInitialized = false;
+
+  void _initScope() {
     if (_scopeInitialized) return;
+    final widget = this.widget as LMultiScope;
     final scopeName = widget.name ?? 'LMultiScope';
-    _scope = _createScope(context, scopeName);
+    _scope = _createChildScope(this, scopeName);
     for (final scope in widget.scopes) {
       scope._registerIn(_scope);
     }
@@ -189,34 +135,37 @@ class _LMultiScopeState extends State<LMultiScope>
   }
 
   @override
-  Widget build(BuildContext context) {
-    _initScope(context);
-    return wrapWithScope(widget.child);
+  void update(LMultiScope newWidget) {
+    super.update(newWidget);
+    markNeedsBuild();
+    rebuild();
   }
 
   @override
-  void dispose() {
-    disposeScope();
-    super.dispose();
+  Widget build() {
+    _initScope();
+    return _ScopeProvider(scope: _scope, child: (widget as LMultiScope).child);
+  }
+
+  @override
+  void unmount() {
+    if (_scopeInitialized) {
+      _scope.reset(force: true);
+    }
+    super.unmount();
   }
 }
 
 /// Configuration for a single binding in [LMultiScope].
-class ScopeBinding<T> {
-  /// Factory function to create the dependency.
+class LMultiScopeBinding<T> {
   final T Function() init;
-
-  /// Optional tag for the binding.
   final String? tag;
-
-  /// Whether the binding is permanent.
   final bool permanent;
 
-  /// Creates a binding definition.
-  const ScopeBinding(this.init, {this.tag, this.permanent = false});
+  const LMultiScopeBinding(this.init, {this.tag, this.permanent = false});
 
   void _registerIn(LevitScope scope) {
-    scope.put<T>(init(), tag: tag, permanent: permanent);
+    scope.put<T>(init, tag: tag, permanent: permanent);
   }
 }
 
@@ -226,7 +175,6 @@ class LevitContext {
 
   LevitContext(this._context);
 
-  /// Finds and returns an instance of type [S] from the nearest scope.
   S find<S>({String? tag}) {
     final scope = _ScopeProvider.of(_context);
     if (scope != null) {
@@ -235,7 +183,6 @@ class LevitContext {
     return Levit.find<S>(tag: tag);
   }
 
-  /// Returns `true` if type [S] is registered in the nearest scope (or globally).
   bool isRegistered<S>({String? tag}) {
     final scope = _ScopeProvider.of(_context);
     if (scope != null) {
@@ -244,101 +191,91 @@ class LevitContext {
     return Levit.isRegistered<S>(tag: tag);
   }
 
-  /// Registers a dependency dynamically in the nearest scope.
-  S put<S>(S dependency, {String? tag, bool permanent = false}) {
+  S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
     final scope = _ScopeProvider.of(_context);
     if (scope != null) {
-      return scope.put<S>(dependency, tag: tag, permanent: permanent);
+      return scope.put<S>(builder, tag: tag, permanent: permanent);
     }
-    return Levit.put<S>(dependency, tag: tag, permanent: permanent);
+    return Levit.put<S>(builder, tag: tag, permanent: permanent);
+  }
+
+  S putOrFind<S>(S Function() builder, {String? tag, bool permanent = false}) {
+    final scope = _ScopeProvider.of(_context);
+    if (scope != null) {
+      final instance = scope.findOrNull<S>(tag: tag);
+      if (instance != null) return instance;
+      return scope.put<S>(builder, tag: tag, permanent: permanent);
+    }
+
+    final instance = Levit.findOrNull<S>(tag: tag);
+    if (instance != null) return instance;
+    return Levit.put<S>(builder, tag: tag, permanent: permanent);
   }
 }
 
-/// Extensions on [BuildContext] for easy access to the dependency injection system.
+/// Extension to access scoped DI via [BuildContext].
 extension LevitContextExtension on BuildContext {
-  /// Access the scoped dependency injection system.
-  ///
-  /// usage: `context.levit.find<MyController>()`
   LevitContext get levit => LevitContext(this);
 }
 
-/// A convenience widget that combines scope creation, controller instantiation,
-/// and reactive UI building.
-///
-/// [LScopedView] simplifies the common pattern of creating a controller for a
-/// specific page or view. It manages the lifecycle of the controller (init/dispose)
-/// and automatically wraps the content in [LWatch] if [autoWatch] is true.
-///
-/// Use this class to quickly build pages that have a dedicated controller.
-///
-/// ## Usage
-/// ```dart
-/// class CounterPage extends LScopedView<CounterController> {
-///   const CounterPage({super.key});
-///
-///   @override
-///   CounterController createController() => CounterController();
-///
-///   @override
-///   Widget buildContent(BuildContext context, CounterController controller) {
-///     return Text('Count: ${controller.count.value}');
-///   }
-/// }
-/// ```
-abstract class LScopedView<T> extends StatefulWidget {
-  /// Creates a scoped view.
+/// A convenience widget for scoped View.
+abstract class LScopedView<T> extends Widget {
   const LScopedView({super.key});
 
-  /// Optional tag for the controller registration.
   String? get tag => null;
-
-  /// Whether the controller should be permanent (defaults to false).
   bool get permanent => false;
-
-  /// Whether to wrap [buildContent] in [LWatch] for automatic rebuilding.
-  /// Defaults to `true`.
   bool get autoWatch => true;
 
-  /// Factory method to create the controller.
-  ///
-  /// This is called exactly once when the scope is initialized.
   T createController();
-
-  /// Builds the UI for the view.
-  ///
-  /// The [controller] is passed as an argument, fully initialized and ready to use.
   Widget buildContent(BuildContext context, T controller);
 
   @override
-  State<LScopedView<T>> createState() => _LScopedViewState<T>();
+  Element createElement() => LScopedViewElement<T>(this);
 }
 
-class _LScopedViewState<T> extends State<LScopedView<T>>
-    with _ScopeMixin<LScopedView<T>> {
-  late final T _controller;
+class LScopedViewElement<T> extends ComponentElement {
+  LScopedViewElement(LScopedView<T> super.widget);
 
-  void _initScope(BuildContext context) {
+  late LevitScope _scope;
+  late T _controller;
+  bool _scopeInitialized = false;
+
+  void _initScope() {
     if (_scopeInitialized) return;
+    final widget = this.widget as LScopedView<T>;
     final scopeName = 'LScopedView<${T.toString()}>';
-    _scope = _createScope(context, scopeName);
-    _controller = widget.createController();
-    _scope.put<T>(_controller, tag: widget.tag, permanent: widget.permanent);
+    _scope = _createChildScope(this, scopeName);
+
+    _controller = _scope.put<T>(() => widget.createController(),
+        tag: widget.tag, permanent: widget.permanent);
+
     _scopeInitialized = true;
   }
 
   @override
-  Widget build(BuildContext context) {
-    _initScope(context);
-    return wrapWithScope(
-      widget.autoWatch
-          ? LWatch(() => widget.buildContent(context, _controller))
-          : widget.buildContent(context, _controller),
-    );
+  void update(LScopedView<T> newWidget) {
+    super.update(newWidget);
+    markNeedsBuild();
+    rebuild();
   }
 
   @override
-  void dispose() {
-    disposeScope();
-    super.dispose();
+  Widget build() {
+    _initScope();
+    final widget = this.widget as LScopedView<T>;
+
+    final content = widget.autoWatch
+        ? LWatch(() => widget.buildContent(this, _controller))
+        : widget.buildContent(this, _controller);
+
+    return _ScopeProvider(scope: _scope, child: content);
+  }
+
+  @override
+  void unmount() {
+    if (_scopeInitialized) {
+      _scope.reset(force: true);
+    }
+    super.unmount();
   }
 }

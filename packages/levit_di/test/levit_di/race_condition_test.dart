@@ -5,7 +5,7 @@ import 'dart:async';
 void main() {
   group('Race Condition Coverage', () {
     test('Simultaneous async lookups hit _pendingInit cache', () async {
-      final scope = Levit.createScope('race_test');
+      final scope = LevitScope.root('race_test');
       int buildCount = 0;
 
       scope.lazyPutAsync<String>(() async {

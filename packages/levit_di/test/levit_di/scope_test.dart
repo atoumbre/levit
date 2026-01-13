@@ -2,7 +2,7 @@ import 'package:levit_di/levit_di.dart';
 import 'package:test/test.dart';
 
 // Test service class
-class TestService implements LevitDisposable {
+class TestService implements LevitScopeDisposable {
   static int initCount = 0;
   static int closeCount = 0;
   final String name;
@@ -15,6 +15,9 @@ class TestService implements LevitDisposable {
   @override
   void onClose() => closeCount++;
 
+  @override
+  void didAttachToScope(LevitScope scope, {String? key}) {}
+
   static void resetCounts() {
     initCount = 0;
     closeCount = 0;
@@ -26,29 +29,31 @@ class ParentService {}
 class ChildService {}
 
 void main() {
+  late LevitScope levit;
+
   setUp(() {
-    Levit.reset(force: true);
+    levit = LevitScope.root();
     TestService.resetCounts();
   });
 
   tearDown(() {
-    Levit.reset(force: true);
+    levit.reset(force: true);
   });
 
   group('LevitScope', () {
     group('Basic Registration', () {
       test('put registers in scope', () {
-        final scope = Levit.createScope('test');
+        final scope = levit.createScope('test');
         final service = TestService('scoped');
 
-        scope.put(service);
+        scope.put(() => service);
 
         expect(scope.find<TestService>().name, 'scoped');
         expect(scope.registeredCount, 1);
       });
 
       test('lazyPut registers lazy in scope', () {
-        final scope = Levit.createScope('test');
+        final scope = levit.createScope('test');
         var created = false;
 
         scope.lazyPut(() {
@@ -62,10 +67,10 @@ void main() {
       });
 
       test('putFactory registers factory in scope', () {
-        final scope = Levit.createScope('test');
+        final scope = levit.createScope('test');
         var count = 0;
 
-        scope.putFactory(() => TestService('factory-${++count}'));
+        scope.lazyPut(() => TestService('factory-${++count}'), isFactory: true);
 
         final a = scope.find<TestService>();
         final b = scope.find<TestService>();
@@ -76,8 +81,8 @@ void main() {
       });
 
       test('onInit is called on put', () {
-        final scope = Levit.createScope('test');
-        scope.put(TestService());
+        final scope = levit.createScope('test');
+        scope.put(() => TestService());
 
         expect(TestService.initCount, 1);
       });
@@ -85,8 +90,8 @@ void main() {
 
     group('Parent Fallback', () {
       test('find falls back to Levit if not in scope', () {
-        Levit.put(ParentService());
-        final scope = Levit.createScope('test');
+        levit.put(() => ParentService());
+        final scope = levit.createScope('test');
 
         expect(scope.find<ParentService>(), isA<ParentService>());
         expect(scope.isRegisteredLocally<ParentService>(), false);
@@ -94,20 +99,20 @@ void main() {
       });
 
       test('findOrNull falls back to Levit', () {
-        Levit.put(ParentService());
-        final scope = Levit.createScope('test');
+        levit.put(() => ParentService());
+        final scope = levit.createScope('test');
 
         expect(scope.findOrNull<ParentService>(), isNotNull);
       });
 
       test('findOrNull returns null if not found anywhere', () {
-        final scope = Levit.createScope('test');
+        final scope = levit.createScope('test');
 
         expect(scope.findOrNull<ParentService>(), isNull);
       });
 
       test('find throws if not found anywhere', () {
-        final scope = Levit.createScope('test');
+        final scope = levit.createScope('test');
 
         expect(
           () => scope.find<ParentService>(),
@@ -118,20 +123,20 @@ void main() {
 
     group('Local Override', () {
       test('scope can override parent dependency', () {
-        Levit.put(TestService('parent'));
-        final scope = Levit.createScope('test');
-        scope.put(TestService('scoped'));
+        levit.put(() => TestService('parent'));
+        final scope = levit.createScope('test');
+        scope.put(() => TestService('scoped'));
 
         // Scope returns local
         expect(scope.find<TestService>().name, 'scoped');
         // Parent still has original
-        expect(Levit.find<TestService>().name, 'parent');
+        expect(levit.find<TestService>().name, 'parent');
       });
 
       test('override works with findOrNull', () {
-        Levit.put(TestService('parent'));
-        final scope = Levit.createScope('test');
-        scope.put(TestService('scoped'));
+        levit.put(() => TestService('parent'));
+        final scope = levit.createScope('test');
+        scope.put(() => TestService('scoped'));
 
         expect(scope.findOrNull<TestService>()?.name, 'scoped');
       });
@@ -139,9 +144,9 @@ void main() {
 
     group('Scope Reset', () {
       test('reset clears scope only, not parent', () {
-        Levit.put(ParentService());
-        final scope = Levit.createScope('test');
-        scope.put(ChildService());
+        levit.put(() => ParentService());
+        final scope = levit.createScope('test');
+        scope.put(() => ChildService());
 
         expect(scope.registeredCount, 1);
 
@@ -149,12 +154,12 @@ void main() {
 
         expect(scope.registeredCount, 0);
         // Parent still has its service
-        expect(Levit.find<ParentService>(), isA<ParentService>());
+        expect(levit.find<ParentService>(), isA<ParentService>());
       });
 
       test('reset calls onClose on scope services', () {
-        final scope = Levit.createScope('test');
-        scope.put(TestService());
+        final scope = levit.createScope('test');
+        scope.put(() => TestService());
 
         expect(TestService.closeCount, 0);
         scope.reset();
@@ -162,21 +167,21 @@ void main() {
       });
 
       test('reset does not affect parent services', () {
-        Levit.put(TestService('parent'));
-        final scope = Levit.createScope('test');
+        levit.put(() => TestService('parent'));
+        final scope = levit.createScope('test');
 
         scope.reset();
 
-        expect(Levit.find<TestService>().name, 'parent');
+        expect(levit.find<TestService>().name, 'parent');
         expect(TestService.closeCount, 0);
       });
     });
 
     group('Nested Scopes', () {
       test('nested scope falls back to parent scope', () {
-        Levit.put(TestService('levit'));
-        final parent = Levit.createScope('parent');
-        parent.put(ParentService());
+        levit.put(() => TestService('levit'));
+        final parent = levit.createScope('parent');
+        parent.put(() => ParentService());
         final child = parent.createScope('child');
 
         // Child can find from parent scope
@@ -186,20 +191,20 @@ void main() {
       });
 
       test('nested scope can override parent scope', () {
-        final parent = Levit.createScope('parent');
-        parent.put(TestService('parent-scope'));
+        final parent = levit.createScope('parent');
+        parent.put(() => TestService('parent-scope'));
         final child = parent.createScope('child');
-        child.put(TestService('child-scope'));
+        child.put(() => TestService('child-scope'));
 
         expect(parent.find<TestService>().name, 'parent-scope');
         expect(child.find<TestService>().name, 'child-scope');
       });
 
       test('child reset does not affect parent scope', () {
-        final parent = Levit.createScope('parent');
-        parent.put(ParentService());
+        final parent = levit.createScope('parent');
+        parent.put(() => ParentService());
         final child = parent.createScope('child');
-        child.put(ChildService());
+        child.put(() => ChildService());
 
         child.reset();
 
@@ -211,8 +216,8 @@ void main() {
 
     group('Deletion', () {
       test('delete removes from scope', () {
-        final scope = Levit.createScope('test');
-        scope.put(TestService());
+        final scope = levit.createScope('test');
+        scope.put(() => TestService());
 
         scope.delete<TestService>();
 
@@ -220,8 +225,8 @@ void main() {
       });
 
       test('delete calls onClose', () {
-        final scope = Levit.createScope('test');
-        scope.put(TestService());
+        final scope = levit.createScope('test');
+        scope.put(() => TestService());
 
         scope.delete<TestService>();
 
@@ -231,23 +236,23 @@ void main() {
 
     group('isRegistered', () {
       test('isRegisteredLocally checks only local', () {
-        Levit.put(ParentService());
-        final scope = Levit.createScope('test');
+        levit.put(() => ParentService());
+        final scope = levit.createScope('test');
 
         expect(scope.isRegisteredLocally<ParentService>(), false);
       });
 
       test('isRegistered checks local and parents', () {
-        Levit.put(ParentService());
-        final scope = Levit.createScope('test');
+        levit.put(() => ParentService());
+        final scope = levit.createScope('test');
 
         expect(scope.isRegistered<ParentService>(), true);
       });
     });
 
     test('toString shows scope name and count', () {
-      final scope = Levit.createScope('checkout');
-      scope.put(TestService());
+      final scope = levit.createScope('checkout');
+      scope.put(() => TestService());
 
       expect(scope.toString(), contains('checkout'));
       expect(scope.toString(), contains('1'));

@@ -2,8 +2,6 @@ import 'dart:math';
 
 import 'package:levit_dart/levit_dart.dart';
 
-export 'package:levit_dart/levit_dart.dart';
-
 /// A simple 2D vector for isomorphic use.
 ///
 /// Used instead of Flutter's `Offset` to ensure server-side compatibility.
@@ -47,13 +45,13 @@ class NodeModel {
   final String type;
 
   /// Reactive position.
-  final Lx<Vec2> position;
+  final LxVal<Vec2> position;
 
   /// Reactive size.
-  final Lx<Vec2> size;
+  final LxVal<Vec2> size;
 
   /// Reactive color value.
-  final Lx<int> color;
+  final LxInt color;
 
   /// Creates a node model.
   NodeModel({
@@ -62,9 +60,9 @@ class NodeModel {
     required Vec2 pos,
     required Vec2 sz,
     required int col,
-  })  : position = pos.lx..flags['name'] = 'node:$id:pos',
-        size = sz.lx..flags['name'] = 'node:$id:size',
-        color = col.lx..flags['name'] = 'node:$id:color';
+  })  : position = (pos.lx..name = 'node:$id:pos'),
+        size = (sz.lx..name = 'node:$id:size'),
+        color = (col.lx..name = 'node:$id:color');
 
   /// Serializes to JSON.
   Map<String, dynamic> toJson() => {
@@ -97,7 +95,7 @@ class RemoteUser {
   final int color;
 
   /// Reactive cursor position.
-  final Lx<Vec2> cursor;
+  final LxVal<Vec2> cursor;
 
   /// Creates a remote user.
   RemoteUser({
@@ -159,9 +157,7 @@ class NexusEngine extends LevitController {
   /// Using [LxList] allows for fine-grained reactivity. The UI only updates
   /// when nodes are added or removed, not when individual node properties change
   /// (since those are tracked separately).
-  late final nodes = autoDispose(
-    <NodeModel>[].lx..flags['name'] = 'engine:nodes',
-  );
+  final nodes = <NodeModel>[].lx..name = 'engine:nodes';
 
   /// Add a node to the engine.
   void addNode(NodeModel node) {
@@ -241,5 +237,11 @@ class NexusEngine extends LevitController {
     }
 
     return Rect(minX, minY, maxX - minX, maxY - minY);
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    autoDispose(nodes);
   }
 }

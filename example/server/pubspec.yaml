@@ -9,10 +9,8 @@ environment:
 # Add regular dependencies here.
 dependencies:
   path: ^1.9.0
-  levit_reactive:
-    path: ../../packages/levit_reactive
-  levit_di:
-    path: ../../packages/levit_di
+  levit_dart:
+    path: ../../packages/levit_dart
   shared:
     path: ../shared
   shelf: ^1.4.2

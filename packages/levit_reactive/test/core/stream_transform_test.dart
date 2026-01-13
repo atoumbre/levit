@@ -11,13 +11,13 @@ void main() {
       final doubled = stream.map((x) => x * 2);
       doubled.addListener(() {}); // Activate stream
 
-      expect(doubled.status, isA<AsyncWaiting>());
+      expect(doubled.status, isA<LxWaiting>());
 
       controller.add(10);
       await Future.delayed(Duration.zero);
 
       expect(doubled.value.valueOrNull, 20);
-      expect(doubled.status, isA<AsyncSuccess<int>>());
+      expect(doubled.status, isA<LxSuccess<int>>());
 
       controller.close();
     });
@@ -31,7 +31,7 @@ void main() {
 
       controller.add(1);
       await Future.delayed(Duration.zero);
-      expect(even.status, isA<AsyncWaiting>()); // Should not update
+      expect(even.status, isA<LxWaiting>()); // Should not update
 
       controller.add(2);
       await Future.delayed(Duration.zero);
@@ -52,7 +52,7 @@ void main() {
 
       controller.add(5);
       await Future.delayed(Duration.zero);
-      expect(stringified.status, isA<AsyncWaiting>());
+      expect(stringified.status, isA<LxWaiting>());
 
       await Future.delayed(const Duration(milliseconds: 20));
       expect(stringified.value.valueOrNull, 'Value: 5');
@@ -130,11 +130,11 @@ void main() {
       final stream = future.asLxStream;
       stream.addListener(() {}); // Activate
 
-      expect(stream.status, isA<AsyncWaiting>());
+      expect(stream.status, isA<LxWaiting>());
 
       await Future.delayed(const Duration(milliseconds: 20));
       expect(stream.value.valueOrNull, 42);
-      expect(stream.status, isA<AsyncSuccess<int>>());
+      expect(stream.status, isA<LxSuccess<int>>());
     });
   });
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:levit_flutter/levit_flutter.dart';
 
 import 'package:nexus_studio_app/controllers.dart';
 import 'package:shared/shared.dart';
@@ -104,8 +105,8 @@ void main() {
   setUp(() {
     Levit.reset(force: true);
     // Dependencies needed for controllers
-    Levit.put(NexusEngine());
-    Levit.put(
+    Levit.put(() => NexusEngine());
+    Levit.put(() =>
         PresenceController()); // ProjectController finds PresenceController
   });
 
@@ -137,16 +138,16 @@ void main() {
     FakeWebSocketChannel? mockChannel;
 
     setUp(() {
-      Levit.put(AuthController());
+      Levit.put(() => AuthController());
       Levit.find<AuthController>().login('admin@nexus.io'); // Grant permissions
       mockChannel = FakeWebSocketChannel();
-      pc = Levit.put(ProjectController(channel: mockChannel));
+      pc = Levit.put(() => ProjectController(channel: mockChannel));
     });
 
     test('addNode adds node to engine and updates counts', () async {
-      expect(pc.nodeCount.value, 0);
+      expect(pc.nodeCount.lastValue, 0);
       pc.addNode('rect');
-      expect(pc.nodeCount.value, 1);
+      expect(pc.nodeCount.lastValue, 1);
       expect(pc.engine.nodes.length, 1);
       expect(pc.engine.nodes.first.type, 'rect');
 
@@ -181,7 +182,7 @@ void main() {
     test('sendPresenceUpdate handles missing PresenceController', () {
       // Don't register PresenceController
       Levit.reset(force: true);
-      final pc = Levit.put(ProjectController(channel: mockChannel));
+      final pc = Levit.put(() => ProjectController(channel: mockChannel));
 
       // Should not throw
       pc.sendPresenceUpdate(const Vec2(0, 0));
@@ -233,10 +234,10 @@ void main() {
 
     test('connect handles connection error', () {
       bool connectorCalled = false;
-      Levit.put(ProjectController(connector: (uri) {
-        connectorCalled = true;
-        throw Exception('Connection failed');
-      }));
+      Levit.put(() => ProjectController(connector: (uri) {
+            connectorCalled = true;
+            throw Exception('Connection failed');
+          }));
       // _connect called in onInit
       expect(connectorCalled, true);
     });
@@ -314,7 +315,7 @@ void main() {
     test('export sets status', () async {
       pc.addNode('rect');
       pc.export();
-      expect(pc.exportStatus.value!.status, isA<AsyncWaiting>());
+      expect(pc.exportStatus.value!.status, isA<LxWaiting>());
       // Wait 2s to complete in real app, might be slow for test?
       // We can just verify it started.
     });
@@ -401,9 +402,9 @@ void main() {
 
     setUp(() {
       mockChannel = FakeWebSocketChannel();
-      presence = Levit.put(PresenceController());
+      presence = Levit.put(() => PresenceController());
       // Mock project controller for `updateLocalCursor`
-      Levit.put(ProjectController(channel: mockChannel));
+      Levit.put(() => ProjectController(channel: mockChannel));
     });
 
     test('handlePresenceMessage updates remoteUsers', () {

@@ -16,7 +16,7 @@ class ScopeService implements Service {
   String get name => 'Scope';
 }
 
-class Counter implements LevitDisposable {
+class Counter implements LevitScopeDisposable {
   final String id;
   bool closed = false;
 
@@ -29,44 +29,49 @@ class Counter implements LevitDisposable {
   void onClose() {
     closed = true;
   }
+
+  @override
+  void didAttachToScope(LevitScope scope, {String? key}) {}
 }
 
 void main() {
+  late LevitScope levit;
+
   setUp(() {
-    Levit.reset(force: true);
+    levit = LevitScope.root();
   });
 
   group('Unified Scope Hierarchy', () {
     test('Root Scope Basic Operations', () {
-      Levit.put<Service>(RootService());
-      expect(Levit.find<Service>().name, 'Root');
-      expect(Levit.isRegistered<Service>(), isTrue);
+      levit.put<Service>(() => RootService());
+      expect(levit.find<Service>().name, 'Root');
+      expect(levit.isRegistered<Service>(), isTrue);
 
-      Levit.delete<Service>();
-      expect(Levit.isRegistered<Service>(), isFalse);
+      levit.delete<Service>();
+      expect(levit.isRegistered<Service>(), isFalse);
     });
 
     test('Scope Hierarchy Resolution', () {
-      Levit.put<Service>(RootService());
+      levit.put<Service>(() => RootService());
 
-      final scope = Levit.createScope('child');
+      final scope = levit.createScope('child');
 
       // Should find in parent (root)
       expect(scope.find<Service>().name, 'Root');
 
       // Override in scope
-      scope.put<Service>(ScopeService());
+      scope.put<Service>(() => ScopeService());
 
       // Should find local
       expect(scope.find<Service>().name, 'Scope');
 
       // Root should still have original
-      expect(Levit.find<Service>().name, 'Root');
+      expect(levit.find<Service>().name, 'Root');
     });
 
     test('Nested Scopes', () {
-      final scope1 = Levit.createScope('scope1');
-      scope1.put(Counter('c1'));
+      final scope1 = levit.createScope('scope1');
+      scope1.put(() => Counter('c1'));
 
       final scope2 = scope1.createScope('scope2');
 
@@ -75,10 +80,10 @@ void main() {
     });
 
     test('Async Methods in Scopes', () async {
-      final scope = Levit.createScope('async_scope');
+      final scope = levit.createScope('async_scope');
 
-      // putAsync in scope
-      await scope.putAsync<Service>(() async => ScopeService());
+      // putAsync in scope -> put (simulated)
+      scope.put<Service>(() => ScopeService());
       expect(await scope.findAsync<Service>(), isA<ScopeService>());
 
       // lazyPutAsync in scope
@@ -87,9 +92,9 @@ void main() {
     });
 
     test('Scope Cleanup', () {
-      final scope = Levit.createScope('cleanup');
+      final scope = levit.createScope('cleanup');
       final c1 = Counter('c1');
-      scope.put(c1);
+      scope.put(() => c1);
 
       scope.reset();
       expect(c1.closed, isTrue);
@@ -98,15 +103,15 @@ void main() {
 
     test('SimpleDI Delegation Check', () {
       // White-box test to ensure SimpleDI delegates correctly
-      Levit.put(Counter('root'));
-      expect(Levit.registeredCount, 1);
-      expect(Levit.registeredKeys, contains(endsWith('Counter')));
+      levit.put(() => Counter('root'));
+      expect(levit.registeredCount, 1);
+      expect(levit.registeredKeys, contains(contains('Counter')));
     });
 
     test('Async Resolution Cache', () async {
       // Setup: Parent with async service, Child scope
-      final parent = Levit.createScope('parent');
-      await parent.putAsync<Service>(() async => ScopeService());
+      final parent = levit.createScope('parent');
+      parent.put<Service>(() => ScopeService());
 
       final child = parent.createScope('child');
 
@@ -127,8 +132,8 @@ void main() {
     test('Deep Scope Cache Path Compression', () async {
       // Grandparent -> Parent -> Child
       // Service in Grandparent
-      final gp = Levit.createScope('gp');
-      await gp.putAsync<Service>(() async => RootService());
+      final gp = levit.createScope('gp');
+      gp.put<Service>(() => RootService());
 
       final parent = gp.createScope('parent');
       final child = parent.createScope('child');
@@ -141,6 +146,20 @@ void main() {
       // This hits lines 407-409 in findOrNullAsync
       final instance = await child.findOrNullAsync<Service>();
       expect(instance!.name, 'Root');
+    });
+
+    test('lazyPut with isFactory', () {
+      int factoryCount = 0;
+      levit.lazyPut<Service>(() {
+        factoryCount++;
+        return ScopeService();
+      }, isFactory: true);
+
+      final s1 = levit.find<Service>();
+      final s2 = levit.find<Service>();
+
+      expect(s1, isNot(same(s2)));
+      expect(factoryCount, 2);
     });
   });
 }

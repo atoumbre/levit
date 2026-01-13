@@ -5,9 +5,9 @@ import 'watch.dart';
 
 /// A unified widget for handling the various states of an asynchronous operation.
 ///
-/// [LStatusBuilder] simplifies the UI logic for [AsyncStatus] (Idle, Waiting, Success, Error).
+/// [LStatusBuilder] simplifies the UI logic for [LxStatus] (Idle, Waiting, Success, Error).
 /// It works seamlessly with [LxFuture], [LxStream], [LxAsyncComputed], or any
-/// reactive variable holding an [AsyncStatus].
+/// reactive variable holding an [LxStatus].
 ///
 /// Under the hood, it uses [LWatch] to automatically listen for status changes.
 ///
@@ -33,7 +33,7 @@ import 'watch.dart';
 /// )
 /// ```
 class LStatusBuilder<T> extends StatefulWidget {
-  final LxReactive<AsyncStatus<T>>? _source;
+  final LxReactive<LxStatus<T>>? _source;
   final Future<T> Function()? _futureFactory;
   final Stream<T>? _stream;
   final Future<T> Function()? _asyncCompute;
@@ -49,7 +49,7 @@ class LStatusBuilder<T> extends StatefulWidget {
   /// Creates a status builder from an existing reactive source.
   const LStatusBuilder({
     super.key,
-    required LxReactive<AsyncStatus<T>> source,
+    required LxReactive<LxStatus<T>> source,
     required this.onSuccess,
     this.onWaiting,
     this.onError,
@@ -109,9 +109,9 @@ class LStatusBuilder<T> extends StatefulWidget {
 }
 
 class _LStatusBuilderState<T> extends State<LStatusBuilder<T>> {
-  LxReactive<AsyncStatus<T>>? _internalSource;
+  LxReactive<LxStatus<T>>? _internalSource;
 
-  LxReactive<AsyncStatus<T>> get _effectiveSource {
+  LxReactive<LxStatus<T>> get _effectiveSource {
     if (widget._source != null) return widget._source!;
     return _internalSource!;
   }
@@ -125,11 +125,23 @@ class _LStatusBuilderState<T> extends State<LStatusBuilder<T>> {
   @override
   void didUpdateWidget(LStatusBuilder<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Re-init if factories changed (simple equality check might not be enough for closures)
-    // If external source changed:
-    if (widget._source != oldWidget._source) {
-      // Internal source not needed if external provided
+
+    // If external source changed, internal source not needed
+    if (widget._source != oldWidget._source && widget._source != null) {
       _disposeInternal();
+      return;
+    }
+
+    // If we're using internal sources and they changed, reinitialize
+    if (widget._source == null) {
+      final factoryChanged = widget._futureFactory != oldWidget._futureFactory;
+      final streamChanged = widget._stream != oldWidget._stream;
+      final computeChanged = widget._asyncCompute != oldWidget._asyncCompute;
+
+      if (factoryChanged || streamChanged || computeChanged) {
+        _disposeInternal();
+        _initSource();
+      }
     }
   }
 
@@ -144,7 +156,7 @@ class _LStatusBuilderState<T> extends State<LStatusBuilder<T>> {
           LxStream<T>(widget._stream!, initial: widget._initialValue);
     } else if (widget._asyncCompute != null) {
       _internalSource =
-          LxComputed.async(widget._asyncCompute!) as LxReactive<AsyncStatus<T>>;
+          LxComputed.async(widget._asyncCompute!) as LxReactive<LxStatus<T>>;
     }
   }
 
@@ -164,15 +176,14 @@ class _LStatusBuilderState<T> extends State<LStatusBuilder<T>> {
     return LWatch(() {
       final status = _effectiveSource.value;
       return switch (status) {
-        AsyncIdle<T>() => widget.onIdle?.call() ??
+        LxIdle<T>() => widget.onIdle?.call() ??
             widget.onWaiting?.call() ??
             const SizedBox.shrink(),
-        AsyncWaiting<T>() =>
-          widget.onWaiting?.call() ?? const SizedBox.shrink(),
-        AsyncError<T>(:final error, :final stackTrace) =>
+        LxWaiting<T>() => widget.onWaiting?.call() ?? const SizedBox.shrink(),
+        LxError<T>(:final error, :final stackTrace) =>
           widget.onError?.call(error, stackTrace) ??
               Center(child: Text('Error: $error')),
-        AsyncSuccess<T>(:final value) => widget.onSuccess(value),
+        LxSuccess<T>(:final value) => widget.onSuccess(value),
       };
     });
   }

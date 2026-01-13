@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 import 'package:levit_di/levit_di.dart';
 
-class TestService implements LevitDisposable {
+class TestService implements LevitScopeDisposable {
   bool initCalled = false;
   bool closeCalled = false;
 
@@ -10,9 +10,12 @@ class TestService implements LevitDisposable {
 
   @override
   void onClose() => closeCalled = true;
+
+  @override
+  void didAttachToScope(LevitScope scope, {String? key}) {}
 }
 
-class AsyncService implements LevitDisposable {
+class AsyncService implements LevitScopeDisposable {
   final String value;
   bool initCalled = false;
 
@@ -23,82 +26,66 @@ class AsyncService implements LevitDisposable {
 
   @override
   void onClose() {}
+
+  @override
+  void didAttachToScope(LevitScope scope, {String? key}) {}
 }
 
 void main() {
+  late LevitScope levit;
+
   setUp(() {
-    Levit.reset(force: true);
+    levit = LevitScope.root();
   });
 
   group('SimpleDI Advanced Features', () {
-    test('put replaces existing instance', () {
-      final s1 = TestService();
-      Levit.put(s1);
-
-      final s2 = TestService();
-      Levit.put(s2); // Should replace s1 and call onClose on s1
-
-      expect(Levit.find<TestService>(), equals(s2));
-      expect(s1.closeCalled, isTrue);
-    });
-
-    test('put permanent flag prevents delete', () {
-      final s1 = TestService();
-      Levit.put(s1, permanent: true);
-
-      Levit.delete<TestService>();
-      expect(Levit.isRegistered<TestService>(), isTrue);
-
-      Levit.delete<TestService>(force: true);
-      expect(Levit.isRegistered<TestService>(), isFalse);
-    });
-
     test('lazyPut ignores if already instantiated', () {
-      Levit.put(TestService());
+      levit.put(() => TestService());
 
       bool builderCalled = false;
-      Levit.lazyPut(() {
+      levit.lazyPut(() {
         builderCalled = true;
         return TestService();
       });
 
       expect(builderCalled, isFalse);
-      Levit.find<TestService>(); // Should still be the original put
+      levit.find<TestService>(); // Should still be the original put
       expect(builderCalled, isFalse);
     });
 
-    test('putAsync registers instance', () async {
-      await Levit.putAsync(() async => AsyncService('async'));
-      expect(Levit.find<AsyncService>().value, equals('async'));
+    test('put (simulated async) registers instance', () async {
+      final s = await Future.value(AsyncService('async'));
+      levit.put(() => s);
+      expect(levit.find<AsyncService>().value, equals('async'));
     });
 
     test('lazyPutAsync instantiated on findAsync', () async {
       bool built = false;
-      Levit.lazyPutAsync(() async {
+      levit.lazyPutAsync(() async {
         built = true;
         return AsyncService('lazy');
       });
 
       expect(built, isFalse);
-      final service = await Levit.findAsync<AsyncService>();
+      final service = await levit.findAsync<AsyncService>();
       expect(built, isTrue);
       expect(service.value, equals('lazy'));
       expect(service.initCalled, isTrue);
     });
 
     test('lazyPutAsync check ignores if registered', () {
-      Levit.put(AsyncService('existing'));
+      levit.put(() => AsyncService('existing'));
 
-      Levit.lazyPutAsync(() async => AsyncService('new'));
+      levit.lazyPutAsync(() async => AsyncService('new'));
       // Should verify it didn't overwrite - implementation checks
       // isInstantiated, ensuring safe ignorance.
     });
 
     test('putFactory (Factory) returns new instance each time', () {
-      Levit.putFactory(() => TestService());
+      levit.lazyPut(() => TestService(), isFactory: true);
 
-      final s1 = Levit.find<TestService>();
-      final s2 = Levit.find<TestService>();
+      final s1 = levit.find<TestService>();
+      final s2 = levit.find<TestService>();
 
       expect(s1, isNot(equals(s2)));
       expect(s1.initCalled, isTrue);
@@ -107,117 +94,136 @@ void main() {
 
     test('putFactoryAsync (Async Factory) returns new instance each time',
         () async {
-      Levit.putFactoryAsync(() async => AsyncService('factory'));
+      levit.lazyPutAsync(() async => AsyncService('factory'), isFactory: true);
 
-      final s1 = await Levit.findAsync<AsyncService>();
-      final s2 = await Levit.findAsync<AsyncService>();
+      final s1 = await levit.findAsync<AsyncService>();
+      final s2 = await levit.findAsync<AsyncService>();
 
       expect(s1, isNot(equals(s2)));
       expect(s1.initCalled, isTrue);
     });
 
+    test('putAsync registers instance asynchronously', () async {
+      final service = AsyncService('async_put');
+      levit.put(() =>
+          service); // put is synchronous, but takes an already awaited instance
+      final instance = await levit.findAsync<AsyncService>();
+      expect(instance, equals(service));
+    });
+
+    test('Overwriting an existing lazy binding hits internal check', () {
+      levit.lazyPut(() => TestService());
+      // This second call should hit the check at line 260 in _registerBinding
+      // "if (info.isLazy || info.isFactory) ..."
+      levit.lazyPut(() => TestService(), tag: 'overwrite_check');
+      levit.lazyPut(() => TestService(), tag: 'overwrite_check');
+
+      expect(levit.isRegistered<TestService>(tag: 'overwrite_check'), isTrue);
+    });
+
     test('findAsync handles all modes', () async {
       // 1. Instantiated Sync
-      Levit.put(TestService());
-      expect(await Levit.findAsync<TestService>(), isA<TestService>());
+      levit.put(() => TestService());
+      expect(await levit.findAsync<TestService>(), isA<TestService>());
 
       // 2. Lazy Sync
-      Levit.lazyPut(() => AsyncService('lazySync'), tag: 'lazySync');
-      expect((await Levit.findAsync<AsyncService>(tag: 'lazySync')).value,
+      levit.lazyPut(() => AsyncService('lazySync'), tag: 'lazySync');
+      expect((await levit.findAsync<AsyncService>(tag: 'lazySync')).value,
           'lazySync');
 
       // 3. Factory Sync
-      Levit.putFactory(() => AsyncService('factorySync'), tag: 'factorySync');
-      final fs1 = await Levit.findAsync<AsyncService>(tag: 'factorySync');
-      final fs2 = await Levit.findAsync<AsyncService>(tag: 'factorySync');
+      levit.lazyPut(() => AsyncService('factorySync'),
+          tag: 'factorySync', isFactory: true);
+      final fs1 = await levit.findAsync<AsyncService>(tag: 'factorySync');
+      final fs2 = await levit.findAsync<AsyncService>(tag: 'factorySync');
       expect(fs1, isNot(equals(fs2)));
 
       // 4. Lazy Async
-      Levit.lazyPutAsync(() async => AsyncService('lazyAsync'),
+      levit.lazyPutAsync(() async => AsyncService('lazyAsync'),
           tag: 'lazyAsync');
-      expect((await Levit.findAsync<AsyncService>(tag: 'lazyAsync')).value,
+      expect((await levit.findAsync<AsyncService>(tag: 'lazyAsync')).value,
           'lazyAsync');
       // Subsequent call returns same instance (singleton)
-      expect((await Levit.findAsync<AsyncService>(tag: 'lazyAsync')).value,
+      expect((await levit.findAsync<AsyncService>(tag: 'lazyAsync')).value,
           'lazyAsync');
 
       // 5. Factory Async
-      Levit.putFactoryAsync(() async => AsyncService('factoryAsync'),
-          tag: 'factoryAsync');
-      final fa1 = await Levit.findAsync<AsyncService>(tag: 'factoryAsync');
-      final fa2 = await Levit.findAsync<AsyncService>(tag: 'factoryAsync');
+      levit.lazyPutAsync(() async => AsyncService('factoryAsync'),
+          tag: 'factoryAsync', isFactory: true);
+      final fa1 = await levit.findAsync<AsyncService>(tag: 'factoryAsync');
+      final fa2 = await levit.findAsync<AsyncService>(tag: 'factoryAsync');
       expect(fa1, isNot(equals(fa2)));
     });
 
     test('findOrNull returns null when missing', () {
-      expect(Levit.findOrNull<TestService>(), isNull);
+      expect(levit.findOrNull<TestService>(), isNull);
     });
 
     test('findOrNull instantiates lazy', () {
-      Levit.lazyPut(() => TestService());
-      final s = Levit.findOrNull<TestService>();
+      levit.lazyPut(() => TestService());
+      final s = levit.findOrNull<TestService>();
       expect(s, isNotNull);
       expect(s!.initCalled, isTrue);
     });
 
     test('isInstantiated checks correctly', () {
-      expect(Levit.isInstantiated<TestService>(), isFalse);
+      expect(levit.isInstantiated<TestService>(), isFalse);
 
-      Levit.lazyPut(() => TestService());
-      expect(Levit.isRegistered<TestService>(), isTrue);
-      expect(Levit.isInstantiated<TestService>(), isFalse);
+      levit.lazyPut(() => TestService());
+      expect(levit.isRegistered<TestService>(), isTrue);
+      expect(levit.isInstantiated<TestService>(), isFalse);
 
-      Levit.find<TestService>();
-      expect(Levit.isInstantiated<TestService>(), isTrue);
+      levit.find<TestService>();
+      expect(levit.isInstantiated<TestService>(), isTrue);
     });
 
     test('find throws when not found', () {
-      expect(() => Levit.find<TestService>(), throwsException);
+      expect(() => levit.find<TestService>(), throwsException);
     });
 
     test('findAsync throws when not found', () async {
-      expect(Levit.findAsync<TestService>(), throwsException);
+      expect(levit.findAsync<TestService>(), throwsException);
     });
 
     test('delete returns false if not found', () {
-      expect(Levit.delete<TestService>(), isFalse);
+      expect(levit.delete<TestService>(), isFalse);
     });
 
     test('registeredKeys returns list', () {
-      Levit.put(TestService());
-      expect(Levit.registeredKeys, contains('TestService'));
+      levit.put(() => TestService());
+      expect(levit.registeredKeys, contains(contains('TestService')));
     });
 
     test('reset respects permanent flag', () {
-      Levit.put(TestService(), permanent: true);
-      Levit.reset();
-      expect(Levit.isRegistered<TestService>(), isTrue);
+      levit.put(() => TestService(), permanent: true);
+      levit.reset();
+      expect(levit.isRegistered<TestService>(), isTrue);
 
-      Levit.reset(force: true);
-      expect(Levit.isRegistered<TestService>(), isFalse);
+      levit.reset(force: true);
+      expect(levit.isRegistered<TestService>(), isFalse);
     });
   });
 
   group('LevitScope Advanced Features', () {
     test('finds from parent scope', () {
-      final parent = Levit.createScope('parent');
-      parent.put(TestService());
+      final parent = levit.createScope('parent');
+      parent.put(() => TestService());
 
       final child = parent.createScope('child');
       expect(child.find<TestService>(), isNotNull);
     });
 
     test('finds from parent DI', () {
-      Levit.put(TestService());
-      final scope = Levit.createScope('scope');
+      levit.put(() => TestService());
+      final scope = levit.createScope('scope');
       expect(scope.find<TestService>(), isNotNull);
     });
 
     test('findOrNull falls back correctly', () {
-      final scope = Levit.createScope('scope');
+      final scope = levit.createScope('scope');
 
       // Local
-      scope.put(TestService());
+      scope.put(() => TestService());
       expect(scope.findOrNull<TestService>(), isNotNull);
 
       // Parent Scope
@@ -225,45 +231,45 @@ void main() {
       expect(child.findOrNull<TestService>(), isNotNull);
 
       // Parent DI
-      Levit.put(AsyncService('global'));
+      levit.put(() => AsyncService('global'));
       expect(child.findOrNull<AsyncService>(), isNotNull);
     });
 
     test('find throws if not found anywhere', () {
-      final scope = Levit.createScope('scope');
+      final scope = levit.createScope('scope');
       expect(() => scope.find<TestService>(), throwsException);
     });
 
     test('isRegistered checks parents', () {
-      Levit.put(TestService());
-      final scope = Levit.createScope('scope');
+      levit.put(() => TestService());
+      final scope = levit.createScope('scope');
       expect(scope.isRegistered<TestService>(), isTrue);
       expect(scope.isRegisteredLocally<TestService>(), isFalse);
     });
 
     test('delete local only', () {
-      Levit.put(TestService());
-      final scope = Levit.createScope('scope');
+      levit.put(() => TestService());
+      final scope = levit.createScope('scope');
 
       // Trying to delete parent service from scope should return false (or not affect parent)
       // Implementation check: _delete checks _registry.containsKey.
       expect(scope.delete<TestService>(), isFalse);
-      expect(Levit.isRegistered<TestService>(), isTrue);
+      expect(levit.isRegistered<TestService>(), isTrue);
     });
 
     test('put in scope overrides parent', () {
-      Levit.put(AsyncService('global'));
+      levit.put(() => AsyncService('global'));
 
-      final scope = Levit.createScope('scope');
-      scope.put(AsyncService('local'));
+      final scope = levit.createScope('scope');
+      scope.put(() => AsyncService('local'));
 
       expect(scope.find<AsyncService>().value, 'local');
-      expect(Levit.find<AsyncService>().value, 'global');
+      expect(levit.find<AsyncService>().value, 'global');
     });
 
     test('putFactory in scope works', () {
-      final scope = Levit.createScope('scope');
-      scope.putFactory(() => TestService());
+      final scope = levit.createScope('scope');
+      scope.lazyPut(() => TestService(), isFactory: true);
 
       final s1 = scope.find<TestService>();
       final s2 = scope.find<TestService>();
@@ -271,22 +277,22 @@ void main() {
     });
 
     test('reset clears local instances', () {
-      final scope = Levit.createScope('scope');
-      scope.put(TestService());
+      final scope = levit.createScope('scope');
+      scope.put(() => TestService());
 
       scope.reset();
       expect(scope.isRegisteredLocally<TestService>(), isFalse);
     });
 
     test('toString includes info', () {
-      final scope = Levit.createScope('debugScope');
+      final scope = levit.createScope('debugScope');
       expect(scope.toString(), contains('debugScope'));
     });
 
     test('resolution cache hits', () {
       // 1. Local hit
-      final scope = Levit.createScope('cacheScope');
-      scope.put(TestService());
+      final scope = levit.createScope('cacheScope');
+      scope.put(() => TestService());
 
       // First access populates cache (though local is always checked first)
       scope.find<TestService>();
@@ -297,8 +303,8 @@ void main() {
 
     test('resolution cache hits from parent', () {
       // Parent Scope
-      final parent = Levit.createScope('parent');
-      parent.put(TestService());
+      final parent = levit.createScope('parent');
+      parent.put(() => TestService());
       final child = parent.createScope('child');
 
       // 1. First find - searches parents, populates cache
@@ -311,8 +317,8 @@ void main() {
 
     test('resolution cache hits from global', () {
       // Global
-      Levit.put(AsyncService('global'));
-      final scope = Levit.createScope('scope');
+      levit.put(() => AsyncService('global'));
+      final scope = levit.createScope('scope');
 
       // 1. First find
       scope.find<AsyncService>();
@@ -328,22 +334,22 @@ void main() {
       // Actually isInstantiated checks instance != null.
       // So checking null instance registration.
 
-      // Levit.put<String?>(null); // This sets instance to null.
+      // levit.put<String?>(() => null); // This sets instance to null.
       // isInstantiated => false.
       // findAsync falls through all lazy/factory checks.
       // Hit return info.instance as S.
 
-      Levit.put<String?>(null);
-      final val = await Levit.findAsync<String?>();
+      levit.put<String?>(() => null);
+      final val = await levit.findAsync<String?>();
       expect(val, isNull);
     });
 
     test('findOrNull finds cached local', () {
       // This is tricky because findOrNull checks registry first.
       // But let's ensure coverage of _resolutionCache logic
-      final scope = Levit.createScope('s1');
+      final scope = levit.createScope('s1');
       final child = scope.createScope('child');
-      scope.put(TestService());
+      scope.put(() => TestService());
 
       child.find<TestService>(); // Cache populated with scope
       expect(child.find<TestService>(), isNotNull);

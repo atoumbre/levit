@@ -7,7 +7,7 @@ void main() {
       final flag = false.lx;
       var fired = false;
 
-      watchTrue(flag, () => fired = true);
+      LxWatch.isTrue(flag, () => fired = true);
 
       flag.setTrue();
       await Future.microtask(() {});
@@ -18,7 +18,7 @@ void main() {
       final flag = true.lx;
       var fired = false;
 
-      watchTrue(flag, () => fired = true);
+      LxWatch.isTrue(flag, () => fired = true);
 
       flag.setFalse();
       await Future.microtask(() {});
@@ -29,7 +29,7 @@ void main() {
       final flag = true.lx;
       var fired = false;
 
-      watchFalse(flag, () => fired = true);
+      LxWatch.isFalse(flag, () => fired = true);
 
       flag.setFalse();
       await Future.microtask(() {});
@@ -40,7 +40,7 @@ void main() {
       final flag = false.lx;
       var fired = false;
 
-      watchFalse(flag, () => fired = true);
+      LxWatch.isFalse(flag, () => fired = true);
 
       flag.setTrue();
       await Future.microtask(() {});
@@ -51,7 +51,7 @@ void main() {
       final status = 'idle'.lx;
       var fired = false;
 
-      watchValue(status, 'complete', () => fired = true);
+      LxWatch.isValue(status, 'complete', () => fired = true);
 
       status.value = 'loading';
       await Future.microtask(() {});
@@ -66,13 +66,13 @@ void main() {
       final flag = false.lx;
       var fireCount = 0;
 
-      final dispose = watchTrue(flag, () => fireCount++);
+      final dispose = LxWatch.isTrue(flag, () => fireCount++);
 
       flag.setTrue();
       await Future.microtask(() {});
       expect(fireCount, 1);
 
-      dispose();
+      dispose.close();
 
       flag.setFalse();
       flag.setTrue();

@@ -26,7 +26,7 @@ void main() {
 
     // Wait for initial computation
     await Future.delayed(Duration(milliseconds: 50));
-    expect(computed.value, isA<AsyncSuccess<int>>());
+    expect(computed.value, isA<LxSuccess<int>>());
     expect(computed.computedValue, 0);
 
     // 1. Updating pre-await dependency SHOULD trigger recompute

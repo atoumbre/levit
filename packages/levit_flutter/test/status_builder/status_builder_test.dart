@@ -188,7 +188,7 @@ void main() {
       stream.close();
     });
 
-    testWidgets('handles AsyncIdle status', (tester) async {
+    testWidgets('handles LxIdle status', (tester) async {
       final stream = LxStream<int>.idle();
 
       await tester.pumpWidget(Directionality(

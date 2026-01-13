@@ -58,7 +58,7 @@ void main() {
       final count = 0.lx;
       bool disposed = false;
 
-      final disposeFunc = watch(count, (_) {});
+      final disposeFunc = LxWatch(count, (_) {});
       controller.autoDispose(() {
         disposeFunc();
         disposed = true;

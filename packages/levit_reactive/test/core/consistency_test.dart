@@ -49,8 +49,8 @@ void main() {
 
       test('computedValue throws when waiting', () {
         final f = LxStream(Stream
-            .empty()); // starts in AsyncWaiting since no initial and lazy activation not hit yet
-        // Wait, LxStream starts in AsyncWaiting() if no initial value provided.
+            .empty()); // starts in LxWaiting since no initial and lazy activation not hit yet
+        // Wait, LxStream starts in LxWaiting() if no initial value provided.
         expect(() => f.computedValue, throwsStateError);
       });
 
@@ -73,7 +73,7 @@ void main() {
           initial: 10,
         );
 
-        expect(c.status, isA<AsyncSuccess<int>>());
+        expect(c.status, isA<LxSuccess<int>>());
         expect(c.computedValue, equals(10));
         expect(c.isSuccess, isTrue);
 

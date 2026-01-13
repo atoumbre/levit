@@ -12,8 +12,8 @@ void main() {
   // Showcase: Levit.lazyPut (Pillar 6)
   // Lazily initializes the controller only when first accessed
   Levit.lazyPut(() => AuthController());
-  Levit.put(PresenceController());
-  Levit.put(ProjectController());
+  Levit.put(() => PresenceController());
+  Levit.put(() => ProjectController());
 
   debugPrint('✅ DI Registration Complete: ${Levit.registeredKeys}');
 
@@ -103,7 +103,7 @@ class EditorPage extends StatelessWidget {
 
                 // Selection Bounds (Pillar 1: Computed)
                 LWatch(() {
-                  final bounds = pc.selectionBounds.value;
+                  final bounds = pc.selectionBounds.valueOrNull;
                   if (bounds == null) return const SizedBox();
                   return Positioned(
                     left: bounds.left - 4,
@@ -599,7 +599,7 @@ class _TopBar extends StatelessWidget {
                     onPressed: pc.export,
                     icon: LWatch(() {
                       final status = pc.exportStatus.value?.status;
-                      if (status is AsyncWaiting) {
+                      if (status is LxWaiting) {
                         return const SizedBox(
                           width: 16,
                           height: 16,
@@ -613,15 +613,15 @@ class _TopBar extends StatelessWidget {
                     }),
                     label: LWatch(() {
                       final status = pc.exportStatus.value?.status;
-                      if (status is AsyncWaiting) {
+                      if (status is LxWaiting) {
                         return const Text('EXPORTING...');
                       }
-                      if (status is AsyncSuccess<String>) {
+                      if (status is LxSuccess<String>) {
                         return Text(
                           '${status.value.split('successfully').first}DONE',
                         );
                       }
-                      if (status is AsyncError) return const Text('FAILED');
+                      if (status is LxError) return const Text('FAILED');
                       return const Text('EXPORT');
                     }),
                     style: ElevatedButton.styleFrom(

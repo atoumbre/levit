@@ -8,10 +8,10 @@ void main() {
       final doubled = (() => count.value * 2).lx;
 
       expect(doubled, isA<LxComputed<int>>());
-      expect(doubled.value, equals(2));
+      expect(doubled.computedValue, equals(2));
 
       count.value = 5;
-      expect(doubled.value, equals(10));
+      expect(doubled.computedValue, equals(10));
     });
 
     test('.lx creates LxAsyncComputed from async function', () async {
@@ -26,10 +26,10 @@ void main() {
       // Add listener to activate the lazy computed
       delayedDoubled.addListener(() {});
 
-      expect(delayedDoubled.status, isA<AsyncWaiting<int>>());
+      expect(delayedDoubled.status, isA<LxWaiting<int>>());
 
       await Future.delayed(Duration(milliseconds: 200));
-      expect(delayedDoubled.status, isA<AsyncSuccess<int>>());
+      expect(delayedDoubled.status, isA<LxSuccess<int>>());
       expect(delayedDoubled.status.valueOrNull, equals(2));
 
       count.value = 5;

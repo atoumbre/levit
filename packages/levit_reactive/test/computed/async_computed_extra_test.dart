@@ -13,7 +13,7 @@ void main() {
         // Initial state is waiting (async)
         expect(c.isWaiting, true);
         expect(c.isLoading, true);
-        expect(c.value, isA<AsyncWaiting>());
+        expect(c.value, isA<LxWaiting>());
 
         await Future.delayed(Duration(milliseconds: 50));
 
@@ -21,7 +21,7 @@ void main() {
         expect(c.hasValue, true);
         expect(c.valueOrNull, 42);
 
-        expect(c.toString(), contains('AsyncSuccess'));
+        expect(c.toString(), contains('LxSuccess'));
       });
 
       test('listener API coverage', () async {
@@ -51,7 +51,7 @@ void main() {
         c.stream.listen((_) {});
         await Future.delayed(Duration(milliseconds: 20));
 
-        expect(c.value, isA<AsyncError>());
+        expect(c.value, isA<LxError>());
         expect(c.errorOrNull, 'sync error');
       });
 
@@ -62,7 +62,7 @@ void main() {
         c.stream.listen((_) {});
         await Future.delayed(Duration(milliseconds: 50));
 
-        expect(c.value, isA<AsyncError>());
+        expect(c.value, isA<LxError>());
         expect(c.errorOrNull, 'fail');
         expect(c.stackTraceOrNull, isNotNull);
       });
@@ -75,7 +75,7 @@ void main() {
 
         c.close();
         await Future.delayed(Duration(milliseconds: 100));
-        expect(c.status, isA<AsyncWaiting>()); // Remains waiting
+        expect(c.status, isA<LxWaiting>()); // Remains waiting
       });
 
       test('close cancels subscriptions', () async {
@@ -110,18 +110,22 @@ void main() {
     group('LxComputed (Sync)', () {
       test('getters coverage', () {
         final c = LxComputed(() => 42);
-        // Sync computed returns value directly
-        expect(c.value, 42);
+        // Sync computed returns value directly via computedValue
+        expect(c.computedValue, 42);
 
-        // Sync computed throws on access if error (now on construction)
-        expect(() => LxComputed(() => throw 'err'), throwsA('err'));
+        // Sync computed captures error
+        final errC = LxComputed(() => throw 'err');
+        expect(errC.isError, isTrue);
+        expect(errC.errorOrNull, 'err');
       });
 
       test('LxMemoComputed getters coverage', () {
         final m = LxComputed(() => 10);
-        expect(m.value, 10);
+        expect(m.computedValue, 10);
 
-        expect(() => LxComputed(() => throw 'err'), throwsA('err'));
+        final errM = LxComputed(() => throw 'err');
+        expect(errM.isError, isTrue);
+        expect(errM.errorOrNull, 'err');
       });
     });
   });

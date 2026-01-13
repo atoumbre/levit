@@ -10,7 +10,7 @@ void main() {
         return 42;
       });
 
-      expect(c.status, isA<AsyncWaiting<int>>());
+      expect(c.status, isA<LxWaiting<int>>());
 
       // Activate
       c.stream.listen((_) {});

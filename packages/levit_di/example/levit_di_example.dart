@@ -1,7 +1,11 @@
 import 'package:levit_di/levit_di.dart';
 
+class Locator {
+  static LevitScope root = LevitScope.root();
+}
+
 // A simple service
-class DatabaseService extends LevitDisposable {
+class DatabaseService extends LevitScopeDisposable {
   bool connected = false;
 
   @override
@@ -25,7 +29,7 @@ class DatabaseService extends LevitDisposable {
 // A dependent service
 class UserRepository {
   // Dependencies are resolved seamlessly
-  final db = Levit.find<DatabaseService>();
+  final db = Locator.root.find<DatabaseService>();
 
   void findUser(int id) {
     db.query('SELECT * FROM users WHERE id = $id');
@@ -35,17 +39,17 @@ class UserRepository {
 void main() {
   // 1. Register dependencies
   print('--- Registering ---');
-  Levit.put(DatabaseService());
-  Levit.lazyPut(() => UserRepository());
+  Locator.root.put(() => DatabaseService());
+  Locator.root.lazyPut(() => UserRepository());
 
   // 2. Use dependencies
   print('\n--- Resolving ---');
-  final repo = Levit.find<UserRepository>();
+  final repo = Locator.root.find<UserRepository>();
   repo.findUser(42);
 
   // 3. Clean up
   print('\n--- Cleaning up ---');
-  Levit.reset(); // Disposes DatabaseService
+  Locator.root.reset(); // Disposes DatabaseService
 
   try {
     repo.findUser(42);

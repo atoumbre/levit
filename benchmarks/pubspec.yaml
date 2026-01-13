@@ -1,0 +1,49 @@
+name: benchmarks
+description: A benchmark app for Levit.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Local Levit packages
+  levit_dart: 
+    path: ../packages/levit_dart
+  levit_reactive:
+    path: ../packages/levit_reactive
+  levit_flutter:
+    path: ../packages/levit_flutter
+    
+  # Comparison frameworks
+  provider: ^6.1.1
+  get: ^4.6.6
+  flutter_bloc: ^9.1.1
+  flutter_riverpod: ^2.6.1
+  
+  # UI & Utils
+  fl_chart: ^1.1.1
+  gap: ^3.0.0
+  rxdart: ^0.28.0
+  riverpod: ^2.6.1
+
+dependency_overrides:
+  levit_di:
+    path: ../packages/levit_di
+  levit_dart:
+    path: ../packages/levit_dart
+  levit_reactive:
+    path: ../packages/levit_reactive
+  levit_flutter:
+    path: ../packages/levit_flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

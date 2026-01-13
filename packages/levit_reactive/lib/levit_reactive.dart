@@ -11,15 +11,15 @@
 ///
 /// ## Async Reactive Types
 ///
-/// *   **[AsyncStatus]**: Sealed status type (`AsyncIdle`, `AsyncWaiting`, `AsyncSuccess`, `AsyncError`).
+/// *   **[LxStatus]**: Sealed status type (`LxIdle`, `LxWaiting`, `LxSuccess`, `LxError`).
 /// *   **[LxFuture]**: Reactive wrapper for [Future].
 /// *   **[LxStream]**: Reactive wrapper for [Stream].
 /// *   **[LxComputed]**: Auto-tracking computed value (sync).
 /// *   **[LxAsyncComputed]**: Async computed value.
 ///
-/// ## Workers
+/// ## Watchers
 ///
-/// *   **[watch]**: Core worker with support for stream transforms (debounce, throttle, etc.).
+/// *   **[watch]**: Core watcher with support for stream transforms (debounce, throttle, etc.).
 /// *   **[watchTrue]**: Fires callback when source becomes true.
 /// *   **[watchFalse]**: Fires callback when source becomes false.
 /// *   **[watchValue]**: Fires callback when source matches target value.
@@ -40,9 +40,12 @@
 /// ```
 library;
 
+export 'src/async_status.dart';
+export 'src/async_types.dart';
 export 'src/base_types.dart';
 export 'src/collections.dart';
 export 'src/computed.dart';
-export 'src/core.dart';
-export 'src/middlewares.dart';
-export 'src/worker.dart';
+export 'src/core.dart' hide LevitSateCore;
+export 'src/global_accessor.dart';
+export 'src/middlewares.dart' hide LevitStateMiddlewareChain;
+export 'src/watchers.dart';

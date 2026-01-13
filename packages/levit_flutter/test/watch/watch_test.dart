@@ -103,7 +103,7 @@ void main() {
         MaterialApp(
           home: ValueListenableBuilder<bool>(
             valueListenable: useFirst,
-            builder: (_, first, __) => LValue<Lx<String>>(
+            builder: (_, first, __) => LValue<LxVal<String>>(
               first ? value1 : value2,
               (value) => Text('Value: ${value.value}'),
             ),

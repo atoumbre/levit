@@ -3,21 +3,21 @@ import 'package:levit_reactive/levit_reactive.dart';
 import '../helpers.dart';
 
 void main() {
-  group('LxMiddleware', () {
+  group('LevitStateMiddleware', () {
     setUp(() {
-      Lx.middlewares.clear();
+      Lx.clearMiddlewares();
       Lx.captureStackTrace = false;
     });
 
     tearDown(() {
-      Lx.middlewares.clear();
+      Lx.clearMiddlewares();
     });
 
     test('middleware receives state changes', () async {
-      final changes = <StateChange>[];
-      Lx.middlewares.add(TestMiddleware(onAfter: changes.add));
+      final changes = <LevitStateChange>[];
+      Lx.addMiddleware(TestMiddleware(onAfter: changes.add));
 
-      final count = Lx<int>(0)..flags['name'] = 'counter';
+      final count = LxInt(0);
       count.value = 1;
       count.value = 2;
 
@@ -28,31 +28,35 @@ void main() {
       expect(changes[1].newValue, equals(2));
     });
 
-    test('flags name is included in StateChange', () {
-      final changes = <StateChange>[];
-      Lx.middlewares.add(TestMiddleware(onAfter: changes.add));
+    test('LevitStateChange toString includes type info', () {
+      final change = LevitStateChange<int>(
+        timestamp: DateTime(2024, 1, 1),
+        valueType: int,
+        oldValue: 0,
+        newValue: 1,
+      );
 
-      final count = Lx<int>(0)..flags['name'] = 'myCounter';
-      count.value = 5;
-
-      expect(changes.first.name, equals('myCounter'));
+      final str = change.toString();
+      expect(str, contains('int'));
+      expect(str, contains('0'));
+      expect(str, contains('1'));
     });
 
     test('onBeforeChange can prevent state change', () {
-      Lx.middlewares.add(TestMiddleware(allowChange: false));
+      Lx.addMiddleware(TestMiddleware(allowChange: false));
 
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       count.value = 100;
 
       expect(count.value, equals(0)); // Change was prevented
     });
 
     test('captureStackTrace captures stack when enabled', () {
-      final changes = <StateChange>[];
+      final changes = <LevitStateChange>[];
       Lx.captureStackTrace = true;
-      Lx.middlewares.add(TestMiddleware(onAfter: changes.add));
+      Lx.addMiddleware(TestMiddleware(onAfter: changes.add));
 
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       count.value = 1;
 
       expect(changes.first.stackTrace, isNotNull);
@@ -60,57 +64,35 @@ void main() {
 
     test('default onBeforeChange allows changes', () {
       final minimal = MinimalMiddleware();
-      Lx.middlewares.add(minimal);
+      Lx.addMiddleware(minimal);
 
-      final count = Lx<int>(0);
+      final count = LxInt(0);
       count.value = 5;
 
       expect(count.value, equals(5)); // Change was allowed
       expect(minimal.changes, hasLength(1));
     });
 
-    test('StateChange toString includes relevant info', () {
-      final change = StateChange<int>(
-        timestamp: DateTime(2024, 1, 1),
-        name: 'test',
-        valueType: int,
-        oldValue: 0,
-        newValue: 1,
-      );
-
-      final str = change.toString();
-      expect(str, contains('test'));
-      expect(str, contains('0'));
-      expect(str, contains('1'));
-    });
-
-    test('LxMiddleware default onBeforeChange returns true', () {
+    test('LevitStateMiddleware default onSet returns null', () {
       final middleware = DefaultMiddleware();
-      final change = StateChange<int>(
-        timestamp: DateTime.now(),
-        valueType: int,
-        oldValue: 0,
-        newValue: 1,
-      );
-
-      expect(middleware.onBeforeChange(change), isTrue);
+      expect(middleware.onSet, isNull);
     });
   });
 
-  group('LxHistoryMiddleware (Basic)', () {
-    late LxHistoryMiddleware history;
+  group('LevitStateHistoryMiddleware (Basic)', () {
+    late LevitStateHistoryMiddleware history;
 
     setUp(() {
-      history = LxHistoryMiddleware();
-      Lx.middlewares.add(history);
+      history = LevitStateHistoryMiddleware();
+      Lx.addMiddleware(history);
     });
 
     tearDown(() {
-      Lx.middlewares.clear();
+      Lx.clearMiddlewares();
     });
 
     test('records state changes', () {
-      final count = Lx<int>(0)..flags['name'] = 'count';
+      final count = LxInt(0);
       count.value = 1;
       count.value = 2;
       count.value = 3;
@@ -122,7 +104,7 @@ void main() {
     });
 
     test('respects maxHistorySize', () {
-      Lx.maxHistorySize = 2;
+      LevitStateHistoryMiddleware.maxHistorySize = 2;
 
       final count = 0.lx;
       count.value = 1;
@@ -133,19 +115,19 @@ void main() {
       expect(history.changes[0].newValue, equals(2));
       expect(history.changes[1].newValue, equals(3));
 
-      Lx.maxHistorySize = 100; // Reset
+      LevitStateHistoryMiddleware.maxHistorySize = 100; // Reset
     });
 
-    test('changesFor filters by name', () {
-      final a = Lx<int>(0)..flags['name'] = 'a';
-      final b = Lx<int>(0)..flags['name'] = 'b';
+    test('changesOfType filters by type', () {
+      final a = LxInt(0);
+      final b = LxVal<String>('');
 
       a.value = 1;
-      b.value = 2;
+      b.value = 'hello';
       a.value = 3;
 
-      expect(history.changesFor('a'), hasLength(2));
-      expect(history.changesFor('b'), hasLength(1));
+      expect(history.changesOfType(int), hasLength(2));
+      expect(history.changesOfType(String), hasLength(1));
     });
 
     test('clear removes all history', () {
@@ -168,7 +150,7 @@ void main() {
     });
 
     test('changes list returns all changes', () {
-      final count = Lx<int>(0)..flags['name'] = 'count';
+      final count = LxInt(0);
       count.value = 1;
       count.value = 2;
 
@@ -176,7 +158,7 @@ void main() {
     });
 
     test('undo works automatically', () {
-      final count = Lx<int>(0)..flags['name'] = 'counter';
+      final count = LxInt(0);
 
       count.value = 5;
       count.value = 10;
@@ -205,7 +187,7 @@ void main() {
     });
 
     test('printHistory prints all changes', () {
-      final count = Lx<int>(0)..flags['name'] = 'test';
+      final count = LxInt(0);
       count.value = 1;
 
       // Just verify it doesn't throw

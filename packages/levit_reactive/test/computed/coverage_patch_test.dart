@@ -33,8 +33,8 @@ void main() {
 
       // Allow the computed to settle
       await Future.delayed(Duration(milliseconds: 10));
-      if (computed.status is AsyncError) {
-        fail('Computed failed with: ${(computed.status as AsyncError).error}');
+      if (computed.status is LxError) {
+        fail('Computed failed with: ${(computed.status as LxError).error}');
       }
     });
 
@@ -67,8 +67,8 @@ void main() {
       computed.removeListener(listener);
 
       await Future.delayed(Duration(milliseconds: 10));
-      if (computed.status is AsyncError) {
-        fail('Computed failed with: ${(computed.status as AsyncError).error}');
+      if (computed.status is LxError) {
+        fail('Computed failed with: ${(computed.status as LxError).error}');
       }
     });
   });

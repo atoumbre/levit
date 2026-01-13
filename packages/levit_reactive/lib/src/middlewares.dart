@@ -1,59 +1,333 @@
+import 'package:meta/meta.dart';
+
+import 'base_types.dart';
 import 'core.dart';
 
-/// A middleware that logs state changes to the console.
+// ============================================================================
+// Middleware / Interceptor Pattern for Debugging
+// ============================================================================
+
+int _batchCounter = 0;
+
+/// Counter for generating unique batch IDs within this session.
+
+/// Represents a change in a reactive variable's state.
 ///
-/// Use this middleware to debug state changes during development.
-///
-/// ## Usage
-/// ```dart
-/// Lx.middlewares.add(LxLoggerMiddleware());
-/// ```
-class LxLoggerMiddleware extends LxMiddleware {
-  /// Whether to include stack traces in the log output.
-  final bool includeStackTrace;
+/// Passed to [LevitStateMiddleware] to inspect or modify state changes.
+class LevitStateChange<T> {
+  /// Time of the change.
+  final DateTime timestamp;
 
-  /// Optional custom log formatter.
-  final String Function(StateChange change)? formatter;
+  /// Type of the value.
+  final Type valueType;
 
-  /// Creates a logger middleware.
-  ///
-  /// [filter] can be used to filter logs by variable name.
-  LxLoggerMiddleware({
-    this.includeStackTrace = false,
-    bool Function(String? name)? filter,
-    this.formatter,
-  }) {
-    if (filter != null) {
-      this.filter = (change) => filter(change.name);
-    }
+  /// Previous value.
+  final T oldValue;
+
+  /// New value.
+  final T newValue;
+
+  /// Stack trace (if enabled).
+  final StackTrace? stackTrace;
+
+  /// Function to restore this state (for undo).
+  final void Function(dynamic value)? restore;
+
+  /// Creates a state change record.
+  LevitStateChange({
+    required this.timestamp,
+    required this.valueType,
+    required this.oldValue,
+    required this.newValue,
+    this.stackTrace,
+    this.restore,
+  });
+
+  bool _propagationStopped = false;
+
+  /// Stops propagation to subsequent middlewares.
+  void stopPropagation() {
+    _propagationStopped = true;
   }
 
-  @override
-  bool onBeforeChange<T>(StateChange<T> change) => true;
+  /// Whether propagation is stopped.
+  bool get isPropagationStopped => _propagationStopped;
 
   @override
-  void onAfterChange<T>(StateChange<T> change) {
-    if (formatter != null) {
-      print(formatter!(change));
-    } else {
-      print('[Lx] ${change.toString()}');
-    }
-
-    if (includeStackTrace && change.stackTrace != null) {
-      print(change.stackTrace);
-    }
-  }
-
-  @override
-  void onBatchStart() {
-    print('[Lx] Batch started');
-  }
-
-  @override
-  void onBatchEnd() {
-    print('[Lx] Batch ended');
+  String toString() {
+    return '[$timestamp] $valueType: $oldValue → $newValue';
   }
 }
+
+/// A batch of state changes grouped together.
+///
+/// Used when [Lx.batch] is active. Contains pairs of reactive variables
+/// and their associated state changes.
+class LevitStateBatchChange implements LevitStateChange<void> {
+  /// The list of (reactive, change) pairs in this batch.
+  final List<(LxReactive, LevitStateChange)> entries;
+
+  /// Unique identifier for this batch within the session.
+  final int batchId;
+
+  @override
+  final DateTime timestamp;
+
+  /// Creates a composite change from a list of entries.
+  LevitStateBatchChange(this.entries, {int? batchId})
+      : batchId = batchId ?? ++_batchCounter,
+        timestamp = DateTime.now();
+
+  /// Creates a composite change from separate lists (legacy compatibility).
+  factory LevitStateBatchChange.fromChanges(List<LevitStateChange> changes) {
+    // For backward compatibility when we don't have reactive references
+    return LevitStateBatchChange([]);
+  }
+
+  /// Convenience getter for just the changes.
+  List<LevitStateChange> get changes => entries.map((e) => e.$2).toList();
+
+  /// Convenience getter for just the reactive variables.
+  List<LxReactive> get reactiveVariables => entries.map((e) => e.$1).toList();
+
+  /// The number of changes in this batch.
+  int get length => entries.length;
+
+  /// Whether this batch is empty.
+  bool get isEmpty => entries.isEmpty;
+
+  /// Whether this batch is not empty.
+  bool get isNotEmpty => entries.isNotEmpty;
+
+  @override
+  Type get valueType => LevitStateBatchChange;
+
+  @override
+  void get oldValue {}
+
+  @override
+  void get newValue {}
+
+  @override
+  StackTrace? get stackTrace => null;
+
+  @override
+  void Function(dynamic value)? get restore => null;
+
+  @override
+  bool _propagationStopped = false;
+
+  @override
+  void stopPropagation() {
+    _propagationStopped = true;
+  }
+
+  @override
+  bool get isPropagationStopped => _propagationStopped;
+
+  @override
+  String toString() => '[$timestamp] Batch of ${entries.length} changes';
+}
+
+class LevitStateMiddleware {
+  /// Global middlewares (active wrappers).
+  static final List<LevitStateMiddleware> _middlewares = [];
+
+  static bool _hasSetMiddlewares = false;
+  static bool get hasSetMiddlewares => _hasSetMiddlewares;
+
+  static bool _hasBatchMiddlewares = false;
+  static bool get hasBatchMiddlewares => _hasBatchMiddlewares;
+
+  static bool _hasDisposeMiddlewares = false;
+  static bool get hasDisposeMiddlewares => _hasDisposeMiddlewares;
+
+  static bool _hasInitMiddlewares = false;
+  static bool get hasInitMiddlewares => _hasInitMiddlewares;
+
+  static bool _hasGraphChangeMiddlewares = false;
+  static bool get hasGraphChangeMiddlewares => _hasGraphChangeMiddlewares;
+
+  static void _updateFlags() {
+    _hasSetMiddlewares = false;
+    _hasBatchMiddlewares = false;
+    _hasDisposeMiddlewares = false;
+    _hasInitMiddlewares = false;
+    _hasGraphChangeMiddlewares = false;
+
+    for (final mw in _middlewares) {
+      if (mw.onSet != null) _hasSetMiddlewares = true;
+      if (mw.onBatch != null) _hasBatchMiddlewares = true;
+      if (mw.onDispose != null) _hasDisposeMiddlewares = true;
+      if (mw.onInit != null) _hasInitMiddlewares = true;
+      if (mw.onGraphChange != null) _hasGraphChangeMiddlewares = true;
+    }
+  }
+
+  /// Adds a middleware.
+  static LevitStateMiddleware add(LevitStateMiddleware middleware) {
+    _middlewares.add(middleware);
+    _updateFlags();
+    return middleware;
+  }
+
+  static bool remove(LevitStateMiddleware middleware) {
+    final result = _middlewares.remove(middleware);
+    _updateFlags();
+    return result;
+  }
+
+  static void clear() {
+    _middlewares.clear();
+    _updateFlags();
+  }
+
+  static bool contains(LevitStateMiddleware middleware) {
+    return _middlewares.contains(middleware);
+  }
+
+  static bool _bypassMiddleware = false;
+  static bool get bypassMiddleware => _bypassMiddleware;
+
+  static void runWithoutMiddleware(void Function() action) {
+    final prev = _bypassMiddleware;
+    _bypassMiddleware = true;
+    try {
+      action();
+    } finally {
+      _bypassMiddleware = prev;
+    }
+  }
+
+  // =========================================================================
+  // Wrapper Hooks (Active - can intercept/modify)
+  // =========================================================================
+
+  /// Wraps value changes.
+  ///
+  /// Returns null if this middleware does not intercept value changes.
+  LxOnSet? get onSet => null;
+
+  /// Wraps batch execution.
+  ///
+  /// Returns null if this middleware does not intercept batch execution.
+  LxOnBatch? get onBatch => null;
+
+  /// Wraps disposal execution.
+  ///
+  /// Returns null if this middleware does not intercept disposal.
+  LxOnDispose? get onDispose => null;
+
+  // =========================================================================
+  // Passive Hooks (Observation - no interception)
+  // =========================================================================
+
+  /// Called when a reactive object is initialized.
+  ///
+  /// Returns null if this middleware does not observe initialization.
+  void Function(LxReactive reactive)? get onInit => null;
+
+  /// Called when a computed reactive's dependencies change.
+  ///
+  /// Returns null if this middleware does not observe graph changes.
+  void Function(LxReactive computed, List<LxReactive> dependencies)?
+      get onGraphChange => null;
+}
+
+/// Helper typedefs for middleware getters.
+typedef LxOnSet = void Function(dynamic value) Function(
+  void Function(dynamic value) next,
+  LxReactive reactive,
+  LevitStateChange<dynamic> change,
+);
+
+typedef LxOnBatch = dynamic Function() Function(
+  dynamic Function() next,
+  LevitStateBatchChange change,
+);
+
+typedef LxOnDispose = void Function() Function(
+  void Function() next,
+  LxReactive reactive,
+);
+
+@internal
+abstract class LevitStateMiddlewareChain {
+  static void Function(T) applyOnSet<T>(
+    void Function(T) next,
+    LxReactive reactive,
+    LevitStateChange<T> change,
+  ) {
+    if (!LevitStateMiddleware.hasSetMiddlewares) return next;
+
+    // Convert strict typed next to dynamic for middleware chain
+    void Function(dynamic) current = (dynamic v) => next(v as T);
+
+    // LIFO wrapping ensures the last added middleware wraps the inner ones.
+    for (final mw in LevitStateMiddleware._middlewares.reversed) {
+      if (mw.onSet != null) {
+        current =
+            mw.onSet!(current, reactive, change as LevitStateChange<dynamic>);
+      }
+    }
+
+    // Convert back to strict typed return
+    return (T val) => current(val);
+  }
+
+  static dynamic Function() applyOnBatch(
+    dynamic Function() next,
+    LevitStateBatchChange change,
+  ) {
+    if (!LevitStateMiddleware.hasBatchMiddlewares) return next;
+    var current = next;
+    for (final mw in LevitStateMiddleware._middlewares.reversed) {
+      if (mw.onBatch != null) {
+        current = mw.onBatch!(current, change);
+      }
+    }
+    return current;
+  }
+
+  static void Function() applyOnDispose(
+    void Function() next,
+    LxReactive reactive,
+  ) {
+    if (!LevitStateMiddleware.hasDisposeMiddlewares) return next;
+    var current = next;
+    for (final mw in LevitStateMiddleware._middlewares.reversed) {
+      if (mw.onDispose != null) {
+        current = mw.onDispose!(current, reactive);
+      }
+    }
+    return current;
+  }
+
+  // --------------------------------------------------------------------------
+  // Passive Hooks
+  // --------------------------------------------------------------------------
+
+  static void applyOnInit(LxReactive reactive) {
+    if (!LevitStateMiddleware.hasInitMiddlewares) return;
+    for (final mw in LevitStateMiddleware._middlewares) {
+      mw.onInit?.call(reactive);
+    }
+  }
+
+  static void applyGraphChange(
+    LxReactive computed,
+    List<LxReactive> dependencies,
+  ) {
+    if (!LevitStateMiddleware.hasGraphChangeMiddlewares) return;
+    for (final mw in LevitStateMiddleware._middlewares) {
+      mw.onGraphChange?.call(computed, dependencies);
+    }
+  }
+}
+
+// ============================================================================
+// LevitStateHistoryMiddleware - State History Middleware
+// ============================================================================
 
 /// A middleware that records state history for undo/redo functionality.
 ///
@@ -62,28 +336,37 @@ class LxLoggerMiddleware extends LxMiddleware {
 ///
 /// ## Usage
 /// ```dart
-/// final history = LxHistoryMiddleware();
+/// final history = LevitStateHistoryMiddleware();
 /// Lx.middlewares.add(history);
 ///
 /// // Later...
 /// history.undo();
 /// ```
-class LxHistoryMiddleware extends LxMiddleware {
+class LevitStateHistoryMiddleware extends LevitStateMiddleware {
+  /// Maximum history size for [LevitStateHistoryMiddleware].
+  static int maxHistorySize = 100;
+
   /// Creates a new history middleware.
-  LxHistoryMiddleware();
+  LevitStateHistoryMiddleware();
 
-  final List<StateChange> _undoStack = [];
-  final List<StateChange> _redoStack = [];
+  final List<LevitStateChange> _undoStack = [];
+  final List<LevitStateChange> _redoStack = [];
 
-  final _version = Lx(0);
+  final _version = LxVal(0);
 
-  List<StateChange>? _currentBatch;
+  // Removed _currentBatch as we now rely on LevitStateBatchChange passed to onBatch
   bool _isRestoring = false;
 
   /// Returns an unmodifiable list of all recorded changes.
-  List<StateChange> get changes {
+  List<LevitStateChange> get changes {
     _version.value;
     return List.unmodifiable(_undoStack);
+  }
+
+  /// Returns an unmodifiable list of re-doable changes.
+  List<LevitStateChange> get redoChanges {
+    _version.value;
+    return List.unmodifiable(_redoStack);
   }
 
   /// The number of recorded changes in the undo stack.
@@ -105,44 +388,48 @@ class LxHistoryMiddleware extends LxMiddleware {
   }
 
   @override
-  bool onBeforeChange<T>(StateChange<T> change) => true;
+  LxOnSet? get onSet => (next, reactive, change) {
+        return (value) {
+          next(value);
+
+          if (_isRestoring) return;
+
+          _redoStack.clear();
+
+          if (_batchDepth == 0) {
+            _addChange(change);
+          }
+        };
+      };
+
+  int _batchDepth = 0;
 
   @override
-  void onAfterChange<T>(StateChange<T> change) {
-    if (_isRestoring) return;
+  LxOnBatch? get onBatch => (next, change) {
+        return () {
+          if (_isRestoring) {
+            return next();
+          }
 
-    _redoStack.clear();
+          _batchDepth++;
+          try {
+            return next();
+          } finally {
+            _batchDepth--;
+            if (_batchDepth == 0 && change.isNotEmpty) {
+              _addChange(change);
+            }
+          }
+        };
+      };
 
-    if (_currentBatch != null) {
-      _currentBatch!.add(change);
-    } else {
-      _addChange(change);
-    }
-  }
-
-  @override
-  void onBatchStart() {
-    if (_isRestoring) return;
-    _currentBatch = [];
-  }
-
-  @override
-  void onBatchEnd() {
-    if (_isRestoring) return;
-    if (_currentBatch != null && _currentBatch!.isNotEmpty) {
-      final composite = CompositeStateChange(List.from(_currentBatch!));
-      _addChange(composite);
-    }
-    _currentBatch = null;
-  }
-
-  void _addChange(StateChange change) {
+  void _addChange(LevitStateChange change) {
     _undoStack.add(change);
 
-    if (Lx.maxHistorySize > 0 && _undoStack.length > Lx.maxHistorySize) {
+    if (maxHistorySize > 0 && _undoStack.length > maxHistorySize) {
       _undoStack.removeAt(0);
     }
-    Lx.runWithoutMiddleware(() => _version.value++);
+    LevitStateMiddleware.runWithoutMiddleware(() => _version.value++);
   }
 
   /// Reverts the last change.
@@ -155,7 +442,7 @@ class LxHistoryMiddleware extends LxMiddleware {
     _redoStack.add(change);
 
     _applyRestore(change, isUndo: true);
-    Lx.runWithoutMiddleware(() => _version.value++);
+    LevitStateMiddleware.runWithoutMiddleware(() => _version.value++);
     return true;
   }
 
@@ -169,14 +456,14 @@ class LxHistoryMiddleware extends LxMiddleware {
     _undoStack.add(change);
 
     _applyRestore(change, isUndo: false);
-    Lx.runWithoutMiddleware(() => _version.value++);
+    LevitStateMiddleware.runWithoutMiddleware(() => _version.value++);
     return true;
   }
 
-  void _applyRestore(StateChange change, {required bool isUndo}) {
+  void _applyRestore(LevitStateChange change, {required bool isUndo}) {
     _isRestoring = true;
     try {
-      if (change is CompositeStateChange) {
+      if (change is LevitStateBatchChange) {
         final listToProcess = isUndo ? change.changes.reversed : change.changes;
         for (final subChange in listToProcess) {
           _restoreSingle(subChange, isUndo: isUndo);
@@ -189,30 +476,30 @@ class LxHistoryMiddleware extends LxMiddleware {
     }
   }
 
-  void _restoreSingle(StateChange change, {required bool isUndo}) {
+  void _restoreSingle(LevitStateChange change, {required bool isUndo}) {
     final valueToRestore = isUndo ? change.oldValue : change.newValue;
 
     if (change.restore != null) {
-      Lx.runWithoutMiddleware(() {
+      LevitStateMiddleware.runWithoutMiddleware(() {
         change.restore!(valueToRestore);
       });
       return;
     }
 
     print(
-        '[LxHistoryMiddleware] Warning: No restore mechanism for ${change.name ?? change.valueType}');
+        '[LevitStateHistoryMiddleware] Warning: No restore mechanism for ${change.valueType}');
   }
 
   /// Clears the entire history (both undo and redo stacks).
   void clear() {
     _undoStack.clear();
     _redoStack.clear();
-    Lx.runWithoutMiddleware(() => _version.value++);
+    LevitStateMiddleware.runWithoutMiddleware(() => _version.value++);
   }
 
-  /// Returns all changes associated with a specific variable [name].
-  List<StateChange> changesFor(String name) {
-    return _undoStack.where((c) => c.name == name).toList();
+  /// Returns all changes of a specific type.
+  List<LevitStateChange> changesOfType(Type type) {
+    return _undoStack.where((c) => c.valueType == type).toList();
   }
 
   /// Prints the current history to the console for debugging.
@@ -228,12 +515,4 @@ class LxHistoryMiddleware extends LxMiddleware {
       }
     }
   }
-
-  /// Serializes the history state to JSON.
-  Map<String, dynamic> toJson() => {
-        'undoStack': _undoStack.map((c) => c.toJson()).toList(),
-        'redoStack': _redoStack.map((c) => c.toJson()).toList(),
-        'canUndo': canUndo,
-        'canRedo': canRedo,
-      };
 }

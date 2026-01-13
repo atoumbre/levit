@@ -235,7 +235,7 @@ Future<void> _generateReport(
       reportsDir.createSync();
     }
 
-    final reportFile = File('assets/reports/packages_test_coverage.md');
+    final reportFile = File('reports/packages_test_coverage.md');
     await reportFile.writeAsString(buffer.toString());
     print('\n✅ Report exported to: ${reportFile.absolute.path}');
   } else {

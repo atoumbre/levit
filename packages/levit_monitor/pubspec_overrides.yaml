@@ -1,0 +1,8 @@
+# melos_managed_dependency_overrides: levit_dart,levit_di,levit_reactive
+dependency_overrides:
+  levit_dart:
+    path: ../levit_dart
+  levit_di:
+    path: ../levit_di
+  levit_reactive:
+    path: ../levit_reactive

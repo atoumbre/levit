@@ -1,9 +1,9 @@
 import 'dart:math';
 
-import 'core.dart';
+import 'base_types.dart';
 
 // ============================================================================
-// LxList<T>
+// LxList<T> - Specialized reactive list
 // ============================================================================
 
 /// A reactive list that notifies observers when modified.
@@ -19,12 +19,12 @@ import 'core.dart';
 /// final items = <String>[].lx;
 /// items.add('Hello'); // Notifies observers
 /// ```
-class LxList<E> extends Lx<List<E>> implements List<E> {
+class LxList<E> extends LxVal<List<E>> implements List<E> {
   /// Creates a reactive list.
   ///
   /// If [initial] is provided, it is used as the backing list.
   /// Otherwise, an empty list is created.
-  LxList([List<E>? initial]) : super(initial ?? <E>[]);
+  LxList([List<E>? initial, String? name]) : super(initial ?? <E>[]);
 
   /// Creates an [LxList] containing all [elements].
   factory LxList.from(Iterable<E> elements) {
@@ -314,7 +314,7 @@ class LxList<E> extends Lx<List<E>> implements List<E> {
 }
 
 // ============================================================================
-// LxMap<K, V>
+// LxMap<K, V> - Specialized reactive map
 // ============================================================================
 
 /// A reactive map that notifies observers when modified.
@@ -330,12 +330,12 @@ class LxList<E> extends Lx<List<E>> implements List<E> {
 /// final settings = <String, dynamic>{}.lx;
 /// settings['theme'] = 'dark'; // Notifies observers
 /// ```
-class LxMap<K, V> extends Lx<Map<K, V>> implements Map<K, V> {
+class LxMap<K, V> extends LxVal<Map<K, V>> implements Map<K, V> {
   /// Creates a reactive map.
   ///
   /// If [initial] is provided, it is used as the backing map.
   /// Otherwise, an empty map is created.
-  LxMap([Map<K, V>? initial]) : super(initial ?? <K, V>{});
+  LxMap([Map<K, V>? initial, String? name]) : super(initial ?? <K, V>{});
 
   /// Creates an [LxMap] from an existing map.
   factory LxMap.from(Map<K, V> other) {
@@ -456,7 +456,7 @@ class LxMap<K, V> extends Lx<Map<K, V>> implements Map<K, V> {
 }
 
 // ============================================================================
-// LxSet<E>
+// LxSet<E> - Specialized reactive set
 // ============================================================================
 
 /// A reactive set that notifies observers when modified.
@@ -466,12 +466,12 @@ class LxMap<K, V> extends Lx<Map<K, V>> implements Map<K, V> {
 ///
 /// Use this collection when you need a set that updates the UI or triggers
 /// effects whenever elements are added or removed.
-class LxSet<E> extends Lx<Set<E>> implements Set<E> {
+class LxSet<E> extends LxVal<Set<E>> implements Set<E> {
   /// Creates a reactive set.
   ///
   /// If [initial] is provided, it is used as the backing set.
   /// Otherwise, an empty set is created.
-  LxSet([Set<E>? initial]) : super(initial ?? <E>{});
+  LxSet([Set<E>? initial, String? name]) : super(initial ?? <E>{});
 
   /// Creates an [LxSet] from an existing iterable.
   factory LxSet.from(Iterable<E> elements) {
@@ -663,6 +663,10 @@ class LxSet<E> extends Lx<Set<E>> implements Set<E> {
     refresh();
   }
 }
+
+// ============================================================================
+// Extensions -  .lx syntax
+// ============================================================================
 
 /// Extension to create [LxList].
 extension LxListExtension<E> on List<E> {

@@ -2,17 +2,17 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('LxHistoryMiddleware (DevTools)', () {
-    late LxHistoryMiddleware history;
+  group('LevitStateHistoryMiddleware (DevTools)', () {
+    late LevitStateHistoryMiddleware history;
 
     setUp(() {
-      history = LxHistoryMiddleware();
-      Lx.middlewares.add(history);
-      Lx.maxHistorySize = 100;
+      history = LevitStateHistoryMiddleware();
+      Lx.addMiddleware(history);
+      LevitStateHistoryMiddleware.maxHistorySize = 100;
     });
 
     tearDown(() {
-      Lx.middlewares.clear();
+      Lx.clearMiddlewares();
     });
 
     // ------------------------------------------------------------------------
@@ -98,8 +98,8 @@ void main() {
 
       expect(history.length, equals(1)); // Single composite change
       final change = history.changes.first;
-      expect(change, isA<CompositeStateChange>());
-      expect((change as CompositeStateChange).changes, hasLength(2));
+      expect(change, isA<LevitStateBatchChange>());
+      expect((change as LevitStateBatchChange).changes, hasLength(2));
     });
 
     test('Undo reverts entire batch atomically', () {
@@ -149,33 +149,6 @@ void main() {
       // And 1 item in redo stack
       expect(history.changes, isEmpty);
       expect(history.canRedo, isTrue);
-    });
-
-    // ------------------------------------------------------------------------
-    // Serialization (DevTools Protocol)
-    // ------------------------------------------------------------------------
-
-    test('toJson produces valid structure for DevTools', () {
-      final count = Lx<int>(0)..flags['name'] = 'counter';
-      count.value = 1;
-
-      Lx.batch(() {
-        count.value = 2;
-        count.value = 3;
-      });
-
-      final json = history.toJson();
-
-      expect(json['undoStack'], hasLength(2)); // 1 normal + 1 batch
-      expect(json['canUndo'], isTrue);
-
-      final change1 = (json['undoStack'] as List)[0];
-      expect(change1['name'], equals('counter'));
-      expect(change1['newValue'], equals('1'));
-
-      final batch = (json['undoStack'] as List)[1];
-      expect(batch['type'], equals('CompositeChange'));
-      expect(batch['changes'], hasLength(2));
     });
   });
 }

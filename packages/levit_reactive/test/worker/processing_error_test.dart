@@ -3,12 +3,12 @@ import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('Worker onProcessingError', () {
+  group('Watcher onProcessingError', () {
     test('catches sync errors via watch', () {
       final s = 0.lx;
       dynamic caughtError;
 
-      watch(s, (v) {
+      LxWatch(s, (v) {
         if (v == 1) throw 'Sync Error';
       }, onProcessingError: (e, s) {
         caughtError = e;
@@ -20,7 +20,7 @@ void main() {
 
     test('rethrows sync errors if handler missing', () {
       final s = 0.lx;
-      watch(s, (v) => throw 'Fail');
+      LxWatch(s, (v) => throw 'Fail');
       expect(() => s.value = 1, throwsA('Fail'));
     });
 
@@ -28,7 +28,7 @@ void main() {
       final s = 0.lx;
       final completer = Completer<dynamic>();
 
-      watch(s, (v) async {
+      LxWatch(s, (v) async {
         await Future.delayed(Duration.zero);
         throw 'Async Error';
       }, onProcessingError: (e, s) {
@@ -43,7 +43,7 @@ void main() {
       final s = false.lx;
       dynamic caughtError;
 
-      watchTrue(
+      LxWatch.isTrue(
         s,
         () => throw 'True Error',
         onProcessingError: (e, s) => caughtError = e,
@@ -54,10 +54,10 @@ void main() {
     });
 
     test('catches async errors via watchStatus', () async {
-      final s = Lx<AsyncStatus<int>>(AsyncWaiting());
+      final s = LxVal<LxStatus<int>>(LxWaiting());
       final completer = Completer<dynamic>();
 
-      watchStatus<int>(
+      LxWatch.status<int>(
         s,
         onSuccess: (v) async {
           throw 'Success Async Error';
@@ -67,7 +67,7 @@ void main() {
         },
       );
 
-      s.value = AsyncSuccess(10);
+      s.value = LxSuccess(10);
       expect(await completer.future, 'Success Async Error');
     });
   });

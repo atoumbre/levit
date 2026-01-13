@@ -20,7 +20,7 @@ void main() {
       // Triggers listener immediately (sync) or microtask?
       // Lx notifies sync.
       expect(listenerCallCount, 1);
-      expect(computed.value, 10);
+      expect(computed.computedValue, 10);
 
       // 3. Remove listener
       computed.removeListener(listener);
@@ -37,7 +37,7 @@ void main() {
       expect(listenerCallCount, 1); // No change
 
       // 5. Read value (pull-based now, because inactive)
-      expect(computed.value, 20); // Computed on demand
+      expect(computed.computedValue, 20); // Computed on demand
     });
   });
 }

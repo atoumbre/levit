@@ -65,11 +65,11 @@ void main() {
         });
 
         // Lx.batch (sync) uses the GLOBAL batch state, which currently pushes to _batchedNotifiers.
-        // However, our LxNotifier.notify checks 'asyncBatch' (Zone) FIRST.
+        // However, our LevitStateNotifier.notify checks 'asyncBatch' (Zone) FIRST.
         // So even inside Lx.batch(), the Zone check wins if we prioritize it.
         //
         // Let's verify existing behavior:
-        // LxNotifier.notify implementation puts Zone check (0) BEFORE Sync check (1).
+        // LevitStateNotifier.notify implementation puts Zone check (0) BEFORE Sync check (1).
         // So 'b' updates inside sync batch will ACTUALLY be captured by the ASYNC batch
         // because the Zone is still active!
         // This effectively "promotes" the sync batch content to the surrounding async batch.
@@ -87,7 +87,7 @@ void main() {
       int startCount = 0;
       int endCount = 0;
 
-      final middleware = _TestMiddleware(
+      final middleware = TestBatchHookMiddleware(
         onStart: () => startCount++,
         onEnd: () => endCount++,
       );
@@ -107,24 +107,63 @@ void main() {
         expect(endCount, 1,
             reason: 'onBatchEnd should be called after execution');
       } finally {
-        Lx.middlewares.remove(middleware);
+        Lx.removeMiddleware(middleware);
       }
+    });
+
+    test('flushes batched notifiers after async batch completes', () async {
+      final source1 = 0.lx;
+      final source2 = 1.lx;
+      var notifyCount1 = 0;
+      var notifyCount2 = 0;
+
+      source1.addListener(() => notifyCount1++);
+      source2.addListener(() => notifyCount2++);
+
+      await Lx.batchAsync(() async {
+        source1.value = 10;
+        await Future.delayed(Duration(milliseconds: 10));
+        source2.value = 20;
+
+        // Notifications should be batched
+        expect(notifyCount1, 0);
+        expect(notifyCount2, 0);
+      });
+
+      // After batch completes, notifiers should be flushed
+      expect(notifyCount1, 1);
+      expect(notifyCount2, 1);
+      expect(source1.value, 10);
+      expect(source2.value, 20);
     });
   });
 }
 
-class _TestMiddleware extends LxMiddleware {
+class TestBatchHookMiddleware extends LevitStateMiddleware {
   final void Function() onStart;
   final void Function() onEnd;
 
-  _TestMiddleware({required this.onStart, required this.onEnd});
+  TestBatchHookMiddleware({required this.onStart, required this.onEnd});
 
   @override
-  void onBatchStart() => onStart();
+  LxOnBatch? get onBatch => (next, change) {
+        return () {
+          onStart();
+          // ignore: prefer_typing_uninitialized_variables
+          var result;
+          try {
+            result = next();
+          } catch (e) {
+            onEnd();
+            rethrow;
+          }
 
-  @override
-  void onBatchEnd() => onEnd();
-
-  @override
-  void onAfterChange<T>(StateChange<T> change) {}
+          if (result is Future) {
+            return result.whenComplete(onEnd);
+          } else {
+            onEnd();
+            return result;
+          }
+        };
+      };
 }

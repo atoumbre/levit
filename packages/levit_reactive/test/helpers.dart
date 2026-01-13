@@ -7,9 +7,10 @@ class User {
   User(this.name, this.age);
 }
 
-class MockObserver implements LxObserver {
+class MockObserver implements LevitStateObserver {
   final List<Stream> streams = [];
-  final List<LxNotifier> notifiers = [];
+  final List<LevitStateNotifier> notifiers = [];
+  final List<LxReactive> reactives = [];
 
   @override
   void addStream<T>(Stream<T> stream) {
@@ -17,58 +18,49 @@ class MockObserver implements LxObserver {
   }
 
   @override
-  void addNotifier(LxNotifier notifier) {
+  void addNotifier(LevitStateNotifier notifier) {
     notifiers.add(notifier);
+  }
+
+  @override
+  void addReactive(LxReactive reactive) {
+    reactives.add(reactive);
   }
 }
 
-class TestMiddleware extends LxMiddleware {
-  final void Function(StateChange)? onAfter;
+class TestMiddleware extends LevitStateMiddleware {
+  final void Function(LevitStateChange)? onAfter;
   final bool allowChange;
 
   TestMiddleware({this.onAfter, this.allowChange = true});
 
   @override
-  bool onBeforeChange<T>(StateChange<T> change) => allowChange;
-
-  @override
-  void onAfterChange<T>(StateChange<T> change) {
-    onAfter?.call(change);
-  }
-
-  @override
-  void onBatchStart() {}
-
-  @override
-  void onBatchEnd() {}
+  LxOnSet? get onSet => (next, reactive, change) {
+        if (!allowChange) {
+          return (value) {}; // Do nothing, blocking change
+        }
+        return (value) {
+          next(value);
+          onAfter?.call(change);
+        };
+      };
 }
 
-/// Middleware that uses the default onBeforeChange implementation
-class MinimalMiddleware extends LxMiddleware {
-  final List<StateChange> changes = [];
+/// Middleware that uses the default wrapper implementation
+class MinimalMiddleware extends LevitStateMiddleware {
+  final List<LevitStateChange> changes = [];
 
   @override
-  void onAfterChange<T>(StateChange<T> change) {
-    changes.add(change);
-  }
-
-  @override
-  void onBatchStart() {}
-
-  @override
-  void onBatchEnd() {}
+  LxOnSet? get onSet => (next, reactive, change) {
+        return (value) {
+          next(value);
+          changes.add(change);
+        };
+      };
 }
 
-/// Default Middleware for testing
-class DefaultMiddleware extends LxMiddleware {
-  @override
-  void onAfterChange<T>(StateChange<T> change) {}
-
-  @override
-  void onBatchStart() {}
-
-  @override
-  void onBatchEnd() {}
+class DefaultMiddleware extends LevitStateMiddleware {
+  // Uses default implementation (pass-through)
 }
 
 /// Mutable user class for testing mutate()

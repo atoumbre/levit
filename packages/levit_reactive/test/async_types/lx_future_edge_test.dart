@@ -3,7 +3,7 @@ import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
   group('LxFuture Edge Cases', () {
-    test('wait propagates error from AsyncError state', () async {
+    test('wait propagates error from LxError state', () async {
       final f = LxFuture<String>(Future.error('failure'));
 
       // Wait for it to complete
@@ -11,7 +11,7 @@ void main() {
         await f.wait;
       } catch (_) {}
 
-      expect(f.status, isA<AsyncError>());
+      expect(f.status, isA<LxError>());
 
       // Now access .wait
       // It should return a Future that completes with error

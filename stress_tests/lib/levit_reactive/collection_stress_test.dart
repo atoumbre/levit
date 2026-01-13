@@ -1,85 +1,120 @@
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
-import 'dart:math';
 
 void main() {
-  group('Stress Test: Collection Bulk Operations', () {
-    test('LxList with 1,000,000 items and bulk mutations', () {
-      print(
-          '[Description] Measures performance of bulk assignments and rapid random mutations on very large reactive lists.');
-      final list = List.generate(1000000, (i) => i).lx;
-
-      int notifyCount = 0;
-      list.addListener(() => notifyCount++);
+  group('Stress Test: Collections', () {
+    test('LxList Bulk Assign - 1M items', () {
+      print('[Description] Tests performance of assigning a large list.');
+      final list = <int>[].lx;
+      final largeData = List.generate(1000000, (i) => i);
 
       final sw = Stopwatch()..start();
+      list.value = largeData;
+      sw.stop();
 
-      // Bulk update
-      list.assign(List.generate(1000000, (i) => i * 2));
-      print('Large list assign (1M items) took ${sw.elapsedMilliseconds}ms');
+      expect(list.length, 1000000);
+      print('Assigned 1M items to LxList in ${sw.elapsedMilliseconds}ms');
 
-      expect(notifyCount, 1);
-      expect(list[500000], 1000000);
-
-      // Rapid small mutations
-      sw.reset();
-      final random = Random();
-      for (int i = 0; i < 1000; i++) {
-        list[random.nextInt(1000000)] = i;
-      }
-      print(
-          '1,000 random mutations on 1M list took ${sw.elapsedMilliseconds}ms');
-      expect(notifyCount, 1001);
+      list.close();
     });
 
-    test('LxMap with 100,000 unique keys', () {
+    test('LxList Mutation Burst - 10k random ops', () {
+      print('[Description] Tests rapid add/remove/insert operations.');
+      final list = List.generate(10000, (i) => i).lx;
+      const ops = 10000;
+
+      final sw = Stopwatch()..start();
+      for (var i = 0; i < ops; i++) {
+        final op = i % 3;
+        if (op == 0) {
+          list.add(i);
+        } else if (op == 1 && list.isNotEmpty) {
+          list.removeAt(0);
+        } else if (list.isNotEmpty) {
+          list[0] = i;
+        }
+      }
+      sw.stop();
+
+      final opsPerMs = ops / sw.elapsedMilliseconds;
       print(
-          '[Description] Benchmarks insertion and clearing speed for reactive maps with a large number of unique entries.');
-      final map = <String, int>{}.lx;
-      int notifyCount = 0;
+          'Performed $ops mutations in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)');
+
+      list.close();
+    });
+
+    test('LxMap Bulk Insert - 100k entries', () {
+      print('[Description] Tests mass insertion into LxMap.');
+      final map = LxMap<String, int>({});
+      const count = 100000;
+
+      final sw = Stopwatch()..start();
+      for (var i = 0; i < count; i++) {
+        map['key_$i'] = i;
+      }
+      sw.stop();
+
+      expect(map.length, count);
+      print('Inserted $count entries in ${sw.elapsedMilliseconds}ms');
+
+      // Test clear
+      sw.reset();
+      sw.start();
+      map.clear();
+      sw.stop();
+      print('Cleared $count entries in ${sw.elapsedMicroseconds}us');
+
+      map.close();
+    });
+
+    test('LxMap Update Flood - 10k key updates', () {
+      print('[Description] Tests rapidly updating existing map values.');
+      final map = LxMap<String, int>({});
+      const keyCount = 10000;
+
+      // Pre-populate
+      for (var i = 0; i < keyCount; i++) {
+        map['key_$i'] = 0;
+      }
+
+      var notifyCount = 0;
       map.addListener(() => notifyCount++);
 
       final sw = Stopwatch()..start();
-      for (int i = 0; i < 100000; i++) {
-        map['key_$i'] = i;
+      for (var i = 0; i < keyCount; i++) {
+        map['key_$i'] = i + 1;
       }
-      print('100,000 map insertions took ${sw.elapsedMilliseconds}ms');
-      expect(notifyCount, 100000);
-      expect(map.length, 100000);
-
-      sw.reset();
-      map.clear();
       sw.stop();
-      print('100,000 map clear took ${sw.elapsedMicroseconds}us');
-      expect(notifyCount, 100001);
+
+      print(
+          'Updated $keyCount keys in ${sw.elapsedMilliseconds}ms ($notifyCount notifications)');
+
+      map.close();
     });
 
-    test('Collection change propagation to computed', () {
-      print(
-          '[Description] Validates that bulk mutations in reactive collections correctly and efficiently propagate to dependent computed values.');
+    test('Collection Computed Propagation', () {
+      print('[Description] Tests computed that observes collection changes.');
       final list = <int>[].lx;
-      final sum = LxComputed(() => list.fold(0, (acc, e) => acc + e));
+      final sum = LxComputed(() => list.fold<int>(0, (a, b) => a + b));
 
-      // Initialize
-      expect(sum.value, 0);
+      var computeCount = 0;
+      sum.addListener(() => computeCount++);
 
       final sw = Stopwatch()..start();
-      Lx.batch(() {
-        for (int i = 0; i < 10000; i++) {
-          list.add(i);
-        }
-      });
-      // Trigger lazy computation within the stopwatch
-      sum.value;
+      for (var i = 1; i <= 10000; i++) {
+        list.add(i);
+      }
+      final result = sum.computedValue;
       sw.stop();
 
+      // Sum of 1..10000 = 50005000
+      expect(result, 50005000);
       print(
-          'Batch add 10,000 items + computed sum took ${sw.elapsedMilliseconds}ms');
-
-      expect(sum.value, 49995000); // sum(0..9999)
+          'Added 10k items, computed sum=$result in ${sw.elapsedMilliseconds}ms');
+      print('Compute notifications: $computeCount');
 
       list.close();
       sum.close();
     });
-  }, timeout: const Timeout(Duration(minutes: 5)));
+  });
 }

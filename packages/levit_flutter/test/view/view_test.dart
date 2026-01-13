@@ -11,7 +11,7 @@ void main() {
 
   group('LView', () {
     testWidgets('provides controller access', (tester) async {
-      Levit.put(TestController()..count = 42);
+      Levit.put(() => TestController()..count = 42);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -23,7 +23,7 @@ void main() {
     });
 
     testWidgets('supports tagged controller', (tester) async {
-      Levit.put(TestController()..count = 100, tag: 'special');
+      Levit.put(() => TestController()..count = 100, tag: 'special');
 
       await tester.pumpWidget(
         MaterialApp(
@@ -46,7 +46,7 @@ void main() {
 
     testWidgets('autoWatch enables automatic reactivity', (tester) async {
       final controller = TestController();
-      Levit.put(controller);
+      Levit.put(() => controller);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -83,7 +83,7 @@ void main() {
 
   group('LStatefulView', () {
     testWidgets('provides controller access in state', (tester) async {
-      Levit.put(TestController()..count = 77);
+      Levit.put(() => TestController()..count = 77);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -120,7 +120,7 @@ void main() {
       bool initCalled = false;
       bool closeCalled = false;
 
-      Levit.put(TestController());
+      Levit.put(() => TestController());
 
       await tester.pumpWidget(
         MaterialApp(
@@ -147,7 +147,7 @@ void main() {
 
     testWidgets('autoWatch true wraps build in LWatch', (tester) async {
       final controller = TestController();
-      Levit.put(controller);
+      Levit.put(() => controller);
 
       await tester.pumpWidget(
         MaterialApp(
