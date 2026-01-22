@@ -1,5 +1,11 @@
 # Levit Monitor
 
+[![Pub Version](https://img.shields.io/pub/v/levit_monitor)](https://pub.dev/packages/levit_monitor)
+[![Platforms](https://img.shields.io/badge/platforms-dart-blue)](https://pub.dev/packages/levit_monitor)
+[![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
+[![codecov](https://codecov.io/gh/SoftiLab/levit/graph/badge.svg?token=ooSOnU6nkwg\&flag=levit_monitor)](https://codecov.io/github/atoumbre/levit?flags=levit_monitor)
+
+
 A unified observability and diagnostics engine for the Levit ecosystem.
 
 `levit_monitor` provides deep visibility into the runtime behavior of your application by capturing and correlating events from both the dependency injection system (`levit_dart`) and the reactive state engine (`levit_reactive`).
