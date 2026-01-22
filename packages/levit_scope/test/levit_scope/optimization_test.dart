@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:levit_di/levit_di.dart';
+import 'package:levit_scope/levit_scope.dart';
 
 void main() {
   group('DI Optimization & Cache Invalidation', () {
@@ -187,7 +187,7 @@ void main() {
       // We are looking at `_delete` in Scope A.
       // Does A has cache entry for X? No.
 
-      // Re-read `levit_di.dart` around `reset` / `delete`.
+      // Re-read `levit_scope.dart` around `reset` / `delete`.
       // It iterates `_registry`. So it only deletes things that are local.
       // If `put` guarantees cache is clear, and `find` never populates cache for local...
       // Then `delete`/`reset` cache clearing might indeed be unreachable/redundant logic

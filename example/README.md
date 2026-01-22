@@ -180,7 +180,7 @@ Domain logic remains clean, deterministic, and testable.
 
 ---
 
-### Scoped Dependency Injection (`levit_di`)
+### Scoped Dependency Injection (`levit_scope`)
 
 Lifecycle management is explicit and predictable.
 

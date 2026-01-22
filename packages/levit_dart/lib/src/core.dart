@@ -438,6 +438,22 @@ class _ChainedCaptureList extends ListBase<LxReactive> {
   }
 }
 
+/// Implicit scoping extensions for [LevitScope].
+extension LevitScopeImplicitScopeExtension on LevitScope {
+  /// Executes the [callback] within a [Zone] where this scope is active.
+  ///
+  /// Any calls to static methods like [Levit.find] or [Levit.put] inside the
+  /// [callback] will automatically target this scope.
+  ///
+  /// Returns the result of the [callback].
+  R run<R>(R Function() callback) {
+    return runZoned(
+      callback,
+      zoneValues: {Levit.zoneScopeKey: this},
+    );
+  }
+}
+
 /// Fluent API for naming reactive variables.
 extension LxNamingExtension<R extends LxReactive> on R {
   /// Sets the debug name of this reactive object and returns it.

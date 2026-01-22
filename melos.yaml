@@ -2,6 +2,7 @@ name: levit
 repository: https://github.com/softilab/levit
 
 packages:
+  - benchmarks
   - packages/**
   - example/**
   - stress_tests

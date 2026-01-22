@@ -21,7 +21,6 @@
 library;
 
 export 'package:levit_dart/levit_dart.dart';
-export 'package:levit_monitor/levit_monitor.dart';
 
 export 'src/scope.dart'
     hide LMultiScopeElement, LScopedViewElement, LScopeElement;

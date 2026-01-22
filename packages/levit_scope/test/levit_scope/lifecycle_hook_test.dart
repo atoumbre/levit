@@ -1,4 +1,4 @@
-import 'package:levit_di/levit_di.dart';
+import 'package:levit_scope/levit_scope.dart';
 import 'package:test/test.dart';
 
 class LifecycleService implements LevitScopeDisposable {

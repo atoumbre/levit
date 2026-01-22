@@ -150,7 +150,7 @@ When `LScope` is removed:
 In the Levit stack:
 
 * [`levit_reactive`](../levit_reactive) defines **reactive primitives**
-* [`levit_di`](../levit_di) defines **dependency scoping**
+* [`levit_scope`](../levit_scope) defines **dependency scoping**
 * [`levit_dart`](../levit_dart) defines **application structure**
 * `levit_flutter` projects all of the above into **Flutter’s widget tree**
 

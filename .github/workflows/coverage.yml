@@ -56,12 +56,12 @@ jobs:
            flags: levit_dart
            token: ${{ secrets.CODECOV_TOKEN }}
            
-      - name: Upload levit_di Coverage
+      - name: Upload levit_scope Coverage
         uses: codecov/codecov-action@v4
         if: always()
         with:
-           files: packages/levit_di/coverage/lcov.info
-           flags: levit_di
+           files: packages/levit_scope/coverage/lcov.info
+           flags: levit_scope
            token: ${{ secrets.CODECOV_TOKEN }}
            
       - name: Upload levit_reactive Coverage

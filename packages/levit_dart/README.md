@@ -8,7 +8,7 @@
 
 **The core composition layer for pure Dart applications. Explicit. Reactive. Testable.**
 
-`levit_dart` is the **non-UI core framework** of the Levit ecosystem. It composes the reactive primitives from `levit_reactive` and the dependency-management model from `levit_di` into a coherent foundation for building **scalable, deterministic Dart applications**—without any Flutter dependency.
+`levit_dart` is the **non-UI core framework** of the Levit ecosystem. It composes the reactive primitives from `levit_reactive` and the dependency-management model from `levit_scope` into a coherent foundation for building **scalable, deterministic Dart applications**—without any Flutter dependency.
 
 It is designed for shared business logic, servers, background watchers, CLI tools, and any environment where application structure and lifecycle discipline matter.
 
@@ -19,7 +19,7 @@ It is designed for shared business logic, servers, background watchers, CLI tool
 
 ## What `levit_dart` Provides
 
-Unlike `levit_reactive` and `levit_di`, which are standalone primitives, `levit_dart` defines **application-level conventions**:
+Unlike `levit_reactive` and `levit_scope`, which are standalone primitives, `levit_dart` defines **application-level conventions**:
 
 * How stateful logic is structured
 * How lifecycles are managed
@@ -38,7 +38,7 @@ It turns low-level building blocks into a practical framework for real applicati
   Built-in support for structured task execution (idle, running, success, error).
 
 * **Integrated Dependency Injection**
-  Re-exports and standardizes usage of `levit_di` for service and controller resolution.
+  Re-exports and standardizes usage of `levit_scope` for service and controller resolution.
 
 * **Integrated Reactivity**
   Re-exports `levit_reactive` for fine-grained state, computed values, and async state.
@@ -134,7 +134,7 @@ Use `levit_dart` when you need:
 * Shared business logic across multiple runtimes
 
 For UI binding and widget-tree scoping, add **`levit_flutter`**.
-For lower-level control, you can use **[`levit_reactive`](../levit_reactive)** or **[`levit_di`](../levit_di)** directly.
+For lower-level control, you can use **[`levit_reactive`](../levit_reactive)** or **[`levit_scope`](../levit_scope)** directly.
 
 ---
 

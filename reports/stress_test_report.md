@@ -81,18 +81,18 @@
 [lib/levit_reactive/lx_core_stress_test.dart] [Stress Test: Lx Core Listener Fan-Out - 10k listeners on a single Lx] Notified 10000 listeners in 2ms
 [lib/levit_reactive/lx_core_stress_test.dart] [Stress Test: Lx Core Listener Add/Remove Churn - 5k add/remove cycles] Performed 10000 add/remove ops in 1ms (10000 ops/ms)
 [lib/levit_reactive/async_stress_test.dart] [Stress Test: Async Types Async Race - 50 concurrent LxAsyncComputed on same source] 50 async computeds, 0 resolved in 201ms
-[lib/levit_di/registration_stress_test.dart] [Stress Test: DI Registration Bulk Put/Find - 100k services] Registered 100000 services in 74ms
-[lib/levit_di/registration_stress_test.dart] [Stress Test: DI Registration Bulk Put/Find - 100k services] Resolved 100000 services in 42ms
-[lib/levit_di/registration_stress_test.dart] [Stress Test: DI Registration Lazy Instantiation Burst - 10k lazy services] Instantiated 10000 lazy services in 5ms
-[lib/levit_di/registration_stress_test.dart] [Stress Test: DI Registration Factory Create Churn - 10k factory instances] Created 10000 factory instances in 2ms (5000 ops/ms)
-[lib/levit_di/scope_stress_test.dart] [Stress Test: DI Scoping Deep Nesting - 1000 nested scopes] Created 1000 nested scopes in 2ms
-[lib/levit_di/scope_stress_test.dart] [Stress Test: DI Scoping Deep Nesting - 1000 nested scopes] Resolved root dependency through 1000 layers in 3ms
-[lib/levit_di/scope_stress_test.dart] [Stress Test: DI Scoping Shadowing - Resolution at each level] Performed 1000 shadowed lookups at depth 100 in 1ms
-[lib/levit_di/lifecycle_stress_test.dart] [Stress Test: DI Lifecycle Disposable Cleanup - 10k services] Disposed 10000 services in 5ms (onClose count: 10000)
-[lib/levit_di/lifecycle_stress_test.dart] [Stress Test: DI Lifecycle Concurrent Find - 10k concurrent futures] Resolved 10000 concurrent requests in 137ms
+[lib/levit_scope/registration_stress_test.dart] [Stress Test: DI Registration Bulk Put/Find - 100k services] Registered 100000 services in 74ms
+[lib/levit_scope/registration_stress_test.dart] [Stress Test: DI Registration Bulk Put/Find - 100k services] Resolved 100000 services in 42ms
+[lib/levit_scope/registration_stress_test.dart] [Stress Test: DI Registration Lazy Instantiation Burst - 10k lazy services] Instantiated 10000 lazy services in 5ms
+[lib/levit_scope/registration_stress_test.dart] [Stress Test: DI Registration Factory Create Churn - 10k factory instances] Created 10000 factory instances in 2ms (5000 ops/ms)
+[lib/levit_scope/scope_stress_test.dart] [Stress Test: DI Scoping Deep Nesting - 1000 nested scopes] Created 1000 nested scopes in 2ms
+[lib/levit_scope/scope_stress_test.dart] [Stress Test: DI Scoping Deep Nesting - 1000 nested scopes] Resolved root dependency through 1000 layers in 3ms
+[lib/levit_scope/scope_stress_test.dart] [Stress Test: DI Scoping Shadowing - Resolution at each level] Performed 1000 shadowed lookups at depth 100 in 1ms
+[lib/levit_scope/lifecycle_stress_test.dart] [Stress Test: DI Lifecycle Disposable Cleanup - 10k services] Disposed 10000 services in 5ms (onClose count: 10000)
+[lib/levit_scope/lifecycle_stress_test.dart] [Stress Test: DI Lifecycle Concurrent Find - 10k concurrent futures] Resolved 10000 concurrent requests in 137ms
 [lib/levit_reactive/computed_stress_test.dart] [Stress Test: LxComputed Deep Chain - 5000 LxComputed nodes] Created 5000 computed nodes in 701ms
 [lib/levit_reactive/computed_stress_test.dart] [Stress Test: LxComputed Deep Chain - 5000 LxComputed nodes] Propagated change through 5000 nodes in 1ms
-[lib/levit_di/lifecycle_stress_test.dart] [Stress Test: DI Lifecycle Put/Delete Cycles - 100k iterations] Performed 100000 put/delete cycles in 65ms
+[lib/levit_scope/lifecycle_stress_test.dart] [Stress Test: DI Lifecycle Put/Delete Cycles - 100k iterations] Performed 100000 put/delete cycles in 65ms
 [lib/levit_flutter/lwatch_stress_test.dart] [Stress Test: LWatch Fan-In - LWatch observing 1000 sources] LWatch Fan-In: Initial build with 1000 sources, single update rebuild in 10ms
 [lib/levit_flutter/lwatch_stress_test.dart] [Stress Test: LWatch Rapid Rebuild - 60fps simulation for 2 seconds] Rapid Rebuild: 120 builds over 120 frame updates in 126ms
 [lib/levit_flutter/status_builder_stress_test.dart] [Stress Test: LStatusBuilder State Switch - 1000 status transitions] LStatusBuilder State Switch: 1000 transitions in 32ms

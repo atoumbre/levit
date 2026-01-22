@@ -93,16 +93,16 @@
 [lib/levit_reactive/diamond_graph_stress_test.dart] [Stress Test: Diamond Graph Diamond Graph Efficiency (Glitch Freedom)] Diamond Graph Update: Propagated change through 100 layers in 4ms
 [lib/levit_reactive/memory_churn_stress_test.dart] [Stress Test: Memory Churn & Lifecycle Repeatedly create and dispose 10,000 reactive objects] Completed 10000 lifecycle iterations
 [lib/levit_reactive/memory_churn_stress_test.dart] [Stress Test: Memory Churn & Lifecycle Churn with cross-dependencies] Completed 5000 cross-dependency lifecycle iterations
-[lib/levit_di/deep_scope_stress_test.dart] [Stress Test: Deep Scoping Deeply Nested Scopes (1,000 levels)] Created 1000 nested scopes in 3ms
-[lib/levit_di/deep_scope_stress_test.dart] [Stress Test: Deep Scoping Deeply Nested Scopes (1,000 levels)] Resolved local in deep scope in 2ms
-[lib/levit_di/deep_scope_stress_test.dart] [Stress Test: Deep Scoping Deep Traversal Resolution] Resolved root dependency through 1000 layers in 1ms
-[lib/levit_di/concurrent_access_stress_test.dart] [Stress Test: Concurrent Access Concurrent Async Resolution (10,000 futures)] Resolved 10000 concurrent requests in 251ms
-[lib/levit_di/registration_stress_test.dart] [Stress Test: DI Registration Massive Registration & Resolution (100,000 services)] Registered 100000 services in 90ms
-[lib/levit_di/registration_stress_test.dart] [Stress Test: DI Registration Massive Registration & Resolution (100,000 services)] Resolved 100000 services in 49ms
-[lib/levit_di/provider_shadowing_stress_test.dart] [Stress Test: Provider Shadowing Resolution remains efficient with deep shadowing] Deep Shadowing Setup: Created 1000 nested scopes in 3ms
-[lib/levit_di/provider_shadowing_stress_test.dart] [Stress Test: Provider Shadowing Resolution remains efficient with deep shadowing] Deep Shadowing Resolution: Performed 10000 resolutions at depth 1000 in 8ms
-[lib/levit_di/provider_shadowing_stress_test.dart] [Stress Test: Provider Shadowing Resolving root dependency through many layers of shadowing] Root Resolution: Resolved through 1000 layers 10000 times in 3ms
-[lib/levit_di/churn_stress_test.dart] [Stress Test: Memory Churn & Lifecycle Put/Delete Cycles (1,000,000 iterations)] Performed 1000000 put/delete cycles in 462ms
+[lib/levit_scope/deep_scope_stress_test.dart] [Stress Test: Deep Scoping Deeply Nested Scopes (1,000 levels)] Created 1000 nested scopes in 3ms
+[lib/levit_scope/deep_scope_stress_test.dart] [Stress Test: Deep Scoping Deeply Nested Scopes (1,000 levels)] Resolved local in deep scope in 2ms
+[lib/levit_scope/deep_scope_stress_test.dart] [Stress Test: Deep Scoping Deep Traversal Resolution] Resolved root dependency through 1000 layers in 1ms
+[lib/levit_scope/concurrent_access_stress_test.dart] [Stress Test: Concurrent Access Concurrent Async Resolution (10,000 futures)] Resolved 10000 concurrent requests in 251ms
+[lib/levit_scope/registration_stress_test.dart] [Stress Test: DI Registration Massive Registration & Resolution (100,000 services)] Registered 100000 services in 90ms
+[lib/levit_scope/registration_stress_test.dart] [Stress Test: DI Registration Massive Registration & Resolution (100,000 services)] Resolved 100000 services in 49ms
+[lib/levit_scope/provider_shadowing_stress_test.dart] [Stress Test: Provider Shadowing Resolution remains efficient with deep shadowing] Deep Shadowing Setup: Created 1000 nested scopes in 3ms
+[lib/levit_scope/provider_shadowing_stress_test.dart] [Stress Test: Provider Shadowing Resolution remains efficient with deep shadowing] Deep Shadowing Resolution: Performed 10000 resolutions at depth 1000 in 8ms
+[lib/levit_scope/provider_shadowing_stress_test.dart] [Stress Test: Provider Shadowing Resolving root dependency through many layers of shadowing] Root Resolution: Resolved through 1000 layers 10000 times in 3ms
+[lib/levit_scope/churn_stress_test.dart] [Stress Test: Memory Churn & Lifecycle Put/Delete Cycles (1,000,000 iterations)] Performed 1000000 put/delete cycles in 462ms
 [lib/levit_flutter/massive_fan_in_stress_test.dart] [Stress Test: LWatch Fan-In One LWatch observing 2,000 sources] Initial build with 2000 dependencies: 17ms
 [lib/levit_flutter/massive_fan_in_stress_test.dart] [Stress Test: LWatch Fan-In One LWatch observing 2,000 sources] Update time for 2000 dependencies: 5ms
 [lib/levit_flutter/massive_fan_in_stress_test.dart] [Stress Test: LWatch Fan-In One LWatch observing 2,000 sources] Batch update (100) time: 2ms

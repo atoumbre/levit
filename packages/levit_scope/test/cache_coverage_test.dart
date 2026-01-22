@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:levit_di/levit_di.dart';
+import 'package:levit_scope/levit_scope.dart';
 
 void main() {
   group('LevitScope Cache Coverage', () {

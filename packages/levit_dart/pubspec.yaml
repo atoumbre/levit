@@ -7,7 +7,7 @@ environment:
   sdk: ^3.0.0
 
 dependencies:
-  levit_di: ^0.0.4  
+  levit_scope: ^0.0.4  
   levit_reactive: ^0.0.4
   meta: ^1.17.0
 

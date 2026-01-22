@@ -10,7 +10,7 @@ Future<void> main() async {
       [
         'test',
         'lib/levit_reactive',
-        'lib/levit_di',
+        'lib/levit_scope',
         'lib/levit_flutter',
         '-r',
         'json',
@@ -121,7 +121,7 @@ Future<void> _generateMarkdownReport(List<Map<String, String>> metrics) async {
   final reactiveMetrics =
       metrics.where((m) => m['suite']!.contains('levit_reactive')).toList();
   final diMetrics =
-      metrics.where((m) => m['suite']!.contains('levit_di')).toList();
+      metrics.where((m) => m['suite']!.contains('levit_scope')).toList();
   final flutterMetrics =
       metrics.where((m) => m['suite']!.contains('levit_flutter')).toList();
 

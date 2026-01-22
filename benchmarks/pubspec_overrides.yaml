@@ -1,10 +1,10 @@
-# melos_managed_dependency_overrides: levit_scope,levit_flutter,levit_reactive,levit_dart
+# melos_managed_dependency_overrides: levit_dart,levit_flutter,levit_reactive,levit_scope
 dependency_overrides:
   levit_dart:
     path: ../packages/levit_dart
-  levit_scope:
-    path: ../packages/levit_scope
   levit_flutter:
     path: ../packages/levit_flutter
   levit_reactive:
     path: ../packages/levit_reactive
+  levit_scope:
+    path: ../packages/levit_scope
