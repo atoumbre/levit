@@ -3,7 +3,7 @@ name: Main Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main]
 
@@ -25,6 +25,10 @@ jobs:
   call-coverage:
     uses: ./.github/workflows/coverage.yml
     secrets: inherit # Passes CODECOV_TOKEN automatically
+
+  # Call Pana Workflow
+  call-pana:
+    uses: ./.github/workflows/pana.yml
 
 
   # Call Deploy Workflow

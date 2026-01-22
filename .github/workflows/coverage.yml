@@ -79,3 +79,11 @@ jobs:
            files: packages/levit_flutter/coverage/lcov.info
            flags: levit_flutter
            token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload levit_monitor Coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+           files: packages/levit_monitor/coverage/lcov.info
+           flags: levit_monitor
+           token: ${{ secrets.CODECOV_TOKEN }}

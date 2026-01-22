@@ -1,0 +1,56 @@
+name: Pana Analysis
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  pana:
+    name: Pana (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [levit_dart, levit_flutter, levit_monitor, levit_reactive, levit_scope]
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Melos
+        uses: bluefireteam/melos-action@v3
+
+      - name: Bootstrap
+        run: melos bootstrap
+
+      - name: Install Pana
+        run: dart pub global activate pana
+
+      - name: Run Pana
+        id: run_pana
+        run: |
+          cd packages/${{ matrix.package }}
+          # We run pana and capture JSON output. 
+          # Some logs might go to stdout, so we try to extract the JSON part if needed,
+          # but usually --format json prints ONLY json to stdout.
+          pana --format json . > pana_output.json
+          
+      - name: Check Pana Score
+        run: |
+          cd packages/${{ matrix.package }}
+          SCORE=$(jq '.scores.grantedPoints' pana_output.json)
+          MAX=$(jq '.scores.maxPoints' pana_output.json)
+          echo "Package: ${{ matrix.package }}"
+          echo "Score: $SCORE / $MAX"
+          
+          if [ "$SCORE" -lt 160 ]; then
+            echo "❌ Error: Pana score $SCORE is less than 160"
+            exit 1
+          else
+            echo "✅ Pana score is 160/160!"
+          fi
