@@ -3,7 +3,7 @@
 [![Pub Version](https://img.shields.io/pub/v/levit_scope)](https://pub.dev/packages/levit_scope)
 [![Platforms](https://img.shields.io/badge/platforms-dart-blue)](https://pub.dev/packages/levit_scope)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-[![codecov](https://codecov.io/gh/SoftiLab/levit/graph/badge.svg?token=AESOtS4YPg\&flag=levit_scope)](https://codecov.io/github/atoumbre/levit?flags=levit_scope)
+[![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg\&flag=levit_scope)](https://codecov.io/github/atoumbre/levit?flags=levit_scope)
 
 **Type-safe, hierarchical dependency injection for Dart. Explicit. Scoped. Deterministic.**
 
