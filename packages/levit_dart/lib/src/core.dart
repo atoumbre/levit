@@ -1,179 +1,210 @@
 part of '../levit_dart.dart';
 
-/// The primary entry point for managing dependencies and scopes in Levit.
+/// The central access point for the Levit framework.
 ///
-/// [Levit] provides a unified, static interface for interacting with the
-/// dependency injection (DI) system. It simplifies access to the current
-/// [LevitScope] by using [Zone]-based implicit propagation.
+/// [Levit] provides static methods to manage the application's dependency injection (DI)
+/// system and state management lifecycle. It serves as a facade over the active [LevitScope],
+/// handling implicit scoping via [Zone] values.
 ///
-/// In a Levit application, dependencies are stored within a [LevitScope].
-/// By default, [Levit] operations target the root scope. However, when code
-/// is executed within a nested scope using [LevitScope.run], this class
-/// automatically detects and targets that active scope.
+/// **Key Responsibilities:**
+/// *   **Dependency Management:** Register and retrieve dependencies ([put], [find], [lazyPut]).
+/// *   **Scope Management:** Create and manage child scopes ([createScope], [reset]).
+/// *   **Middleware Integration:** Register global middlewares for logging and monitoring ([addMiddleware]).
+/// *   **Auto-Linking:** Automatically link reactive variables to their controllers ([enableAutoLinking]).
 ///
-/// This "ambient" scope behavior allows components to find their dependencies
-/// without requiring manual scope passing, while still supporting isolation
-/// for features like modularity or testing.
+/// This class is designed to be used statically. Most operations delegate to the
+/// [LevitScope] associated with the current [Zone]. If no specific scope is active,
+/// the root scope is used.
 class Levit {
+  /// The root scope of the application.
   static final LevitScope _root = () {
     return LevitScope.root();
   }();
 
   static int _activeCaptureScopes = 0;
 
-  /// The internal [Zone] key used to find the active scope.
+  /// The internal [Zone] key used to identify the active [LevitScope].
   static final Object zoneScopeKey = Object();
 
   /// Retrieves the current active [LevitScope].
   ///
-  /// Returns the scope associated with the current [Zone], or the root scope
-  /// if no explicit scope is active.
+  /// This property checks the current [Zone] for an active scope. If none is found,
+  /// it returns the global root scope. This allows for implicit scope propagation
+  /// through async calls and widget trees (when used with `levit_flutter`).
   static LevitScope get _currentScope {
     final implicit = Zone.current[Levit.zoneScopeKey];
     if (implicit is LevitScope) return implicit;
     return _root;
   }
 
-  /// Instantiates and registers a dependency using a [builder].
+  /// Registers a dependency instance in the active scope.
   ///
-  /// The [builder] is executed immediately. If [Levit.enableAutoLinking] is
-  /// active, any reactive variables (like [Lx]) created during execution are
-  /// automatically captured and linked to the resulting instance for cleanup.
+  /// The [builder] is executed immediately to create the instance.
   ///
-  /// * [builder]: A function that creates the dependency instance.
-  /// * [tag]: Optional unique identifier to allow multiple instances of the same type [S].
-  /// * [permanent]: If `true`, this instance survives a non-forced [reset].
+  /// *   [builder]: A function that returns the dependency instance.
+  /// *   [tag]: An optional unique identifier for this dependency.
+  /// *   [permanent]: If `true`, the dependency will not be removed when the scope is reset (unless forced).
   ///
-  /// Returns the created instance of type [S].
+  /// Returns the created instance.
+  ///
+  /// Example:
+  /// ```dart
+  /// final service = Levit.put(() => MyService());
+  /// ```
   static S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
     return _currentScope.put<S>(builder, tag: tag, permanent: permanent);
   }
 
-  /// Registers a [builder] that will be executed only when the dependency is first requested.
+  /// Registers a lazy dependency builder in the active scope.
   ///
-  /// * [builder]: A function that creates the dependency instance.
-  /// * [tag]: Optional unique identifier for the instance.
-  /// * [permanent]: If `true`, the registration persists through a [reset].
-  /// * [isFactory]: If `true`, a new instance is created every time [find] is called.
+  /// The [builder] is not executed until the dependency is first requested via [find].
+  ///
+  /// *   [builder]: A function that creates the dependency instance.
+  /// *   [tag]: An optional unique identifier.
+  /// *   [permanent]: If `true`, the registration persists across resets.
+  /// *   [isFactory]: If `true`, the [builder] is executed *every time* [find] is called,
+  ///     creating a new instance each time.
+  ///
+  /// Example:
+  /// ```dart
+  /// Levit.lazyPut(() => MyService());
+  /// ```
   static void lazyPut<S>(S Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
     _currentScope.lazyPut<S>(builder,
         tag: tag, permanent: permanent, isFactory: isFactory);
   }
 
-  /// Registers an asynchronous [builder] for lazy instantiation.
+  /// Registers an asynchronous lazy dependency builder.
   ///
-  /// Use [findAsync] to retrieve the instance once the future completes.
+  /// The [builder] returns a [Future]. Use [findAsync] to retrieve the instance.
   ///
-  /// * [builder]: A function returning a [Future] of the dependency.
-  /// * [tag]: Optional unique identifier for the instance.
-  /// * [permanent]: If `true`, the registration persists through a [reset].
-  /// * [isFactory]: If `true`, the builder is re-run for every [findAsync] call.
+  /// *   [builder]: A function returning a [Future] of the dependency.
+  /// *   [tag]: An optional unique identifier.
+  /// *   [permanent]: If `true`, the registration persists across resets.
+  /// *   [isFactory]: If `true`, the builder is re-executed for every [findAsync] call.
   static void lazyPutAsync<S>(Future<S> Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
     _currentScope.lazyPutAsync<S>(builder,
         tag: tag, permanent: permanent, isFactory: isFactory);
   }
 
-  /// Retrieves the registered instance of type [S].
+  /// Retrieves a registered dependency of type [S].
   ///
-  /// If the instance is not found in the current scope, it searches upward through
-  /// parent scopes.
+  /// *   [tag]: The unique identifier used at registration.
   ///
-  /// * [tag]: The unique identifier used during registration.
+  /// Throws a [LevitException] (or standard [Exception]) if the dependency is not found.
   ///
-  /// Throws an [Exception] if no registration is found for [S] and [tag].
+  /// Example:
+  /// ```dart
+  /// final service = Levit.find<MyService>();
+  /// ```
   static S find<S>({String? tag}) {
     return _currentScope.find<S>(tag: tag);
   }
 
-  /// Retrieves the registered instance of type [S], or returns `null` if not found.
+  /// Retrieves a registered dependency of type [S], or returns `null` if not found.
   ///
-  /// * [tag]: The unique identifier used during registration.
+  /// *   [tag]: The unique identifier used at registration.
   static S? findOrNull<S>({String? tag}) {
     return _currentScope.findOrNull<S>(tag: tag);
   }
 
-  /// Asynchronously retrieves the registered instance of type [S].
+  /// Asynchronously retrieves a registered dependency of type [S].
   ///
-  /// Useful for dependencies registered via [lazyPutAsync].
+  /// This waits for the [Future] provided in [lazyPutAsync] to complete.
   ///
-  /// * [tag]: The unique identifier used during registration.
+  /// *   [tag]: The unique identifier used at registration.
   ///
-  /// Throws an [Exception] if no registration is found.
+  /// Throws if the dependency is not found.
   static Future<S> findAsync<S>({String? tag}) {
     return _currentScope.findAsync<S>(tag: tag);
   }
 
-  /// Asynchronously retrieves the registered instance of type [S], or returns `null`.
+  /// Asynchronously retrieves a registered dependency of type [S], or returns `null` if not found.
   ///
-  /// * [tag]: The unique identifier used during registration.
+  /// *   [tag]: The unique identifier used at registration.
   static Future<S?> findOrNullAsync<S>({String? tag}) {
     return _currentScope.findOrNullAsync<S>(tag: tag);
   }
 
-  /// Returns `true` if type [S] is registered in the current or any parent scope.
+  /// Checks if a dependency of type [S] is registered in the active scope or its parents.
+  ///
+  /// *   [tag]: The unique identifier used at registration.
+  ///
+  /// Returns `true` if registered.
   static bool isRegistered<S>({String? tag}) {
     return _currentScope.isRegistered<S>(tag: tag);
   }
 
-  /// Returns `true` if type [S] has already been instantiated.
+  /// Checks if a dependency of type [S] has been instantiated (created).
+  ///
+  /// *   [tag]: The unique identifier used at registration.
+  ///
+  /// Returns `true` if the instance exists in memory.
   static bool isInstantiated<S>({String? tag}) {
     return _currentScope.isInstantiated<S>(tag: tag);
   }
 
-  /// Removes the registration for [S] and disposes of the instance.
+  /// Deletes a registered dependency of type [S] from the active scope.
   ///
-  /// If the instance implements [LevitScopeDisposable], its `onClose` method is called.
+  /// If the instance exists and implements [LevitScopeDisposable] (or has an `onClose` method via [LevitController]),
+  /// it will be disposed.
   ///
-  /// * [tag]: The unique identifier used during registration.
-  /// * [force]: If `true`, deletes even if the dependency was marked as `permanent`.
+  /// *   [tag]: The unique identifier used at registration.
+  /// *   [force]: If `true`, deletes the dependency even if it was marked as `permanent`.
   ///
-  /// Returns `true` if a registration was found and removed.
+  /// Returns `true` if the dependency was found and deleted.
   static bool delete<S>({String? tag, bool force = false}) {
     return _currentScope.delete<S>(tag: tag, force: force);
   }
 
-  /// Disposes of all non-permanent dependencies in the current scope.
+  /// Resets the active scope, removing all non-permanent dependencies.
   ///
-  /// * [force]: If `true`, also disposes of permanent dependencies.
+  /// *   [force]: If `true`, removes *all* dependencies, including permanent ones.
   static void reset({bool force = false}) {
     _currentScope.reset(force: force);
   }
 
-  /// Creates a new child scope branching from the current active scope.
+  /// Creates a new child scope from the current active scope.
   ///
-  /// child scopes can override parent dependencies and provide their own
-  /// isolated lifecycle.
+  /// Child scopes inherit dependencies from their parent but can override them.
+  /// They provide an isolated environment for module-specific dependencies.
   ///
-  /// * [name]: A descriptive name for the scope (used in profiling and logs).
+  /// *   [name]: A descriptive name for the scope (useful for debugging).
+  ///
+  /// Returns the newly created [LevitScope].
   static LevitScope createScope(String name) {
     return _currentScope.createScope(name);
   }
 
-  /// The total number of dependencies registered in the current active scope.
+  /// The number of dependencies registered in the current active scope.
   static int get registeredCount => _currentScope.registeredCount;
 
-  /// A list of all registration keys (type + tag) in the current active scope.
+  /// A list of all keys (type + tag) registered in the current active scope.
   static List<String> get registeredKeys => _currentScope.registeredKeys;
 
-  /// Adds a global middleware for receiving dependency injection events.
+  /// Adds a middleware for dependency injection events.
+  ///
+  /// See [LevitScopeMiddleware] for details on available hooks.
   static void addDependencyMiddleware(LevitScopeMiddleware middleware) {
     LevitScope.addMiddleware(middleware);
   }
 
-  /// Removes a DI middleware.
+  /// Removes a dependency injection middleware.
   static void removeDependencyMiddleware(LevitScopeMiddleware middleware) {
     LevitScope.removeMiddleware(middleware);
   }
 
-  /// Adds a middleware to the list of active middlewares.
+  /// Adds a middleware for reactive state events.
+  ///
+  /// See [LevitReactiveMiddleware] for details on available hooks.
   static void addStateMiddleware(LevitMiddleware middleware) {
     _middlewares.add(middleware);
     Lx.addMiddleware(middleware);
   }
 
-  /// Removes a middleware from the list of active middlewares.
+  /// Removes a reactive state middleware.
   static void removeStateMiddleware(LevitMiddleware middleware) {
     _middlewares.remove(middleware);
     Lx.removeMiddleware(middleware);
@@ -181,24 +212,23 @@ class Levit {
 
   static final List<LevitMiddleware> _middlewares = [];
 
-  /// Registers a [middleware] to intercept both state changes and DI events.
+  /// Registers a global middleware for both state and DI events.
   ///
-  /// Middlewares can be used for logging, persistence, or implementing
-  /// advanced features like Time Travel.
+  /// This is useful for comprehensive logging or developer tools.
   static void addMiddleware(LevitMiddleware middleware) {
     _middlewares.add(middleware);
     Lx.addMiddleware(middleware);
     LevitScope.addMiddleware(middleware);
   }
 
-  /// Un-registers a previously added [middleware].
+  /// Removes a global middleware.
   static void removeMiddleware(LevitMiddleware middleware) {
     _middlewares.remove(middleware);
     Lx.removeMiddleware(middleware);
     LevitScope.removeMiddleware(middleware);
   }
 
-  /// Internal: Notifies middlewares that a reactive object has been registered.
+  /// Notifies middlewares that a reactive object has been registered with an owner.
   static void _notifyRegister(LxReactive reactive, String ownerId) {
     for (final mw in _middlewares) {
       mw.onReactiveRegister(reactive, ownerId);
@@ -207,23 +237,23 @@ class Levit {
 
   static final Object _captureKey = Object();
 
-  /// The key used to capture reactive objects in the current [Zone].
+  /// The internal key used for capturing reactive objects in the current [Zone].
   @visibleForTesting
   static Object get captureKey => _captureKey;
 
   static final _autoLinkMiddleware = _AutoLinkMiddleware();
 
-  /// Enables the "Auto-Linking" feature.
+  /// Enables "Auto-Linking" of reactive variables to controllers.
   ///
-  /// When enabled, any [Lx] variable created inside a [Levit.put] builder or
-  /// [LevitController.onInit] is automatically registered for cleanup with
-  /// its parent controller.
+  /// When enabled, any [Lx] variable created during the initialization of a
+  /// [LevitController] (specifically within [LevitController.onInit] or the builder passed to [put])
+  /// is automatically linked to that controller for lifecycle management.
   static void enableAutoLinking() {
     Lx.addMiddleware(_autoLinkMiddleware);
     LevitScope.addMiddleware(_AutoDisposeMiddleware());
   }
 
-  /// Disables the "Auto-Linking" feature.
+  /// Disables "Auto-Linking".
   static void disableAutoLinking() {
     Lx.removeMiddleware(_autoLinkMiddleware);
     LevitScope.removeMiddleware(_AutoDisposeMiddleware());
@@ -435,42 +465,5 @@ class _ChainedCaptureList extends ListBase<LxReactive> {
   void add(LxReactive element) {
     _inner.add(element);
     _parent.add(element);
-  }
-}
-
-/// Implicit scoping extensions for [LevitScope].
-extension LevitScopeImplicitScopeExtension on LevitScope {
-  /// Executes the [callback] within a [Zone] where this scope is active.
-  ///
-  /// Any calls to static methods like [Levit.find] or [Levit.put] inside the
-  /// [callback] will automatically target this scope.
-  ///
-  /// Returns the result of the [callback].
-  R run<R>(R Function() callback) {
-    return runZoned(
-      callback,
-      zoneValues: {Levit.zoneScopeKey: this},
-    );
-  }
-}
-
-/// Fluent API for naming reactive variables.
-extension LxNamingExtension<R extends LxReactive> on R {
-  /// Sets the debug name of this reactive object and returns it.
-  ///
-  /// Useful for chaining:
-  /// ```dart
-  /// final count = 0.lx.named('count');
-  /// ```
-  R named(String name) {
-    this.name = name;
-    return this;
-  }
-
-  /// Registers this reactive object with an owner (fluent API).
-  R register(String ownerId) {
-    this.ownerId = ownerId;
-    Levit._notifyRegister(this, ownerId);
-    return this;
   }
 }
