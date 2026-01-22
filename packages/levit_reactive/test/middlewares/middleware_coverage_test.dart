@@ -9,19 +9,19 @@ void main() {
       Lx.captureStackTrace = false;
     });
 
-    group('LevitStateHistoryMiddleware', () {
+    group('LevitReactiveHistoryMiddleware', () {
       test('undo/redo return false when empty', () {
-        final history = LevitStateHistoryMiddleware();
+        final history = LevitReactiveHistoryMiddleware();
         expect(history.undo(), isFalse);
         expect(history.redo(), isFalse);
       });
 
       test('changesOfType filters correctly', () {
-        final history = LevitStateHistoryMiddleware();
+        final history = LevitReactiveHistoryMiddleware();
         Lx.addMiddleware(history);
 
         final a = LxInt(0);
-        final b = LxVal<String>('');
+        final b = LxVar<String>('');
 
         a.value = 1;
         b.value = 'hi';
@@ -33,7 +33,7 @@ void main() {
 
       test('printHistory output', () {
         final logs = <String>[];
-        final history = LevitStateHistoryMiddleware();
+        final history = LevitReactiveHistoryMiddleware();
 
         runZoned(() {
           Lx.addMiddleware(history);
@@ -53,7 +53,7 @@ void main() {
       });
 
       test('handles composite change in undo/redo', () {
-        final history = LevitStateHistoryMiddleware();
+        final history = LevitReactiveHistoryMiddleware();
         Lx.addMiddleware(history);
 
         final a = 0.lx;
@@ -81,7 +81,7 @@ void main() {
         bool listened = false;
         bool cancelled = false;
 
-        final count = LxVal(
+        final count = LxVar(
           0,
           onListen: () => listened = true,
           onCancel: () => cancelled = true,
@@ -131,16 +131,16 @@ void main() {
         expect(count.toString(), equals('1'));
       });
 
-      test('LevitStateBatchChange properties', () {
-        final history = LevitStateHistoryMiddleware();
+      test('LevitReactiveBatch properties', () {
+        final history = LevitReactiveHistoryMiddleware();
         Lx.addMiddleware(history);
 
         Lx.batch(() {
           0.lx.value = 1;
         });
 
-        // Verify LevitStateBatchChange specific getters
-        final composite = history.changes.first as LevitStateBatchChange;
+        // Verify LevitReactiveBatch specific getters
+        final composite = history.changes.first as LevitReactiveBatch;
 
         // Access via dynamic to handle 'void' return type in tests
         expect((composite as dynamic).oldValue, isNull);
@@ -151,14 +151,14 @@ void main() {
         expect(composite.toString(), contains('Batch'));
       });
 
-      test('LevitStateBatchChange stopPropagation', () {
-        final history = LevitStateHistoryMiddleware();
+      test('LevitReactiveBatch stopPropagation', () {
+        final history = LevitReactiveHistoryMiddleware();
         Lx.addMiddleware(history);
         Lx.batch(() {
           0.lx.value = 1;
         });
 
-        final composite = history.changes.first as LevitStateBatchChange;
+        final composite = history.changes.first as LevitReactiveBatch;
         expect(composite.isPropagationStopped, isFalse);
 
         composite.stopPropagation();

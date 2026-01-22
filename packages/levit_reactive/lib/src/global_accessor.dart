@@ -12,10 +12,10 @@ import 'watchers.dart';
 /// This class provides static access to core reactive state management functionality,
 /// including configuration, proxy management, and middleware operations.
 class Lx {
-  static LevitStateObserver? get proxy => LevitSateCore.proxy;
+  static LevitReactiveObserver? get proxy => LevitStateCore.proxy;
 
-  static set proxy(LevitStateObserver? value) {
-    LevitSateCore.proxy = value;
+  static set proxy(LevitReactiveObserver? value) {
+    LevitStateCore.proxy = value;
   }
 
 // --------------------------------------------------------------------------
@@ -23,7 +23,7 @@ class Lx {
 // --------------------------------------------------------------------------
 
   /// Whether to capture stack traces on state changes (expensive).
-  static bool get captureStackTrace => LevitSateCore.captureStackTrace;
+  static bool get captureStackTrace => LevitStateCore.captureStackTrace;
 
   /// Global flag to enable/disable [LxWatch] performance monitoring.
   ///
@@ -43,7 +43,7 @@ class Lx {
   static bool enableWatchMonitoring = true;
 
   static set captureStackTrace(bool value) {
-    LevitSateCore.captureStackTrace = value;
+    LevitStateCore.captureStackTrace = value;
   }
 
 // --------------------------------------------------------------------------
@@ -51,26 +51,27 @@ class Lx {
 // --------------------------------------------------------------------------
 
   /// Adds a middleware.
-  static LevitStateMiddleware addMiddleware(LevitStateMiddleware middleware) {
-    return LevitStateMiddleware.add(middleware);
+  static LevitReactiveMiddleware addMiddleware(
+      LevitReactiveMiddleware middleware) {
+    return LevitReactiveMiddleware.add(middleware);
   }
 
   /// Removes a middleware.
-  static bool removeMiddleware(LevitStateMiddleware middleware) {
-    return LevitStateMiddleware.remove(middleware);
+  static bool removeMiddleware(LevitReactiveMiddleware middleware) {
+    return LevitReactiveMiddleware.remove(middleware);
   }
 
   /// Clears all middlewares. Use with caution.
   static void clearMiddlewares() {
-    LevitStateMiddleware.clear();
+    LevitReactiveMiddleware.clear();
   }
 
-  static bool containsMiddleware(LevitStateMiddleware middleware) {
-    return LevitStateMiddleware.contains(middleware);
+  static bool containsMiddleware(LevitReactiveMiddleware middleware) {
+    return LevitReactiveMiddleware.contains(middleware);
   }
 
   static void runWithoutMiddleware(void Function() action) {
-    LevitStateMiddleware.runWithoutMiddleware(action);
+    LevitReactiveMiddleware.runWithoutMiddleware(action);
   }
 
 // --------------------------------------------------------------------------
@@ -78,14 +79,14 @@ class Lx {
 // --------------------------------------------------------------------------
 
   static R batch<R>(R Function() callback) {
-    return LevitSateCore.batch(callback);
+    return LevitStateCore.batch(callback);
   }
 
   static Future<R> batchAsync<R>(Future<R> Function() callback) {
-    return LevitSateCore.batchAsync(callback);
+    return LevitStateCore.batchAsync(callback);
   }
 
-  static bool get isBatching => LevitSateCore.isBatching;
+  static bool get isBatching => LevitStateCore.isBatching;
 
 // --------------------------------------------------------------------------
 // Async Zone Tracking (Internal)
@@ -94,16 +95,16 @@ class Lx {
   /// Internal: Enters async tracking scope.
   @internal
   static void enterAsyncScope() {
-    LevitSateCore.enterAsyncScope();
+    LevitStateCore.enterAsyncScope();
   }
 
   /// Internal: Exits async tracking scope.
   @internal
   static void exitAsyncScope() {
-    LevitSateCore.exitAsyncScope();
+    LevitStateCore.exitAsyncScope();
   }
 
   @internal
   static Object get asyncComputedTrackerZoneKey =>
-      LevitSateCore.asyncComputedTrackerZoneKey;
+      LevitStateCore.asyncComputedTrackerZoneKey;
 }

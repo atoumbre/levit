@@ -3,7 +3,7 @@ import 'package:levit_reactive/levit_reactive.dart';
 import '../helpers.dart';
 
 void main() {
-  group('LevitStateMiddleware', () {
+  group('LevitReactiveMiddleware', () {
     setUp(() {
       Lx.clearMiddlewares();
       Lx.captureStackTrace = false;
@@ -14,7 +14,7 @@ void main() {
     });
 
     test('middleware receives state changes', () async {
-      final changes = <LevitStateChange>[];
+      final changes = <LevitReactiveChange>[];
       Lx.addMiddleware(TestMiddleware(onAfter: changes.add));
 
       final count = LxInt(0);
@@ -28,8 +28,8 @@ void main() {
       expect(changes[1].newValue, equals(2));
     });
 
-    test('LevitStateChange toString includes type info', () {
-      final change = LevitStateChange<int>(
+    test('LevitReactiveChange toString includes type info', () {
+      final change = LevitReactiveChange<int>(
         timestamp: DateTime(2024, 1, 1),
         valueType: int,
         oldValue: 0,
@@ -52,7 +52,7 @@ void main() {
     });
 
     test('captureStackTrace captures stack when enabled', () {
-      final changes = <LevitStateChange>[];
+      final changes = <LevitReactiveChange>[];
       Lx.captureStackTrace = true;
       Lx.addMiddleware(TestMiddleware(onAfter: changes.add));
 
@@ -73,17 +73,17 @@ void main() {
       expect(minimal.changes, hasLength(1));
     });
 
-    test('LevitStateMiddleware default onSet returns null', () {
+    test('LevitReactiveMiddleware default onSet returns null', () {
       final middleware = DefaultMiddleware();
       expect(middleware.onSet, isNull);
     });
   });
 
-  group('LevitStateHistoryMiddleware (Basic)', () {
-    late LevitStateHistoryMiddleware history;
+  group('LevitReactiveHistoryMiddleware (Basic)', () {
+    late LevitReactiveHistoryMiddleware history;
 
     setUp(() {
-      history = LevitStateHistoryMiddleware();
+      history = LevitReactiveHistoryMiddleware();
       Lx.addMiddleware(history);
     });
 
@@ -104,7 +104,7 @@ void main() {
     });
 
     test('respects maxHistorySize', () {
-      LevitStateHistoryMiddleware.maxHistorySize = 2;
+      LevitReactiveHistoryMiddleware.maxHistorySize = 2;
 
       final count = 0.lx;
       count.value = 1;
@@ -115,12 +115,12 @@ void main() {
       expect(history.changes[0].newValue, equals(2));
       expect(history.changes[1].newValue, equals(3));
 
-      LevitStateHistoryMiddleware.maxHistorySize = 100; // Reset
+      LevitReactiveHistoryMiddleware.maxHistorySize = 100; // Reset
     });
 
     test('changesOfType filters by type', () {
       final a = LxInt(0);
-      final b = LxVal<String>('');
+      final b = LxVar<String>('');
 
       a.value = 1;
       b.value = 'hello';

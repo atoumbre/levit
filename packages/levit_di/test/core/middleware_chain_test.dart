@@ -87,7 +87,7 @@ class TestMiddleware extends LevitScopeMiddleware {
     S Function() builder,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) {
     if (onCreateCallback != null) {
       return onCreateCallback!(builder, scope, key, info);
@@ -101,7 +101,7 @@ class TestMiddleware extends LevitScopeMiddleware {
     S instance,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) {
     if (onDependencyInitCallback != null) {
       return onDependencyInitCallback!(onInit, instance, scope, key, info);

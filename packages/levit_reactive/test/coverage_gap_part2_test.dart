@@ -2,7 +2,7 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 // Concrete Observer for testing
-class GapTestObserver extends LevitStateMiddleware {
+class GapTestObserver extends LevitReactiveMiddleware {
   int initCount = 0;
   @override
   void Function(LxReactive reactive)? get onInit => (reactive) => initCount++;
@@ -24,10 +24,10 @@ void main() {
       // LxComputed call() functor
       final dep = 0.lx;
       final computed = LxComputed(() => dep.value * 2);
-      expect((computed as dynamic)().valueOrNull, 0);
+      expect(computed(), 0);
     });
 
-    // Removed LevitStateMiddleware default methods test as it tested deprecated API.
+    // Removed LevitReactiveMiddleware default methods test as it tested deprecated API.
 
     // LxStream gap: ensure onInit called for observer
     test('LxStream constructor calls observer.onInit', () {
@@ -54,7 +54,7 @@ void main() {
       final computed = LxComputed(() => dep.value * 2);
 
       // Access value to make it clean (otherwise _onDependencyChanged won't trigger notify())
-      expect(computed.computedValue, 0);
+      expect(computed.value, 0);
 
       bool notified = false;
       computed.addListener(() => notified = true);

@@ -4,7 +4,7 @@ import 'package:levit_reactive/levit_reactive.dart';
 import '../helpers.dart';
 
 void main() {
-  group('LxVal<T>', () {
+  group('LxVar<T>', () {
     test('initial value is accessible', () {
       final count = LxInt(0);
       expect(count.value, equals(0));
@@ -86,7 +86,7 @@ void main() {
     });
 
     test('mutate updates value in place and notifies', () {
-      final user = LxVal<MutableUser>(MutableUser('Alice', 30));
+      final user = LxVar<MutableUser>(MutableUser('Alice', 30));
       bool notified = false;
       user.addListener(() => notified = true);
 
@@ -124,7 +124,7 @@ void main() {
 
     test('works on String', () {
       final name = 'John'.lx;
-      expect(name, isA<LxVal<String>>());
+      expect(name, isA<LxVar<String>>());
       expect(name.value, equals('John'));
     });
 
@@ -136,7 +136,7 @@ void main() {
 
     test('works on custom objects', () {
       final user = User('John', 30).lx;
-      expect(user, isA<LxVal<User>>());
+      expect(user, isA<LxVar<User>>());
       expect(user.value.name, equals('John'));
     });
   });
@@ -229,9 +229,9 @@ void main() {
 
   group('LxIdle Coverage', () {
     test('LxIdle equality and hashCode', () {
-      const idle1 = LxIdle<int>(0);
-      const idle2 = LxIdle<int>(0);
-      const idle3 = LxIdle<int>(1);
+      final idle1 = LxIdle<int>(0);
+      final idle2 = LxIdle<int>(0);
+      final idle3 = LxIdle<int>(1);
 
       expect(idle1 == idle2, isTrue);
       expect(idle1 == idle3, isFalse);
@@ -243,7 +243,7 @@ void main() {
   group('LxBase Internal Coverage', () {
     test('LxBase _checkActive coverage', () {
       final rx = 0.lx;
-      // Triger _checkActive via listener addition/removal
+      // Trigger _checkActive via listener addition/removal
       rx.addListener(() {});
       rx.removeListener(() {});
     });

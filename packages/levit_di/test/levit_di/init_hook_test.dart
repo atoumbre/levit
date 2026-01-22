@@ -11,7 +11,7 @@ void main() {
         S instance,
         LevitScope scope,
         String key,
-        LevitBindingEntry info,
+        LevitDependency info,
       ) {
         return () {
           hookCalled++;
@@ -46,7 +46,7 @@ class _TestInitObserver extends LevitScopeMiddleware {
     S instance,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) hook;
 
   const _TestInitObserver(this.hook);
@@ -57,7 +57,7 @@ class _TestInitObserver extends LevitScopeMiddleware {
     S instance,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) {
     return hook<S>(onInit, instance, scope, key, info);
   }

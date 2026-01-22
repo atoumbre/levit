@@ -1,10 +1,10 @@
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
 
-class TestBatchFilterMiddleware extends LevitStateMiddleware {
+class TestBatchFilterMiddleware extends LevitReactiveMiddleware {
   final bool shouldProcessBatchFlag;
-  final void Function(LevitStateBatchChange)? onBefore;
-  final void Function(LevitStateBatchChange)? onAfter;
+  final void Function(LevitReactiveBatch)? onBefore;
+  final void Function(LevitReactiveBatch)? onAfter;
 
   TestBatchFilterMiddleware({
     this.shouldProcessBatchFlag = true,

@@ -6,7 +6,7 @@ class MockStackTrace implements StackTrace {
   String toString() => 'MockStackTrace';
 }
 
-class TestHistoryMiddleware extends LevitStateMiddleware {
+class TestHistoryMiddleware extends LevitReactiveMiddleware {
   int disposeCount = 0;
 
   @override
@@ -18,7 +18,7 @@ class TestHistoryMiddleware extends LevitStateMiddleware {
       };
 }
 
-class TestObserver extends LevitStateMiddleware {
+class TestObserver extends LevitReactiveMiddleware {
   int initCount = 0;
 
   @override
@@ -28,19 +28,19 @@ class TestObserver extends LevitStateMiddleware {
 }
 
 void main() {
-  group('LevitStateHistoryMiddleware Coverage', () {
+  group('LevitReactiveHistoryMiddleware Coverage', () {
     test('warns when restore is missing', () {
-      final history = LevitStateHistoryMiddleware();
+      final history = LevitReactiveHistoryMiddleware();
       final rx = 0.lx;
 
       // Simulate a change without restore function
-      final change = LevitStateChange<int>(
+      final change = LevitReactiveChange<int>(
         timestamp: DateTime.now(),
         valueType: int,
         oldValue: 0,
         newValue: 1,
         // restore: null (implied by default constructor? No, required?)
-        // LevitStateChange constructor has named required arguments?
+        // LevitReactiveChange constructor has named required arguments?
         // Let's check constructor. It has 'restore' as optional?
         // Actually earlier code showed 'restore' implies it's nullable or optional.
         // Assuming nullable.

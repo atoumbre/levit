@@ -16,7 +16,7 @@ void main() {
       error.dispose();
     });
 
-    test('LevitStateNotifier graphDepth getter and setter', () {
+    test('LevitReactiveNotifier graphDepth getter and setter', () {
       final reactive = 0.lx;
       reactive.graphDepth = 10;
       expect(reactive.graphDepth, 10);
@@ -30,16 +30,16 @@ void main() {
       computed = LxComputed(() {
         if (source.value == 1) {
           // This call should return super.value (stale) because _isComputing is true
-          return computed.value.valueOrNull ?? -1;
+          return computed.value;
         }
         return source.value;
       });
 
       final sub = computed.stream.listen((_) {});
-      expect(computed.value.valueOrNull, 0);
+      expect(computed.value, 0);
 
       source.value = 1;
-      expect(computed.value.valueOrNull, 0);
+      expect(computed.value, 0);
 
       sub.cancel();
       source.close();
@@ -52,14 +52,14 @@ void main() {
         return manySources.map((s) => s.value).reduce((a, b) => a + b);
       });
 
-      expect(bigComputed.value.valueOrNull, 190); // sum(0..19) = 19*20/2 = 190
+      expect(bigComputed.value, 190); // sum(0..19) = 19*20/2 = 190
 
       manySources[0].value = 10;
-      expect(bigComputed.value.valueOrNull, 200);
+      expect(bigComputed.value, 200);
 
       // Hit _useSet = true branch in _add
       manySources[1].value = 10;
-      expect(bigComputed.value.valueOrNull, 209);
+      expect(bigComputed.value, 209);
 
       for (var s in manySources) {
         s.close();
@@ -67,43 +67,24 @@ void main() {
       bigComputed.close();
     });
 
-    test('LxComputed Error paths', () {
-      final source = 0.lx;
-      final errorComputed = LxComputed(() {
-        if (source.value == 1) throw 'compute error';
-        return source.value;
-      });
-
-      expect(errorComputed.value.valueOrNull, 0);
-      source.value = 1;
-      expect(errorComputed.value, isA<LxError>());
-
-      // Pull-on-read error path
-      final another = LxComputed(() => throw 'instant error');
-      expect(another.value, isA<LxError>());
-
-      source.close();
-      errorComputed.close();
-    });
-
     test('Middleware Chain coverage', () {
       // Trigger LevitStateMiddlewareChain._()
       final m1 = TestMiddleware();
       final m2 = TestMiddleware();
-      LevitStateMiddleware.add(m1);
-      LevitStateMiddleware.add(m2);
+      LevitReactiveMiddleware.add(m1);
+      LevitReactiveMiddleware.add(m2);
 
       final reactive = 0.lx;
       reactive.value = 1;
 
-      LevitStateMiddleware.remove(m1);
-      LevitStateMiddleware.remove(m2);
+      LevitReactiveMiddleware.remove(m1);
+      LevitReactiveMiddleware.remove(m2);
       reactive.close();
     });
   });
 }
 
-class TestMiddleware extends LevitStateMiddleware {
+class TestMiddleware extends LevitReactiveMiddleware {
   @override
   LxOnSet? get onSet => (next, reactive, change) => (value) {
         next(value);

@@ -111,21 +111,7 @@ void main() {
       test('getters coverage', () {
         final c = LxComputed(() => 42);
         // Sync computed returns value directly via computedValue
-        expect(c.computedValue, 42);
-
-        // Sync computed captures error
-        final errC = LxComputed(() => throw 'err');
-        expect(errC.isError, isTrue);
-        expect(errC.errorOrNull, 'err');
-      });
-
-      test('LxMemoComputed getters coverage', () {
-        final m = LxComputed(() => 10);
-        expect(m.computedValue, 10);
-
-        final errM = LxComputed(() => throw 'err');
-        expect(errM.isError, isTrue);
-        expect(errM.errorOrNull, 'err');
+        expect(c.value, 42);
       });
     });
   });

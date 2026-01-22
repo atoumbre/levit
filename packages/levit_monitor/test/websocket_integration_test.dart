@@ -40,7 +40,7 @@ void main() {
     await server?.close(force: true);
   });
 
-  test('MonitorMiddleware broadcasts DI and State events to WebSocket',
+  test('LevitMonitorMiddleware broadcasts DI and State events to WebSocket',
       () async {
     // 2. Connect client
     final channel = IOWebSocketChannel.connect('ws://localhost:$port/ws');

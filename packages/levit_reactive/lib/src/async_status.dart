@@ -48,8 +48,24 @@ sealed class LxStatus<T> {
 ///
 /// Represents the initial state before an operation begins.
 final class LxIdle<T> extends LxStatus<T> {
+  /// Singleton cache for LxIdle instances without lastValue.
+  /// Key is the type T's hashCode (since we can't use Type directly as generic).
+  static final Map<Type, LxIdle<dynamic>> _cache = {};
+
   /// Creates an idle status, optionally with a [lastValue].
-  const LxIdle([super.lastValue]);
+  ///
+  /// When [lastValue] is null, returns a cached singleton instance
+  /// to reduce allocations in hot paths.
+  factory LxIdle([T? lastValue]) {
+    if (lastValue != null) {
+      return LxIdle._internal(lastValue);
+    }
+    // Return cached singleton for this type
+    return _cache.putIfAbsent(T, () => LxIdle<T>._internal(null)) as LxIdle<T>;
+  }
+
+  /// Internal constructor for creating instances.
+  const LxIdle._internal(super.lastValue);
 
   @override
   String toString() => 'LxIdle<$T>(lastValue: $lastValue)';
@@ -66,8 +82,24 @@ final class LxIdle<T> extends LxStatus<T> {
 ///
 /// Represents an ongoing asynchronous operation.
 final class LxWaiting<T> extends LxStatus<T> {
+  /// Singleton cache for LxWaiting instances without lastValue.
+  static final Map<Type, LxWaiting<dynamic>> _cache = {};
+
   /// Creates a waiting status.
-  const LxWaiting([super.lastValue]);
+  ///
+  /// When [lastValue] is null, returns a cached singleton instance
+  /// to reduce allocations in hot paths.
+  factory LxWaiting([T? lastValue]) {
+    if (lastValue != null) {
+      return LxWaiting._internal(lastValue);
+    }
+    // Return cached singleton for this type
+    return _cache.putIfAbsent(T, () => LxWaiting<T>._internal(null))
+        as LxWaiting<T>;
+  }
+
+  /// Internal constructor for creating instances.
+  const LxWaiting._internal(super.lastValue);
 
   @override
   String toString() => 'LxWaiting<$T>(lastValue: $lastValue)';
@@ -132,7 +164,7 @@ final class LxError<T> extends LxStatus<T> {
 // ============================================================================
 
 /// Extensions for reactive async status.
-extension LxValueReactiveExtensions<T> on LxReactive<T> {
+extension LxVarExtensions<T> on LxReactive<T> {
   LxWatch<T> listen(
     void Function(T value) callback,
   ) {

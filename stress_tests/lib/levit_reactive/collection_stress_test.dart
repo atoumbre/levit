@@ -104,7 +104,7 @@ void main() {
       for (var i = 1; i <= 10000; i++) {
         list.add(i);
       }
-      final result = sum.computedValue;
+      final result = sum.value;
       sw.stop();
 
       // Sum of 1..10000 = 50005000

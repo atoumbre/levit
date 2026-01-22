@@ -21,7 +21,7 @@ class TestMiddleware extends LevitMiddleware {
 
   @override
   S Function() onCreate<S>(S Function() builder, LevitScope scope, String key,
-      LevitBindingEntry info) {
+      LevitDependency info) {
     injectionCount++;
     return builder;
   }

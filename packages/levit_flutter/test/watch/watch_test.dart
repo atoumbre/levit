@@ -93,7 +93,7 @@ void main() {
     });
   });
 
-  group('LValue', () {
+  group('LConsumer', () {
     testWidgets('resubscribes when Lx changes', (tester) async {
       final value1 = 'First'.lx;
       final value2 = 'Second'.lx;
@@ -103,7 +103,7 @@ void main() {
         MaterialApp(
           home: ValueListenableBuilder<bool>(
             valueListenable: useFirst,
-            builder: (_, first, __) => LValue<LxVal<String>>(
+            builder: (_, first, __) => LConsumer<LxVar<String>>(
               first ? value1 : value2,
               (value) => Text('Value: ${value.value}'),
             ),

@@ -64,7 +64,7 @@ void main() {
   });
 }
 
-class TestBatchMiddleware extends LevitStateMiddleware {
+class TestBatchMiddleware extends LevitReactiveMiddleware {
   Function? onBatchCallback;
 
   @override

@@ -75,7 +75,7 @@ class ProjectController extends LevitController {
 
   /// Showcase: LxFuture (Pillar 6)
   /// Represents the status of a cloud export operation.
-  final exportStatus = LxVal<LxFuture<String>?>(null);
+  final exportStatus = LxVar<LxFuture<String>?>(null);
 
   /// Showcase: LxComputed (Pillar 1)
   /// This box wraps all selected elements. It recomputes automatically
@@ -83,8 +83,8 @@ class ProjectController extends LevitController {
   late final LxComputed<Rect?> selectionBounds;
 
   /// Showcase: HistoryMiddleware (Pillar 3)
-  final history = LevitStateHistoryMiddleware();
-  LevitStateMiddleware? _activeHistoryMiddleware;
+  final history = LevitReactiveHistoryMiddleware();
+  LevitReactiveMiddleware? _activeHistoryMiddleware;
 
   /// Showcase: LxStream (Pillar 6)
   /// Tracks session duration reactively
@@ -436,9 +436,9 @@ class ProjectController extends LevitController {
   }
 }
 
-class _FilteredMiddleware extends LevitStateMiddleware {
-  final LevitStateMiddleware inner;
-  final bool Function(LxReactive, LevitStateChange) filter;
+class _FilteredMiddleware extends LevitReactiveMiddleware {
+  final LevitReactiveMiddleware inner;
+  final bool Function(LxReactive, LevitReactiveChange) filter;
 
   _FilteredMiddleware(this.inner, this.filter);
 
@@ -456,7 +456,7 @@ class _FilteredMiddleware extends LevitStateMiddleware {
   LxOnBatch? get onBatch => inner.onBatch == null
       ? null
       : (next, change) {
-          // For batch, we ideally filter the entries, but LevitStateBatchChange is immutable.
+          // For batch, we ideally filter the entries, but LevitReactiveBatch is immutable.
           // However, inner.onBatch logic handles the batch as a whole.
           // If we want to filter specific ops inside batch, we can't easily.
           // Assuming if ANY matches or ALL match?
@@ -492,7 +492,7 @@ class UserSession {
 /// Controller for authentication.
 class AuthController extends LevitController {
   /// The current user session (null if logged out).
-  final session = LxVal<UserSession?>(null);
+  final session = LxVar<UserSession?>(null);
 
   /// Whether a user is currently logged in.
   bool get isAuthenticated => session.value != null;

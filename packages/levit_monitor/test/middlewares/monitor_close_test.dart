@@ -4,10 +4,10 @@ import 'package:levit_monitor/src/middlewares/state.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('MonitorMiddleware close()', () {
+  group('LevitMonitorMiddleware close()', () {
     test('close() cleans up resources properly', () async {
       final transport = TestTransport();
-      final middleware = MonitorMiddleware(transport: transport);
+      final middleware = LevitMonitorMiddleware(transport: transport);
 
       // Enable middleware
       middleware.enable();
@@ -41,7 +41,7 @@ void main() {
 
     test('close() can be called multiple times safely', () {
       final transport = TestTransport();
-      final middleware = MonitorMiddleware(transport: transport);
+      final middleware = LevitMonitorMiddleware(transport: transport);
 
       middleware.enable();
 

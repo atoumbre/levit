@@ -191,7 +191,7 @@ class Levit {
     LevitScope.addMiddleware(middleware);
   }
 
-  /// Unregisters a previously added [middleware].
+  /// Un-registers a previously added [middleware].
   static void removeMiddleware(LevitMiddleware middleware) {
     _middlewares.remove(middleware);
     Lx.removeMiddleware(middleware);
@@ -230,7 +230,7 @@ class Levit {
   }
 }
 
-class _AutoLinkMiddleware extends LevitStateMiddleware {
+class _AutoLinkMiddleware extends LevitReactiveMiddleware {
   @override
   void Function(LxReactive)? get onInit => (reactive) {
         if (Levit._activeCaptureScopes == 0) return;
@@ -247,7 +247,7 @@ class _AutoDisposeMiddleware extends LevitScopeMiddleware {
     S Function() builder,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) {
     return _createCaptureHook(builder, key);
   }
@@ -258,7 +258,7 @@ class _AutoDisposeMiddleware extends LevitScopeMiddleware {
     S instance,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) {
     return _createCaptureHookInit(onInit, key, instance);
   }
@@ -272,7 +272,7 @@ S Function() _createCaptureHook<S>(
     // Fast path: Skip Zone overhead when no middlewares are listening
     // and we're not already inside a capture scope
     final parentList = Zone.current[Levit._captureKey] as List<LxReactive>?;
-    if (parentList == null && !LevitStateMiddleware.hasInitMiddlewares) {
+    if (parentList == null && !LevitReactiveMiddleware.hasInitMiddlewares) {
       final instance = builder();
       // Still process for auto-dispose registration if it's a controller
       if (instance is LevitController) {

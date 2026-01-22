@@ -54,7 +54,7 @@ void main() {
     });
 
     test('catches async errors via watchStatus', () async {
-      final s = LxVal<LxStatus<int>>(LxWaiting());
+      final s = LxVar<LxStatus<int>>(LxWaiting());
       final completer = Completer<dynamic>();
 
       LxWatch.status<int>(

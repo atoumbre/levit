@@ -35,7 +35,7 @@ void main() {
       final val = 0.lx;
 
       // Use History Middleware
-      final history = LevitStateHistoryMiddleware();
+      final history = LevitReactiveHistoryMiddleware();
       final mw = Lx.addMiddleware(history);
 
       addTearDown(() {
@@ -97,9 +97,9 @@ void main() {
   });
 }
 
-class CoverageGapMiddleware extends LevitStateMiddleware {
-  final bool Function(LevitStateChange)? onBefore;
-  final void Function(LevitStateChange)? onAfter;
+class CoverageGapMiddleware extends LevitReactiveMiddleware {
+  final bool Function(LevitReactiveChange)? onBefore;
+  final void Function(LevitReactiveChange)? onAfter;
 
   CoverageGapMiddleware({this.onBefore, this.onAfter});
 

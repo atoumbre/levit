@@ -31,7 +31,7 @@ void main() {
       expect(observer.registerCount, 1);
     });
 
-    test('removeDependencyMiddleware unregisters middleware', () {
+    test('removeDependencyMiddleware un-registers middleware', () {
       final observer = TestObserver();
       Levit.addDependencyMiddleware(observer);
       Levit.removeDependencyMiddleware(observer);

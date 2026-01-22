@@ -3,21 +3,21 @@ import 'dart:async';
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
 
-// DefaultObserver extends LevitStateObserver which likely exists still?
+// DefaultObserver extends LevitReactiveObserver which likely exists still?
 // Wait, grep check pending.
-// Assuming LevitStateObserver is separate interface for Proxy.
-// But test group "LevitStateObserver default addReactive does nothing" implies it is testable.
+// Assuming LevitReactiveObserver is separate interface for Proxy.
+// But test group "LevitReactiveObserver default addReactive does nothing" implies it is testable.
 // If it is internal abstract class, I can extend it.
-class DefaultObserver extends LevitStateObserver {
+class DefaultObserver extends LevitReactiveObserver {
   @override
-  void addNotifier(LevitStateNotifier notifier) {}
+  void addNotifier(LevitReactiveNotifier notifier) {}
 
   @override
   void addStream<T>(Stream<T> stream) {}
 }
 
 /// Test middleware to capture dependency graph changes
-class DepGraphCapture extends LevitStateMiddleware {
+class DepGraphCapture extends LevitReactiveMiddleware {
   LxReactive? capturedComputed;
   List<LxReactive>? capturedDeps;
 
@@ -31,10 +31,10 @@ class DepGraphCapture extends LevitStateMiddleware {
 
 void main() {
   group('Coverage Gaps', () {
-    test('LevitStateObserver default addReactive does nothing', () {
+    test('LevitReactiveObserver default addReactive does nothing', () {
       // core.dart line 27
       final observer = DefaultObserver();
-      final rx = LxVal(10);
+      final rx = LxVar(10);
 
       // Should not throw
       observer.addReactive(rx);
@@ -50,11 +50,11 @@ void main() {
       final count = 0.lx;
       final doubleCount = (() => count.value * 2).lx;
 
-      expect(doubleCount.computedValue, 0);
+      expect(doubleCount.value, 0);
 
       count.value++;
 
-      expect(doubleCount.computedValue, 2);
+      expect(doubleCount.value, 2);
       expect(capture.capturedComputed, equals(doubleCount));
       expect(capture.capturedDeps, contains(count));
     });
@@ -71,7 +71,7 @@ void main() {
       final computed = (() => count.value * 5).lx;
 
       // Read value directly
-      final val = computed.computedValue;
+      final val = computed.value;
 
       expect(val, 50);
       // Middleware should have been called

@@ -9,7 +9,7 @@ void main() {
     Levit.reset(force: true);
   });
 
-  group('Coverage Gaps - LevitContext', () {
+  group('Coverage Gaps - LevitProvider', () {
     testWidgets('putOrFind uses existing global instance', (tester) async {
       Levit.put<_TestService>(() => _TestService());
 

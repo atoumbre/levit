@@ -9,7 +9,7 @@ class TestReactive<T> extends LxBase<T> {
 }
 
 void main() {
-  group('LWatch & LValue Coverage', () {
+  group('LWatch & LConsumer Coverage', () {
     testWidgets('LWatch auto-tracks dependencies', (tester) async {
       final rx = TestReactive<int>(0);
       int buildCount = 0;
@@ -114,14 +114,14 @@ void main() {
       // If it didn't crash, good.
     });
 
-    testWidgets('LValue watches specific reactive', (tester) async {
+    testWidgets('LConsumer watches specific reactive', (tester) async {
       final rx = TestReactive<int>(100);
       int buildCount = 0;
 
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LValue<TestReactive<int>>(rx, (r) {
+          child: LConsumer<TestReactive<int>>(rx, (r) {
             buildCount++;
             return Text('V: ${r.value}');
           }),
@@ -137,14 +137,15 @@ void main() {
       expect(buildCount, 2);
     });
 
-    testWidgets('LValue updates subscription on widget update', (tester) async {
+    testWidgets('LConsumer updates subscription on widget update',
+        (tester) async {
       final rx1 = TestReactive<int>(1);
       final rx2 = TestReactive<int>(2);
 
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LValue<TestReactive<int>>(
+          child: LConsumer<TestReactive<int>>(
             rx1,
             (r) => Text('V: ${r.value}'),
             key: ValueKey('lvalue'),
@@ -158,7 +159,7 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LValue<TestReactive<int>>(
+          child: LConsumer<TestReactive<int>>(
             rx2,
             (r) => Text('V: ${r.value}'),
             key: ValueKey('lvalue'),

@@ -31,7 +31,7 @@ sealed class MonitorEvent {
 }
 
 // ============================================================================
-// REACTIVE EVENTS (from LevitStateMiddleware)
+// REACTIVE EVENTS (from LevitReactiveMiddleware)
 // ============================================================================
 
 sealed class ReactiveEvent extends MonitorEvent {
@@ -67,9 +67,9 @@ class ReactiveDisposeEvent extends ReactiveEvent {
       };
 }
 
-class StateChangeEvent extends ReactiveEvent {
-  final LevitStateChange change;
-  StateChangeEvent({
+class ReactiveChangeEvent extends ReactiveEvent {
+  final LevitReactiveChange change;
+  ReactiveChangeEvent({
     required super.sessionId,
     required super.reactive,
     required this.change,
@@ -85,9 +85,9 @@ class StateChangeEvent extends ReactiveEvent {
       };
 }
 
-class BatchEvent extends MonitorEvent {
-  final LevitStateBatchChange change;
-  BatchEvent({required super.sessionId, required this.change});
+class ReactiveBatchEvent extends MonitorEvent {
+  final LevitReactiveBatch change;
+  ReactiveBatchEvent({required super.sessionId, required this.change});
   @override
   Map<String, dynamic> toJson() => {
         ...super.toJson(),
@@ -106,9 +106,9 @@ class BatchEvent extends MonitorEvent {
       };
 }
 
-class GraphChangeEvent extends ReactiveEvent {
+class ReactiveGraphChangeEvent extends ReactiveEvent {
   final List<LxReactive> dependencies;
-  GraphChangeEvent({
+  ReactiveGraphChangeEvent({
     required super.sessionId,
     required super.reactive,
     required this.dependencies,
@@ -130,13 +130,13 @@ class GraphChangeEvent extends ReactiveEvent {
 // DI EVENTS (from LevitScopeMiddleware)
 // ============================================================================
 
-sealed class DIEvent extends MonitorEvent {
+sealed class DependencyEvent extends MonitorEvent {
   final int scopeId;
   final String scopeName;
   final String key;
-  final LevitBindingEntry info;
+  final LevitDependency info;
 
-  DIEvent({
+  DependencyEvent({
     required super.sessionId,
     required this.scopeId,
     required this.scopeName,
@@ -158,9 +158,9 @@ sealed class DIEvent extends MonitorEvent {
       };
 }
 
-class DIRegisterEvent extends DIEvent {
+class DependencyRegisterEvent extends DependencyEvent {
   final String source;
-  DIRegisterEvent({
+  DependencyRegisterEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -176,9 +176,9 @@ class DIRegisterEvent extends DIEvent {
       };
 }
 
-class DIResolveEvent extends DIEvent {
+class DependencyResolveEvent extends DependencyEvent {
   final String source;
-  DIResolveEvent({
+  DependencyResolveEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -195,9 +195,9 @@ class DIResolveEvent extends DIEvent {
       };
 }
 
-class DIDeleteEvent extends DIEvent {
+class DependencyDeleteEvent extends DependencyEvent {
   final String source;
-  DIDeleteEvent({
+  DependencyDeleteEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -214,8 +214,8 @@ class DIDeleteEvent extends DIEvent {
 }
 
 // Special wrapping events
-class DIInstanceCreateEvent extends DIEvent {
-  DIInstanceCreateEvent({
+class DependencyInstanceCreateEvent extends DependencyEvent {
+  DependencyInstanceCreateEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -229,9 +229,9 @@ class DIInstanceCreateEvent extends DIEvent {
       };
 }
 
-class DIInstanceInitEvent extends DIEvent {
+class DependencyInstanceReadyEvent extends DependencyEvent {
   final dynamic instance;
-  DIInstanceInitEvent({
+  DependencyInstanceReadyEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,

@@ -17,8 +17,8 @@ class FileTransport implements LevitTransport {
   @override
   void send(MonitorEvent event) {
     final category = switch (event) {
-      ReactiveEvent _ || BatchEvent _ => 'state',
-      DIEvent _ => 'di',
+      ReactiveEvent _ || ReactiveBatchEvent _ => 'state',
+      DependencyEvent _ => 'di',
     };
 
     _sink.writeln(jsonEncode({

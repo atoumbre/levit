@@ -145,9 +145,9 @@ void main() {
     });
 
     test('addNode adds node to engine and updates counts', () async {
-      expect(pc.nodeCount.lastValue, 0);
+      expect(pc.nodeCount.value, 0);
       pc.addNode('rect');
-      expect(pc.nodeCount.lastValue, 1);
+      expect(pc.nodeCount.value, 1);
       expect(pc.engine.nodes.length, 1);
       expect(pc.engine.nodes.first.type, 'rect');
 

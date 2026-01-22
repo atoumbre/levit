@@ -7,43 +7,6 @@ void main() {
       Lx.clearMiddlewares();
     });
 
-    test('value getter catches error with graph change middleware', () {
-      // Register a graph change middleware to trigger the code path
-      final middleware = _GraphMiddleware();
-      Lx.addMiddleware(middleware);
-
-      // Create a computed that throws
-      final computed = LxComputed<int>(() => throw 'computation error');
-
-      // Access value - should return LxError, not throw
-      final result = computed.value;
-
-      expect(result, isA<LxError<int>>());
-      expect((result as LxError).error, 'computation error');
-
-      Lx.removeMiddleware(middleware);
-    });
-
-    test('value getter catches error when proxy is active', () {
-      // Create outer computed that accesses inner throwing computed
-      late LxComputed<int> inner;
-      inner = LxComputed<int>(() => throw 'inner error');
-
-      // Create an LWatch-like proxy
-      final tracker = _MockObserver();
-      Lx.proxy = tracker;
-
-      try {
-        // Access value while proxy is active
-        final result = inner.value;
-
-        expect(result, isA<LxError<int>>());
-        expect((result as LxError).error, 'inner error');
-      } finally {
-        Lx.proxy = null;
-      }
-    });
-
     test('value getter succeeds when proxy is active', () {
       final source = 10.lx;
       final computed = LxComputed<int>(() => source.value * 2);
@@ -55,8 +18,7 @@ void main() {
       try {
         final result = computed.value;
 
-        expect(result, isA<LxSuccess<int>>());
-        expect((result as LxSuccess).value, 20);
+        expect(result, 20);
       } finally {
         Lx.proxy = null;
       }
@@ -81,15 +43,15 @@ void main() {
       computed.stream.listen((_) {});
 
       // Access computed value
-      expect(computed.computedValue, 45); // sum 0..9 = 45
+      expect(computed.value, 45); // sum 0..9 = 45
 
       // Change first source to verify tracking works
       sources[0].value = 100;
-      expect(computed.computedValue, 145);
+      expect(computed.value, 145);
 
       // Change last source
       sources[9].value = 100;
-      expect(computed.computedValue, 236); // 100 + 1..8 + 100 = 236
+      expect(computed.value, 236); // 100 + 1..8 + 100 = 236
 
       for (final s in sources) {
         s.close();
@@ -113,14 +75,14 @@ void main() {
       computed.stream.listen((_) {});
 
       // sum(0..11) = 66
-      expect(computed.computedValue, 66);
+      expect(computed.value, 66);
 
       // Update multiple sources
       sources[10].value = 100;
       sources[11].value = 200;
 
       // 0+1+..+9 + 100 + 200 = 345
-      expect(computed.computedValue, 345);
+      expect(computed.value, 345);
 
       for (final s in sources) {
         s.close();
@@ -130,17 +92,9 @@ void main() {
   });
 }
 
-class _GraphMiddleware extends LevitStateMiddleware {
-  @override
-  void Function(LxReactive computed, List<LxReactive> dependencies)?
-      get onGraphChange => (computed, deps) {
-            // Just observe, don't do anything
-          };
-}
-
-class _MockObserver implements LevitStateObserver {
+class _MockObserver implements LevitReactiveObserver {
   final List<Stream> streams = [];
-  final List<LevitStateNotifier> notifiers = [];
+  final List<LevitReactiveNotifier> notifiers = [];
 
   @override
   void addStream<T>(Stream<T> stream) {
@@ -148,7 +102,7 @@ class _MockObserver implements LevitStateObserver {
   }
 
   @override
-  void addNotifier(LevitStateNotifier notifier) {
+  void addNotifier(LevitReactiveNotifier notifier) {
     notifiers.add(notifier);
   }
 

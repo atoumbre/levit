@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
-import '../benchmark_engine.dart';
+import '../../benchmark_engine.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;
 
 class ComplexGraphBenchmark extends Benchmark {
@@ -36,7 +36,7 @@ class ComplexGraphBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitGraphBenchmark extends BenchmarkImplementation {
-  late LxVal<int> a;
+  late LxVar<int> a;
   late LxComputed<int> b;
   late LxComputed<int> c;
   late LxComputed<int> d;
@@ -44,12 +44,12 @@ class LevitGraphBenchmark extends BenchmarkImplementation {
 
   @override
   Future<void> setup() async {
-    a = LxVal(0);
+    a = LxVar(0);
     // Use synchronous LxComputed for fair comparison
     b = LxComputed(() => a.value + 1);
     c = LxComputed(() => a.value * 2);
     // Access .computedValue to get the actual int value
-    d = LxComputed(() => b.computedValue + c.computedValue);
+    d = LxComputed(() => b.value + c.value);
 
     listener = () {};
     d.addListener(listener);
@@ -60,7 +60,7 @@ class LevitGraphBenchmark extends BenchmarkImplementation {
     final stopwatch = Stopwatch()..start();
     for (int i = 0; i < 100000; i++) {
       a.value++;
-      final _ = d.computedValue;
+      final _ = d.value;
     }
     stopwatch.stop();
     return stopwatch.elapsedMicroseconds;

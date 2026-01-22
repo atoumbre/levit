@@ -18,7 +18,7 @@ class LWatch extends Widget {
   Element createElement() => LWatchElement(this);
 }
 
-class LWatchElement extends ComponentElement implements LevitStateObserver {
+class LWatchElement extends ComponentElement implements LevitReactiveObserver {
   LWatchElement(LWatch super.widget);
 
   @override
@@ -29,16 +29,16 @@ class LWatchElement extends ComponentElement implements LevitStateObserver {
   }
 
   // Fast path for single notifier (most common case)
-  LevitStateNotifier? _singleNotifier;
+  LevitReactiveNotifier? _singleNotifier;
   bool _usingSinglePath = false;
 
   // Slow path for multiple dependencies
   Map<Stream, StreamSubscription>? _subscriptions;
-  Map<LevitStateNotifier, void Function()>? _notifiers;
+  Map<LevitReactiveNotifier, void Function()>? _notifiers;
 
   // Optimized: Use List instead of Set for zero-allocation capture
   List<Stream>? _newStreams;
-  List<LevitStateNotifier>? _newNotifiers;
+  List<LevitReactiveNotifier>? _newNotifiers;
 
   bool _isDirty = false;
 
@@ -48,7 +48,7 @@ class LWatchElement extends ComponentElement implements LevitStateObserver {
   }
 
   @override
-  void addNotifier(LevitStateNotifier notifier) {
+  void addNotifier(LevitReactiveNotifier notifier) {
     (_newNotifiers ??= []).add(notifier);
   }
 
@@ -117,7 +117,7 @@ class LWatchElement extends ComponentElement implements LevitStateObserver {
   }
 
   void _updateSubscriptions(
-      List<Stream>? nextStreams, List<LevitStateNotifier>? nextNotifiers) {
+      List<Stream>? nextStreams, List<LevitReactiveNotifier>? nextNotifiers) {
     // 1. FAST PATH: Single Notifier, No Streams
     if (nextStreams == null &&
         nextNotifiers != null &&
@@ -222,11 +222,11 @@ class LWatchElement extends ComponentElement implements LevitStateObserver {
 
 /// A reactive widget that observes a single specific reactive value.
 ///
-/// Unlike [LWatch], which tracks dependencies automatically, [LValue]
-/// requires you to explicitly provide the reactive variable [LxVal]. This avoids
+/// Unlike [LWatch], which tracks dependencies automatically, [LConsumer]
+/// requires you to explicitly provide the reactive variable [LxVar]. This avoids
 /// the overhead of the proxy mechanism and can be slightly more performant
 /// for simple use cases.
-class LValue<T extends LxReactive> extends Widget {
+class LConsumer<T extends LxReactive> extends Widget {
   /// The builder function that receives the reactive value.
   final Widget Function(T value) builder;
 
@@ -234,19 +234,19 @@ class LValue<T extends LxReactive> extends Widget {
   final T x;
 
   /// Creates a widget that watches the specific reactive object [x].
-  const LValue(this.x, this.builder, {super.key});
+  const LConsumer(this.x, this.builder, {super.key});
 
   @override
-  Element createElement() => LValueElement<T>(this);
+  Element createElement() => LConsumerElement<T>(this);
 }
 
-class LValueElement<T extends LxReactive> extends ComponentElement {
-  LValueElement(LValue<T> super.widget);
+class LConsumerElement<T extends LxReactive> extends ComponentElement {
+  LConsumerElement(LConsumer<T> super.widget);
 
   @override
   void mount(Element? parent, Object? newSlot) {
     super.mount(parent, newSlot);
-    (widget as LValue<T>).x.addListener(_onNotify);
+    (widget as LConsumer<T>).x.addListener(_onNotify);
   }
 
   void _onNotify() {
@@ -254,8 +254,8 @@ class LValueElement<T extends LxReactive> extends ComponentElement {
   }
 
   @override
-  void update(LValue<T> newWidget) {
-    final oldWidget = widget as LValue<T>;
+  void update(LConsumer<T> newWidget) {
+    final oldWidget = widget as LConsumer<T>;
     super.update(newWidget);
     if (newWidget.x != oldWidget.x) {
       oldWidget.x.removeListener(_onNotify);
@@ -267,12 +267,12 @@ class LValueElement<T extends LxReactive> extends ComponentElement {
 
   @override
   Widget build() {
-    return (widget as LValue<T>).builder((widget as LValue<T>).x);
+    return (widget as LConsumer<T>).builder((widget as LConsumer<T>).x);
   }
 
   @override
   void unmount() {
-    (widget as LValue<T>).x.removeListener(_onNotify);
+    (widget as LConsumer<T>).x.removeListener(_onNotify);
     super.unmount();
   }
 }

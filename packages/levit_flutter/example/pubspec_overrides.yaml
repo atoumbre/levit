@@ -1,4 +1,4 @@
-# melos_managed_dependency_overrides: levit_dart,levit_di,levit_flutter,levit_reactive
+# melos_managed_dependency_overrides: levit_dart,levit_di,levit_flutter,levit_reactive,levit_monitor
 dependency_overrides:
   levit_dart:
     path: ../../levit_dart
@@ -6,5 +6,7 @@ dependency_overrides:
     path: ../../levit_di
   levit_flutter:
     path: ..
+  levit_monitor:
+    path: ../../levit_monitor
   levit_reactive:
     path: ../../levit_reactive

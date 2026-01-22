@@ -5,7 +5,7 @@ class _CountingMiddleware extends LevitMiddleware {
   int onChangeCount = 0;
 
   // @override
-  // void onChange(LxReactive reactive, LevitStateChange change) {
+  // void onChange(LxReactive reactive, LevitReactiveChange change) {
   //   onChangeCount++;
   // }
 }

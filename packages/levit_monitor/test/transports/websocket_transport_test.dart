@@ -72,9 +72,9 @@ void main() {
       mockChannel.outgoing.close();
     });
 
-    test('send (DIEvent) sends correct JSON with category', () async {
-      final info = LevitBindingEntry(builder: () => 42);
-      final event = DIRegisterEvent(
+    test('send (DependencyEvent) sends correct JSON with category', () async {
+      final info = LevitDependency(builder: () => 42);
+      final event = DependencyRegisterEvent(
         sessionId: 's1',
         scopeId: 1,
         scopeName: 'root',
@@ -158,10 +158,10 @@ void main() {
 
     test('handles stream errors gracefully', () async {
       final reactive = 0.lx;
-      final event = StateChangeEvent(
+      final event = ReactiveChangeEvent(
         sessionId: 's1',
         reactive: reactive,
-        change: LevitStateChange(
+        change: LevitReactiveChange(
           timestamp: DateTime.now(),
           valueType: int,
           oldValue: 0,

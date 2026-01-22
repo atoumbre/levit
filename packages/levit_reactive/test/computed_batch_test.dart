@@ -3,11 +3,11 @@ import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
   test('Computed updates inside batch', () {
-    final count = LxVal(0);
+    final count = LxVar(0);
     final doubled = LxComputed(() => count.value * 2);
 
     // Initial value
-    expect(doubled.computedValue, 0);
+    expect(doubled.value, 0);
 
     // Update inside batch
     Lx.batch(() {
@@ -22,6 +22,6 @@ void main() {
     });
 
     // After batch, it should be updated
-    expect(doubled.computedValue, 2);
+    expect(doubled.value, 2);
   });
 }

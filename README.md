@@ -1,6 +1,3 @@
-Below is a refined, DevRel-quality root README that tightens positioning, improves narrative flow, and clearly differentiates Levit without overselling or disparaging alternatives. The goal is to read like the front door of a serious framework: calm, confident, and opinionated in the right places.
-
----
 
 # Levit
 

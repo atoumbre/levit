@@ -14,7 +14,7 @@ import 'base_types.dart';
 /// final items = <String>[].lx;
 /// items.add('Hello'); // Notifies observers
 /// ```
-class LxList<E> extends LxVal<List<E>> implements List<E> {
+class LxList<E> extends LxVar<List<E>> implements List<E> {
   /// Creates a reactive list.
   ///
   /// If [initial] is provided, it is used as the backing list.
@@ -320,7 +320,7 @@ class LxList<E> extends LxVal<List<E>> implements List<E> {
 /// final settings = <String, dynamic>{}.lx;
 /// settings['theme'] = 'dark'; // Notifies observers
 /// ```
-class LxMap<K, V> extends LxVal<Map<K, V>> implements Map<K, V> {
+class LxMap<K, V> extends LxVar<Map<K, V>> implements Map<K, V> {
   /// Creates a reactive map.
   ///
   /// If [initial] is provided, it is used as the backing map.
@@ -452,7 +452,7 @@ class LxMap<K, V> extends LxVal<Map<K, V>> implements Map<K, V> {
 ///
 /// Use this collection when you need a set that updates the UI or triggers
 /// effects whenever elements are added or removed.
-class LxSet<E> extends LxVal<Set<E>> implements Set<E> {
+class LxSet<E> extends LxVar<Set<E>> implements Set<E> {
   /// Creates a reactive set.
   ///
   /// If [initial] is provided, it is used as the backing set.

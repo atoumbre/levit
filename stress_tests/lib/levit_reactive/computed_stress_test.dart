@@ -14,19 +14,19 @@ void main() {
       LxComputed<int> current = LxComputed(() => source.value);
       for (var i = 1; i < depth; i++) {
         final prev = current;
-        current = LxComputed(() => prev.computedValue + 1);
+        current = LxComputed(() => prev.value + 1);
       }
       sw.stop();
       print('Created $depth computed nodes in ${sw.elapsedMilliseconds}ms');
 
       // Verify final value
-      expect(current.computedValue, depth - 1);
+      expect(current.value, depth - 1);
 
       // Measure propagation
       sw.reset();
       sw.start();
       source.value = 10;
-      final result = current.computedValue;
+      final result = current.value;
       sw.stop();
 
       expect(result, depth - 1 + 10);
@@ -46,21 +46,21 @@ void main() {
       // Diamond pattern: source -> [left, right] -> join
       var left = LxComputed(() => source.value);
       var right = LxComputed(() => source.value);
-      var join = LxComputed(() => left.computedValue + right.computedValue);
+      var join = LxComputed(() => left.value + right.value);
 
       final sw = Stopwatch()..start();
       for (var i = 0; i < layers; i++) {
         final prevJoin = join;
-        left = LxComputed(() => prevJoin.computedValue);
-        right = LxComputed(() => prevJoin.computedValue);
-        join = LxComputed(() => left.computedValue + right.computedValue);
+        left = LxComputed(() => prevJoin.value);
+        right = LxComputed(() => prevJoin.value);
+        join = LxComputed(() => left.value + right.value);
       }
       sw.stop();
       print(
           'Diamond Graph Setup: Created $layers diamond layers in ${sw.elapsedMilliseconds}ms');
 
       // Initial value
-      expect(join.computedValue, 0);
+      expect(join.value, 0);
 
       // Track recomputations via listener
       var recomputeCount = 0;
@@ -69,7 +69,7 @@ void main() {
       sw.reset();
       sw.start();
       source.value = 1;
-      final result = join.computedValue;
+      final result = join.value;
       sw.stop();
 
       print(
@@ -88,7 +88,7 @@ void main() {
       final sw = Stopwatch()..start();
       final sum =
           LxComputed(() => sources.fold<int>(0, (acc, lx) => acc + lx.value));
-      final initialValue = sum.computedValue;
+      final initialValue = sum.value;
       sw.stop();
 
       expect(initialValue, 0);
@@ -99,7 +99,7 @@ void main() {
       sw.reset();
       sw.start();
       sources[0].value = 100;
-      final resultAfterSingle = sum.computedValue;
+      final resultAfterSingle = sum.value;
       sw.stop();
       expect(resultAfterSingle, 100);
       print(

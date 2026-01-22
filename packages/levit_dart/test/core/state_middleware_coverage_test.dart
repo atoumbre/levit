@@ -15,7 +15,7 @@ void main() {
       expect(Lx.containsMiddleware(middleware), isTrue);
     });
 
-    test('removeStateMiddleware unregisters middleware from Lx', () {
+    test('removeStateMiddleware un-registers middleware from Lx', () {
       final middleware = _TestMiddleware();
 
       Levit.addStateMiddleware(middleware);

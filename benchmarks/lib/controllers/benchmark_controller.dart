@@ -1,20 +1,21 @@
 import 'dart:async';
+
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:levit_dart/levit_dart.dart';
 
-import 'package:flutter/services.dart';
 import '../benchmark_engine.dart';
-import '../benchmarks/rapid_mutation.dart';
-import '../benchmarks/complex_graph.dart';
-import '../benchmarks/large_list.dart';
-import '../benchmarks/deep_tree.dart';
-import '../benchmarks/fan_out.dart';
-import '../benchmarks/fan_in.dart';
-import '../benchmarks/dynamic_grid.dart';
-import '../benchmarks/async_computed.dart';
-import '../benchmarks/batch_benchmark.dart';
-import '../benchmarks/scoped_di.dart';
-import '../benchmarks/animated_state.dart';
+import '../benchmarks/logic/async_computed.dart';
+import '../benchmarks/logic/batch_benchmark.dart';
+import '../benchmarks/logic/complex_graph.dart';
+import '../benchmarks/logic/fan_in.dart';
+import '../benchmarks/logic/fan_out.dart';
+import '../benchmarks/logic/rapid_mutation.dart';
+import '../benchmarks/logic/scoped_di.dart';
+import '../benchmarks/ui/animated_state.dart';
+import '../benchmarks/ui/deep_tree.dart';
+import '../benchmarks/ui/dynamic_grid.dart';
+import '../benchmarks/ui/large_list.dart';
 import '../runners/benchmark_runner.dart';
 
 class AppBenchmarkController extends LevitController {
@@ -27,12 +28,12 @@ class AppBenchmarkController extends LevitController {
   late LxMap<String, List<BenchmarkResult>> results;
 
   // State
-  late LxVal<bool> isRunning;
-  late LxVal<String> currentStatus;
-  late LxVal<double> progress; // 0.0 to 1.0
+  late LxVar<bool> isRunning;
+  late LxVar<String> currentStatus;
+  late LxVar<double> progress; // 0.0 to 1.0
 
   // Widget for active UI benchmarks
-  late LxVal<WidgetBuilder?> activeBenchmarkWidget;
+  late LxVar<WidgetBuilder?> activeBenchmarkWidget;
 
   final List<Benchmark> availableBenchmarks = [
     // Logic Benchmarks
@@ -41,12 +42,12 @@ class AppBenchmarkController extends LevitController {
     FanOutBenchmark(),
     FanInBenchmark(),
     AsyncComputedBenchmark(),
-    BatchVsUnbatchedBenchmark(),
+    BatchVsUnBatchedBenchmark(),
+    ScopedDIBenchmark(),
     // UI Benchmarks
     LargeListBenchmark(),
     DeepTreeBenchmark(),
     DynamicGridBenchmark(),
-    ScopedDIBenchmark(),
     AnimatedStateBenchmark(),
   ];
 
@@ -56,10 +57,10 @@ class AppBenchmarkController extends LevitController {
 
     selectedFrameworks = LxSet(Framework.values.toSet());
     results = LxMap({});
-    isRunning = LxVal(false);
-    currentStatus = LxVal('Ready');
-    progress = LxVal(0.0);
-    activeBenchmarkWidget = LxVal(null);
+    isRunning = LxVar(false);
+    currentStatus = LxVar('Ready');
+    progress = LxVar(0.0);
+    activeBenchmarkWidget = LxVar(null);
   }
 
   Future<void> _mountWidget(WidgetBuilder builder) async {
@@ -118,7 +119,7 @@ class AppBenchmarkController extends LevitController {
 
     for (final benchName in results.keys) {
       buffer.writeln('## $benchName');
-      buffer.writeln('| Framework | Time (ms) | Status |');
+      buffer.writeln('| Framework | Time (µs) | Status |');
       buffer.writeln('|---|---|---|');
 
       final sortedResults = List<BenchmarkResult>.from(results[benchName]!)
@@ -127,7 +128,7 @@ class AppBenchmarkController extends LevitController {
       for (final res in sortedResults) {
         final status = res.success ? 'OK' : 'Error: ${res.error}';
         buffer.writeln(
-            '| ${res.framework.label} | ${res.durationMs.toStringAsFixed(3)} | $status |');
+            '| ${res.framework.label} | ${res.durationMicros} | $status |');
       }
       buffer.writeln('');
     }

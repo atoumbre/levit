@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
-class TestRejectMiddleware extends LevitStateMiddleware {
+class TestRejectMiddleware extends LevitReactiveMiddleware {
   @override
   LxOnSet? get onSet => (next, reactive, change) {
         // Reject: do NOT call next
@@ -16,8 +16,8 @@ class TestRejectMiddleware extends LevitStateMiddleware {
       };
 }
 
-class TestSimpleMiddleware extends LevitStateMiddleware {
-  final List<LevitStateChange> changes = [];
+class TestSimpleMiddleware extends LevitReactiveMiddleware {
+  final List<LevitReactiveChange> changes = [];
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
@@ -46,8 +46,8 @@ void main() {
       expect(Lx.isBatching, isFalse);
     });
 
-    test('LevitStateNotifier ignores operations after disposal', () {
-      final notifier = LevitStateNotifier();
+    test('LevitReactiveNotifier ignores operations after disposal', () {
+      final notifier = LevitReactiveNotifier();
       var called = false;
       notifier.addListener(() => called = true);
 
@@ -62,8 +62,8 @@ void main() {
       notifier.addListener(() => called = true);
     });
 
-    test('LevitStateNotifier removeListener works', () {
-      final notifier = LevitStateNotifier();
+    test('LevitReactiveNotifier removeListener works', () {
+      final notifier = LevitReactiveNotifier();
       var count = 0;
       void listener() => count++;
 
@@ -78,13 +78,13 @@ void main() {
 
     test('CompositeChange getters return correct metadata', () {
       final rx = 0.lx;
-      final change1 = LevitStateChange<int>(
+      final change1 = LevitReactiveChange<int>(
         timestamp: DateTime.now(),
         valueType: int,
         oldValue: 0,
         newValue: 1,
       );
-      final composite = LevitStateBatchChange([(rx, change1)]);
+      final composite = LevitReactiveBatch([(rx, change1)]);
 
       // Force access invalid getters for coverage
       try {
@@ -98,7 +98,7 @@ void main() {
       expect(composite.toString(), contains('Batch'));
 
       // Cover valueType, restore getters
-      expect(composite.valueType, equals(LevitStateBatchChange));
+      expect(composite.valueType, equals(LevitReactiveBatch));
       expect(composite.restore, isNull);
 
       // New getters coverage
@@ -108,14 +108,14 @@ void main() {
       expect(composite.isNotEmpty, isTrue);
 
       // Legacy factory coverage
-      expect(LevitStateBatchChange.fromChanges([]).isEmpty, isTrue);
+      expect(LevitReactiveBatch.fromChanges([]).isEmpty, isTrue);
     });
 
     test('Lx.hasSetMiddlewares coverage', () {
       Lx.clearMiddlewares();
-      expect(LevitStateMiddleware.hasSetMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
       Lx.addMiddleware(TestSimpleMiddleware());
-      expect(LevitStateMiddleware.hasSetMiddlewares, isTrue);
+      expect(LevitReactiveMiddleware.hasSetMiddlewares, isTrue);
     });
 
     test('Lx bind handles stream errors', () async {
@@ -166,7 +166,7 @@ void main() {
       expect(() => Lx.batchAsync(() async {}), throwsStateError);
     });
 
-    test('LevitStateMiddleware default implementations', () {
+    test('LevitReactiveMiddleware default implementations', () {
       // Create a specific class that extends (not implements) to use default methods
       final simpleMiddleware = TestSimpleMiddleware();
       Lx.addMiddleware(simpleMiddleware);
@@ -180,7 +180,7 @@ void main() {
       // Trigger default onBatch
       // TestSimpleMiddleware doesn't override onBatch to crash, it uses default (pass-through)
       // Wait, TestSimpleMiddleware DOES NOT override onBatch.
-      // So it inherits default LevitStateMiddleware.onBatch => return next.
+      // So it inherits default LevitReactiveMiddleware.onBatch => return next.
       Lx.batch(() {
         count.value = 2;
       });
@@ -190,13 +190,14 @@ void main() {
     });
   });
 
-  group('LevitStateHistoryMiddleware Extra Coverage', () {
-    test('LevitStateHistoryMiddleware handles missing name/callback gracefully',
+  group('LevitReactiveHistoryMiddleware Extra Coverage', () {
+    test(
+        'LevitReactiveHistoryMiddleware handles missing name/callback gracefully',
         () {
-      final history = LevitStateHistoryMiddleware();
+      final history = LevitReactiveHistoryMiddleware();
       final rx = 0.lx;
       // Manually add a change with NO restore callback and NO name
-      final brokenChange = LevitStateChange<int>(
+      final brokenChange = LevitReactiveChange<int>(
         timestamp: DateTime.now(),
         valueType: int,
         oldValue: 0,
@@ -217,8 +218,8 @@ void main() {
       expect(history.undo(), isTrue);
     });
 
-    test('LevitStateHistoryMiddleware clear works', () {
-      final history = LevitStateHistoryMiddleware();
+    test('LevitReactiveHistoryMiddleware clear works', () {
+      final history = LevitReactiveHistoryMiddleware();
       final count = 0.lx;
       Lx.addMiddleware(history); // Activate
 
@@ -230,8 +231,8 @@ void main() {
       expect(history.length, equals(0)); // access length getter
     });
 
-    test('LevitStateHistoryMiddleware printHistory with redo stack', () {
-      final history = LevitStateHistoryMiddleware();
+    test('LevitReactiveHistoryMiddleware printHistory with redo stack', () {
+      final history = LevitReactiveHistoryMiddleware();
       Lx.addMiddleware(history);
 
       final count = 0.lx;
@@ -299,7 +300,7 @@ void main() {
       expect(lxFuture.valueOrNull, equals(42));
     });
 
-    test('LevitSateCore flushGlobalBatch resets isBatching on exception', () {
+    test('LevitStateCore flushGlobalBatch resets isBatching on exception', () {
       final rx = 0.lx;
       rx.addListener(() {
         throw Exception('Listener error');
@@ -345,18 +346,18 @@ void main() {
 
     test('Additional granular middleware flags', () {
       Lx.clearMiddlewares();
-      expect(LevitStateMiddleware.hasBatchMiddlewares, isFalse);
-      expect(LevitStateMiddleware.hasDisposeMiddlewares, isFalse);
-      expect(LevitStateMiddleware.hasInitMiddlewares, isFalse);
-      expect(LevitStateMiddleware.hasGraphChangeMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasBatchMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasDisposeMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasGraphChangeMiddlewares, isFalse);
     });
 
-    test('LevitStateHistoryMiddleware onBatch during restore', () {
-      final history = LevitStateHistoryMiddleware();
+    test('LevitReactiveHistoryMiddleware onBatch during restore', () {
+      final history = LevitReactiveHistoryMiddleware();
       final rx = 0.lx;
       Lx.addMiddleware(history);
 
-      final customChange = LevitStateChange<int>(
+      final customChange = LevitReactiveChange<int>(
           timestamp: DateTime.now(),
           valueType: int,
           oldValue: 0,

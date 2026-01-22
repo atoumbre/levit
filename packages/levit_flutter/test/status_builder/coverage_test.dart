@@ -100,8 +100,8 @@ void main() {
 
   testWidgets('LStatusBuilder handles source change (external source)',
       (tester) async {
-    final rx1 = LxVal<LxStatus<int>>(LxSuccess(1));
-    final rx2 = LxVal<LxStatus<int>>(LxSuccess(2));
+    final rx1 = LxVar<LxStatus<int>>(LxSuccess(1));
+    final rx2 = LxVar<LxStatus<int>>(LxSuccess(2));
 
     await tester.pumpWidget(
       Directionality(

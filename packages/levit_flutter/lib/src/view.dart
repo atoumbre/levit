@@ -60,7 +60,7 @@ abstract class LView<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Resolve controller using the optimized path (avoiding LevitContext allocation)
+    // Resolve controller using the optimized path (avoiding LevitProvider allocation)
     final T controller;
     final scope = LScope.of(context);
     if (scope != null) {

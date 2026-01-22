@@ -9,8 +9,8 @@ class TestReactive<T> extends LxBase<T> {
 
 void main() {
   group('Middleware Coverage', () {
-    test('LevitStateChange toString', () {
-      final change = LevitStateChange(
+    test('LevitReactiveChange toString', () {
+      final change = LevitReactiveChange(
         timestamp: DateTime.now(),
         valueType: int,
         oldValue: 1,
@@ -19,21 +19,21 @@ void main() {
       expect(change.toString(), contains('int: 1 → 2'));
     });
 
-    test('LevitStateBatchChange logic', () {
-      final batch = LevitStateBatchChange([]);
+    test('LevitReactiveBatch logic', () {
+      final batch = LevitReactiveBatch([]);
       expect(batch.isEmpty, true);
       expect(batch.isNotEmpty, false);
       expect(batch.length, 0);
       expect(batch.toString(), contains('Batch of 0 changes'));
 
       // Coverage for getters that do nothing/return null
-      expect(batch.valueType, LevitStateBatchChange);
+      expect(batch.valueType, LevitReactiveBatch);
       // batch.oldValue; // void
       // batch.newValue; // void
       expect(batch.stackTrace, null);
       expect(batch.restore, null);
 
-      // Stop propagation logic (inherited from LevitStateChange but overridden in Batch)
+      // Stop propagation logic (inherited from LevitReactiveChange but overridden in Batch)
       batch.stopPropagation();
       expect(batch.isPropagationStopped, true);
     });
@@ -42,7 +42,7 @@ void main() {
     // properly, but we can verify StateHistory logic which is contained.
 
     test('StateHistoryMiddleware clear and print', () {
-      final history = LevitStateHistoryMiddleware();
+      final history = LevitReactiveHistoryMiddleware();
       final rx = TestReactive<int>(0);
 
       Lx.addMiddleware(history);
@@ -61,7 +61,7 @@ void main() {
     });
 
     test('StateHistoryMiddleware changesOfType', () {
-      final history = LevitStateHistoryMiddleware();
+      final history = LevitReactiveHistoryMiddleware();
       final rx = TestReactive<int>(0);
       final rxStr = TestReactive<String>('a');
 

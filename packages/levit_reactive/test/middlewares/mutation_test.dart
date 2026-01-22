@@ -1,7 +1,7 @@
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
 
-class TestMutationMiddleware extends LevitStateMiddleware {
+class TestMutationMiddleware extends LevitReactiveMiddleware {
   int changeCount = 0;
 
   @override

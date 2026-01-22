@@ -51,14 +51,14 @@ void main() {
       );
     });
 
-    testWidgets('LValue update coverage', (tester) async {
+    testWidgets('LConsumer update coverage', (tester) async {
       final v1 = 0.lx;
       final v2 = 1.lx;
 
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LValue(
+          child: LConsumer(
             v1,
             (v) => Text('V: ${v.value}'),
           ),
@@ -70,7 +70,7 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LValue(
+          child: LConsumer(
             v2,
             (v) => Text('V: ${v.value}'),
           ),

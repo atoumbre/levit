@@ -7,9 +7,9 @@ class User {
   User(this.name, this.age);
 }
 
-class MockObserver implements LevitStateObserver {
+class MockObserver implements LevitReactiveObserver {
   final List<Stream> streams = [];
-  final List<LevitStateNotifier> notifiers = [];
+  final List<LevitReactiveNotifier> notifiers = [];
   final List<LxReactive> reactives = [];
 
   @override
@@ -18,7 +18,7 @@ class MockObserver implements LevitStateObserver {
   }
 
   @override
-  void addNotifier(LevitStateNotifier notifier) {
+  void addNotifier(LevitReactiveNotifier notifier) {
     notifiers.add(notifier);
   }
 
@@ -28,8 +28,8 @@ class MockObserver implements LevitStateObserver {
   }
 }
 
-class TestMiddleware extends LevitStateMiddleware {
-  final void Function(LevitStateChange)? onAfter;
+class TestMiddleware extends LevitReactiveMiddleware {
+  final void Function(LevitReactiveChange)? onAfter;
   final bool allowChange;
 
   TestMiddleware({this.onAfter, this.allowChange = true});
@@ -47,8 +47,8 @@ class TestMiddleware extends LevitStateMiddleware {
 }
 
 /// Middleware that uses the default wrapper implementation
-class MinimalMiddleware extends LevitStateMiddleware {
-  final List<LevitStateChange> changes = [];
+class MinimalMiddleware extends LevitReactiveMiddleware {
+  final List<LevitReactiveChange> changes = [];
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
@@ -59,7 +59,7 @@ class MinimalMiddleware extends LevitStateMiddleware {
       };
 }
 
-class DefaultMiddleware extends LevitStateMiddleware {
+class DefaultMiddleware extends LevitReactiveMiddleware {
   // Uses default implementation (pass-through)
 }
 

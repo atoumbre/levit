@@ -45,7 +45,7 @@ export 'src/async_types.dart';
 export 'src/base_types.dart';
 export 'src/collections.dart';
 export 'src/computed.dart';
-export 'src/core.dart' hide LevitSateCore;
+export 'src/core.dart' hide LevitStateCore;
 export 'src/global_accessor.dart';
 export 'src/middlewares.dart' hide LevitStateMiddlewareChain;
 export 'src/watchers.dart';

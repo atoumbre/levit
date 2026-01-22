@@ -32,7 +32,7 @@ void main() {
 
     test('Lx raw callbacks work', () async {
       bool active = false;
-      final lx = LxVal(0, onListen: () {
+      final lx = LxVar(0, onListen: () {
         active = true;
       }, onCancel: () {
         active = false;
@@ -66,7 +66,7 @@ void main() {
           reason: 'LxComputed should NOT subscribe actively if no listeners');
 
       // Verify Value Access (Pull) works
-      expect(computed.computedValue, 0); // initial value
+      expect(computed.value, 0); // initial value
 
       // ACT: Listen to computed
       final sub = computed.stream.listen((_) {});
@@ -190,7 +190,7 @@ void main() {
   });
 }
 
-class _MockObserver implements LevitStateObserver {
+class _MockObserver implements LevitReactiveObserver {
   final List<StreamSubscription> subscriptions = [];
   final List<void Function()> disposers = [];
 
@@ -200,7 +200,7 @@ class _MockObserver implements LevitStateObserver {
   }
 
   @override
-  void addNotifier(LevitStateNotifier notifier) {
+  void addNotifier(LevitReactiveNotifier notifier) {
     void listener() {}
     notifier.addListener(listener);
     disposers.add(() => notifier.removeListener(listener));

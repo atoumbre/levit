@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:levit_flutter/levit_flutter.dart';
-import '../benchmark_engine.dart';
+import '../../benchmark_engine.dart';
 
 class DeepTreeBenchmark extends Benchmark {
   @override
@@ -46,11 +46,11 @@ Widget buildDeepTree(int depth, Widget leaf) {
 
 // --- Levit ---
 class LevitDeepTree extends BenchmarkImplementation {
-  late LxVal<int> counter;
+  late LxVar<int> counter;
 
   @override
   Future<void> setup() async {
-    counter = LxVal(0);
+    counter = LxVar(0);
   }
 
   @override

@@ -2,13 +2,13 @@ part of '../levit_dart.dart';
 
 /// A unified base class for Levit middlewares.
 ///
-/// [LevitMiddleware] combines the capabilities of [LevitStateMiddleware] (for reactive
+/// [LevitMiddleware] combines the capabilities of [LevitReactiveMiddleware] (for reactive
 /// state changes) and [LevitScopeMiddleware] (for dependency injection events).
 ///
 /// Use this class to create integrated tools like loggers, analytics trackers,
 /// or devtools bridges that require a holistic view of the application state
 /// and its structure.
-abstract class LevitMiddleware extends LevitStateMiddleware
+abstract class LevitMiddleware extends LevitReactiveMiddleware
     implements LevitScopeMiddleware {
   /// Called when a reactive variable is registered with its owner.
   ///
@@ -23,7 +23,7 @@ abstract class LevitMiddleware extends LevitStateMiddleware
     int scopeId,
     String scopeName,
     String key,
-    LevitBindingEntry info, {
+    LevitDependency info, {
     required String source,
     int? parentScopeId,
   }) {}
@@ -33,7 +33,7 @@ abstract class LevitMiddleware extends LevitStateMiddleware
     int scopeId,
     String scopeName,
     String key,
-    LevitBindingEntry info, {
+    LevitDependency info, {
     required String source,
     int? parentScopeId,
   }) {}
@@ -43,7 +43,7 @@ abstract class LevitMiddleware extends LevitStateMiddleware
     int scopeId,
     String scopeName,
     String key,
-    LevitBindingEntry info, {
+    LevitDependency info, {
     required String source,
     int? parentScopeId,
   }) {}
@@ -53,7 +53,7 @@ abstract class LevitMiddleware extends LevitStateMiddleware
     S Function() builder,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) {
     return builder;
   }
@@ -64,7 +64,7 @@ abstract class LevitMiddleware extends LevitStateMiddleware
     S instance,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) {
     return onInit;
   }

@@ -17,13 +17,13 @@ class MockTransport implements LevitTransport {
 }
 
 void main() {
-  group('MonitorMiddleware', () {
-    late MonitorMiddleware middleware;
+  group('LevitMonitorMiddleware', () {
+    late LevitMonitorMiddleware middleware;
     late MockTransport transport;
 
     setUp(() {
       transport = MockTransport();
-      middleware = MonitorMiddleware(transport: transport);
+      middleware = LevitMonitorMiddleware(transport: transport);
       middleware.enable();
     });
 
@@ -42,31 +42,31 @@ void main() {
       expect(event.reactive.ownerId, equals('owner'));
     });
 
-    test('captures state changes as StateChangeEvent', () async {
+    test('captures state changes as ReactiveChangeEvent', () async {
       final reactive = 0.lx.named('r');
       reactive.value++;
       await Future.delayed(Duration.zero);
 
-      final event = transport.events.whereType<StateChangeEvent>().first;
+      final event = transport.events.whereType<ReactiveChangeEvent>().first;
       expect(event.reactive.name, equals('r'));
       expect(event.change.newValue, equals(1));
     });
 
-    test('captures DI registration as DIRegisterEvent', () async {
+    test('captures DI registration as DependencyRegisterEvent', () async {
       Levit.put(() => 'di_value', tag: 'di_test');
       await Future.delayed(Duration.zero);
 
-      final event = transport.events.whereType<DIRegisterEvent>().first;
+      final event = transport.events.whereType<DependencyRegisterEvent>().first;
       expect(event.key, contains('String_di_test'));
       expect(event.scopeName, equals('root'));
     });
 
-    test('captures DI resolution as DIResolveEvent', () async {
+    test('captures DI resolution as DependencyResolveEvent', () async {
       Levit.lazyPut(() => 'di_value', tag: 'di_test');
       Levit.find<String>(tag: 'di_test');
       await Future.delayed(Duration.zero);
 
-      final event = transport.events.whereType<DIResolveEvent>().first;
+      final event = transport.events.whereType<DependencyResolveEvent>().first;
       expect(event.key, contains('String_di_test'));
     });
 
@@ -100,7 +100,7 @@ void main() {
 
       await Future.delayed(Duration.zero);
 
-      final batchEvents = transport.events.whereType<BatchEvent>();
+      final batchEvents = transport.events.whereType<ReactiveBatchEvent>();
       expect(batchEvents, isNotEmpty);
       expect(batchEvents.first.change.length, 2);
     });
@@ -117,37 +117,40 @@ void main() {
 
       await Future.delayed(Duration.zero);
 
-      final batchEvents = transport.events.whereType<BatchEvent>();
+      final batchEvents = transport.events.whereType<ReactiveBatchEvent>();
       expect(batchEvents, isNotEmpty);
     });
 
-    test('captures DI deletion as DIDeleteEvent', () async {
+    test('captures DI deletion as DependencyDeleteEvent', () async {
       Levit.put(() => 'value_to_delete', tag: 'delete_test');
       await Future.delayed(Duration.zero);
 
       Levit.delete<String>(tag: 'delete_test', force: true);
       await Future.delayed(Duration.zero);
 
-      final deleteEvents = transport.events.whereType<DIDeleteEvent>();
+      final deleteEvents = transport.events.whereType<DependencyDeleteEvent>();
       expect(deleteEvents, isNotEmpty);
       expect(deleteEvents.first.key, contains('String_delete_test'));
     });
 
-    test('captures DI instance creation as DIInstanceCreateEvent', () async {
+    test('captures DI instance creation as DependencyInstanceCreateEvent',
+        () async {
       Levit.put(() => 'created_instance', tag: 'create_test');
       await Future.delayed(Duration.zero);
 
-      final createEvents = transport.events.whereType<DIInstanceCreateEvent>();
+      final createEvents =
+          transport.events.whereType<DependencyInstanceCreateEvent>();
       expect(createEvents, isNotEmpty);
       expect(createEvents.first.key, contains('String_create_test'));
     });
 
-    test('captures DI instance init as DIInstanceInitEvent', () async {
+    test('captures DI instance init as DependencyInstanceReadyEvent', () async {
       // Register controller with DI to trigger init event
       Levit.put(() => TestController(), tag: 'test_controller');
       await Future.delayed(Duration.zero);
 
-      final initEvents = transport.events.whereType<DIInstanceInitEvent>();
+      final initEvents =
+          transport.events.whereType<DependencyInstanceReadyEvent>();
       expect(initEvents, isNotEmpty);
     });
 
@@ -159,7 +162,8 @@ void main() {
       computed.value;
       await Future.delayed(Duration.zero);
 
-      final graphEvents = transport.events.whereType<GraphChangeEvent>();
+      final graphEvents =
+          transport.events.whereType<ReactiveGraphChangeEvent>();
       expect(graphEvents, isNotEmpty);
     });
 
@@ -182,7 +186,8 @@ void main() {
 
       await Future.delayed(Duration(milliseconds: 100));
 
-      final initEvents = transport.events.whereType<DIInstanceInitEvent>();
+      final initEvents =
+          transport.events.whereType<DependencyInstanceReadyEvent>();
       expect(initEvents, isNotEmpty);
 
       // Verify instance is captured

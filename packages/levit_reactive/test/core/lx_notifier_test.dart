@@ -2,9 +2,9 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('LevitStateNotifier', () {
+  group('LevitReactiveNotifier', () {
     test('notify calls all listeners', () {
-      final notifier = LevitStateNotifier();
+      final notifier = LevitReactiveNotifier();
       var count = 0;
       notifier.addListener(() => count++);
       notifier.addListener(() => count++);
@@ -14,7 +14,7 @@ void main() {
     });
 
     test('removeListener works', () {
-      final notifier = LevitStateNotifier();
+      final notifier = LevitReactiveNotifier();
       var count = 0;
       void listener() => count++;
 
@@ -28,7 +28,7 @@ void main() {
     });
 
     test('dispose clears listeners', () {
-      final notifier = LevitStateNotifier();
+      final notifier = LevitReactiveNotifier();
       var count = 0;
       notifier.addListener(() => count++);
 
@@ -38,7 +38,7 @@ void main() {
     });
 
     test('isDisposed returns correct value', () {
-      final notifier = LevitStateNotifier();
+      final notifier = LevitReactiveNotifier();
       expect(notifier.isDisposed, isFalse);
 
       notifier.dispose();
@@ -46,7 +46,7 @@ void main() {
     });
 
     test('addListener ignored after dispose', () {
-      final notifier = LevitStateNotifier();
+      final notifier = LevitReactiveNotifier();
       notifier.dispose();
 
       var called = false;

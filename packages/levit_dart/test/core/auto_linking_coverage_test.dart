@@ -19,11 +19,11 @@ void main() {
 
       // Verify reactives were created and captured
       expect(controller.count.value, 0);
-      expect(controller.doubled.requireValue, 0);
+      expect(controller.doubled.value, 0);
 
       // Update values
       controller.count.value = 5;
-      expect(controller.doubled.requireValue, 10);
+      expect(controller.doubled.value, 10);
 
       // Delete controller - should auto-dispose reactives
       Levit.delete<TestController>(force: true);

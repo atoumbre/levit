@@ -3,7 +3,7 @@ import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
   group('LxStatus Extension Coverage', () {
-    test('LxValueReactiveExtensions.listen creates LxWatch', () {
+    test('LxVarExtensions.listen creates LxWatch', () {
       final rx = 0.lx;
       var callCount = 0;
 

@@ -31,7 +31,17 @@
         "substr",
         "unwatch",
         "Updateable",
-        "writeln"
+        "writeln",
+        "rethrown",
+        "devs",
+        "typedefs",
+        "microtasks",
+        // Levit keywords
+        "lwatch",
+        "lscope",
+        "lstate",
+        "lvalue",
+        "lcomputed"
     ],
     // flagWords - list of words to be always considered incorrect
     // This is useful for offensive words and common spelling errors.
@@ -44,6 +54,9 @@
     "ignorePaths": [
         "**/build/**",
         "**/coverage/**",
-        "**/temp-docs/**"
+        "**/temp-docs/**",
+        "**/macos/**",
+        "**/ios/**",
+        "**/android/**"
     ]
 }

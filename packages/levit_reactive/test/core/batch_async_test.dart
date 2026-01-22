@@ -65,11 +65,11 @@ void main() {
         });
 
         // Lx.batch (sync) uses the GLOBAL batch state, which currently pushes to _batchedNotifiers.
-        // However, our LevitStateNotifier.notify checks 'asyncBatch' (Zone) FIRST.
+        // However, our LevitReactiveNotifier.notify checks 'asyncBatch' (Zone) FIRST.
         // So even inside Lx.batch(), the Zone check wins if we prioritize it.
         //
         // Let's verify existing behavior:
-        // LevitStateNotifier.notify implementation puts Zone check (0) BEFORE Sync check (1).
+        // LevitReactiveNotifier.notify implementation puts Zone check (0) BEFORE Sync check (1).
         // So 'b' updates inside sync batch will ACTUALLY be captured by the ASYNC batch
         // because the Zone is still active!
         // This effectively "promotes" the sync batch content to the surrounding async batch.
@@ -139,7 +139,7 @@ void main() {
   });
 }
 
-class TestBatchHookMiddleware extends LevitStateMiddleware {
+class TestBatchHookMiddleware extends LevitReactiveMiddleware {
   final void Function() onStart;
   final void Function() onEnd;
 

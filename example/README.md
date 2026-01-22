@@ -126,7 +126,7 @@ State is decomposed into individually observable properties rather than monolith
 
 ```dart
 class NodeModel {
-  final LxVal<Vec2> position;
+  final LxVar<Vec2> position;
   final LxInt color;
 
   NodeModel(...)

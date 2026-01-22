@@ -140,7 +140,7 @@ void main() {
       expect(find.text('10 multi'), findsOneWidget);
     });
 
-    testWidgets('LevitContext fallback to global', (tester) async {
+    testWidgets('LevitProvider fallback to global', (tester) async {
       // Register global
       Levit.put<double>(() => 3.14);
 
@@ -163,7 +163,7 @@ void main() {
       Levit.reset();
     });
 
-    testWidgets('LevitContext put works in scope', (tester) async {
+    testWidgets('LevitProvider put works in scope', (tester) async {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,

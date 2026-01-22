@@ -2,9 +2,9 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 // verify import path
 
-class FilteredMiddlewareWrapper extends LevitStateMiddleware {
-  final LevitStateMiddleware child;
-  final bool Function(LxReactive, LevitStateChange) filter;
+class FilteredMiddlewareWrapper extends LevitReactiveMiddleware {
+  final LevitReactiveMiddleware child;
+  final bool Function(LxReactive, LevitReactiveChange) filter;
 
   FilteredMiddlewareWrapper(this.child, {required this.filter});
 
@@ -42,10 +42,10 @@ class FilteredMiddlewareWrapper extends LevitStateMiddleware {
 
 void main() {
   group('FilteredMiddleware', () {
-    late LevitStateHistoryMiddleware history;
+    late LevitReactiveHistoryMiddleware history;
 
     setUp(() {
-      history = LevitStateHistoryMiddleware();
+      history = LevitReactiveHistoryMiddleware();
       // Ensure clean state
       Lx.clearMiddlewares();
     });
@@ -61,7 +61,7 @@ void main() {
       );
       Lx.addMiddleware(filteredHistory);
 
-      final ignoreObj = LxVal<String>('ignore');
+      final ignoreObj = LxVar<String>('ignore');
       final recordObj = LxInt(0);
 
       // Should be ignored

@@ -2,7 +2,7 @@ import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
 
 /// Test middleware to capture dependency graph changes
-class DepGraphCapture extends LevitStateMiddleware {
+class DepGraphCapture extends LevitReactiveMiddleware {
   LxReactive? lastTarget;
   List<LxReactive>? lastReactives;
 
@@ -15,7 +15,7 @@ class DepGraphCapture extends LevitStateMiddleware {
 }
 
 void main() {
-  group('LevitStateMiddleware.onGraphChange', () {
+  group('LevitReactiveMiddleware.onGraphChange', () {
     test('LxComputed notifies onDependencyGraphChange', () {
       final source = 1.lx;
       final capture = DepGraphCapture();

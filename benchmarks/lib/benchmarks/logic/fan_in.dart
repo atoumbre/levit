@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
-import '../benchmark_engine.dart';
+import '../../benchmark_engine.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;
 
 class FanInBenchmark extends Benchmark {
@@ -36,7 +36,7 @@ class FanInBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitFanInBenchmark extends BenchmarkImplementation {
-  final List<LxVal<int>> inputs = [];
+  final List<LxVar<int>> inputs = [];
   late LxComputed<int> output;
   late VoidCallback listener;
 
@@ -44,7 +44,7 @@ class LevitFanInBenchmark extends BenchmarkImplementation {
   Future<void> setup() async {
     inputs.clear();
     for (int i = 0; i < 1000; i++) {
-      inputs.add(LxVal(1));
+      inputs.add(LxVar(1));
     }
 
     // Create one computed that depends on all 1000 inputs
@@ -233,10 +233,6 @@ class BlocFanInBenchmark extends BenchmarkImplementation {
     for (int i = 0; i < 1000; i++) {
       inputs.add(rxdart.BehaviorSubject.seeded(1));
     }
-
-    // CombineLatest? 1000 streams might be heavy for CombineLatest.
-    // Rx.combineLatest(inputs, (vals) => ... )
-    // Let's try it.
 
     final output = rxdart.Rx.combineLatestList(inputs).map((list) {
       return list.fold(0, (a, b) => a + b);

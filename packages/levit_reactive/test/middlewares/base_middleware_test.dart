@@ -1,12 +1,12 @@
 import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
-class BaseMiddleware extends LevitStateMiddleware {
+class BaseMiddleware extends LevitReactiveMiddleware {
   // Uses default implementations
 }
 
 void main() {
-  group('LevitStateMiddleware Base', () {
+  group('LevitReactiveMiddleware Base', () {
     test('default onSet returns null', () {
       final mw = BaseMiddleware();
       expect(mw.onSet, isNull);

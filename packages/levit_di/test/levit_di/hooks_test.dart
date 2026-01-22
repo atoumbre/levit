@@ -13,7 +13,7 @@ void main() {
       bool hookCalled = false;
 
       S Function() myHook<S>(S Function() builder, LevitScope scope, String key,
-          LevitBindingEntry info) {
+          LevitDependency info) {
         return () {
           hookCalled = true;
           return builder();
@@ -35,7 +35,7 @@ void main() {
 
       // Observer 1
       S Function() hook1<S>(S Function() builder, LevitScope scope, String key,
-          LevitBindingEntry info) {
+          LevitDependency info) {
         return () {
           order.add('Hook1 Start');
           final result = builder();
@@ -48,7 +48,7 @@ void main() {
 
       // Observer 2
       S Function() hook2<S>(S Function() builder, LevitScope scope, String key,
-          LevitBindingEntry info) {
+          LevitDependency info) {
         return () {
           order.add('Hook2 Start');
           final result = builder();
@@ -84,7 +84,7 @@ void main() {
       bool hookCalled = false;
 
       S Function() myHook<S>(S Function() builder, LevitScope scope, String key,
-          LevitBindingEntry info) {
+          LevitDependency info) {
         return () {
           hookCalled = true;
           return builder();
@@ -109,7 +109,7 @@ class _TestCreateObserver extends LevitScopeMiddleware {
     S Function() builder,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) hook;
 
   const _TestCreateObserver(this.hook);
@@ -119,7 +119,7 @@ class _TestCreateObserver extends LevitScopeMiddleware {
     S Function() builder,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) {
     return hook<S>(builder, scope, key, info);
   }

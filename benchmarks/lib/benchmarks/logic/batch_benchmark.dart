@@ -3,13 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
-import '../benchmark_engine.dart';
+import '../../benchmark_engine.dart';
 
-/// Benchmark comparing batched vs unbatched updates.
+/// Benchmark comparing batched vs un-batched updates.
 /// Demonstrates the value of Lx.batch() for bulk operations.
-class BatchVsUnbatchedBenchmark extends Benchmark {
+class BatchVsUnBatchedBenchmark extends Benchmark {
   @override
-  String get name => 'Batch vs Unbatched';
+  String get name => 'Batch vs Un-batched';
 
   @override
   String get description =>
@@ -37,7 +37,7 @@ class BatchVsUnbatchedBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitBatchBenchmark extends BenchmarkImplementation {
-  final List<LxVal<int>> sources = [];
+  final List<LxVar<int>> sources = [];
   late LxComputed<int> sum;
   late VoidCallback listener;
   int notifyCount = 0;
@@ -47,7 +47,7 @@ class LevitBatchBenchmark extends BenchmarkImplementation {
     sources.clear();
     notifyCount = 0;
     for (int i = 0; i < 100; i++) {
-      sources.add(LxVal(0));
+      sources.add(LxVar(0));
     }
     sum = LxComputed(() {
       int total = 0;

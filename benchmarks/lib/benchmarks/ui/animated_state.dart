@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../benchmark_engine.dart';
+import '../../benchmark_engine.dart';
 
 /// Benchmark for animated state updates at 60fps.
 /// Tests framework overhead during continuous animation.
 class AnimatedStateBenchmark extends Benchmark {
   @override
-  String get name => 'Animated State (60fps)';
+  String get name => 'Animated State - 60fps (UI)';
 
   @override
   String get description =>
@@ -38,12 +38,12 @@ class AnimatedStateBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitAnimatedBenchmark extends BenchmarkImplementation {
-  late LxVal<double> progress;
+  late LxVar<double> progress;
   int frameCount = 0;
 
   @override
   Future<void> setup() async {
-    progress = LxVal(0.0);
+    progress = LxVar(0.0);
     frameCount = 0;
   }
 
@@ -62,7 +62,7 @@ class LevitAnimatedBenchmark extends BenchmarkImplementation {
 
   @override
   Widget build(BuildContext context) {
-    return LWatch(() {
+    return LConsumer(progress, (progress) {
       return Container(
         width: 200,
         height: 20,

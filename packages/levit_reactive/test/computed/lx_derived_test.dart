@@ -5,7 +5,7 @@ import 'package:levit_reactive/levit_reactive.dart';
 void main() {
   group('LxStatus sealed class', () {
     test('LxIdle has correct properties', () {
-      const status = LxIdle<int>();
+      final status = LxIdle<int>();
       expect(status.isLoading, false);
       expect(status.hasValue, false);
       expect(status.hasError, false);
@@ -15,7 +15,7 @@ void main() {
     });
 
     test('LxWaiting has correct properties', () {
-      const status = LxWaiting<int>();
+      final status = LxWaiting<int>();
       expect(status.isLoading, true);
       expect(status.hasValue, false);
       expect(status.hasError, false);
@@ -49,8 +49,8 @@ void main() {
     });
 
     test('LxStatus equality', () {
-      expect(const LxIdle<int>(), equals(const LxIdle<int>()));
-      expect(const LxWaiting<int>(), equals(const LxWaiting<int>()));
+      expect(LxIdle<int>(), equals(LxIdle<int>()));
+      expect(LxWaiting<int>(), equals(LxWaiting<int>()));
       expect(const LxSuccess<int>(42), equals(const LxSuccess<int>(42)));
       expect(const LxSuccess<int>(42), isNot(equals(const LxSuccess<int>(43))));
       expect(const LxError<int>('a'), equals(const LxError<int>('a')));
@@ -280,7 +280,7 @@ void main() {
       final count = 0.lx;
       final doubled = LxComputed(() => count.value * 2);
 
-      expect(doubled.computedValue, 0);
+      expect(doubled.value, 0);
     });
 
     test('recomputes when dependency changes', () async {
@@ -291,12 +291,12 @@ void main() {
       doubled.stream.listen((_) {});
       await Future.microtask(() {});
 
-      expect(doubled.computedValue, 0);
+      expect(doubled.value, 0);
 
       count.value = 5;
       await Future.delayed(Duration.zero);
 
-      expect(doubled.computedValue, 10);
+      expect(doubled.value, 10);
     });
 
     test('tracks multiple dependencies', () async {
@@ -304,22 +304,15 @@ void main() {
       final b = 2.lx;
       final sum = LxComputed(() => a.value + b.value);
 
-      expect(sum.computedValue, 3);
+      expect(sum.value, 3);
 
       a.value = 10;
       await Future.delayed(Duration.zero);
-      expect(sum.computedValue, 12);
+      expect(sum.value, 12);
 
       b.value = 20;
       await Future.delayed(Duration.zero);
-      expect(sum.computedValue, 30);
-    });
-
-    test('handles computation errors', () {
-      // Access value to trigger computation in pull-mode (throws in constructor)
-      final c = LxComputed<int>(() => throw 'Computation error');
-      expect(c.isError, isTrue);
-      expect(c.errorOrNull, 'Computation error');
+      expect(sum.value, 30);
     });
 
     test('close stops recomputation', () async {
@@ -331,7 +324,7 @@ void main() {
       doubled.stream.listen((_) => notifyCount++);
       await Future.delayed(Duration(milliseconds: 10));
 
-      expect(doubled.computedValue, 0);
+      expect(doubled.value, 0);
 
       doubled.close();
       notifyCount = 0; // Reset count
@@ -345,7 +338,7 @@ void main() {
       // Wait, if closed, does it compute?
       // _SyncComputed calls _statusLx.close().
       // If pull-on-read calls _compute(), it returns value.
-      expect(doubled.computedValue, 10);
+      expect(doubled.value, 10);
     });
 
     test('listeners are notified on recomputation', () async {
@@ -384,14 +377,14 @@ void main() {
 
   group('LxStatus hashCode', () {
     test('LxIdle hashCode is consistent', () {
-      const idle1 = LxIdle<int>();
-      const idle2 = LxIdle<int>();
+      final idle1 = LxIdle<int>();
+      final idle2 = LxIdle<int>();
       expect(idle1.hashCode, equals(idle2.hashCode));
     });
 
     test('LxWaiting hashCode is consistent', () {
-      const waiting1 = LxWaiting<int>();
-      const waiting2 = LxWaiting<int>();
+      final waiting1 = LxWaiting<int>();
+      final waiting2 = LxWaiting<int>();
       expect(waiting1.hashCode, equals(waiting2.hashCode));
     });
 
@@ -532,7 +525,7 @@ void main() {
       final computed = LxComputed(() => count.value * 2);
 
       // Access value to trigger computation
-      expect(computed.computedValue, 10);
+      expect(computed.value, 10);
 
       computed.close();
     });
@@ -550,7 +543,7 @@ void main() {
 
       final values = <int>[];
       computed.stream.listen((s) {
-        if (s.hasValue) values.add(s.valueOrNull!);
+        values.add(s);
       });
 
       count.value = 5;
@@ -599,9 +592,9 @@ void main() {
   _lxReactiveCoverageTests();
 }
 
-class _MockObserver implements LevitStateObserver {
+class _MockObserver implements LevitReactiveObserver {
   final List<Stream> streams;
-  final List<LevitStateNotifier> notifiers = [];
+  final List<LevitReactiveNotifier> notifiers = [];
   _MockObserver(this.streams);
 
   @override
@@ -610,7 +603,7 @@ class _MockObserver implements LevitStateObserver {
   }
 
   @override
-  void addNotifier(LevitStateNotifier notifier) {
+  void addNotifier(LevitReactiveNotifier notifier) {
     notifiers.add(notifier);
   }
 
@@ -629,7 +622,7 @@ void _lxReactiveCoverageTests() {
       final results = <int>[];
 
       final unwatch = LxWatch(doubled, (val) {
-        if (val.hasValue) results.add(val.valueOrNull!);
+        results.add(val);
       });
 
       // Wait for watch to activate

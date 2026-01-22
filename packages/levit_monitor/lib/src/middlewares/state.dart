@@ -7,7 +7,7 @@ import '../transports/console_transport.dart';
 import '../../levit_monitor.dart' show LevitMonitor;
 
 /// The unified Levit middleware for monitoring and DevTools integration.
-class MonitorMiddleware extends LevitMiddleware {
+class LevitMonitorMiddleware extends LevitMiddleware {
   bool _enabled = false;
 
   /// Session-wide unique identifier for correlating events.
@@ -23,11 +23,11 @@ class MonitorMiddleware extends LevitMiddleware {
   StreamSubscription<MonitorEvent>? _subscription;
 
   /// Creates a unified Levit monitor middleware.
-  MonitorMiddleware({
+  LevitMonitorMiddleware({
     LevitTransport? transport,
     this.includeStackTrace = false,
     String? sessionId,
-  }) : transport = transport ?? const ConsoleTransport() {
+  }) : transport = transport ?? ConsoleTransport() {
     this.sessionId = sessionId ?? _generateSessionId();
   }
 
@@ -88,7 +88,7 @@ class MonitorMiddleware extends LevitMiddleware {
   LxOnSet? get onSet => (next, reactive, change) {
         return (value) {
           next(value);
-          _addToBuffer(StateChangeEvent(
+          _addToBuffer(ReactiveChangeEvent(
             sessionId: sessionId,
             reactive: reactive,
             change: change,
@@ -110,8 +110,8 @@ class MonitorMiddleware extends LevitMiddleware {
         };
       };
 
-  void _logBatch(LevitStateBatchChange change) {
-    _addToBuffer(BatchEvent(
+  void _logBatch(LevitReactiveBatch change) {
+    _addToBuffer(ReactiveBatchEvent(
       sessionId: sessionId,
       change: change,
     ));
@@ -139,7 +139,7 @@ class MonitorMiddleware extends LevitMiddleware {
   @override
   void Function(LxReactive, List<LxReactive>)? get onGraphChange =>
       (computed, dependencies) {
-        _addToBuffer(GraphChangeEvent(
+        _addToBuffer(ReactiveGraphChangeEvent(
           sessionId: sessionId,
           reactive: computed,
           dependencies: dependencies,
@@ -150,9 +150,9 @@ class MonitorMiddleware extends LevitMiddleware {
 
   @override
   void onRegister(
-      int scopeId, String scopeName, String key, LevitBindingEntry info,
+      int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {
-    _addToBuffer(DIRegisterEvent(
+    _addToBuffer(DependencyRegisterEvent(
       sessionId: sessionId,
       scopeId: scopeId,
       scopeName: scopeName,
@@ -164,9 +164,9 @@ class MonitorMiddleware extends LevitMiddleware {
 
   @override
   void onResolve(
-      int scopeId, String scopeName, String key, LevitBindingEntry info,
+      int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {
-    _addToBuffer(DIResolveEvent(
+    _addToBuffer(DependencyResolveEvent(
       sessionId: sessionId,
       scopeId: scopeId,
       scopeName: scopeName,
@@ -177,10 +177,9 @@ class MonitorMiddleware extends LevitMiddleware {
   }
 
   @override
-  void onDelete(
-      int scopeId, String scopeName, String key, LevitBindingEntry info,
+  void onDelete(int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {
-    _addToBuffer(DIDeleteEvent(
+    _addToBuffer(DependencyDeleteEvent(
       sessionId: sessionId,
       scopeId: scopeId,
       scopeName: scopeName,
@@ -192,9 +191,9 @@ class MonitorMiddleware extends LevitMiddleware {
 
   @override
   S Function() onCreate<S>(S Function() builder, LevitScope scope, String key,
-      LevitBindingEntry info) {
+      LevitDependency info) {
     return () {
-      _addToBuffer(DIInstanceCreateEvent(
+      _addToBuffer(DependencyInstanceCreateEvent(
         sessionId: sessionId,
         scopeId: scope.id,
         scopeName: scope.name,
@@ -207,9 +206,9 @@ class MonitorMiddleware extends LevitMiddleware {
 
   @override
   void Function() onDependencyInit<S>(void Function() onInit, S instance,
-      LevitScope scope, String key, LevitBindingEntry info) {
+      LevitScope scope, String key, LevitDependency info) {
     return () {
-      _addToBuffer(DIInstanceInitEvent(
+      _addToBuffer(DependencyInstanceReadyEvent(
         sessionId: sessionId,
         scopeId: scope.id,
         scopeName: scope.name,

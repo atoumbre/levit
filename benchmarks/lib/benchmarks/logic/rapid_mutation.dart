@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
-import '../benchmark_engine.dart';
+import '../../benchmark_engine.dart';
 
 class RapidMutationBenchmark extends Benchmark {
   @override
@@ -35,11 +35,11 @@ class RapidMutationBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitRapidMutation extends BenchmarkImplementation {
-  late LxVal<int> counter;
+  late LxVar<int> counter;
 
   @override
   Future<void> setup() async {
-    counter = LxVal(0);
+    counter = LxVar(0);
     counter.addListener(() {});
   }
 

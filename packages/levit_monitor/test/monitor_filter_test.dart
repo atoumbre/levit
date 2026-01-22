@@ -1,4 +1,5 @@
 import 'package:levit_monitor/levit_monitor.dart';
+import 'package:levit_monitor/src/middlewares/state.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
 
@@ -40,10 +41,21 @@ void main() {
 
   group('LevitMonitor Setup', () {
     test('attach without transport uses ConsoleTransport', () {
-      // This covers line 69: final t = transport ?? const ConsoleTransport();
+      // This covers line 69: final t = transport ?? ConsoleTransport();
       // We also check that it doesn't throw.
       expect(() => LevitMonitor.attach(), returnsNormally);
       LevitMonitor.detach();
+    });
+  });
+
+  group('LevitMonitorMiddleware default transport', () {
+    test(
+        'LevitMonitorMiddleware uses default ConsoleTransport when none provided',
+        () {
+      // This covers line 30 in state.dart: transport = transport ?? ConsoleTransport()
+      final middleware = LevitMonitorMiddleware();
+      expect(middleware.transport, isA<ConsoleTransport>());
+      middleware.close();
     });
   });
 }

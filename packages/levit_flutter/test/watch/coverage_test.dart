@@ -5,8 +5,8 @@ import 'package:levit_flutter/levit_flutter.dart';
 
 void main() {
   testWidgets('LWatch complex subscription transitions', (tester) async {
-    final listenable1 = LevitStateNotifier();
-    // final listenable2 = LevitStateNotifier();
+    final listenable1 = LevitReactiveNotifier();
+    // final listenable2 = LevitReactiveNotifier();
     // final stream1 = StreamController<int>.broadcast();
     // final stream2 = StreamController<int>.broadcast();
 
@@ -25,9 +25,9 @@ void main() {
             // Simulate access manually or via Lx reactive logic.
             // LWatch uses Lx.proxy
             // We need to simulate access to reactive objects.
-            // But here we are using LevitStateNotifier directly?
-            // LevitStateNotifier.value access doesn't exist.
-            // We need LxVal<T> objects or call Lx.proxy.addNotifier() manually?
+            // But here we are using LevitReactiveNotifier directly?
+            // LevitReactiveNotifier.value access doesn't exist.
+            // We need LxVar<T> objects or call Lx.proxy.addNotifier() manually?
             // Since LWatch sets Lx.proxy, we can manually register deps if we want.
             // But better to use real reactive objects.
           }
@@ -66,7 +66,7 @@ void main() {
               // Mix stream and notifier, assuming we can hook stream??
               // LWatch only tracks Lx access unless we have a way to track stream access.
               // LxComputed tracks streams, does LWatch?
-              // LWatch implements LevitStateObserver.
+              // LWatch implements LevitReactiveObserver.
               // Does accessing Stream automatically notify observer? NO.
               // Only LxReactive does.
               // Core.dart: Lx.proxy.addStream()

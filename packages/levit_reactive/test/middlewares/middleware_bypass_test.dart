@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
-class TestTrackingMiddleware extends LevitStateMiddleware {
+class TestTrackingMiddleware extends LevitReactiveMiddleware {
   int beforeCount = 0;
   int afterCount = 0;
 
@@ -76,9 +76,9 @@ void main() {
     });
 
     test(
-        'Undo with LevitStateHistoryMiddleware does not trigger other middlewares',
+        'Undo with LevitReactiveHistoryMiddleware does not trigger other middlewares',
         () {
-      final history = LevitStateHistoryMiddleware();
+      final history = LevitReactiveHistoryMiddleware();
       // Add tracker AFTER history to ensure it would normally catch events
       Lx.addMiddleware(history);
 
@@ -93,7 +93,7 @@ void main() {
       tracker.reset();
 
       // Undo should bypass normal middleware recording loop because
-      // LevitStateHistoryMiddleware uses runWithoutMiddleware internally now
+      // LevitReactiveHistoryMiddleware uses runWithoutMiddleware internally now
       history.undo();
 
       expect(count.value, equals(0));

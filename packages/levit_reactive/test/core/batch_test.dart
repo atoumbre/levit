@@ -151,7 +151,7 @@ void main() {
       });
 
       // Initial computation
-      expect(sum.computedValue, 3);
+      expect(sum.value, 3);
       expect(computeCount, 2);
 
       // Batch update
@@ -164,7 +164,7 @@ void main() {
       await Future.microtask(() {});
 
       // Access the computed value after batch
-      expect(sum.computedValue, 30);
+      expect(sum.value, 30);
       // Computed may recompute per stream event (implementation detail)
       expect(computeCount, greaterThan(1));
 
@@ -182,7 +182,7 @@ void main() {
       await Future.microtask(() {}); // Wait for listener to activate
 
       // Initial access to set up dependency tracking
-      expect(product.computedValue, 0);
+      expect(product.value, 0);
 
       Lx.batch(() {
         x.value = 5;
@@ -193,7 +193,7 @@ void main() {
       // Wait for stream events to propagate
       await Future.delayed(Duration(milliseconds: 10));
 
-      expect(product.computedValue, 42); // 7 * 6
+      expect(product.value, 42); // 7 * 6
       // Note: listener count depends on implementation (may be >1 due to stream events)
       expect(notifyCount, greaterThanOrEqualTo(1));
 
@@ -203,11 +203,11 @@ void main() {
     test('Chained LxComputed updates correctly after batch', () async {
       final base = 1.lx;
       final doubled = LxComputed(() => base.value * 2);
-      final quadrupled = LxComputed(() => doubled.computedValue * 2);
+      final quadrupled = LxComputed(() => doubled.value * 2);
 
       // Initial access
-      expect(doubled.computedValue, 2);
-      expect(quadrupled.computedValue, 4);
+      expect(doubled.value, 2);
+      expect(quadrupled.value, 4);
 
       Lx.batch(() {
         base.value = 5;
@@ -217,8 +217,8 @@ void main() {
       // Wait for stream events to propagate through the chain
       await Future.delayed(const Duration(milliseconds: 10));
 
-      expect(doubled.computedValue, 20);
-      expect(quadrupled.computedValue, 40);
+      expect(doubled.value, 20);
+      expect(quadrupled.value, 40);
 
       doubled.close();
       quadrupled.close();

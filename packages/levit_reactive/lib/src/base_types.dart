@@ -2,16 +2,16 @@ import 'async_types.dart';
 import 'core.dart';
 
 // ============================================================================
-// LxVal - Base Reactive Type that holds a mutable value
+// LxVar - Base Reactive Type that holds a mutable value
 // ============================================================================
 
 /// A reactive wrapper for a value of type [T].
 ///
-/// [LxVal] is the core primitive of Levit's reactive system. It notifies
+/// [LxVar] is the core primitive of Levit's reactive system. It notifies
 /// listeners whenever its value changes.
-class LxVal<T> extends LxBase<T> {
+class LxVar<T> extends LxBase<T> {
   /// Creates a reactive wrapper around [initial].
-  LxVal(super.initial, {super.onListen, super.onCancel, super.name});
+  LxVar(super.initial, {super.onListen, super.onCancel, super.name});
 
   /// Sets the value and notifies listeners.
   set value(T val) => setValueInternal(val);
@@ -44,7 +44,7 @@ class LxVal<T> extends LxBase<T> {
 /// final isVisible = LxBool(false);
 /// isVisible.toggle();
 /// ```
-class LxBool extends LxVal<bool> {
+class LxBool extends LxVar<bool> {
   /// Creates a reactive boolean.
   ///
   /// [initial] defaults to `false`.
@@ -80,7 +80,7 @@ class LxBool extends LxVal<bool> {
 /// final count = LxInt(0);
 /// count.increment();
 /// ```
-class LxNum<T extends num> extends LxVal<T> {
+class LxNum<T extends num> extends LxVar<T> {
   /// Creates a reactive number.
   LxNum(super.initial, {super.name});
 
@@ -135,10 +135,10 @@ extension LxExtension<T> on T {
   /// final count = 0.lx;
   /// final name = 'Levit'.lx;
   /// ```
-  LxVal<T> get lx => LxVal<T>(this);
+  LxVar<T> get lx => LxVar<T>(this);
 
   /// Creates a nullable reactive wrapper around this value.
-  LxVal<T?> get lxNullable => LxVal<T?>(this);
+  LxVar<T?> get lxNullable => LxVar<T?>(this);
 }
 
 /// Extensions for boolean specific reactivity.

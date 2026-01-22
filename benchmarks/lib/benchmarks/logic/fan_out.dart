@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
-import '../benchmark_engine.dart';
+import '../../benchmark_engine.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;
 
 class FanOutBenchmark extends Benchmark {
@@ -36,12 +36,12 @@ class FanOutBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitFanOutBenchmark extends BenchmarkImplementation {
-  late LxVal<int> source;
+  late LxVar<int> source;
   final List<LxComputed<int>> dependents = [];
 
   @override
   Future<void> setup() async {
-    source = LxVal(0);
+    source = LxVar(0);
     dependents.clear();
     for (int i = 0; i < 1000; i++) {
       // Create 1000 computeds that listen to source

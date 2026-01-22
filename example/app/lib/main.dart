@@ -102,7 +102,7 @@ class EditorPage extends StatelessWidget {
 
                 // Selection Bounds (Pillar 1: Computed)
                 LWatch(() {
-                  final bounds = pc.selectionBounds.valueOrNull;
+                  final bounds = pc.selectionBounds.value;
                   if (bounds == null) return const SizedBox();
                   return Positioned(
                     left: bounds.left - 4,

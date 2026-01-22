@@ -113,7 +113,7 @@ Future<void> main(List<String> args) async {
 
   /// Observe derived state
   controller.distance.stream.listen((snapshot) {
-    print('Total distance: ${snapshot.valueOrNull}');
+    print('Total distance: ${snapshot}');
   });
 
   /// Observe mutable state

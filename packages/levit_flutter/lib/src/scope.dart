@@ -170,10 +170,10 @@ class LMultiScopeBinding<T> {
 }
 
 /// Helper class for scoped DI access via [BuildContext].
-class LevitContext {
+class LevitProvider {
   final BuildContext _context;
 
-  LevitContext(this._context);
+  LevitProvider(this._context);
 
   S find<S>({String? tag}) {
     final scope = _ScopeProvider.of(_context);
@@ -214,8 +214,8 @@ class LevitContext {
 }
 
 /// Extension to access scoped DI via [BuildContext].
-extension LevitContextExtension on BuildContext {
-  LevitContext get levit => LevitContext(this);
+extension LevitProviderExtension on BuildContext {
+  LevitProvider get levit => LevitProvider(this);
 }
 
 /// A convenience widget for scoped View.

@@ -15,7 +15,7 @@ void main() {
 
     for (int i = 1; i < chainLength; i++) {
       final prev = currents;
-      currents = LxComputed(() => prev.computedValue + 1);
+      currents = LxComputed(() => prev.value + 1);
       chain.add(currents);
     }
 
@@ -27,7 +27,7 @@ void main() {
     // Use synchronous listener to verify glitch freedom
     void checkGlitch() {
       listenerCallCount++;
-      lastValue = endNode.computedValue;
+      lastValue = endNode.value;
       if (lastValue != root.value + chainLength - 1) {
         glitchDetected = true;
       }

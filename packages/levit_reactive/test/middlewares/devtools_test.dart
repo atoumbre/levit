@@ -2,13 +2,13 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('LevitStateHistoryMiddleware (DevTools)', () {
-    late LevitStateHistoryMiddleware history;
+  group('LevitReactiveHistoryMiddleware (DevTools)', () {
+    late LevitReactiveHistoryMiddleware history;
 
     setUp(() {
-      history = LevitStateHistoryMiddleware();
+      history = LevitReactiveHistoryMiddleware();
       Lx.addMiddleware(history);
-      LevitStateHistoryMiddleware.maxHistorySize = 100;
+      LevitReactiveHistoryMiddleware.maxHistorySize = 100;
     });
 
     tearDown(() {
@@ -98,8 +98,8 @@ void main() {
 
       expect(history.length, equals(1)); // Single composite change
       final change = history.changes.first;
-      expect(change, isA<LevitStateBatchChange>());
-      expect((change as LevitStateBatchChange).changes, hasLength(2));
+      expect(change, isA<LevitReactiveBatch>());
+      expect((change as LevitReactiveBatch).changes, hasLength(2));
     });
 
     test('Undo reverts entire batch atomically', () {

@@ -8,10 +8,10 @@ void main() {
       final doubled = (() => count.value * 2).lx;
 
       expect(doubled, isA<LxComputed<int>>());
-      expect(doubled.computedValue, equals(2));
+      expect(doubled.value, equals(2));
 
       count.value = 5;
-      expect(doubled.computedValue, equals(10));
+      expect(doubled.value, equals(10));
     });
 
     test('.lx creates LxAsyncComputed from async function', () async {

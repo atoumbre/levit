@@ -9,14 +9,13 @@ import 'src/transports/console_transport.dart';
 
 export 'src/core/event.dart';
 export 'src/core/transport.dart';
-export 'src/middlewares/state.dart';
 export 'src/transports/console_transport.dart';
 export 'src/transports/file_transport.dart';
 export 'src/transports/websocket_transport.dart';
 
 /// A unified monitoring entry point for Levit applications.
 class LevitMonitor {
-  static MonitorMiddleware? _middleware;
+  static LevitMonitorMiddleware? _middleware;
 
   /// The current event filter function.
   ///
@@ -36,13 +35,13 @@ class LevitMonitor {
   ///
   /// ```dart
   /// // Only monitor state change events
-  /// LevitMonitor.setFilter((event) => event is StateChangeEvent);
+  /// LevitMonitor.setFilter((event) => event is ReactiveChangeEvent);
   ///
   /// // Only monitor DI events
-  /// LevitMonitor.setFilter((event) => event is DIEvent);
+  /// LevitMonitor.setFilter((event) => event is DependencyEvent);
   ///
   /// // Exclude batch events
-  /// LevitMonitor.setFilter((event) => event is! BatchEvent);
+  /// LevitMonitor.setFilter((event) => event is! ReactiveBatchEvent);
   ///
   /// // Clear filter
   /// LevitMonitor.setFilter(null);
@@ -66,9 +65,9 @@ class LevitMonitor {
 
     Levit.enableAutoLinking();
 
-    final t = transport ?? const ConsoleTransport();
+    final t = transport ?? ConsoleTransport();
 
-    _middleware = MonitorMiddleware(transport: t);
+    _middleware = LevitMonitorMiddleware(transport: t);
     _middleware?.enable();
   }
 

@@ -50,8 +50,8 @@ void main() {
 
     test('watchStatus fires onIdle', () async {
       // Harder to test with LxFuture since it doesn't go back to idle easily
-      // Use raw LxVal<LxStatus<int>>
-      final s = LxVal<LxStatus<int>>(LxWaiting());
+      // Use raw LxVar<LxStatus<int>>
+      final s = LxVar<LxStatus<int>>(LxWaiting());
       var idle = false;
 
       LxWatch.status<int>(s, onIdle: () => idle = true);
@@ -104,7 +104,7 @@ void main() {
       expect(log.last, 'error: fail');
     });
     test('watchStatus alias coverage', () async {
-      final lx = LxVal<LxStatus<int>>(const LxIdle<int>());
+      final lx = LxVar<LxStatus<int>>(LxIdle<int>());
       bool successCalled = false;
       bool waitingCalled = false;
 
@@ -115,7 +115,7 @@ void main() {
       );
 
       // Transitions
-      lx.value = const LxWaiting<int>();
+      lx.value = LxWaiting<int>();
       await Future.microtask(() {});
       expect(waitingCalled, true);
 

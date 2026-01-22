@@ -17,7 +17,7 @@ void main() {
       memo.stream.listen((_) {});
       await Future.microtask(() {});
 
-      expect(memo.computedValue, 0);
+      expect(memo.value, 0);
       final initialCount = computeCount;
 
       // Change 0 -> 1, result stays 0
@@ -30,12 +30,12 @@ void main() {
       // Change 1 -> 2, result becomes 1
       source.value = 2;
       await Future.delayed(Duration(milliseconds: 10));
-      expect(memo.computedValue, 1);
+      expect(memo.value, 1);
     });
 
     test('uses custom equality function', () async {
       final source = [1, 2, 3].lx;
-      var valueChanges = <LxStatus<List<int>>>[];
+      var valueChanges = <List<int>>[];
 
       final memo = LxComputed(
         () => source.value.toList(),
@@ -65,36 +65,7 @@ void main() {
       source.value = [1, 2, 3, 4];
       await Future.delayed(Duration(milliseconds: 20));
       expect(valueChanges.length, greaterThan(countAfterSame));
-      expect(valueChanges.last.lastValue!, [1, 2, 3, 4]);
-    });
-
-    test('handles errors', () async {
-      final source = 1.lx;
-
-      final memo = LxComputed(() {
-        if (source.value == 0) throw Exception('Cannot be zero');
-        return 10 ~/ source.value;
-      });
-
-      // Add listener to activate reactive tracking
-      memo.stream.listen((_) {});
-      await Future.microtask(() {});
-
-      expect(memo.computedValue, 10);
-
-      source.value = 0;
-      await Future.delayed(Duration(milliseconds: 10));
-
-      // Should throw on access
-      expect(() => memo.computedValue, throwsA(isA<Exception>()));
-    });
-
-    test('rethrows error on access (construction)', () async {
-      final memo = LxComputed(() {
-        throw Exception('fail');
-      });
-      expect(memo.isError, isTrue);
-      expect(memo.errorOrNull, isA<Exception>());
+      expect(valueChanges.last, [1, 2, 3, 4]);
     });
 
     test('close cancels subscriptions', () async {
@@ -167,13 +138,13 @@ void main() {
     // Activate computed
     final subC = computed.stream.listen((_) {});
     await Future.microtask(() {});
-    expect(computed.computedValue, 10);
+    expect(computed.value, 10);
 
     // Now switch to B
     useA.value = false;
     await Future.microtask(() {}); // Let useA update propagate
 
-    expect(computed.computedValue, 20);
+    expect(computed.value, 20);
 
     // Cleanup
     subA.cancel();

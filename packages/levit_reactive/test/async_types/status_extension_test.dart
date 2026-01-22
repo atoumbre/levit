@@ -4,8 +4,8 @@ import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
   group('LxStatusReactiveExtensions', () {
-    test('works on raw LxVal<LxStatus<T>>', () {
-      final statusLx = LxVal<LxStatus<int>>(const LxIdle());
+    test('works on raw LxVar<LxStatus<T>>', () {
+      final statusLx = LxVar<LxStatus<int>>(LxIdle());
 
       // Initial state (Idle)
       expect(statusLx.isIdle, isTrue);
@@ -16,7 +16,7 @@ void main() {
       expect(statusLx.errorOrNull, isNull);
 
       // Transition to Waiting
-      statusLx.value = const LxWaiting();
+      statusLx.value = LxWaiting();
       expect(statusLx.isIdle, isFalse);
       expect(statusLx.isLoading, isTrue);
       expect(statusLx.isWaiting, isTrue);

@@ -45,10 +45,10 @@ class NodeModel {
   final String type;
 
   /// Reactive position.
-  final LxVal<Vec2> position;
+  final LxVar<Vec2> position;
 
   /// Reactive size.
-  final LxVal<Vec2> size;
+  final LxVar<Vec2> size;
 
   /// Reactive color value.
   final LxInt color;
@@ -95,7 +95,7 @@ class RemoteUser {
   final int color;
 
   /// Reactive cursor position.
-  final LxVal<Vec2> cursor;
+  final LxVar<Vec2> cursor;
 
   /// Creates a remote user.
   RemoteUser({

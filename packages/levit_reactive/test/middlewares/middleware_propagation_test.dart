@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
-class _TrackingMiddleware extends LevitStateMiddleware {
+class _TrackingMiddleware extends LevitReactiveMiddleware {
   final String id;
   int beforeCount = 0;
   int afterCount = 0;

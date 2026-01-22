@@ -9,32 +9,6 @@ class SimpleReactive<T> extends LxBase<T> {
 
 void main() {
   group('Levit Reactive Coverage Boost', () {
-    test('LxComputed error paths', () {
-      final badComputed = LxComputed(() => throw 'Initial Error');
-      final val = badComputed.value;
-      expect(val, isA<LxError>());
-      expect((val as LxError).error, 'Initial Error');
-
-      final reactive = SimpleReactive(0);
-      final problematic = LxComputed(() {
-        if (reactive.value == 1) throw 'Proxy Error';
-        return reactive.value;
-      });
-
-      problematic.value;
-
-      final outer = LxComputed(() {
-        reactive.value = 1;
-        return problematic.value;
-      });
-
-      final outerVal = outer.value;
-      expect(outerVal, isA<LxSuccess<LxStatus>>());
-      final innerStat = (outerVal as LxSuccess<LxStatus>).value;
-      expect(innerStat, isA<LxError>());
-      expect((innerStat as LxError).error, 'Proxy Error');
-    });
-
     test('_DependencyTracker Set mode (lines 535, 543-545)', () {
       final reactives = List.generate(10, (i) => SimpleReactive(i));
 
@@ -46,14 +20,14 @@ void main() {
         return sum;
       });
 
-      expect(multiComputed.computedValue, 45);
+      expect(multiComputed.value, 45);
 
       reactives[0].value = 10;
-      expect(multiComputed.computedValue, 55);
+      expect(multiComputed.value, 55);
     });
 
-    test('LevitStateHistoryMiddleware redoChanges integration', () {
-      final history = LevitStateHistoryMiddleware();
+    test('LevitReactiveHistoryMiddleware redoChanges integration', () {
+      final history = LevitReactiveHistoryMiddleware();
       final rx = SimpleReactive(0);
 
       Lx.addMiddleware(history);
@@ -75,7 +49,7 @@ void main() {
     test('Extensions coverage (.lx)', () {
       final count = 0.lx;
       final doubled = (() => count.value * 2).lx;
-      expect(doubled.computedValue, 0);
+      expect(doubled.value, 0);
 
       final asyncComp = (() async => 42).lx;
       expect(asyncComp, isA<LxAsyncComputed<int>>());

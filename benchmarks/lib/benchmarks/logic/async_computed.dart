@@ -4,7 +4,7 @@ import 'package:levit_reactive/levit_reactive.dart';
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;
-import '../benchmark_engine.dart';
+import '../../benchmark_engine.dart';
 
 /// Benchmark for async computed values.
 /// Tests frameworks' ability to handle async dependency tracking.
@@ -38,13 +38,13 @@ class AsyncComputedBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitAsyncComputedBenchmark extends BenchmarkImplementation {
-  late LxVal<int> source;
+  late LxVar<int> source;
   late LxAsyncComputed<String> asyncComputed;
   late VoidCallback listener;
 
   @override
   Future<void> setup() async {
-    source = LxVal(0);
+    source = LxVar(0);
     asyncComputed = LxComputed.async(() async {
       final val = source.value;
       // Simulate async operation

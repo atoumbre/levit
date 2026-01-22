@@ -17,7 +17,7 @@ class NonControllerDisposable extends LevitScopeDisposable {
 }
 
 class AsyncInitController extends LevitController {
-  LxVal<int>? rx;
+  LxVar<int>? rx;
   @override
   Future<void> onInit() async {
     super.onInit();
@@ -47,19 +47,19 @@ void main() {
       final rx = 0.lx;
 
       mw.onReactiveRegister(rx, 'owner');
-      mw.onRegister(0, 'scope', 'key', LevitBindingEntry(instance: null),
+      mw.onRegister(0, 'scope', 'key', LevitDependency(instance: null),
           source: 'src');
-      mw.onResolve(0, 'scope', 'key', LevitBindingEntry(instance: null),
+      mw.onResolve(0, 'scope', 'key', LevitDependency(instance: null),
           source: 'src');
-      mw.onDelete(0, 'scope', 'key', LevitBindingEntry(instance: null),
+      mw.onDelete(0, 'scope', 'key', LevitDependency(instance: null),
           source: 'src');
 
-      final builder = mw.onCreate(() => 42, LevitScope.root(), 'key',
-          LevitBindingEntry(instance: null));
+      final builder = mw.onCreate(
+          () => 42, LevitScope.root(), 'key', LevitDependency(instance: null));
       expect(builder(), 42);
 
-      final init = mw.onDependencyInit(() {}, 42, LevitScope.root(), 'key',
-          LevitBindingEntry(instance: null));
+      final init = mw.onDependencyInit(
+          () {}, 42, LevitScope.root(), 'key', LevitDependency(instance: null));
       init();
     });
 

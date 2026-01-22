@@ -19,7 +19,7 @@ abstract class LevitScopeMiddleware {
   /// *   [source]: The method that triggered the event (e.g., 'put', 'lazyPut').
   /// *   [parentScopeId]: The ID of the parent scope, or null if root.
   void onRegister(
-      int scopeId, String scopeName, String key, LevitBindingEntry info,
+      int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {}
 
   /// Called when a dependency is resolved (created or returned) via [LevitScope.find]
@@ -32,7 +32,7 @@ abstract class LevitScopeMiddleware {
   /// *   [source]: The method that triggered the event (e.g., 'find', 'findAsync').
   /// *   [parentScopeId]: The ID of the parent scope, or null if root.
   void onResolve(
-      int scopeId, String scopeName, String key, LevitBindingEntry info,
+      int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {}
 
   /// Called when a dependency is deleted via [LevitScope.delete] or [LevitScope.reset].
@@ -43,8 +43,7 @@ abstract class LevitScopeMiddleware {
   /// *   [info]: Metadata about the deleted dependency.
   /// *   [source]: The method that triggered the event (e.g., 'delete', 'reset').
   /// *   [parentScopeId]: The ID of the parent scope, or null if root.
-  void onDelete(
-      int scopeId, String scopeName, String key, LevitBindingEntry info,
+  void onDelete(int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {}
 
   /// Called when a dependency instance is being created.
@@ -63,7 +62,7 @@ abstract class LevitScopeMiddleware {
     S Function() builder,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) =>
       builder;
 
@@ -85,7 +84,7 @@ abstract class LevitScopeMiddleware {
     S instance,
     LevitScope scope,
     String key,
-    LevitBindingEntry info,
+    LevitDependency info,
   ) =>
       onInit;
 }

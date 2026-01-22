@@ -9,7 +9,7 @@ environment:
 dependencies:
   levit_di: ^0.0.4  
   levit_reactive: ^0.0.4
-  meta: ^1.7.0
+  meta: ^1.17.0
 
 dev_dependencies:
   test: ^1.29.0

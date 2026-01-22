@@ -55,6 +55,11 @@ class _DashboardViewState extends State<DashboardView> {
                   icon: const Icon(Icons.settings),
                   onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
                 ),
+              if (isMobile)
+                IconButton(
+                  icon: const Icon(Icons.play_arrow),
+                  onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                ),
               IconButton(
                 icon: const Icon(Icons.copy),
                 tooltip: 'Copy Results',
@@ -289,7 +294,7 @@ class _MainContent extends StatelessWidget {
             tooltipMargin: 8,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
-                '${rod.toY.toStringAsFixed(2)}ms',
+                '${rod.toY.toStringAsFixed(3)}ms',
                 const TextStyle(
                     color: Colors.black, fontWeight: FontWeight.bold),
               );

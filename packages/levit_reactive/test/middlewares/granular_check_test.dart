@@ -1,7 +1,7 @@
 import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
-class SetOnlyMiddleware extends LevitStateMiddleware {
+class SetOnlyMiddleware extends LevitReactiveMiddleware {
   int setCallCount = 0;
 
   @override
@@ -13,7 +13,7 @@ class SetOnlyMiddleware extends LevitStateMiddleware {
       };
 }
 
-class InitOnlyMiddleware extends LevitStateMiddleware {
+class InitOnlyMiddleware extends LevitReactiveMiddleware {
   int initCallCount = 0;
 
   @override
@@ -33,26 +33,26 @@ void main() {
     });
 
     test('hasSetMiddlewares is true only when SetOnlyMiddleware is added', () {
-      expect(LevitStateMiddleware.hasSetMiddlewares, isFalse);
-      expect(LevitStateMiddleware.hasInitMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
 
       final mw = SetOnlyMiddleware();
       Lx.addMiddleware(mw);
 
-      expect(LevitStateMiddleware.hasSetMiddlewares, isTrue);
-      expect(LevitStateMiddleware.hasInitMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasSetMiddlewares, isTrue);
+      expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
     });
 
     test('hasInitMiddlewares is true only when InitOnlyMiddleware is added',
         () {
-      expect(LevitStateMiddleware.hasSetMiddlewares, isFalse);
-      expect(LevitStateMiddleware.hasInitMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
 
       final mw = InitOnlyMiddleware();
       Lx.addMiddleware(mw);
 
-      expect(LevitStateMiddleware.hasSetMiddlewares, isFalse);
-      expect(LevitStateMiddleware.hasInitMiddlewares, isTrue);
+      expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasInitMiddlewares, isTrue);
     });
 
     test('events are skipped if flag is false', () {
@@ -73,16 +73,16 @@ void main() {
       expect(setMw.setCallCount, equals(1));
     });
 
-    test('LevitStateHistoryMiddleware opts out of Init', () {
-      final history = LevitStateHistoryMiddleware();
+    test('LevitReactiveHistoryMiddleware opts out of Init', () {
+      final history = LevitReactiveHistoryMiddleware();
       Lx.addMiddleware(history);
 
-      expect(LevitStateMiddleware.hasSetMiddlewares, isTrue);
-      expect(LevitStateMiddleware.hasBatchMiddlewares, isTrue);
+      expect(LevitReactiveMiddleware.hasSetMiddlewares, isTrue);
+      expect(LevitReactiveMiddleware.hasBatchMiddlewares, isTrue);
       // History does NOT observe Init/Dispose/GraphChange in optimization
-      expect(LevitStateMiddleware.hasInitMiddlewares, isFalse);
-      expect(LevitStateMiddleware.hasDisposeMiddlewares, isFalse);
-      expect(LevitStateMiddleware.hasGraphChangeMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasDisposeMiddlewares, isFalse);
+      expect(LevitReactiveMiddleware.hasGraphChangeMiddlewares, isFalse);
     });
   });
 }

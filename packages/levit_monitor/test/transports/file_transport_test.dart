@@ -13,17 +13,17 @@ void main() {
 
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('file_transport_test');
-      filePath = '${tempDir.path}/llog.jsonl';
+      filePath = '${tempDir.path}/log.jsonl';
     });
 
     tearDown(() async {
       await tempDir.delete(recursive: true);
     });
 
-    test('writes DIRegisterEvent to file with category', () async {
+    test('writes DependencyRegisterEvent to file with category', () async {
       final transport = FileTransport(filePath);
-      final info = LevitBindingEntry(builder: () => 42);
-      final event = DIRegisterEvent(
+      final info = LevitDependency(builder: () => 42);
+      final event = DependencyRegisterEvent(
         sessionId: 's1',
         scopeId: 1,
         scopeName: 'root',
@@ -47,16 +47,16 @@ void main() {
       expect(json['scopeName'], 'root');
     });
 
-    test('writes StateChangeEvent to file with category', () async {
+    test('writes ReactiveChangeEvent to file with category', () async {
       final transport = FileTransport(filePath);
       final reactive = 10.lx.named('rx');
-      final change = LevitStateChange(
+      final change = LevitReactiveChange(
         timestamp: DateTime.now(),
         valueType: int,
         oldValue: 10,
         newValue: 11,
       );
-      final event = StateChangeEvent(
+      final event = ReactiveChangeEvent(
         sessionId: 's1',
         reactive: reactive,
         change: change,
