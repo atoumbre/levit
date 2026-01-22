@@ -35,7 +35,12 @@ jobs:
         id: run_pana
         run: |
           cd packages/${{ matrix.package }}
-          # Use --json flag and run via dart pub global run for better environment compatibility
+          # Print human-readable report for CI logs
+          echo "Generating human-readable report..."
+          dart pub global run pana .
+          
+          # Generate JSON report for automated score check
+          echo "Generating JSON report for score check..."
           dart pub global run pana --json . > pana_output.json
           
       - name: Check Pana Score
