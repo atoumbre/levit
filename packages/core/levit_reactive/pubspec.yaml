@@ -6,9 +6,12 @@ version: 0.0.4
 environment:
   sdk: ^3.0.0
 
+dependencies:
+  meta: ^1.17.0
+
 dev_dependencies:
   test: ^1.29.0
   rxdart: ^0.28.0
   lints: ^6.0.0
-dependencies:
-  meta: ^1.17.0
+
+

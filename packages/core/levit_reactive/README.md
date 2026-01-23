@@ -4,7 +4,7 @@
 [![Pub Version](https://img.shields.io/pub/v/levit_reactive)](https://pub.dev/packages/levit_reactive)
 [![Platforms](https://img.shields.io/badge/platforms-dart-blue)](https://pub.dev/packages/levit_reactive)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-[![codecov](https://codecov.io/gh/SoftiLab/levit/graph/badge.svg?token=ooSOnU6nkwg\&flag=levit_reactive)](https://codecov.io/github/atoumbre/levit?flags=levit_reactive)
+[![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg\&flag=levit_reactive)](https://codecov.io/github/atoumbre/levit?flags=levit_reactive)
 
 **A pure Dart reactive engine. Deterministic. Fine-grained. Dependency-free.**
 

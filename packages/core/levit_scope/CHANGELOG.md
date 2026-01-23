@@ -1,6 +1,7 @@
 
 ## 0.0.4
 
+- Package renamed from `levit_di` to `levit_scope`.
 - Significant performance boost for `LevitScope` lookups (3x faster in concurrent scenarios).
 - Improved `find` and `put` efficiency.
 - Better handling of concurrent registrations and race conditions.

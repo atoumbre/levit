@@ -126,21 +126,34 @@ class LevitReactiveBatch implements LevitReactiveChange<void> {
 /// Middlewares provide a unified way to implement cross-cutting concerns like
 /// logging, state persistence, undo/redo, and analytics.
 abstract class LevitReactiveMiddleware {
+  /// Creates a [LevitReactiveMiddleware] instance.
+  const LevitReactiveMiddleware();
+
   static final List<LevitReactiveMiddleware> _middlewares = [];
 
   static bool _hasSetMiddlewares = false;
+
+  /// Returns `true` if any registered middleware has an [onSet] interceptor.
   static bool get hasSetMiddlewares => _hasSetMiddlewares;
 
   static bool _hasBatchMiddlewares = false;
+
+  /// Returns `true` if any registered middleware has an [onBatch] interceptor.
   static bool get hasBatchMiddlewares => _hasBatchMiddlewares;
 
   static bool _hasDisposeMiddlewares = false;
+
+  /// Returns `true` if any registered middleware has an [onDispose] interceptor.
   static bool get hasDisposeMiddlewares => _hasDisposeMiddlewares;
 
   static bool _hasInitMiddlewares = false;
+
+  /// Returns `true` if any registered middleware has an [onInit] observer.
   static bool get hasInitMiddlewares => _hasInitMiddlewares;
 
   static bool _hasGraphChangeMiddlewares = false;
+
+  /// Returns `true` if any registered middleware has an [onGraphChange] observer.
   static bool get hasGraphChangeMiddlewares => _hasGraphChangeMiddlewares;
 
   static void _updateFlags() {

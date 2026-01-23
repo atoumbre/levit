@@ -798,5 +798,6 @@ class LevitScopeMiddlewareChain {
 
 /// Extension to convert any object to a builder function.
 extension LevitScopeToBuilderExtension<T> on T {
+  /// Converts the current instance into a lazy builder function that returns it.
   T Function() get toBuilder => () => this;
 }
