@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:levit_dart/levit_dart.dart';
+import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:shared/shared.dart';
-import 'package:nexus_server/server_adapter.dart';
+import 'package:nexus_studio_shared/shared.dart';
+import 'package:nexus_studio_server/server_adapter.dart';
 
 export 'server_adapter.dart';
 

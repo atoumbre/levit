@@ -1,5 +1,4 @@
-import 'async_types.dart';
-import 'core.dart';
+part of '../levit_reactive.dart';
 
 /// A reactive variable that holds a mutable value.
 ///

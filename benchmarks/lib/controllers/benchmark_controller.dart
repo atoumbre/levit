@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:levit_dart/levit_dart.dart';
+import 'package:levit_dart_core/levit_dart_core.dart';
 
 import '../benchmark_engine.dart';
 import '../benchmark_discovery.dart';

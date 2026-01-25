@@ -55,16 +55,16 @@ void main() {
       expect(asyncComp, isA<LxAsyncComputed<int>>());
     });
 
-    test('LxWatchStat copyWith isProcessing (line 59)', () {
-      const stat = LxWatchStat();
+    test('LxWorkerStat copyWith isProcessing (line 59)', () {
+      const stat = LxWorkerStat();
       final stat2 = stat.copyWith(isProcessing: true, isAsync: true);
       expect(stat2.isProcessing, true);
       expect(stat2.isAsync, true);
     });
 
-    test('LxWatch detected async coverage extra', () async {
+    test('LxWorker detected async coverage extra', () async {
       final rx = SimpleReactive(0);
-      final watch = LxWatch(rx, (val) async {
+      final watch = LxWorker(rx, (val) async {
         await Future.delayed(Duration(milliseconds: 10));
       });
 

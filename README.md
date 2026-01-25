@@ -20,7 +20,7 @@ It is built for teams and individuals who value **predictability, performance, a
 
 ```yaml
 dependencies:
-  levit_flutter: ^latest
+  levit_flutter_core: ^latest
 ```
 
 or
@@ -214,6 +214,11 @@ flowchart TB
 | **[`levit_flutter`](./packages/levit_flutter)**   | Flutter bindings: `LWatch`, `LScope`, and widget lifecycle integration.       | [![Pub](https://img.shields.io/pub/v/levit_flutter)](https://pub.dev/packages/levit_flutter)   [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flag=levit_flutter)](https://codecov.io/github/atoumbre/levit?flags=levit_flutter)   |
 | **[`levit_monitor`](./packages/levit_monitor)**   | Observability, monitoring, and transport layers.    | [![Pub](https://img.shields.io/pub/v/levit_monitor)](https://pub.dev/packages/levit_monitor) [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flag=levit_monitor)](https://codecov.io/github/atoumbre/levit?flags=levit_monitor)    |
 
+
+## Benchmarks
+
+The latest benchmark results can be found in the [BENCHMARK_0.0.4.md](./BENCHMARK_0.0.4.md) file.
+The app can be found in the [benchmarks](./benchmarks) directory. 
 
 
 ## Community and Contributions

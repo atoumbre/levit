@@ -195,11 +195,6 @@ class _MockObserver implements LevitReactiveObserver {
   final List<void Function()> disposers = [];
 
   @override
-  void addStream<T>(Stream<T> stream) {
-    subscriptions.add(stream.listen((_) {}));
-  }
-
-  @override
   void addNotifier(LevitReactiveNotifier notifier) {
     void listener() {}
     notifier.addListener(listener);

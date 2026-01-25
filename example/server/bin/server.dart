@@ -1,8 +1,17 @@
-import 'package:levit_dart/levit_dart.dart';
-import 'package:shared/shared.dart';
-import 'package:nexus_server/server.dart';
+import 'package:levit_dart_core/levit_dart_core.dart';
+import 'package:levit_monitor/levit_monitor.dart';
+import 'package:nexus_studio_server/server.dart';
+import 'package:nexus_studio_shared/shared.dart';
 
 void main() async {
+  // Connect to LevitDevTools in debug mode
+  final transport = WebSocketTransport.connect(
+    'ws://localhost:9200',
+    appId: 'nexus-server',
+  );
+
+  LevitMonitor.attach(transport: transport);
+
   // Register the core engine (singleton)
   Levit.put(() => NexusEngine());
 

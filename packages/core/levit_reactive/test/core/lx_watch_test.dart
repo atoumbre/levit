@@ -4,10 +4,10 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('LxWatch', () {
+  group('LxWorker', () {
     test('tracks synchronous execution', () async {
       final count = 0.lx;
-      final watcher = LxWatch(count, (_) {});
+      final watcher = LxWorker(count, (_) {});
 
       expect(watcher.value.runCount, 0);
 
@@ -29,7 +29,7 @@ void main() {
       final count = 0.lx;
       final completer = Completer<void>();
 
-      final watcher = LxWatch(count, (_) async {
+      final watcher = LxWorker(count, (_) async {
         await completer.future;
       });
 
@@ -55,9 +55,9 @@ void main() {
       watcher.close();
     });
 
-    test('LxWatch implements close', () {
+    test('LxWorker implements close', () {
       final count = 0.lx;
-      final watcher = LxWatch(count, (_) {});
+      final watcher = LxWorker(count, (_) {});
 
       watcher.close();
       expect(watcher.isDisposed, isTrue);
@@ -71,7 +71,7 @@ void main() {
 
     test('captures processing errors', () async {
       final count = 0.lx;
-      final watcher = LxWatch(count, (_) {
+      final watcher = LxWorker(count, (_) {
         throw 'oops';
       }, onProcessingError: (e, s) {
         // Suppress rethrow for test
@@ -90,7 +90,7 @@ void main() {
       final count = 0.lx;
       final completer = Completer<void>();
 
-      final watcher = LxWatch(count, (_) async {
+      final watcher = LxWorker(count, (_) async {
         await completer.future;
         throw 'async oops';
       });
@@ -111,7 +111,7 @@ void main() {
 
     test('dispose stops tracking', () async {
       final count = 0.lx;
-      final watcher = LxWatch(count, (_) {});
+      final watcher = LxWorker(count, (_) {});
 
       count.value++;
       await Future.delayed(Duration.zero);

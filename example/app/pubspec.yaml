@@ -11,8 +11,10 @@ dependencies:
     sdk: flutter
   web_socket_channel: ^3.0.3
 
-  levit_flutter: ^0.0.4
-  shared:
+  levit_flutter_core: ^0.0.5
+  levit_monitor: ^0.0.5
+  
+  nexus_studio_shared:
     path: ../shared
 
 dev_dependencies:
@@ -22,7 +24,6 @@ dev_dependencies:
   async: ^2.11.0
   stream_channel: ^2.1.1
 
-  levit_monitor: ^0.0.1
 
 flutter:
   uses-material-design: true

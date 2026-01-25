@@ -8,7 +8,7 @@ void main() {
       final s = 0.lx;
       dynamic caughtError;
 
-      LxWatch(s, (v) {
+      LxWorker(s, (v) {
         if (v == 1) throw 'Sync Error';
       }, onProcessingError: (e, s) {
         caughtError = e;
@@ -18,17 +18,27 @@ void main() {
       expect(caughtError, 'Sync Error');
     });
 
-    test('rethrows sync errors if handler missing', () {
+    test('traps sync errors if handler missing (via global middleware)', () {
       final s = 0.lx;
-      LxWatch(s, (v) => throw 'Fail');
-      expect(() => s.value = 1, throwsA('Fail'));
+      dynamic capturedError;
+
+      // Register temporary middleware to trap the error
+      final middleware = _ErrorTrapMiddleware((e) => capturedError = e);
+      LevitReactiveMiddleware.add(middleware);
+      addTearDown(() => LevitReactiveMiddleware.remove(middleware));
+
+      LxWorker(s, (v) => throw 'Fail');
+
+      // Should not throw, but be trapped
+      expect(() => s.value = 1, returnsNormally);
+      expect(capturedError, equals('Fail'));
     });
 
     test('catches async errors via watch', () async {
       final s = 0.lx;
       final completer = Completer<dynamic>();
 
-      LxWatch(s, (v) async {
+      LxWorker(s, (v) async {
         await Future.delayed(Duration.zero);
         throw 'Async Error';
       }, onProcessingError: (e, s) {
@@ -43,7 +53,7 @@ void main() {
       final s = false.lx;
       dynamic caughtError;
 
-      LxWatch.isTrue(
+      LxWorker.watchTrue(
         s,
         () => throw 'True Error',
         onProcessingError: (e, s) => caughtError = e,
@@ -57,7 +67,7 @@ void main() {
       final s = LxVar<LxStatus<int>>(LxWaiting());
       final completer = Completer<dynamic>();
 
-      LxWatch.status<int>(
+      LxWorker.watchStatus<int>(
         s,
         onSuccess: (v) async {
           throw 'Success Async Error';
@@ -71,4 +81,13 @@ void main() {
       expect(await completer.future, 'Success Async Error');
     });
   });
+}
+
+class _ErrorTrapMiddleware extends LevitReactiveMiddleware {
+  final void Function(Object) onError;
+  _ErrorTrapMiddleware(this.onError);
+
+  @override
+  void Function(Object, StackTrace?, LxReactive?)? get onReactiveError =>
+      (e, s, c) => onError(e);
 }

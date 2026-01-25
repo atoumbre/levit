@@ -1,14 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:levit_flutter/levit_flutter.dart';
-import 'package:shared/shared.dart';
+import 'package:levit_flutter_core/levit_flutter_core.dart';
+import 'package:nexus_studio_shared/shared.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 /// Controller for handling real-time presence (cursors, users).
 class PresenceController extends LevitController {
   /// Track of all other users in the session.
-  final remoteUsers = <String, RemoteUser>{}.lx;
+  final remoteUsers = <String, RemoteUser>{}.lx.named('remoteUsers');
 
   /// The local user's info.
   final localUserId = 'user_${DateTime.now().millisecond}';
@@ -61,7 +61,7 @@ class ProjectController extends LevitController {
   final engine = NexusEngine();
 
   /// The set of currently selected node IDs.
-  final selectedIds = <String>{}.lx;
+  final selectedIds = <String>{}.lx.named('selectedIds');
 
   WebSocketChannel? _channel;
   final WebSocketChannel Function(Uri)? _connector;
@@ -111,7 +111,7 @@ class ProjectController extends LevitController {
           (n) => selectedIds.contains(n.id),
         );
         return NexusEngine.calculateBounds(selectedNodes);
-      }),
+      }).named('selectionBounds'),
     );
 
     // Showcase: Lx.select (Pillar 6)
@@ -157,7 +157,7 @@ class ProjectController extends LevitController {
       final connection = LxStream(_channel!.stream.cast<String>());
 
       autoDispose(
-        LxWatch(connection, (status) {
+        LxWorker(connection, (status) {
           if (status is LxSuccess<String>) {
             _handleServerMessage(jsonDecode(status.value));
           } else if (status is LxError) {
@@ -492,7 +492,7 @@ class UserSession {
 /// Controller for authentication.
 class AuthController extends LevitController {
   /// The current user session (null if logged out).
-  final session = LxVar<UserSession?>(null);
+  final session = LxVar<UserSession?>(null).named('session');
 
   /// Whether a user is currently logged in.
   bool get isAuthenticated => session.value != null;

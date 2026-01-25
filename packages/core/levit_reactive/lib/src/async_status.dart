@@ -1,5 +1,4 @@
-import 'core.dart';
-import 'watchers.dart';
+part of '../levit_reactive.dart';
 
 /// A sealed class hierarchy representing the status of an asynchronous operation.
 ///
@@ -212,14 +211,14 @@ extension LxStatusReactiveExtensions<T> on LxReactive<LxStatus<T>> {
   }
 
   /// Specialized listen for async status that allows handling individual states.
-  LxWatch<LxStatus<T>> listen(
+  LxWorker<LxStatus<T>> listen(
     void Function(T value) onSuccess, {
     void Function()? onIdle,
     void Function()? onWaiting,
     void Function(Object error)? onError,
     Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
-    return LxWatch.status<T>(
+    return LxWorker.watchStatus<T>(
       this,
       onIdle: onIdle,
       onWaiting: onWaiting,

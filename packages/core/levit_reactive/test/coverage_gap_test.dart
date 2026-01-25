@@ -11,9 +11,6 @@ import 'package:test/test.dart';
 class DefaultObserver extends LevitReactiveObserver {
   @override
   void addNotifier(LevitReactiveNotifier notifier) {}
-
-  @override
-  void addStream<T>(Stream<T> stream) {}
 }
 
 /// Test middleware to capture dependency graph changes

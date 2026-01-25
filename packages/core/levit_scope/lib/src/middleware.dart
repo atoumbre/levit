@@ -1,4 +1,4 @@
-import 'core.dart';
+part of '../levit_scope.dart';
 
 /// Interface for middleware hooks on dependency injection events.
 ///
@@ -13,6 +13,19 @@ abstract class LevitScopeMiddleware {
   /// Base constructor.
   const LevitScopeMiddleware();
 
+  /// Called when a new scope is created.
+  ///
+  /// *   [scopeId]: Unique identifier for the new scope.
+  /// *   [scopeName]: The name of the new scope.
+  /// *   [parentScopeId]: The ID of the parent scope, or null if root.
+  void onScopeCreate(int scopeId, String scopeName, int? parentScopeId) {}
+
+  /// Called when a scope is disposed.
+  ///
+  /// *   [scopeId]: The unique identifier of the disposed scope.
+  /// *   [scopeName]: The name of the disposed scope.
+  void onScopeDispose(int scopeId, String scopeName) {}
+
   /// Called when a dependency is registered via [LevitScope.put], [LevitScope.lazyPut]
   /// or their async variants.
   ///
@@ -22,7 +35,7 @@ abstract class LevitScopeMiddleware {
   /// *   [info]: Metadata about the registered dependency.
   /// *   [source]: The method that triggered the event (e.g., 'put', 'lazyPut').
   /// *   [parentScopeId]: The ID of the parent scope, or null if root.
-  void onRegister(
+  void onDependencyRegister(
       int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {}
 
@@ -35,7 +48,7 @@ abstract class LevitScopeMiddleware {
   /// *   [info]: Metadata about the resolved dependency.
   /// *   [source]: The method that triggered the event (e.g., 'find', 'findAsync').
   /// *   [parentScopeId]: The ID of the parent scope, or null if root.
-  void onResolve(
+  void onDependencyResolve(
       int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {}
 
@@ -47,7 +60,8 @@ abstract class LevitScopeMiddleware {
   /// *   [info]: Metadata about the deleted dependency.
   /// *   [source]: The method that triggered the event (e.g., 'delete', 'reset').
   /// *   [parentScopeId]: The ID of the parent scope, or null if root.
-  void onDelete(int scopeId, String scopeName, String key, LevitDependency info,
+  void onDependencyDelete(
+      int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {}
 
   /// Called when a dependency instance is being created.
@@ -62,7 +76,7 @@ abstract class LevitScopeMiddleware {
   ///
   /// Returns a new builder function that eventually calls [builder].
   /// If you don't need to wrap the builder, simply return [builder] (default behavior).
-  S Function() onCreate<S>(
+  S Function() onDependencyCreate<S>(
     S Function() builder,
     LevitScope scope,
     String key,

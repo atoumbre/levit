@@ -1,12 +1,22 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:levit_flutter/levit_flutter.dart';
-import 'package:shared/shared.dart';
+import 'package:levit_flutter_core/levit_flutter_core.dart';
+import 'package:levit_monitor/levit_monitor.dart';
 import 'package:nexus_studio_app/controllers.dart';
+import 'package:nexus_studio_shared/shared.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // LevitMonitor.enable();
+  // Connect to LevitDevTools in debug mode
+  if (kDebugMode) {
+    final transport = WebSocketTransport.connect(
+      'ws://localhost:9200',
+      appId: 'nexus-studio',
+    );
+
+    LevitMonitor.attach(transport: transport);
+  }
 
   debugPrint('🚀 Registering Core Controllers...');
 
@@ -134,7 +144,11 @@ class EditorPage extends StatelessWidget {
                 const _TopBar(),
 
                 // Login Overlay (Pillar 1: Reactive visibility)
-                const _LoginOverlay(),
+                LWatch(() {
+                  final auth = Levit.find<AuthController>();
+                  if (auth.isAuthenticated) return const SizedBox.shrink();
+                  return const _LoginOverlay();
+                }),
               ],
             ),
           ),
@@ -582,8 +596,8 @@ class _TopBar extends StatelessWidget {
                   const SizedBox(width: 16),
                   // Showcase: LStatusBuilder (Pillar 6)
                   // Handles async status (loading, success, error) automatically
-                  LStatusBuilder<String>(
-                    source: pc.sessionTimer,
+                  LWatchStatus(
+                    pc.sessionTimer,
                     onSuccess: (time) => Text(
                       'Session: $time',
                       style:
@@ -642,23 +656,21 @@ class _TopBar extends StatelessWidget {
   void _showStatsDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => LScope<StatsController>(
-        init: () => StatsController(),
+      builder: (context) => LScope(
+        dependencyFactory: (scope) =>
+            scope.put<StatsController>(() => StatsController()),
         child: const _StatsDialog(),
       ),
     );
   }
 }
 
-/// Showcase: LView (Pillar 6)
-/// Automatically finds [AuthController] and rebuilds on reactive changes.
-class _LoginOverlay extends LView<AuthController> {
+class _LoginOverlay extends StatelessWidget {
   const _LoginOverlay();
 
   @override
-  Widget buildContent(BuildContext context, AuthController auth) {
-    // LView.autoWatch is true by default, so we don't need LWatch here.
-    if (auth.isAuthenticated) return const SizedBox.shrink();
+  Widget build(BuildContext context) {
+    final auth = Levit.find<AuthController>();
 
     return Container(
       color: Colors.black87,

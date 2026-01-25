@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:shared/shared.dart';
+import 'package:nexus_studio_shared/shared.dart';
 
 void main() {
   group('Vec2', () {

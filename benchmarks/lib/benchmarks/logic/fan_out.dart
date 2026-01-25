@@ -3,8 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
-import '../../benchmark_engine.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;
+import '../../benchmark_config.dart';
+import '../../benchmark_engine.dart';
 
 class FanOutBenchmark extends Benchmark {
   @override
@@ -12,7 +13,7 @@ class FanOutBenchmark extends Benchmark {
 
   @override
   String get description =>
-      'One source updates 1000 dependents. Measures broadcast overhead.';
+      'One source updates ${BenchmarkConfig.fanOutDependents} dependents. Measures broadcast overhead.';
 
   @override
   bool get isUI => false;
@@ -43,7 +44,7 @@ class LevitFanOutBenchmark extends BenchmarkImplementation {
   Future<void> setup() async {
     source = LxVar(0);
     dependents.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       // Create 1000 computeds that listen to source
       dependents.add(LxComputed(() => source.value + i));
     }
@@ -82,7 +83,7 @@ class VanillaFanOutBenchmark extends BenchmarkImplementation {
   Future<void> setup() async {
     source = ValueNotifier(0);
     listeners.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       void listener() {
         final _ = source.value + i;
       }
@@ -116,7 +117,7 @@ class GetXFanOutBenchmark extends BenchmarkImplementation {
   Future<void> setup() async {
     source = 0.obs;
     workers.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       // listen (isActive: true)
       workers.add(source.listen((val) {
         final _ = val + i;
@@ -151,7 +152,7 @@ class RiverpodFanOutBenchmark extends BenchmarkImplementation {
   Future<void> setup() async {
     container = ProviderContainer();
     dependents.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       final p = Provider((ref) => ref.watch(sourceProvider) + i);
       dependents.add(p);
       // Keep alive by listening
@@ -184,7 +185,7 @@ class BlocFanOutBenchmark extends BenchmarkImplementation {
   Future<void> setup() async {
     source = rxdart.BehaviorSubject.seeded(0);
     subs.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       subs.add(source.listen((val) {
         final _ = val + i;
       }));

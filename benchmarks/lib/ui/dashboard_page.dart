@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:levit_flutter/levit_flutter.dart';
+import 'package:levit_flutter_core/levit_flutter_core.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:gap/gap.dart';
 import '../controllers/benchmark_controller.dart';
@@ -10,9 +10,9 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LScope(
-      init: () => AppBenchmarkController(),
-      child: const DashboardView(),
+    return LScopedView<AppBenchmarkController>(
+      dependencyFactory: (s) => s.put(() => AppBenchmarkController()),
+      builder: (context, controller) => const DashboardView(),
     );
   }
 }
@@ -30,68 +30,67 @@ class _DashboardViewState extends State<DashboardView> {
 
   @override
   Widget build(BuildContext context) {
-    // Correct usage of context.levit.find
-    final controller = context.levit.find<AppBenchmarkController>();
+    return LView<AppBenchmarkController>(
+      builder: (context, controller) => LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 800;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 800;
+          // Auto-open drawer on first mobile load
+          if (isMobile && !_hasInitializedDrawer) {
+            _hasInitializedDrawer = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _scaffoldKey.currentState?.openEndDrawer();
+            });
+          }
 
-        // Auto-open drawer on first mobile load
-        if (isMobile && !_hasInitializedDrawer) {
-          _hasInitializedDrawer = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _scaffoldKey.currentState?.openEndDrawer();
-          });
-        }
-
-        return Scaffold(
-          key: _scaffoldKey,
-          appBar: AppBar(
-            title: const Text('Levit Benchmarks'),
-            actions: [
-              if (isMobile)
+          return Scaffold(
+            key: _scaffoldKey,
+            appBar: AppBar(
+              title: const Text('Levit Benchmarks'),
+              actions: [
+                if (isMobile)
+                  IconButton(
+                    icon: const Icon(Icons.settings),
+                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                  ),
+                if (isMobile)
+                  IconButton(
+                    icon: const Icon(Icons.play_arrow),
+                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                  ),
                 IconButton(
-                  icon: const Icon(Icons.settings),
-                  onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                  icon: const Icon(Icons.copy),
+                  tooltip: 'Copy Results',
+                  onPressed: () => controller.copyResults(),
                 ),
-              if (isMobile)
-                IconButton(
-                  icon: const Icon(Icons.play_arrow),
-                  onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-                ),
-              IconButton(
-                icon: const Icon(Icons.copy),
-                tooltip: 'Copy Results',
-                onPressed: () => controller.copyResults(),
-              ),
-            ],
-          ),
-          // Use EndDrawer for settings on Mobile to avoid conflict with potential nav drawer
-          endDrawer: isMobile
-              ? _SidebarContent(controller: controller, isInDrawer: true)
-              : null,
-          body: Row(
-            children: [
-              if (!isMobile)
-                SizedBox(
-                  width: 300,
+              ],
+            ),
+            // Use EndDrawer for settings on Mobile to avoid conflict with potential nav drawer
+            endDrawer: isMobile
+                ? _SidebarContent(controller: controller, isInDrawer: true)
+                : null,
+            body: Row(
+              children: [
+                if (!isMobile)
+                  SizedBox(
+                    width: 300,
+                    child: Card(
+                      margin: const EdgeInsets.all(8),
+                      child: _SidebarContent(controller: controller),
+                    ),
+                  ),
+                Expanded(
                   child: Card(
-                    margin: const EdgeInsets.all(8),
-                    child: _SidebarContent(controller: controller),
+                    margin: const EdgeInsets.all(8)
+                        .copyWith(left: isMobile ? 8 : 0),
+                    child: _MainContent(controller: controller),
                   ),
                 ),
-              Expanded(
-                child: Card(
-                  margin:
-                      const EdgeInsets.all(8).copyWith(left: isMobile ? 8 : 0),
-                  child: _MainContent(controller: controller),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

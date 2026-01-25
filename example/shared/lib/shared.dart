@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:levit_dart/levit_dart.dart';
+import 'package:levit_dart_core/levit_dart_core.dart';
 
 /// A simple 2D vector for isomorphic use.
 ///
@@ -157,7 +157,7 @@ class NexusEngine extends LevitController {
   /// Using [LxList] allows for fine-grained reactivity. The UI only updates
   /// when nodes are added or removed, not when individual node properties change
   /// (since those are tracked separately).
-  final nodes = <NodeModel>[].lx..name = 'engine:nodes';
+  final nodes = <NodeModel>[].lx..named("engine:nodes");
 
   /// Add a node to the engine.
   void addNode(NodeModel node) {

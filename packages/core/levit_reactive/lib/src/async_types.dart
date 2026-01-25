@@ -1,6 +1,4 @@
-import 'dart:async';
-import 'async_status.dart';
-import 'core.dart';
+part of '../levit_reactive.dart';
 
 /// A reactive wrapper for a [Stream].
 ///

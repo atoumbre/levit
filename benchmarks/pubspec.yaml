@@ -11,10 +11,11 @@ dependencies:
     sdk: flutter
   
   # Local Levit packages
-  levit_scope: ^0.0.4
-  levit_dart: ^0.0.4
-  levit_reactive: ^0.0.4
-  levit_flutter: ^0.0.4
+  levit_scope: ^0.0.5
+  levit_dart_core: ^0.0.5
+  levit_reactive: ^0.0.5
+  levit_flutter_core: ^0.0.5
+  levit_monitor: ^0.0.5
     
   # Comparison frameworks
   provider: ^6.1.1

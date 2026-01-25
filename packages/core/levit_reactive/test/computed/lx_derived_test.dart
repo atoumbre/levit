@@ -598,11 +598,6 @@ class _MockObserver implements LevitReactiveObserver {
   _MockObserver(this.streams);
 
   @override
-  void addStream<T>(Stream<T> stream) {
-    streams.add(stream);
-  }
-
-  @override
   void addNotifier(LevitReactiveNotifier notifier) {
     notifiers.add(notifier);
   }
@@ -621,7 +616,7 @@ void _lxReactiveCoverageTests() {
       final doubled = LxComputed(() => count.value * 2);
       final results = <int>[];
 
-      final unwatch = LxWatch(doubled, (val) {
+      final unwatch = LxWorker(doubled, (val) {
         results.add(val);
       });
 

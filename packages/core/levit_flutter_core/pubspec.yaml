@@ -1,0 +1,18 @@
+name: levit_flutter_core
+description: Flutter widgets for the Levit framework - bridges reactive state and DI to the Flutter widget tree.
+repository: https://github.com/softilab/levit
+version: 0.0.4
+
+environment:
+  sdk: ^3.0.0
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  levit_dart_core: ^0.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  lints: ^6.0.0

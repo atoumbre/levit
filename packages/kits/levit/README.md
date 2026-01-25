@@ -14,7 +14,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  levit: ^0.0.4
+  levit: ^0.0.5
 ```
 
 ## Usage

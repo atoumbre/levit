@@ -5,7 +5,8 @@ packages:
   - benchmarks
   - example/**
   - packages/**
-  - tooling/stress_tests
+  - stress_tests
+  - tools/**
 
 command:
   bootstrap:
@@ -26,6 +27,10 @@ scripts:
     packageFilters:
       dirExists: test
       noDependsOn: flutter
+      ignore:
+        - levit_stress_tests
+        - dev_tool_server
+
 
   test:flutter:
     run: flutter test
@@ -33,18 +38,24 @@ scripts:
     exec:
       concurrency: 1
     packageFilters:
-      dependsOn: flutter
       dirExists: test
+      dependsOn: flutter
       ignore:
         - levit_stress_tests
+        - benchmarks
+        - flutter_dev_tool
 
   coverage:
-    run: dart run scripts/check_coverage.dart
+    run: dart run tools/scripts/check_coverage.dart
     description: Run coverage checks
 
   stress:
-    run: dart run scripts/stress_test.dart
+    run: dart run tools/scripts/stress_test.dart
     description: Run stress tests
+
+  benchmarks:
+    run: flutter test benchmarks
+    description: Run benchmarks
 
   format:
     run: dart format .
@@ -61,6 +72,6 @@ scripts:
       failFast: true
     packageFilters:
       scope: 
-        - levit_flutter
+        - levit_flutter_kit
 
 

@@ -1,4 +1,4 @@
-name: shared
+name: nexus_studio_shared
 description: A starting point for Dart libraries or applications.
 version: 1.0.0
 publish_to: none
@@ -8,7 +8,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  levit_dart: ^0.0.4
+  levit_dart_core: ^0.0.5
   
 dev_dependencies:
   lints: ^6.0.0

@@ -1,4 +1,4 @@
-name: nexus_server
+name: nexus_studio_server
 description: A sample command-line application.
 version: 1.0.0
 publish_to: none
@@ -13,8 +13,10 @@ dependencies:
   shelf_web_socket: ^3.0.0
   web_socket_channel: ^3.0.3
 
-  levit_dart: ^0.0.4
-  shared:
+  levit_dart_core: ^0.0.5
+  levit_monitor: ^0.0.5
+
+  nexus_studio_shared:
     path: ../shared
 
 dev_dependencies:

@@ -1,0 +1,15 @@
+name: levit_dart
+description: Utility mixins and tools for Levit Dart controllers.
+version: 0.0.4
+repository: https://github.com/softilab/levit
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  levit_dart_core: ^0.0.5
+  meta: ^1.11.0
+
+dev_dependencies:
+  lints: ^3.0.0
+  test: ^1.24.0

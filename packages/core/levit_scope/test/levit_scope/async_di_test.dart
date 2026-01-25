@@ -111,6 +111,18 @@ void main() {
       expect(s1.id, isNot(equals(s2.id)));
       expect(factoryCount, 2);
     });
+    test('lazyPutAsync returns a finder function', () async {
+      final finder = levit.lazyPutAsync(() async {
+        return AsyncService('finder-async');
+      });
+
+      expect(finder, isA<Future<AsyncService> Function()>());
+      expect(levit.isInstantiated<AsyncService>(), false);
+
+      final service = await finder();
+      expect(service.name, 'finder-async');
+      expect(levit.isInstantiated<AsyncService>(), true);
+    });
   });
 
   group('findAsync', () {

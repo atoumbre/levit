@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:levit_flutter/levit_flutter.dart';
+import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 import '../../benchmark_engine.dart';
 

@@ -50,7 +50,7 @@ class LevitAsyncComputedBenchmark extends BenchmarkImplementation {
       // Simulate async operation
       await Future.delayed(const Duration(microseconds: 1));
       return 'Result: $val';
-    });
+    }, staticDeps: true);
 
     listener = () {};
     asyncComputed.addListener(listener);

@@ -7,7 +7,7 @@ void main() {
       final f = LxFuture<int>.idle();
       int? result;
 
-      LxWatch.status<int>(f, onSuccess: (value) => result = value);
+      LxWorker.watchStatus<int>(f, onSuccess: (value) => result = value);
 
       f.restart(Future.value(42));
       await Future.microtask(() {});
@@ -18,7 +18,7 @@ void main() {
       final f = LxFuture<int>.idle();
       int? result;
 
-      LxWatch.status<int>(f, onSuccess: (value) => result = value);
+      LxWorker.watchStatus<int>(f, onSuccess: (value) => result = value);
 
       // Transition to Waiting
       f.restart(Future.delayed(Duration(seconds: 1), () => 10));
@@ -30,7 +30,7 @@ void main() {
       final f = LxFuture<int>.idle();
       Object? error;
 
-      LxWatch.status<int>(f, onError: (e) => error = e);
+      LxWorker.watchStatus<int>(f, onError: (e) => error = e);
 
       f.restart(Future.error('Run failed'));
       await Future.microtask(() {});
@@ -41,7 +41,7 @@ void main() {
       final f = LxFuture<int>.idle();
       var waiting = false;
 
-      LxWatch.status<int>(f, onWaiting: () => waiting = true);
+      LxWorker.watchStatus<int>(f, onWaiting: () => waiting = true);
 
       f.restart(Future.delayed(Duration(milliseconds: 50), () => 1));
       await Future.microtask(() {});
@@ -54,7 +54,7 @@ void main() {
       final s = LxVar<LxStatus<int>>(LxWaiting());
       var idle = false;
 
-      LxWatch.status<int>(s, onIdle: () => idle = true);
+      LxWorker.watchStatus<int>(s, onIdle: () => idle = true);
 
       s.value = LxIdle();
       await Future.microtask(() {});
@@ -65,7 +65,7 @@ void main() {
       final f = LxFuture<int>.idle();
       var count = 0;
 
-      final dispose = LxWatch.status<int>(f, onSuccess: (_) => count++);
+      final dispose = LxWorker.watchStatus<int>(f, onSuccess: (_) => count++);
 
       f.restart(Future.value(1));
       await Future.microtask(() {});
@@ -82,7 +82,7 @@ void main() {
       final f = LxFuture<int>.idle();
       var log = <String>[];
 
-      LxWatch.status<int>(
+      LxWorker.watchStatus<int>(
         f,
         onIdle: () => log.add('idle'),
         onWaiting: () => log.add('waiting'),
@@ -108,7 +108,7 @@ void main() {
       bool successCalled = false;
       bool waitingCalled = false;
 
-      final unwatch = LxWatch.status<int>(
+      final unwatch = LxWorker.watchStatus<int>(
         lx,
         onSuccess: (v) => successCalled = true,
         onWaiting: () => waitingCalled = true,

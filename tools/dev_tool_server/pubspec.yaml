@@ -1,0 +1,17 @@
+name: dev_tool_server
+description: A starting point for Dart libraries or applications.
+version: 1.0.0
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  levit_dart_core: ^0.0.5
+  levit_monitor: ^0.0.5
+  shelf: ^1.4.2
+  shelf_web_socket: ^3.0.0
+  web_socket_channel: ^3.0.3
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6

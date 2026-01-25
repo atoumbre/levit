@@ -17,8 +17,16 @@ echo "--------------------------------------------"
 echo "🚀 NEXUS STUDIO: Starting Collaborative Environment"
 echo "--------------------------------------------"
 
+# 0. Start DevTool Server
+echo "🛠️  [1/3] Launching DevTool Server..."
+cd ../packages/tooling/dev_tool_server
+dart pub get > /dev/null
+dart run bin/dev_tool_server.dart &
+DEVTOOL_PID=$!
+cd ../../../example
+
 # 1. Start Server
-echo "📦 [1/2] Launching Relay Server..."
+echo "📦 [2/3] Launching Relay Server..."
 cd server
 dart pub get > /dev/null
 dart run bin/server.dart &
@@ -26,7 +34,7 @@ SERVER_PID=$!
 cd ..
 
 # 2. Start App
-echo "📱 [2/2] Launching Flutter App ..."
+echo "📱 [3/3] Launching Flutter App ..."
 cd app
 flutter pub get > /dev/null
 

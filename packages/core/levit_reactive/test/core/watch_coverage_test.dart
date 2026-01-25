@@ -2,8 +2,8 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  test('LxWatchStat copyWith coverage', () {
-    const stat = LxWatchStat(runCount: 0);
+  test('LxWorkerStat copyWith coverage', () {
+    const stat = LxWorkerStat(runCount: 0);
 
     final s1 = stat.copyWith(runCount: 1);
     expect(s1.runCount, 1);

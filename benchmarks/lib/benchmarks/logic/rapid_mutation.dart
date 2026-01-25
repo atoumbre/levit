@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
+import '../../benchmark_config.dart';
 import '../../benchmark_engine.dart';
 
 class RapidMutationBenchmark extends Benchmark {
@@ -11,7 +12,7 @@ class RapidMutationBenchmark extends Benchmark {
 
   @override
   String get description =>
-      'Updates a state variable 1,000,000 times with one listener active.';
+      'Updates a state variable ${BenchmarkConfig.rapidMutationIterations} times with one listener active.';
 
   @override
   bool get isUI => false;
@@ -46,7 +47,7 @@ class LevitRapidMutation extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 1000000; i++) {
+    for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       counter.value++;
     }
     stopwatch.stop();
@@ -72,7 +73,7 @@ class VanillaRapidMutation extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 1000000; i++) {
+    for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       counter.value++;
     }
     stopwatch.stop();
@@ -98,7 +99,7 @@ class GetXRapidMutation extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 1000000; i++) {
+    for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       counter.value++;
     }
     stopwatch.stop();
@@ -130,7 +131,7 @@ class BlocRapidMutation extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 1000000; i++) {
+    for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       cubit.increment();
     }
     stopwatch.stop();
@@ -159,7 +160,7 @@ class RiverpodRapidMutation extends BenchmarkImplementation {
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
     final notifier = container.read(provider.notifier);
-    for (int i = 0; i < 1000000; i++) {
+    for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       notifier.state++;
     }
     stopwatch.stop();

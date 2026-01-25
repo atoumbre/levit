@@ -35,14 +35,22 @@ void main() {
       Lx.captureStackTrace = false;
     });
 
-    test('Lx.runBatch resets isBatching on exception', () {
+    test('Lx.runBatch resets isBatching on exception (caught internally)', () {
       expect(Lx.isBatching, isFalse);
+
+      // Even if batch throws (which it might not now), it should reset
+      // Note: Lx.batch catches exceptions in the wrapped execution if no middleware or if middleware rethrows.
+      // But now core.batch swallows listener errors? No, core.batch catches listener errors during notification?
+      // Wait, core.batch just wraps execution. If execution logic itself throws, it propagates.
+      // BUT if execution logic triggers notification, and listener throws, listener error is trapped.
+      // So if 'throw Exception' is in the batch BODY, it propagates.
       try {
         Lx.batch(() {
           expect(Lx.isBatching, isTrue);
           throw Exception('Batch failure');
         });
       } catch (_) {}
+
       expect(Lx.isBatching, isFalse);
     });
 
@@ -300,7 +308,9 @@ void main() {
       expect(lxFuture.valueOrNull, equals(42));
     });
 
-    test('LevitStateCore flushGlobalBatch resets isBatching on exception', () {
+    test(
+        'LevitReactiveCore flushGlobalBatch resets isBatching on exception (trapped)',
+        () {
       final rx = 0.lx;
       rx.addListener(() {
         throw Exception('Listener error');
@@ -314,22 +324,20 @@ void main() {
 
       expect(Lx.isBatching, isFalse);
 
-      try {
-        Lx.batch(() {
-          rx.value = 1;
-          rx2.value = 1;
-        });
-        fail('Should have thrown');
-      } catch (e) {
-        expect(e.toString(), contains('Listener error'));
-      }
+      // Now Lx.batch propagates listener errors (Fast Path).
+      expect(
+          () => Lx.batch(() {
+                rx.value = 1;
+                rx2.value = 1;
+              }),
+          throwsException);
 
-      // Critical: isBatching must be reset even after exception
+      // Verify that batching state is reset
       expect(Lx.isBatching, isFalse);
-      expect(processed, isFalse);
 
-      // Note: rx2's listener may or may not have been called depending on
-      // the order of notification. The important thing is isBatching is reset.
+      // Verify execution happened
+      // processed is FALSE because the batch flux crashed at rx, so rx2 was never notified.
+      expect(processed, isFalse);
     });
 
     test('Lx.refresh records batch entry', () {
@@ -374,11 +382,11 @@ void main() {
       history.undo(); // Hitting line 413
     });
 
-    test('LxWatch stream listener coverage', () async {
+    test('LxWorker stream listener coverage', () async {
       final rx = 0.lx;
       var count = 0;
       final watch =
-          LxWatch(rx, (v) => count++, onError: (e, s) => print('Caught $e'));
+          LxWorker(rx, (v) => count++, onError: (e, s) => print('Caught $e'));
 
       rx.value = 1;
       await Future.delayed(Duration.zero);

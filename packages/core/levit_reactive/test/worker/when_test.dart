@@ -7,7 +7,7 @@ void main() {
       final flag = false.lx;
       var fired = false;
 
-      LxWatch.isTrue(flag, () => fired = true);
+      LxWorker.watchTrue(flag, () => fired = true);
 
       flag.setTrue();
       await Future.microtask(() {});
@@ -18,7 +18,7 @@ void main() {
       final flag = true.lx;
       var fired = false;
 
-      LxWatch.isTrue(flag, () => fired = true);
+      LxWorker.watchTrue(flag, () => fired = true);
 
       flag.setFalse();
       await Future.microtask(() {});
@@ -29,7 +29,7 @@ void main() {
       final flag = true.lx;
       var fired = false;
 
-      LxWatch.isFalse(flag, () => fired = true);
+      LxWorker.watchFalse(flag, () => fired = true);
 
       flag.setFalse();
       await Future.microtask(() {});
@@ -40,7 +40,7 @@ void main() {
       final flag = false.lx;
       var fired = false;
 
-      LxWatch.isFalse(flag, () => fired = true);
+      LxWorker.watchFalse(flag, () => fired = true);
 
       flag.setTrue();
       await Future.microtask(() {});
@@ -51,7 +51,7 @@ void main() {
       final status = 'idle'.lx;
       var fired = false;
 
-      LxWatch.isValue(status, 'complete', () => fired = true);
+      LxWorker.watchValue(status, 'complete', () => fired = true);
 
       status.value = 'loading';
       await Future.microtask(() {});
@@ -66,7 +66,7 @@ void main() {
       final flag = false.lx;
       var fireCount = 0;
 
-      final dispose = LxWatch.isTrue(flag, () => fireCount++);
+      final dispose = LxWorker.watchTrue(flag, () => fireCount++);
 
       flag.setTrue();
       await Future.microtask(() {});

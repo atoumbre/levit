@@ -3,7 +3,7 @@ import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
   group('LxStatus Extension Coverage', () {
-    test('LxVarExtensions.listen creates LxWatch', () {
+    test('LxVarExtensions.listen creates LxWorker', () {
       final rx = 0.lx;
       var callCount = 0;
 
@@ -11,7 +11,7 @@ void main() {
         callCount++;
       });
 
-      expect(watch, isA<LxWatch<int>>());
+      expect(watch, isA<LxWorker<int>>());
 
       rx.value = 1;
       expect(callCount, 1);
@@ -37,7 +37,7 @@ void main() {
         },
       );
 
-      expect(watch, isA<LxWatch<LxStatus<int>>>());
+      expect(watch, isA<LxWorker<LxStatus<int>>>());
       expect(waitingCalled, isFalse);
 
       // Wait for future to complete

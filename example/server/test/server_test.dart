@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
-import 'package:levit_dart/levit_dart.dart';
-import 'package:nexus_server/server.dart';
-import 'package:shared/shared.dart';
+import 'package:levit_dart_core/levit_dart_core.dart';
+import 'package:nexus_studio_server/server.dart';
+import 'package:nexus_studio_shared/shared.dart';
 import 'package:test/test.dart';
 
 import 'package:stream_channel/stream_channel.dart';

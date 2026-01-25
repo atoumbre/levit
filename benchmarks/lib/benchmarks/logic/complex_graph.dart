@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
+import '../../benchmark_config.dart';
 import '../../benchmark_engine.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;
 
@@ -45,11 +46,11 @@ class LevitGraphBenchmark extends BenchmarkImplementation {
   @override
   Future<void> setup() async {
     a = LxVar(0);
-    // Use synchronous LxComputed for fair comparison
-    b = LxComputed(() => a.value + 1);
-    c = LxComputed(() => a.value * 2);
+    // Use synchronous LxComputed for fair comparison, with staticDeps optimization
+    b = LxComputed(() => a.value + 1, staticDeps: true);
+    c = LxComputed(() => a.value * 2, staticDeps: true);
     // Access .computedValue to get the actual int value
-    d = LxComputed(() => b.value + c.value);
+    d = LxComputed(() => b.value + c.value, staticDeps: true);
 
     listener = () {};
     d.addListener(listener);
@@ -58,7 +59,7 @@ class LevitGraphBenchmark extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.value++;
       final _ = d.value;
     }
@@ -112,7 +113,7 @@ class VanillaGraphBenchmark extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.value++;
       final _ = d.value; // Read to ensure computation like Levit
     }
@@ -178,7 +179,7 @@ class GetXGraphBenchmark extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.value++;
       final _ = dVal.value; // Read to ensure computation like Levit
     }
@@ -218,7 +219,7 @@ class RiverpodGraphBenchmark extends BenchmarkImplementation {
   Future<int> run() async {
     final notifier = container.read(aProvider.notifier);
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       notifier.state++;
       container.read(dProvider);
     }
@@ -257,7 +258,7 @@ class BlocGraphBenchmark extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.add(i);
       final _ = dSubject.value; // Read to ensure computation like Levit
     }

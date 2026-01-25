@@ -3,8 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
-import '../../benchmark_engine.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;
+import '../../benchmark_config.dart';
+import '../../benchmark_engine.dart';
 
 class FanInBenchmark extends Benchmark {
   @override
@@ -12,7 +13,7 @@ class FanInBenchmark extends Benchmark {
 
   @override
   String get description =>
-      '1000 sources update 1 dependent. Measures dependency tracking overhead.';
+      '${BenchmarkConfig.fanInInputs} sources update 1 dependent. Measures dependency tracking overhead.';
 
   @override
   bool get isUI => false;
@@ -43,7 +44,7 @@ class LevitFanInBenchmark extends BenchmarkImplementation {
   @override
   Future<void> setup() async {
     inputs.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanInInputs; i++) {
       inputs.add(LxVar(1));
     }
 
@@ -91,7 +92,7 @@ class VanillaFanInBenchmark extends BenchmarkImplementation {
   Future<void> setup() async {
     inputs.clear();
     cleanup.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanInInputs; i++) {
       inputs.add(ValueNotifier(1));
     }
 
@@ -155,7 +156,7 @@ class GetXFanInBenchmark extends BenchmarkImplementation {
   Future<void> setup() async {
     inputs.clear();
     subs.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanInInputs; i++) {
       inputs.add(1.obs);
     }
 
@@ -190,7 +191,7 @@ class RiverpodFanInBenchmark extends BenchmarkImplementation {
   Future<void> setup() async {
     container = ProviderContainer();
     inputProviders.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanInInputs; i++) {
       inputProviders.add(StateProvider((ref) => 1));
     }
 
@@ -230,7 +231,7 @@ class BlocFanInBenchmark extends BenchmarkImplementation {
   @override
   Future<void> setup() async {
     inputs.clear();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.fanInInputs; i++) {
       inputs.add(rxdart.BehaviorSubject.seeded(1));
     }
 

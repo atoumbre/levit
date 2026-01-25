@@ -1,7 +1,4 @@
-import 'dart:async';
-
-import 'package:meta/meta.dart';
-import 'middleware.dart';
+part of '../levit_scope.dart';
 
 /// Interface for objects that require explicit lifecycle management within a [LevitScope].
 ///
@@ -131,7 +128,9 @@ class LevitScope {
   /// Creates a new [LevitScope]. Internal constructor.
   LevitScope._(this.name, {LevitScope? parentScope})
       : id = _nextId++,
-        _parentScope = parentScope;
+        _parentScope = parentScope {
+    _notifyScopeCreate();
+  }
 
   /// Creates a new root [LevitScope].
   factory LevitScope.root([String? name]) => LevitScope._(name ?? 'root');
@@ -214,7 +213,7 @@ class LevitScope {
   /// *   [builder]: The async function that creates the instance.
   /// *   [tag]: An optional tag to distinguish multiple instances of the same type.
   /// *   [permanent]: If `true`, the instance will not be removed during a non-forced reset.
-  void lazyPutAsync<S>(
+  Future<S> Function() lazyPutAsync<S>(
     Future<S> Function() builder, {
     String? tag,
     bool permanent = false,
@@ -225,7 +224,7 @@ class LevitScope {
     if (!isFactory &&
         _registry.containsKey(key) &&
         _registry[key]!.isInstantiated) {
-      return;
+      return () => findAsync<S>(tag: tag);
     }
 
     final info = LevitDependency<S>(
@@ -237,6 +236,8 @@ class LevitScope {
 
     _registerBinding(key, info, isFactory ? 'putFactoryAsync' : 'lazyPutAsync',
         tag: tag);
+
+    return () => findAsync<S>(tag: tag);
   }
 
   void _registerBinding<S>(
@@ -371,7 +372,11 @@ class LevitScope {
     // 1. Try Local
     final info = _registry[key];
     if (info != null) {
-      return _findLocal<S>(info as LevitDependency<S>, key, tag);
+      try {
+        return _findLocal<S>(info as LevitDependency<S>, key, tag);
+      } catch (_) {
+        return null;
+      }
     }
 
     // 2. Try Cache
@@ -394,7 +399,7 @@ class LevitScope {
 
   /// Asynchronously finds and returns a registered instance of type [S].
   ///
-  /// Use this for dependencies registered via [lazyPutAsync] or [createAsync].
+  /// Use this for dependencies registered via [lazyPutAsync].
   ///
   /// Throws an [Exception] if the dependency is not registered.
   ///
@@ -656,6 +661,16 @@ class LevitScope {
     _instanceCache.clear();
   }
 
+  /// Disposes this scope and all its dependencies.
+  ///
+  /// This will call [reset] with `force: true` and notify middlewares
+  /// that the scope is being disposed.
+  /// After calling dispose, the scope should considered unusable.
+  void dispose() {
+    reset(force: true);
+    _notifyScopeDispose();
+  }
+
   /// Creates a new child scope that falls back to this scope for dependency resolution.
   ///
   /// *   [name]: The name of the new scope.
@@ -699,12 +714,12 @@ class LevitScope {
   static bool get hasMiddlewares => _middlewares.isNotEmpty;
 
   void _notifyRegister(String key, LevitDependency info, String source) {
-    LevitScopeMiddlewareChain.applyOnRegister(
+    _LevitScopeMiddlewareChain.applyOnRegister(
         id, name, key, info, source, _parentScope?.id);
   }
 
   void _notifyResolve(String key, LevitDependency info, String source) {
-    LevitScopeMiddlewareChain.applyOnResolve(
+    _LevitScopeMiddlewareChain.applyOnResolve(
         id, name, key, info, source, _parentScope?.id);
   }
 
@@ -713,11 +728,12 @@ class LevitScope {
     String key,
     LevitDependency info,
   ) {
-    return LevitScopeMiddlewareChain.applyOnCreate<S>(builder, this, key, info);
+    return _LevitScopeMiddlewareChain.applyOnCreate<S>(
+        builder, this, key, info);
   }
 
   void _notifyDelete(String key, LevitDependency info, String source) {
-    LevitScopeMiddlewareChain.applyOnDelete(
+    _LevitScopeMiddlewareChain.applyOnDelete(
         id, name, key, info, source, _parentScope?.id);
   }
 
@@ -727,17 +743,24 @@ class LevitScope {
     String key,
     LevitDependency info,
   ) {
-    final wrapped = LevitScopeMiddlewareChain.applyOnDependencyInit<S>(
+    final wrapped = _LevitScopeMiddlewareChain.applyOnDependencyInit<S>(
         onInit, instance, this, key, info);
     wrapped();
+  }
+
+  void _notifyScopeCreate() {
+    _LevitScopeMiddlewareChain.applyOnScopeCreate(id, name, _parentScope?.id);
+  }
+
+  void _notifyScopeDispose() {
+    _LevitScopeMiddlewareChain.applyOnScopeDispose(id, name);
   }
 }
 
 /// Internal helper to apply observer hooks in a single place.
 ///
 /// Consolidates iteration logic for better maintainability and optimization.
-@internal
-class LevitScopeMiddlewareChain {
+class _LevitScopeMiddlewareChain {
   static S Function() applyOnCreate<S>(
     S Function() builder,
     LevitScope scope,
@@ -747,7 +770,7 @@ class LevitScopeMiddlewareChain {
     if (LevitScope._middlewares.isEmpty) return builder;
     var wrapped = builder;
     for (final observer in LevitScope._middlewares) {
-      wrapped = observer.onCreate<S>(wrapped, scope, key, info);
+      wrapped = observer.onDependencyCreate<S>(wrapped, scope, key, info);
     }
     return wrapped;
   }
@@ -772,7 +795,7 @@ class LevitScopeMiddlewareChain {
       LevitDependency info, String source, int? parentScopeId) {
     if (LevitScope._middlewares.isEmpty) return;
     for (final observer in LevitScope._middlewares) {
-      observer.onRegister(scopeId, scopeName, key, info,
+      observer.onDependencyRegister(scopeId, scopeName, key, info,
           source: source, parentScopeId: parentScopeId);
     }
   }
@@ -781,7 +804,7 @@ class LevitScopeMiddlewareChain {
       LevitDependency info, String source, int? parentScopeId) {
     if (LevitScope._middlewares.isEmpty) return;
     for (final observer in LevitScope._middlewares) {
-      observer.onResolve(scopeId, scopeName, key, info,
+      observer.onDependencyResolve(scopeId, scopeName, key, info,
           source: source, parentScopeId: parentScopeId);
     }
   }
@@ -790,8 +813,23 @@ class LevitScopeMiddlewareChain {
       LevitDependency info, String source, int? parentScopeId) {
     if (LevitScope._middlewares.isEmpty) return;
     for (final observer in LevitScope._middlewares) {
-      observer.onDelete(scopeId, scopeName, key, info,
+      observer.onDependencyDelete(scopeId, scopeName, key, info,
           source: source, parentScopeId: parentScopeId);
+    }
+  }
+
+  static void applyOnScopeCreate(
+      int scopeId, String scopeName, int? parentScopeId) {
+    if (LevitScope._middlewares.isEmpty) return;
+    for (final observer in LevitScope._middlewares) {
+      observer.onScopeCreate(scopeId, scopeName, parentScopeId);
+    }
+  }
+
+  static void applyOnScopeDispose(int scopeId, String scopeName) {
+    if (LevitScope._middlewares.isEmpty) return;
+    for (final observer in LevitScope._middlewares) {
+      observer.onScopeDispose(scopeId, scopeName);
     }
   }
 }

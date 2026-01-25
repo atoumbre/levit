@@ -10,7 +10,7 @@ void main() {
       final values = <String>[];
 
       // Using a local StreamTransformer (built-in style)
-      LxWatch(
+      LxWorker(
           query.transform((stream) =>
               stream.transform(_debounceBuiltIn(Duration(milliseconds: 50)))),
           (status) {
@@ -33,7 +33,7 @@ void main() {
 
       // Using RxDart's DebounceStreamTransformer
       // Note: LxReactive.transform(transformer) expects StreamTransformer<T, R>
-      LxWatch(
+      LxWorker(
           query.transform((s) => s.debounceTime(Duration(milliseconds: 50))),
           (status) {
         if (status is LxSuccess<String>) {
@@ -57,7 +57,7 @@ void main() {
       // and wrap it back into an LxStream.
       final rxStream = query.stream.debounceTime(Duration(milliseconds: 50)).lx;
 
-      LxWatch(rxStream, (status) {
+      LxWorker(rxStream, (status) {
         if (status is LxSuccess<String>) {
           values.add(status.value);
         }

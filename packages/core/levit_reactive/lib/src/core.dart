@@ -1,16 +1,25 @@
-import 'dart:async';
+part of '../levit_reactive.dart';
 
-import 'package:meta/meta.dart';
-
-import 'middlewares.dart';
-
-@internal
-class LevitStateCore {
+class _LevitReactiveCore {
   /// Whether to capture stack traces on state changes (expensive).
   static bool captureStackTrace = false;
 
+  static LevitReactiveObserver? _proxy;
+
+  // Cache for ultra-fast consecutive read skip
+  static LevitReactiveObserver? _lastReportedObserver;
+  static LxReactive? _lastReportedReactive;
+
   /// The active observer capturing dependencies.
-  static LevitReactiveObserver? proxy;
+  static LevitReactiveObserver? get proxy => _proxy;
+
+  static set proxy(LevitReactiveObserver? value) {
+    if (_proxy == value) return;
+    _proxy = value;
+    _lastReportedObserver = null;
+    _lastReportedReactive = null;
+    _updateFastPath();
+  }
 
   static final Object _batchEntriesKey = Object();
 
@@ -30,15 +39,20 @@ class LevitStateCore {
       LxReactive reactive, LevitReactiveChange change) {
     // Skip zone lookup if no middlewares (fast path)
     if (!LevitReactiveMiddleware.hasBatchMiddlewares) return;
+
     final entries = Zone.current[_batchEntriesKey]
         as List<(LxReactive, LevitReactiveChange)>?;
+
     entries?.add((reactive, change));
   }
 
   static bool _fastPath = true;
 
   static void _updateFastPath() {
-    _fastPath = _asyncZoneDepth == 0 && _batchDepth == 0 && !_isPropagating;
+    _fastPath = _proxy == null &&
+        _asyncZoneDepth == 0 &&
+        _batchDepth == 0 &&
+        !_isPropagating;
     // print('UpdateFastPath: $_fastPath (Depth: $_batchDepth, Async: $_asyncZoneDepth, Prop: $_isPropagating)');
   }
 
@@ -90,16 +104,29 @@ class LevitStateCore {
 
   static int _asyncZoneDepth = 0;
 
-  @internal
-  static void enterAsyncScope() {
+  static void _enterAsyncScope() {
     _asyncZoneDepth++;
     _updateFastPath();
   }
 
-  @internal
-  static void exitAsyncScope() {
+  static void _exitAsyncScope() {
     _asyncZoneDepth--;
     _updateFastPath();
+  }
+
+  /// Context data for the current listener registration operation.
+  /// Used to associate listeners with high-level constructs (e.g., Widgets).
+  static LxListenerContext? listenerContext;
+
+  /// Executes [fn] with [context] set as the current listener context.
+  static T runWithContext<T>(LxListenerContext context, T Function() fn) {
+    final previousCheck = listenerContext;
+    listenerContext = context;
+    try {
+      return fn();
+    } finally {
+      listenerContext = previousCheck;
+    }
   }
 
   /// Executes [callback] in a synchronous batch.
@@ -157,7 +184,7 @@ class LevitStateCore {
     if (!LevitReactiveMiddleware.hasBatchMiddlewares) {
       _batchDepth++;
       _updateFastPath();
-      enterAsyncScope();
+      _enterAsyncScope();
       final batchSet = Set<LevitReactiveNotifier>.identity();
       try {
         return await runZoned(
@@ -165,7 +192,7 @@ class LevitStateCore {
           zoneValues: {_batchZoneKey: batchSet},
         );
       } finally {
-        exitAsyncScope();
+        _exitAsyncScope();
         _batchDepth--;
         _updateFastPath();
         if (_batchDepth == 0) {
@@ -184,7 +211,7 @@ class LevitStateCore {
     dynamic coreExecution() async {
       _batchDepth++;
       _updateFastPath();
-      enterAsyncScope();
+      _enterAsyncScope();
 
       final batchSet = Set<LevitReactiveNotifier>.identity();
       try {
@@ -196,7 +223,7 @@ class LevitStateCore {
           },
         );
       } finally {
-        exitAsyncScope();
+        _exitAsyncScope();
         _batchDepth--;
         _updateFastPath();
         if (_batchDepth == 0) {
@@ -243,6 +270,12 @@ abstract interface class LxReactive<T> {
   /// Unregisters a previously added [listener].
   void removeListener(void Function() listener);
 
+  /// Triggers a notification without changing the value.
+  ///
+  /// This ensures that all current listeners are notified of the current state,
+  /// and any associated streams emit the latest value.
+  void refresh();
+
   /// Permanently closes the reactive object and releases all internal resources.
   ///
   /// After calling [close], the object should no longer be used.
@@ -267,9 +300,6 @@ abstract interface class LxReactive<T> {
 /// error-prone. By using a proxy-based observer, Levit enables "reactive-by-access"
 /// patterns where dependencies are detected implicitly during execution.
 abstract class LevitReactiveObserver {
-  /// Internal: Registers a [Stream] dependency.
-  void addStream<T>(Stream<T> stream);
-
   /// Internal: Registers a [LevitReactiveNotifier] dependency.
   void addNotifier(LevitReactiveNotifier notifier);
 
@@ -310,15 +340,17 @@ class LevitReactiveNotifier {
   /// Returns the current depth in the dependency graph.
   int get graphDepth => _graphDepth;
 
-  /// Set the depth (internal use only by computed values).
-  @internal
-  set graphDepth(int value) => _graphDepth = value;
-
   LevitReactiveNotifier();
 
   /// Adds a listener.
   void addListener(void Function() listener) {
     if (_disposed) return;
+
+    // Notify middleware if active
+    if (LevitReactiveMiddleware.hasListenerMiddlewares && this is LxReactive) {
+      LevitStateMiddlewareChain.applyOnListenerAdd(
+          this as LxReactive, _LevitReactiveCore.listenerContext);
+    }
 
     if (_singleListener == null && _setListeners == null) {
       _singleListener = listener;
@@ -343,6 +375,12 @@ class LevitReactiveNotifier {
   /// Removes a listener.
   void removeListener(void Function() listener) {
     if (_disposed) return;
+
+    // Notify middleware if active
+    if (LevitReactiveMiddleware.hasListenerMiddlewares && this is LxReactive) {
+      LevitStateMiddlewareChain.applyOnListenerRemove(
+          this as LxReactive, _LevitReactiveCore.listenerContext);
+    }
 
     if (_singleListener != null) {
       if (_singleListener == listener) {
@@ -369,17 +407,25 @@ class LevitReactiveNotifier {
     if (_disposed) return;
 
     // Ultra-fast path: Single listener + no batching/propagation active
-    // IMPORTANT: Only use if we haven't migrated to _setListeners
     if (_singleListener != null &&
         _setListeners == null &&
-        LevitStateCore._fastPath) {
-      _singleListener!();
+        _LevitReactiveCore._fastPath) {
+      if (LevitReactiveMiddleware.hasErrorMiddlewares) {
+        try {
+          _singleListener!();
+        } catch (e, s) {
+          LevitStateMiddlewareChain.applyOnReactiveError(
+              e, s, this is LxReactive ? this as LxReactive : null);
+        }
+      } else {
+        _singleListener!();
+      }
       return;
     }
 
     // 0. Handle Async Batching
-    if (LevitStateCore._asyncZoneDepth > 0) {
-      final asyncBatch = Zone.current[LevitStateCore._batchZoneKey];
+    if (_LevitReactiveCore._asyncZoneDepth > 0) {
+      final asyncBatch = Zone.current[_LevitReactiveCore._batchZoneKey];
       if (asyncBatch is Set<LevitReactiveNotifier>) {
         asyncBatch.add(this);
         return;
@@ -387,10 +433,10 @@ class LevitReactiveNotifier {
     }
 
     // 1. Handle Sync Batching
-    if (LevitStateCore.isBatching) {
+    if (_LevitReactiveCore.isBatching) {
       if (!_isPendingSyncBatch) {
         _isPendingSyncBatch = true;
-        LevitStateCore._batchedNotifiers.add(this);
+        _LevitReactiveCore._batchedNotifiers.add(this);
       }
       return;
     }
@@ -398,44 +444,53 @@ class LevitReactiveNotifier {
     // 2. Handle Iterative Propagation (Queueing) with deduplication
     // This is critical for diamond dependencies: when A->B and A->C both
     // notify D, we should only process D once.
-    if (LevitStateCore._isPropagating) {
+    if (_LevitReactiveCore._isPropagating) {
       if (!_isPendingPropagate) {
         _isPendingPropagate = true;
-        LevitStateCore._propagationQueue.add(this);
+        _LevitReactiveCore._propagationQueue.add(this);
       }
       return;
     }
 
     // 3. Start Propagation Cycle
-    LevitStateCore._isPropagating = true;
-    LevitStateCore._updateFastPath();
+    _LevitReactiveCore._isPropagating = true;
+    _LevitReactiveCore._updateFastPath();
     try {
       _notifyListeners();
 
-      if (LevitStateCore._propagationQueue.isNotEmpty) {
+      if (_LevitReactiveCore._propagationQueue.isNotEmpty) {
         var i = 0;
-        while (i < LevitStateCore._propagationQueue.length) {
-          final notifier = LevitStateCore._propagationQueue[i++];
+        while (i < _LevitReactiveCore._propagationQueue.length) {
+          final notifier = _LevitReactiveCore._propagationQueue[i++];
           notifier._isPendingPropagate = false; // Clear before processing
           notifier._notifyListeners();
         }
       }
     } finally {
-      LevitStateCore._isPropagating = false;
-      LevitStateCore._updateFastPath();
-      if (LevitStateCore._propagationQueue.isNotEmpty) {
+      _LevitReactiveCore._isPropagating = false;
+      _LevitReactiveCore._updateFastPath();
+      if (_LevitReactiveCore._propagationQueue.isNotEmpty) {
         // Clear flags for any remaining items (safety)
-        for (final n in LevitStateCore._propagationQueue) {
+        for (final n in _LevitReactiveCore._propagationQueue) {
           n._isPendingPropagate = false;
         }
-        LevitStateCore._propagationQueue.clear();
+        _LevitReactiveCore._propagationQueue.clear();
       }
     }
   }
 
   void _notifyListeners() {
     if (_singleListener != null) {
-      _singleListener!();
+      if (!LevitReactiveMiddleware.hasErrorMiddlewares) {
+        _singleListener!();
+        return;
+      }
+      try {
+        _singleListener!();
+      } catch (e, s) {
+        LevitStateMiddlewareChain.applyOnReactiveError(
+            e, s, this is LxReactive ? this as LxReactive : null);
+      }
       return;
     }
 
@@ -450,9 +505,25 @@ class LevitReactiveNotifier {
     }
 
     final length = snapshot.length;
+
+    // Optimized loop for common case (no error middleware)
+    if (!LevitReactiveMiddleware.hasErrorMiddlewares) {
+      for (var i = 0; i < length; i++) {
+        if (_disposed) break;
+        snapshot[i]();
+      }
+      return;
+    }
+
+    // Safe loop with error handling
     for (var i = 0; i < length; i++) {
       if (_disposed) break;
-      snapshot[i]();
+      try {
+        snapshot[i]();
+      } catch (e, s) {
+        LevitStateMiddlewareChain.applyOnReactiveError(
+            e, s, this is LxReactive ? this as LxReactive : null);
+      }
     }
   }
 
@@ -473,6 +544,10 @@ class LevitReactiveNotifier {
     return _singleListener != null ||
         (_setListeners != null && _setListeners!.isNotEmpty);
   }
+
+  /// Set the depth (internal use only by computed values).
+  @visibleForTesting
+  set graphDepth(int value) => _graphDepth = value;
 }
 
 /// The primary implementation base for reactive objects.
@@ -496,6 +571,17 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   @override
   final int id = _nextId++;
 
+  @override
+  String? name;
+
+  /// Creates a reactive wrapper around [initial].
+  LxBase(T initial, {this.onListen, this.onCancel, this.name})
+      : _value = initial {
+    if (LevitReactiveMiddleware.hasInitMiddlewares) {
+      LevitStateMiddlewareChain.applyOnInit(this);
+    }
+  }
+
   T _value;
   StreamController<T>? _controller;
   // Removed _notifier field (this class is now the notifier)
@@ -515,24 +601,11 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   @override
   String? ownerId;
 
-  @override
-  String? name;
-
-  /// Creates a reactive wrapper around [initial].
-  LxBase(T initial, {this.onListen, this.onCancel, this.name})
-      : _value = initial {
-    if (LevitReactiveMiddleware.hasInitMiddlewares) {
-      LevitStateMiddlewareChain.applyOnInit(this);
-    }
-  }
-
-  @protected
-  void protectedOnActive() {
+  void _protectedOnActive() {
     onListen?.call();
   }
 
-  @protected
-  void protectedOnInactive() {
+  void _protectedOnInactive() {
     onCancel?.call();
   }
 
@@ -540,20 +613,23 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     final shouldBeActive = hasListener;
     if (shouldBeActive && !_isActive) {
       _isActive = true;
-      protectedOnActive();
+      _protectedOnActive();
     } else if (!shouldBeActive && _isActive) {
       _isActive = false;
-      protectedOnInactive();
+      _protectedOnInactive();
     }
   }
 
   @override
   T get value {
-    if (LevitStateCore.proxy != null) {
-      _reportRead(LevitStateCore.proxy!);
-    } else if (LevitStateCore._asyncZoneDepth > 0) {
+    if (_LevitReactiveCore._fastPath) return _value;
+
+    final proxy = _LevitReactiveCore.proxy;
+    if (proxy != null) {
+      _reportRead(proxy);
+    } else if (_LevitReactiveCore._asyncZoneDepth > 0) {
       final zoneTracker =
-          Zone.current[LevitStateCore.asyncComputedTrackerZoneKey];
+          Zone.current[_LevitReactiveCore.asyncComputedTrackerZoneKey];
       if (zoneTracker is LevitReactiveObserver) {
         _reportRead(zoneTracker);
       }
@@ -566,21 +642,30 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   /// Used by subclasses (like [LxComputed]) to propagate "dirty" state
   /// lazily without triggering a full value update cycle usually associated
   /// with middleware.
-  @protected
-  void notifyListenersOnly() {
+  // @protected
+  void _notifyListenersOnly() {
     super.notify();
   }
 
   void _reportRead(LevitReactiveObserver observer) {
+    if (identical(this, _LevitReactiveCore._lastReportedReactive) &&
+        identical(observer, _LevitReactiveCore._lastReportedObserver)) {
+      return;
+    }
+
+    _LevitReactiveCore._lastReportedObserver = observer;
+    _LevitReactiveCore._lastReportedReactive = this;
+
     observer.addNotifier(this);
-    observer.addReactive(this); // For DevTools dependency graph
-    if (_controller != null || _boundStream != null) {
-      observer.addStream(stream);
+
+    // DevTools tracking: only enable if explicitly requested via middleware
+    if (LevitReactiveMiddleware.hasGraphChangeMiddlewares) {
+      observer.addReactive(this);
     }
   }
 
   /// Internal setter for subclasses (Computed, etc.)
-  @protected
+  @visibleForTesting
   void setValueInternal(T val, {bool notifyListeners = true}) {
     // Fast Path (No Middleware)
     if (LevitReactiveMiddleware.bypassMiddleware ||
@@ -604,7 +689,8 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       valueType: T,
       oldValue: oldValue,
       newValue: val,
-      stackTrace: LevitStateCore.captureStackTrace ? StackTrace.current : null,
+      stackTrace:
+          _LevitReactiveCore.captureStackTrace ? StackTrace.current : null,
       restore: (v) {
         _value = v;
         _controller?.add(_value);
@@ -622,8 +708,8 @@ abstract class LxBase<T> extends LevitReactiveNotifier
         super.notify();
       }
       // Record for batch
-      if (LevitStateCore.isBatching) {
-        LevitStateCore._recordBatchEntry(this, change);
+      if (_LevitReactiveCore.isBatching) {
+        _LevitReactiveCore._recordBatchEntry(this, change);
       }
     }
 
@@ -653,8 +739,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   }
 
   /// Whether there are active stream listeners.
-  @protected
-  bool get hasStreamListener {
+  bool get _hasStreamListener {
     // Discount our own internal subscription if present
     int effectiveExternal = _externalListeners;
     if (_activeBoundSubscription != null) effectiveExternal--;
@@ -749,7 +834,8 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       valueType: T,
       oldValue: _value,
       newValue: _value,
-      stackTrace: LevitStateCore.captureStackTrace ? StackTrace.current : null,
+      stackTrace:
+          _LevitReactiveCore.captureStackTrace ? StackTrace.current : null,
       restore: (v) {
         _value = v;
         _controller?.add(_value);
@@ -761,8 +847,8 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       _controller?.add(
           v); // Uses v in case middleware modified it (unlikely for refresh but consistent)
       super.notify();
-      if (LevitStateCore.isBatching) {
-        LevitStateCore._recordBatchEntry(this, change);
+      if (_LevitReactiveCore.isBatching) {
+        _LevitReactiveCore._recordBatchEntry(this, change);
       }
     }
 
@@ -813,4 +899,35 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   /// Whether the reactive object has been closed/disposed.
   @override
   bool get isDisposed => super.isDisposed;
+}
+
+/// A standard context descriptor for reactive listeners.
+///
+/// Used to identify "who" is listening to a reactive variable.
+class LxListenerContext {
+  /// The string representation of the listener's runtime type.
+  final String type;
+
+  /// The identity hash code of the listener.
+  final int id;
+
+  /// Additional metadata or payload for the listener.
+  final Object? data;
+
+  /// Creates a standard listener context.
+  const LxListenerContext({
+    required this.type,
+    required this.id,
+    this.data,
+  });
+
+  /// Serializes the context to a JSON map.
+  Map<String, dynamic> toJson() => {
+        'type': type,
+        'id': id,
+        'data': data,
+      };
+
+  @override
+  String toString() => 'LxContext(type: $type, id: $id, data: $data)';
 }

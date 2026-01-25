@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:levit_flutter/levit_flutter.dart';
+import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 import 'package:nexus_studio_app/controllers.dart';
-import 'package:shared/shared.dart';
+import 'package:nexus_studio_shared/shared.dart';
 import 'package:stream_channel/stream_channel.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:async/async.dart';

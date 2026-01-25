@@ -14,12 +14,17 @@
 /// application requiring deterministic state derivation.
 library;
 
-export 'src/async_status.dart';
-export 'src/async_types.dart';
-export 'src/base_types.dart';
-export 'src/collections.dart';
-export 'src/computed.dart';
-export 'src/core.dart' hide LevitStateCore;
-export 'src/global_accessor.dart';
-export 'src/middlewares.dart' hide LevitStateMiddlewareChain;
-export 'src/watchers.dart';
+import 'dart:async';
+import 'dart:math';
+
+import 'package:meta/meta.dart';
+
+part 'src/async_status.dart';
+part 'src/async_types.dart';
+part 'src/base_types.dart';
+part 'src/collections.dart';
+part 'src/computed.dart';
+part 'src/core.dart';
+part 'src/global_accessor.dart';
+part 'src/middlewares.dart';
+part 'src/workers.dart';

@@ -8,5 +8,9 @@
 /// without reliance on code generation or reflection.
 library;
 
-export 'src/core.dart' hide LevitScopeMiddlewareChain;
-export 'src/middleware.dart';
+import 'dart:async';
+
+part 'src/core.dart';
+part 'src/middleware.dart';
+part 'src/global_accessor.dart';
+part 'src/extensions.dart';

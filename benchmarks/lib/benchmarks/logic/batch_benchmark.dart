@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_reactive/levit_reactive.dart';
+import '../../benchmark_config.dart';
 import '../../benchmark_engine.dart';
 
 /// Benchmark comparing batched vs un-batched updates.
@@ -67,7 +68,7 @@ class LevitBatchBenchmark extends BenchmarkImplementation {
 
     // Batched: Should trigger only 1 notification
     Lx.batch(() {
-      for (int i = 0; i < 1000; i++) {
+      for (int i = 0; i < BenchmarkConfig.batchIterations; i++) {
         sources[i % 100].value++;
       }
     });
@@ -126,7 +127,7 @@ class VanillaBatchBenchmark extends BenchmarkImplementation {
     final stopwatch = Stopwatch()..start();
 
     // No batching - will trigger many notifications
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.batchIterations; i++) {
       sources[i % 100].value++;
     }
 
@@ -171,7 +172,7 @@ class GetXBatchBenchmark extends BenchmarkImplementation {
     notifyCount = 0;
     final stopwatch = Stopwatch()..start();
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.batchIterations; i++) {
       sources[i % 100].value++;
     }
 
@@ -213,7 +214,7 @@ class RiverpodBatchBenchmark extends BenchmarkImplementation {
     notifyCount = 0;
     final stopwatch = Stopwatch()..start();
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.batchIterations; i++) {
       container.read(providers[i % 100].notifier).state++;
     }
 
@@ -250,7 +251,7 @@ class BlocBatchBenchmark extends BenchmarkImplementation {
     notifyCount = 0;
     final stopwatch = Stopwatch()..start();
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.batchIterations; i++) {
       sources[i % 100].value++;
     }
 

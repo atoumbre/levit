@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:levit_flutter/levit_flutter.dart';
+import 'package:levit_flutter_core/levit_flutter_core.dart';
+import '../../benchmark_config.dart';
 import '../../benchmark_engine.dart';
 
 /// Benchmark for scoped DI lookup.
@@ -10,7 +11,8 @@ class ScopedDIBenchmark extends Benchmark {
   String get name => 'Scoped DI Lookup';
 
   @override
-  String get description => '1000 DI lookups. Tests DI resolution performance.';
+  String get description =>
+      '${BenchmarkConfig.scopedDiIterations} DI lookups. Tests DI resolution performance.';
 
   @override
   bool get isUI => false;
@@ -48,7 +50,7 @@ class LevitScopedDIBenchmark extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = Levit.find<CounterService>();
       service.increment();
     }
@@ -90,7 +92,7 @@ class VanillaScopedDIBenchmark extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = _locator.find<CounterService>();
       service.increment();
     }
@@ -114,7 +116,7 @@ class GetXScopedDIBenchmark extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = Get.find<CounterService>();
       service.increment();
     }
@@ -142,7 +144,7 @@ class RiverpodScopedDIBenchmark extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = container.read(_counterProvider);
       service.increment();
     }
@@ -184,7 +186,7 @@ class BlocScopedDIBenchmark extends BenchmarkImplementation {
   @override
   Future<int> run() async {
     final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = _locator.get<CounterService>();
       service.increment();
     }

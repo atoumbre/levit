@@ -28,21 +28,22 @@ class MockDIMiddleware extends LevitScopeMiddleware {
   bool deleteCalled = false;
 
   @override
-  void onRegister(
+  void onDependencyRegister(
       int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {
     registerCalled = true;
   }
 
   @override
-  void onResolve(
+  void onDependencyResolve(
       int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {
     resolveCalled = true;
   }
 
   @override
-  void onDelete(int scopeId, String scopeName, String key, LevitDependency info,
+  void onDependencyDelete(
+      int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {
     deleteCalled = true;
   }

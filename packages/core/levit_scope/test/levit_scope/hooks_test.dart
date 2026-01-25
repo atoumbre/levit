@@ -115,7 +115,7 @@ class _TestCreateObserver extends LevitScopeMiddleware {
   const _TestCreateObserver(this.hook);
 
   @override
-  S Function() onCreate<S>(
+  S Function() onDependencyCreate<S>(
     S Function() builder,
     LevitScope scope,
     String key,

@@ -1,5 +1,4 @@
-import 'base_types.dart';
-import 'core.dart';
+part of '../levit_reactive.dart';
 
 int _batchCounter = 0;
 
@@ -156,12 +155,24 @@ abstract class LevitReactiveMiddleware {
   /// Returns `true` if any registered middleware has an [onGraphChange] observer.
   static bool get hasGraphChangeMiddlewares => _hasGraphChangeMiddlewares;
 
+  static bool _hasListenerMiddlewares = false;
+
+  /// Returns `true` if any registered middleware has listener observers.
+  static bool get hasListenerMiddlewares => _hasListenerMiddlewares;
+
+  static bool _hasErrorMiddlewares = false;
+
+  /// Returns `true` if any registered middleware has error observers.
+  static bool get hasErrorMiddlewares => _hasErrorMiddlewares;
+
   static void _updateFlags() {
     _hasSetMiddlewares = false;
     _hasBatchMiddlewares = false;
     _hasDisposeMiddlewares = false;
     _hasInitMiddlewares = false;
     _hasGraphChangeMiddlewares = false;
+    _hasListenerMiddlewares = false;
+    _hasErrorMiddlewares = false;
 
     for (final mw in _middlewares) {
       if (mw.onSet != null) _hasSetMiddlewares = true;
@@ -169,6 +180,10 @@ abstract class LevitReactiveMiddleware {
       if (mw.onDispose != null) _hasDisposeMiddlewares = true;
       if (mw.onInit != null) _hasInitMiddlewares = true;
       if (mw.onGraphChange != null) _hasGraphChangeMiddlewares = true;
+      if (mw.startedListening != null || mw.stoppedListening != null) {
+        _hasListenerMiddlewares = true;
+      }
+      if (mw.onReactiveError != null) _hasErrorMiddlewares = true;
     }
   }
 
@@ -228,6 +243,21 @@ abstract class LevitReactiveMiddleware {
   /// Observes dependencies change in a computed reactive object.
   void Function(LxReactive computed, List<LxReactive> dependencies)?
       get onGraphChange => null;
+
+  /// Called when a listener is added to a reactive object.
+  void Function(LxReactive reactive, LxListenerContext? context)?
+      get startedListening => null;
+
+  /// Called when a listener is removed from a reactive object.
+  void Function(LxReactive reactive, LxListenerContext? context)?
+      get stoppedListening => null;
+
+  /// Called when an error occurs during notification.
+  ///
+  /// This hook is invoked after the error has been caught by the framework,
+  /// preserving the stability of the notification loop.
+  void Function(Object error, StackTrace? stack, LxReactive? context)?
+      get onReactiveError => null;
 }
 
 /// Helper typedefs for middleware interception.
@@ -317,6 +347,35 @@ abstract class LevitStateMiddlewareChain {
     if (!LevitReactiveMiddleware.hasGraphChangeMiddlewares) return;
     for (final mw in LevitReactiveMiddleware._middlewares) {
       mw.onGraphChange?.call(computed, dependencies);
+    }
+  }
+
+  /// Notifies middlewares that a listener has been added.
+  static void applyOnListenerAdd(
+      LxReactive reactive, LxListenerContext? context) {
+    if (!LevitReactiveMiddleware.hasListenerMiddlewares) {
+      return;
+    }
+    for (final mw in LevitReactiveMiddleware._middlewares) {
+      mw.startedListening?.call(reactive, context);
+    }
+  }
+
+  /// Notifies middlewares that a listener has been removed.
+  static void applyOnListenerRemove(
+      LxReactive reactive, LxListenerContext? context) {
+    if (!LevitReactiveMiddleware.hasListenerMiddlewares) return;
+    for (final mw in LevitReactiveMiddleware._middlewares) {
+      mw.stoppedListening?.call(reactive, context);
+    }
+  }
+
+  /// Notifies middlewares that an error occurred.
+  static void applyOnReactiveError(
+      Object error, StackTrace? stack, LxReactive? context) {
+    if (!LevitReactiveMiddleware.hasErrorMiddlewares) return;
+    for (final mw in LevitReactiveMiddleware._middlewares) {
+      mw.onReactiveError?.call(error, stack, context);
     }
   }
 }

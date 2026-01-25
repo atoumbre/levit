@@ -10,15 +10,15 @@ class TestReactive<T> extends LxBase<T> {
 
 void main() {
   group('Watchers Coverage', () {
-    test('LxWatchStat equality and toString', () {
+    test('LxWorkerStat equality and toString', () {
       final stat1 =
-          LxWatchStat(runCount: 1, lastDuration: Duration(seconds: 1));
+          LxWorkerStat(runCount: 1, lastDuration: Duration(seconds: 1));
 
       // final stat2 =
-      //     LxWatchStat(runCount: 1, lastDuration: Duration(seconds: 1));
-      // final stat3 = LxWatchStat(runCount: 2);
+      //     LxWorkerStat(runCount: 1, lastDuration: Duration(seconds: 1));
+      // final stat3 = LxWorkerStat(runCount: 2);
 
-      // Since LxWatchStat doesn't override == (it uses default identity or implementation?),
+      // Since LxWorkerStat doesn't override == (it uses default identity or implementation?),
       // actually the code provided doesn't override ==, so they won't be equal unless value based equality is added or it's a const class with const constructor calls.
       // But let's check basic properties.
 
@@ -26,11 +26,11 @@ void main() {
       expect(stat1.toString(), contains('runCount: 1'));
     });
 
-    test('LxWatch handles async callbacks', () async {
+    test('LxWorker handles async callbacks', () async {
       final reactive = TestReactive<int>(0);
       bool callbackRun = false;
 
-      final watch = LxWatch(reactive, (val) async {
+      final watch = LxWorker(reactive, (val) async {
         await Future.delayed(Duration(milliseconds: 10));
         callbackRun = true;
       });
@@ -45,11 +45,11 @@ void main() {
       expect(callbackRun, true);
     });
 
-    test('LxWatch handles async callback error', () async {
+    test('LxWorker handles async callback error', () async {
       final reactive = TestReactive<int>(0);
       Object? capturedError;
 
-      final watch = LxWatch(
+      final watch = LxWorker(
         reactive,
         (val) async {
           await Future.delayed(Duration(milliseconds: 10));
@@ -68,13 +68,13 @@ void main() {
       expect(watch.value.error, 'Async Error');
     });
 
-    test('LxWatch handles synchronous error', () {
+    test('LxWorker handles synchronous error', () {
       final reactive = TestReactive<int>(0);
-      final watch = LxWatch(reactive, (val) => throw 'Sync Error');
+      final watch = LxWorker(reactive, (val) => throw 'Sync Error');
 
       try {
         reactive.value = 1;
-        // Depending on implementation, sync error might be caught by LxWatch internal try/catch rethrown if no handler
+        // Depending on implementation, sync error might be caught by LxWorker internal try/catch rethrown if no handler
         // The implementation rethrows if onProcessingError is null
       } catch (e) {
         expect(e, 'Sync Error');
@@ -92,9 +92,9 @@ void main() {
       var falseCount = 0;
       var valueCount = 0;
 
-      LxWatch.isTrue(boolRx, () => trueCount++);
-      LxWatch.isFalse(boolRx, () => falseCount++);
-      LxWatch.isValue(intRx, 5, () => valueCount++);
+      LxWorker.watchTrue(boolRx, () => trueCount++);
+      LxWorker.watchFalse(boolRx, () => falseCount++);
+      LxWorker.watchValue(intRx, 5, () => valueCount++);
 
       boolRx.value = true; // trueCount++
       expect(trueCount, 1);
@@ -112,7 +112,7 @@ void main() {
 
       String stage = '';
 
-      LxWatch.status(
+      LxWorker.watchStatus(
         statusRx,
         onIdle: () => stage = 'idle',
         onWaiting: () => stage = 'waiting',

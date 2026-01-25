@@ -7,7 +7,7 @@ void main() {
     test('watch fires on every change', () async {
       final count = 0.lx;
       final values = <int>[];
-      LxWatch(count, (v) => values.add(v));
+      LxWorker(count, (v) => values.add(v));
 
       count.value = 1;
       count.value = 2;
@@ -20,7 +20,7 @@ void main() {
     test('watch with takeFirst fires only on first change', () async {
       final count = 0.lx;
       final values = <int>[];
-      LxWatch(count.transform((s) => s.transform(_takeFirst())), (v) {
+      LxWorker(count.transform((s) => s.transform(_takeFirst())), (v) {
         if (v is LxSuccess<int>) values.add(v.value);
       });
 
@@ -35,7 +35,7 @@ void main() {
     test('debounce transform waits for value to settle', () async {
       final query = ''.lx;
       final values = <String>[];
-      LxWatch(
+      LxWorker(
           query.transform(
               (s) => s.transform(_debounce(Duration(milliseconds: 50)))), (v) {
         if (v is LxSuccess<String>) values.add(v.value);
@@ -57,7 +57,7 @@ void main() {
     test('throttle transform limits callback frequency', () async {
       final scroll = 0.lx;
       final values = <int>[];
-      LxWatch(
+      LxWorker(
           scroll.transform(
               (s) => s.transform(_throttle(Duration(milliseconds: 50)))), (v) {
         if (v is LxSuccess<int>) values.add(v.value);
@@ -78,7 +78,7 @@ void main() {
     test('watch returns dispose closure', () async {
       final count = 0.lx;
       final values = <int>[];
-      final watcher = LxWatch(count, (v) {
+      final watcher = LxWorker(count, (v) {
         values.add(v);
       });
 
@@ -96,7 +96,7 @@ void main() {
     test('debounce dispose cancels timer', () async {
       final count = 0.lx;
       final values = <int>[];
-      final dispose = LxWatch(
+      final dispose = LxWorker(
         count.transform(
             (s) => s.transform(_debounce(Duration(milliseconds: 50)))),
         (v) {
@@ -115,7 +115,7 @@ void main() {
       final source = _ErrorReactive<int>(0);
 
       Object? receivedError;
-      final unwatch = LxWatch(
+      final unwatch = LxWorker(
         source,
         (_) {},
         onError: (e, s) => receivedError = e,
@@ -136,7 +136,7 @@ void main() {
       final values = <int>[];
 
       final dispose =
-          LxWatch(count.transform((s) => s.transform(_skip(2))), (v) {
+          LxWorker(count.transform((s) => s.transform(_skip(2))), (v) {
         if (v is LxSuccess<int>) values.add(v.value);
       });
 
@@ -157,7 +157,7 @@ void main() {
       final values = <int>[];
 
       final dispose =
-          LxWatch(count.transform((s) => s.transform(_distinct())), (v) {
+          LxWorker(count.transform((s) => s.transform(_distinct())), (v) {
         if (v is LxSuccess<int>) values.add(v.value);
       });
 
@@ -310,6 +310,9 @@ class _ErrorReactive<T> implements LxReactive<T> {
 
   @override
   void close() => _controller.close();
+
+  @override
+  void refresh() => _controller.add(_value);
 
   void addError(Object e) => _controller.addError(e, StackTrace.current);
 

@@ -13,11 +13,6 @@ class MockObserver implements LevitReactiveObserver {
   final List<LxReactive> reactives = [];
 
   @override
-  void addStream<T>(Stream<T> stream) {
-    streams.add(stream);
-  }
-
-  @override
   void addNotifier(LevitReactiveNotifier notifier) {
     notifiers.add(notifier);
   }

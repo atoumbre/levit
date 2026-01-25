@@ -83,7 +83,7 @@ class TestMiddleware extends LevitScopeMiddleware {
   Function? onDependencyInitCallback;
 
   @override
-  S Function() onCreate<S>(
+  S Function() onDependencyCreate<S>(
     S Function() builder,
     LevitScope scope,
     String key,

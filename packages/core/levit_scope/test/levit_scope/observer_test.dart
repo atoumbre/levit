@@ -6,21 +6,22 @@ class MockObserver extends LevitScopeMiddleware {
   final List<String> events = [];
 
   @override
-  void onRegister(
+  void onDependencyRegister(
       int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {
     events.add('register:$source:$scopeName:$key:$scopeId');
   }
 
   @override
-  void onResolve(
+  void onDependencyResolve(
       int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {
     events.add('resolve:$source:$scopeName:$key:$scopeId');
   }
 
   @override
-  void onDelete(int scopeId, String scopeName, String key, LevitDependency info,
+  void onDependencyDelete(
+      int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {
     events.add('delete:$source:$scopeName:$key:$scopeId');
   }
@@ -189,11 +190,12 @@ void main() {
       test('default methods perform no-op without error', () {
         const defaultObserver = DefaultObserver();
         // Just calling them to verify no crash (covers the empty bodies)
-        defaultObserver.onRegister(0, 's', 'k', LevitDependency(),
+        defaultObserver.onDependencyRegister(0, 's', 'k', LevitDependency(),
             source: 'src');
-        defaultObserver.onResolve(0, 's', 'k', LevitDependency(),
+        defaultObserver.onDependencyResolve(0, 's', 'k', LevitDependency(),
             source: 'src');
-        defaultObserver.onDelete(0, 's', 'k', LevitDependency(), source: 'src');
+        defaultObserver.onDependencyDelete(0, 's', 'k', LevitDependency(),
+            source: 'src');
       });
     });
   });
