@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:levit_flutter_core/levit_flutter_core.dart';
+import 'package:levit_flutter/levit_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:gap/gap.dart';
 import '../controllers/benchmark_controller.dart';

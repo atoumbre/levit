@@ -1,6 +1,4 @@
-import 'package:flutter/widgets.dart';
-import 'package:levit_dart/levit_dart.dart';
-import 'package:levit_flutter_core/levit_flutter_core.dart';
+part of '../../levit_flutter.dart';
 
 /// A mixin that automatically pauses execution loops when the app goes to background.
 ///

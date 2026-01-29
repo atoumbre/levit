@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+part of '../../levit_flutter.dart';
 
 /// A widget that keeps its child alive even when it is scrolled out of view or
 /// moved off-screen in a [PageView] or [TabBarView].

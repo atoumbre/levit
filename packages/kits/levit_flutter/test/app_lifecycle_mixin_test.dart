@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:levit_flutter_kit/levit_flutter_kit.dart';
+import 'package:levit_flutter/levit_flutter.dart';
 
 class TestLifecycleController extends LevitController
     with LevitAppLifecycleMixin {

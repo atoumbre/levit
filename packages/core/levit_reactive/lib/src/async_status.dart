@@ -1,19 +1,10 @@
 part of '../levit_reactive.dart';
 
-/// A sealed class hierarchy representing the status of an asynchronous operation.
+/// A sealed hierarchy representing the status of an asynchronous operation.
 ///
-/// [LxStatus] provides a type-safe way to represent the four standard states of
-/// async state management:
-/// 1.  [LxIdle]: The operation has not yet started.
-/// 2.  [LxWaiting]: The operation is currently in progress.
-/// 3.  [LxSuccess]: The operation completed successfully with a value.
-/// 4.  [LxError]: The operation failed with an error.
-///
-/// ### Stale-While-Revalidate
-/// All status types can optionally hold a [lastValue] of type [T]. This allows
-/// the UI to display the previous successful data while a new operation is
-/// in progress or after an error has occurred, preventing awkward loading
-/// flickers.
+/// [LxStatus] provides a type-safe way to represent the standard states of
+/// asynchronous operations: [LxIdle], [LxWaiting], [LxSuccess], and [LxError].
+/// It supports "stale-while-revalidate" by optionally holding a [lastValue].
 sealed class LxStatus<T> {
   /// The most recent successful value of type [T], if any.
   final T? lastValue;

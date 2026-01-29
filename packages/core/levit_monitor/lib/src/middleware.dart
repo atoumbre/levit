@@ -2,7 +2,7 @@ part of '../levit_monitor.dart';
 
 /// The foundational middleware that connects the Levit ecosystem to the monitor.
 ///
-/// [LevitMonitorMiddleware] implements the [LevitMiddleware] interface to
+/// [LevitMonitorMiddleware] implements the necessary middleware interfaces to
 /// intercept and capture lifecycle events from across the entire framework.
 /// It acts as the bridge between internal state transitions and the external
 /// [LevitTransport].

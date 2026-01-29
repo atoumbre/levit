@@ -3,8 +3,7 @@ part of '../levit_monitor.dart';
 /// The base class for all diagnostic events in the Levit ecosystem.
 ///
 /// [MonitorEvent] provides a common schema for both state changes and
-/// dependency injection events, ensuring they can be serialized and
-/// correlated across distributed systems or DevTools.
+/// dependency injection events, ensuring they can be serialized and correlated.
 sealed class MonitorEvent {
   /// A monotonically increasing sequence number within the current session.
   final int seq;

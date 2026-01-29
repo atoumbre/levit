@@ -1,6 +1,6 @@
 part of '../levit_scope.dart';
 
-/// Fluent API extensions for immediate dependency instance registration.
+/// Fluent extensions for immediate dependency registration.
 extension LevitInstanceExtension<T> on T {
   /// Registers this instance immediately in the active [LevitScope].
   ///
@@ -20,7 +20,7 @@ extension LevitInstanceExtension<T> on T {
   void levitLazyPut() => Ls.lazyPut(() => this);
 }
 
-/// Fluent API extensions for immediate registration using builder functions.
+/// Fluent extensions for registration using builder functions.
 extension LevitBuilderExtension<T> on T Function() {
   /// Executes and registers the result of this builder in the active [LevitScope].
   ///
@@ -43,7 +43,7 @@ extension LevitBuilderExtension<T> on T Function() {
       Ls.lazyPut<T>(this, tag: tag, permanent: permanent, isFactory: isFactory);
 }
 
-/// Fluent API extensions for lazy asynchronous registration.
+/// Fluent extensions for lazy asynchronous registration of futures.
 extension LevitAsyncInstanceExtension<T> on Future<T> {
   /// Registers this [Future] as a lazy asynchronous dependency.
   ///
@@ -57,7 +57,7 @@ extension LevitAsyncInstanceExtension<T> on Future<T> {
           tag: tag, permanent: permanent, isFactory: isFactory);
 }
 
-/// Fluent API extensions for lazy asynchronous registration using builders.
+/// Fluent extensions for lazy asynchronous registration using builders.
 extension LevitAsyncBuilderExtension<T> on Future<T> Function() {
   /// Registers this asynchronous builder for lazy instantiation.
   ///

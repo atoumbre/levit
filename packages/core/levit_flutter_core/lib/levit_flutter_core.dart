@@ -9,9 +9,6 @@
 /// *   [LScope]: Provides widget-tree-scoped dependency injection with
 ///     deterministic cleanup.
 /// *   [LWatchStatus]: A specialized widget for reactive status management.
-///
-/// `levit_flutter` enables scaling Flutter applications by providing explicit
-/// rebuild boundaries and predictable resource lifecycles.
 library;
 
 export 'package:levit_dart_core/levit_dart_core.dart';

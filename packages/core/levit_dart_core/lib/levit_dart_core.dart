@@ -1,11 +1,9 @@
 /// Core Levit framework for Dart.
 ///
 /// This package provides the foundational building blocks for Levit applications:
-/// *   [LevitController]: The base class for business logic components.
-
-/// *   Re-exports of [levit_scope] for dependency injection.
-/// *   Re-exports of [levit_reactive] for reactive primitives.
-
+/// *   [LevitController]: Base class for business logic components.
+/// *   [LevitState]: Functional state and dependency provider.
+/// *   Re-exports of `levit_scope` and `levit_reactive`.
 library;
 
 import 'dart:async';

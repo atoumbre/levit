@@ -72,6 +72,6 @@ scripts:
       failFast: true
     packageFilters:
       scope: 
-        - levit_flutter_kit
+        - levit_flutter
 
 

@@ -1,246 +1,222 @@
 
 # Levit
 
-**A deterministic reactive foundation for Flutter.**
+**A deterministic reactive foundation for Flutter and Dart.**
 Lean by design. Fast by default. Explicit by choice.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg)](https://codecov.io/github/atoumbre/levit)
 
-Levit is a **modular reactive foundation for Flutter** that combines fine-grained reactivity, hierarchical dependency injection, and explicit widget-tree bindings.
+Levit is a **modular, deterministic reactive foundation** that combines:
 
-It is built for teams and individuals who value **predictability, performance, and architectural clarity** over hidden abstractions and implicit behavior.
+* fine-grained synchronous reactivity
+* hierarchical dependency injection
+* explicit bindings to the Flutter widget tree
 
-> **Note**
-> This repository is the monorepo for the entire Levit ecosystem.
+It is designed for teams who value **predictability, performance, and architectural clarity** over implicit magic, hidden lifecycles, or global side effects.
 
----
+Levit does **not** attempt to abstract Flutter away.
+It gives you **precise control** over *when*, *where*, and *why* state changes propagate.
+
+
 
 ## Installation
 
-```yaml
-dependencies:
-  levit_flutter_core: ^latest
-```
+### Flutter Applications
 
-or
+Use the Flutter kit for UI, reactivity, DI, and widget bindings.
 
 ```bash
 flutter pub add levit_flutter
 ```
 
----
+### Pure Dart (Logic, CLI, Server)
 
-## Quick Start
+For shared logic, domain layers, or backend services.
 
-Levit encourages explicit layering: services, controllers, and UI each have a clear responsibility.
+```bash
+dart pub add levit
+```
+
+
+
+## Quick Start — *The Levit Way*
+
+Levit enforces a clear separation between:
+
+* **Services** — side effects and I/O
+* **Controllers** — business logic and state orchestration
+* **Views** — deterministic bindings to reactive state
 
 ```dart
-// 1. Service: external data source
-class AuthService {
-  Stream<Session> get sessionStream => Stream.periodic(
-    const Duration(seconds: 1),
-    (i) => Session(
-      user: User(name: 'User $i', lastActive: DateTime.now()),
-    ),
-  );
+// 1. Service: external data or side-effects
+class WeatherService {
+  Future<double> fetchTemperature() async => 22.5; 
 }
 
-// 2. Controller: state and derivations
-class DashboardController extends LevitController {
-  final _authService = Levit.find<AuthService>();
+// 2. Controller: state + reactivity
+class WeatherController extends LevitController
+    with LevitReactiveTasksMixin {
 
-  // Reactive stream with built-in loading / error handling
-  final session = _authService.sessionStream.lx;
+  final _service = Ls.find<WeatherService>();
 
-  // Derived value, recomputed only when dependencies change
-  final currentUser = (() => session.valueOrNull?.user).lx;
+  // Fine-grained reactive state
+  final temperature = 0.0.lx;
 
-  // Further derivation with fine-grained update semantics
-  final lastActive = (() => currentUser.value?.lastActive).lx;
+  Future<void> refresh() async {
+    // Built-in task lifecycle (loading / error / cancellation)
+    await runTask(() async {
+      temperature.value = await _service.fetchTemperature();
+    });
+  }
 }
 
-// 3. UI: lifecycle + binding
-class DashboardPage extends LScopedView<DashboardController> {
-  const DashboardPage({super.key});
+// 3. View: explicit, deterministic binding
+class WeatherPage extends LScopedView<WeatherController> {
+  const WeatherPage({super.key});
 
   @override
-  DashboardController createController() => DashboardController();
+  WeatherController createController() => WeatherController();
 
   @override
-  Widget buildContent(BuildContext context, DashboardController controller) {
+  Widget buildContent(BuildContext context, WeatherController controller) {
     return Scaffold(
       body: Center(
-        child: Text(
-          'Last Active: ${controller.lastActive.value}',
-          style: Theme.of(context).textTheme.headlineMedium,
+        child: LWatch(
+          () => Text('Temp: ${controller.temperature.value}°C'),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: controller.refresh,
+        child: const Icon(Icons.refresh),
       ),
     );
   }
 }
 ```
 
-Levit handles:
+No code generation.
+No implicit listeners.
+No hidden rebuilds.
 
-* Dependency resolution
-* Controller lifecycle
-* Precise widget rebuilds
 
-—all without code generation or implicit magic.
 
----
+## Ecosystem Overview
 
-## Conceptual Overview
+Levit is a **layered ecosystem**, not a monolith.
+You can adopt it incrementally — from low-level reactivity to full application architecture.
 
-```mermaid
-flowchart LR
-  User[User Interaction] --> Widget[LScopedView / Widget]
-  Widget -->|Finds & Calls| Controller[LevitController]
-  Controller -->|Updates| State[Lx Reactive State]
-  State -->|Notifies| Watch[LWatch / LStatusBuilder]
-  Watch -->|Rebuilds| Widget
+### Platform Kits (Recommended Entry Points)
 
-  Scope[LevitScope] -->|Creates & Manages| Controller
-  Controller -->|Auto-disposes| State
-```
+| Package                                              | Description                                              | Version                                                                                      |
+| :--------------------------------------------------- | :------------------------------------------------------- | :------------------------------------------------------------------------------------------- |
+| **[`levit_flutter`](./packages/kits/levit_flutter)** | **Flutter apps.** Complete UI + logic toolkit.           | [![Pub](https://img.shields.io/pub/v/levit_flutter)](https://pub.dev/packages/levit_flutter) |                |
+| **[`levit_dart`](./packages/kits/levit_dart)**       | **Advanced utilities.** Tasks, loops, execution helpers. | [![Pub](https://img.shields.io/pub/v/levit_dart)](https://pub.dev/packages/levit_dart)       |
 
-Levit’s data flow is explicit, deterministic, and easy to reason about—even under heavy mutation or async workloads.
+### Core Foundations (Composable Primitives)
 
----
+| Package                                                        | Description                                                | Version                                                                                                |
+| :------------------------------------------------------------- | :--------------------------------------------------------- | :----------------------------------------------------------------------------------------------------- |
+| **[`levit_reactive`](./packages/core/levit_reactive)**         | Reactive engine (Lx). Deterministic, batched, synchronous. | [![Pub](https://img.shields.io/pub/v/levit_reactive)](https://pub.dev/packages/levit_reactive)         |
+| **[`levit_scope`](./packages/core/levit_scope)**               | Hierarchical dependency injection and lifecycles.          | [![Pub](https://img.shields.io/pub/v/levit_scope)](https://pub.dev/packages/levit_scope)               |
+| **[`levit_dart_core`](./packages/core/levit_dart_core)**       | Controllers, state orchestration, DI glue.                 | [![Pub](https://img.shields.io/pub/v/levit_dart_core)](https://pub.dev/packages/levit_dart_core)       |
+| **[`levit_flutter_core`](./packages/core/levit_flutter_core)** | Flutter bindings (`LView`, `LScope`, `LWatch`).            | [![Pub](https://img.shields.io/pub/v/levit_flutter_core)](https://pub.dev/packages/levit_flutter_core) |
+| **[`levit_monitor`](./packages/core/levit_monitor)**           | Unified observability and diagnostic event bus.            | [![Pub](https://img.shields.io/pub/v/levit_monitor)](https://pub.dev/packages/levit_monitor)           |
 
-## What Levit Is
 
-Levit is a **low-level reactive foundation** for Flutter applications that require:
 
-* Predictable update semantics
-* Performance under scale
-* Explicit lifecycles and scoping
-* Long-term maintainability in complex systems
+## Strategic Advantages
 
-While it integrates deeply with Flutter, Levit is not Flutter-exclusive.
-The same reactive and DI primitives are usable in **pure Dart**, including servers, CLI tools, and tests.
+### 1. No Code Generation
 
----
+Levit relies on Dart’s type system and extensions.
+No build steps. No generated files. No tooling lock-in.
 
-## Why Levit
 
-Many Flutter state solutions prioritize convenience.
-Levit prioritizes **correctness, control, and transparency**.
 
-### Fine-Grained Reactivity
+### 2. Deterministic Observability
 
-Any value can become reactive via `.lx`.
-Dependencies are tracked automatically and precisely—no annotations, no code generation.
+With `levit_monitor`, **every** state mutation, dependency resolution, and lifecycle event is emitted as a structured signal.
 
-### Deterministic Rebuilds
+This enables:
 
-`LWatch` rebuilds **only** when the specific reactive values it consumes change.
-No broad invalidation. No unexpected redraws.
+* advanced debugging
+* telemetry
+* state replay
+* time-travel inspection
 
-### Explicit Scoping and DI
 
-A single, coherent model supports:
 
-* Global access (`Levit.find`)
-* Widget-tree scoping (`LScope`, `context.find`)
-* Predictable lifecycle management
+### 3. True Hierarchical DI
 
-### Async as a First-Class Concern
+Scopes are **explicit and nested**, not global.
 
-Futures and Streams integrate directly into the reactive graph through `LxStatus`, with built-in:
+Dependencies:
 
-* Loading and error states
-* Cancellation and race handling
-* Lifecycle awareness
+* are created lazily
+* are disposed deterministically
+* cannot accidentally outlive their scope
 
-Levit gives you the primitives to model state, derivations, and effects precisely—then stays out of your way.
+This eliminates a large class of memory and lifecycle bugs common in navigation-heavy apps.
 
----
 
-## What Levit Is Not
 
-* **A batteries-included application framework**
-  Levit provides the engine, not the entire vehicle.
+### 4. Synchronous Batched Reactivity
 
-* **A beginner-oriented abstraction layer**
-  The API favors clarity over concealment. It is designed for professional, scalable architectures.
+Reactive mutations are grouped into a single transaction.
 
-* **A replacement for Flutter widgets**
-  Levit integrates with Flutter’s widget model rather than obscuring it.
+* Multiple state updates
+* One propagation pass
+* One rebuild
 
-These boundaries are deliberate.
+This guarantees **stable performance**, even under heavy mutation.
 
----
 
-## Architectural Layers
 
-Levit is intentionally layered and composable, with each layer addressing a distinct architectural concern while remaining fully usable in isolation. At the foundation, levit_reactive provides a platform-agnostic reactivity engine written entirely in pure Dart. Alongside it, levit_scope delivers a pure Dart, scoped, and type-safe dependency injection system with explicit lifecycle management, independent of any UI framework. These two primitives are composed and exposed through levit_dart, which acts as the canonical core for shared logic and non-UI environments. levit_monitor provides observability, monitoring, and transport layers for inspection. Finally, levit_flutter integrates the Levit core with Flutter’s widget tree, bridging reactivity and dependency injection without altering Flutter’s mental model or replacing its widgets. Together, these layers form a cohesive system while remaining independently consumable as building blocks.
+## Architecture at a Glance
 
 ```mermaid
 flowchart TB
-  subgraph PureDart["Pure Dart "]
-    direction TB
-    Reactive["levit_reactive - Reactive Primitives (Lx, Computed, Async, Middleware)"]
-    DI["levit_scope - Scoped Dependency Injection (Lifecycle, Registry)"]
-    Core["levit_dart - Core Composition Layer (Controllers, Shared Logic)"]
-    Tools["levit_monitor - Observability, Monitoring, & Transports"]
+  subgraph Platform["Platform Kits"]
+    Flutter["levit_flutter"]
+    Dart["levit"]
   end
 
-  Flutter["levit_flutter - Flutter Integration Layer (LWatch, LScope, Widget Bindings)"]
+  subgraph Logic["Orchestration"]
+    DartCore["levit_dart_core"]
+    FlutterCore["levit_flutter_core"]
+  end
 
-  Reactive --> Core
-  DI --> Core
-  Core --> Flutter
-  Core --> Tools
-  Tools --> Flutter
+  subgraph Engine["Foundations"]
+    Reactive["levit_reactive"]
+    Scope["levit_scope"]
+    Monitor["levit_monitor"]
+  end
 
-  style PureDart fill:#F5F5F5,stroke:#9E9E9E,color:#212121
-  style Reactive fill:#BBDEFB,stroke:#1976D2,color:#0D47A1
-  style DI fill:#E1BEE7,stroke:#8E24AA,color:#4A148C
-  style Core fill:#FFF9C4,stroke:#FBC02D,color:#F57F17
-  style Tools fill:#FFCC80,stroke:#EF6C00,color:#E65100
-  style Flutter fill:#C8E6C9,stroke:#2E7D32,color:#1B5E20
+  Flutter --> FlutterCore
+  Flutter --> DartCore
+  Dart --> DartCore
+  DartCore --> Reactive
+  DartCore --> Scope
+  FlutterCore --> Reactive
+  FlutterCore --> Scope
+  Monitor -.-> Reactive
+  Monitor -.-> Scope
 ```
----
-
-## Packages
-
-| Package                                             | Description                                                                                  | Version                                                                                          |
-| --------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| **[`levit_dart`](./packages/levit_dart)**       | Core framework for pure Dart. Aggregates DI and Reactivity.                                  | [![Pub](https://img.shields.io/pub/v/levit_dart)](https://pub.dev/packages/levit_dart)         [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flag=levit_dart)](https://codecov.io/github/atoumbre/levit?flags=levit_dart)           |
-| **[`levit_reactive`](./packages/levit_reactive)** | Pure Dart reactive core: primitives (`Lx`), computed values, async handling, and middleware. | [![Pub](https://img.shields.io/pub/v/levit_reactive)](https://pub.dev/packages/levit_reactive) [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flag=levit_reactive)](https://codecov.io/github/atoumbre/levit?flags=levit_reactive) |
-| **[`levit_scope`](./packages/levit_scope)**             | Hierarchical, type-safe dependency injection and service registry.                           | [![Pub](https://img.shields.io/pub/v/levit_scope)](https://pub.dev/packages/levit_scope)             [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flag=levit_scope)](https://codecov.io/github/atoumbre/levit?flags=levit_scope)             |
-| **[`levit_flutter`](./packages/levit_flutter)**   | Flutter bindings: `LWatch`, `LScope`, and widget lifecycle integration.       | [![Pub](https://img.shields.io/pub/v/levit_flutter)](https://pub.dev/packages/levit_flutter)   [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flag=levit_flutter)](https://codecov.io/github/atoumbre/levit?flags=levit_flutter)   |
-| **[`levit_monitor`](./packages/levit_monitor)**   | Observability, monitoring, and transport layers.    | [![Pub](https://img.shields.io/pub/v/levit_monitor)](https://pub.dev/packages/levit_monitor) [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flag=levit_monitor)](https://codecov.io/github/atoumbre/levit?flags=levit_monitor)    |
 
 
-## Benchmarks
 
-The latest benchmark results can be found in the [BENCHMARK_0.0.4.md](./BENCHMARK_0.0.4.md) file.
-The app can be found in the [benchmarks](./benchmarks) directory. 
+## Contributing
+
+Levit is built as a **long-term foundation**, and contributions are welcome.
+
+```bash
+melos bootstrap
+melos run test
+cd benchmarks && flutter run -t lib/main.dart
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 
-## Community and Contributions
-
-Levit is early-stage and evolving, with a strong emphasis on **design correctness and long-term stability**.
-
-Contributions are especially welcome in:
-
-* Documentation and examples
-* Benchmark validation
-* Real-world integration patterns
-
-### Contributing
-
-1. Fork and clone the repository
-2. Activate Melos: `dart pub global activate melos`
-3. Bootstrap the workspace: `melos bootstrap`
-4. Explore the `packages/` directory
-5. Submit a PR with improvements or proposals
-
-If something is unclear, open an issue.
-Levit is developed in the open, and feedback directly influences its direction.
-
-Please review the [Contribution Guidelines](CONTRIBUTING.md) for details on the process and code of conduct.
 

@@ -1,20 +1,16 @@
 part of '../levit_scope.dart';
 
-/// The primary entry point for managing dependencies and ambient scopes in Ls.
+/// The primary entry point for managing dependencies and ambient scopes.
 ///
 /// [Ls] provides a unified, static interface for interacting with the
-/// dependency injection (DI) system. It leverages [Zone]-based implicit propagation
+/// dependency injection system. It leverages [Zone]-based implicit propagation
 /// to simplify access to the current [LevitScope].
 ///
-/// In a Levit application, dependencies reside within a [LevitScope]. By default,
-/// [Ls] operations target the root scope. When code is executed within a nested
-/// scope using [Ls.run], this class automatically detects and targets
-/// that active scope.
-///
-/// ### Architectural Rationale
-/// This "ambient" scope behavior allows components to resolve dependencies without
-/// manual scope passing, ensuring decoupling while maintaining deterministic
-/// isolation for testing and modularity.
+/// // Example usage:
+/// ```dart
+/// // Implicitly targets the active scope
+/// final auth = Ls.find<AuthService>();
+/// ```
 class Ls {
   static final _root = LevitScope.root();
 
@@ -33,9 +29,7 @@ class Ls {
 
   /// Instantiates and registers a dependency using a [builder].
   ///
-  /// The [builder] is executed immediately. If [Ls.enableAutoLinking] is
-  /// active, any reactive variables created during execution are automatically
-  /// captured and linked to the resulting instance for cleanup.
+  /// The [builder] is executed immediately.
   ///
   /// // Example usage:
   /// ```dart

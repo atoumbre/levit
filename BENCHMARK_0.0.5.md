@@ -1,7 +1,7 @@
-# Levit Benchmark Report (v0.0.4)
+# Levit Benchmark Report (v0.0.5)
 
-**Date:** 2026-01-23
-**Version:** 0.0.4
+**Date:** 2026-01-29
+**Version:** 0.0.5
 
 ## Goal
 
@@ -49,11 +49,11 @@ These tests measure the full pipeline: State Update → Widget Rebuild → Flutt
 
 | Framework | Time (µs) | Status |
 | --- | --- | --- |
-| **Levit** | **6,861** | OK |
-| Vanilla | 7,671 | OK |
-| GetX | 10,921 | OK |
-| BLoC | 28,777 | OK |
-| Riverpod | 88,141 | OK |
+| **Levit** | **6,403** | OK |
+| Vanilla | 8,525 | OK |
+| GetX | 15,078 | OK |
+| BLoC | 34,840 | OK |
+| Riverpod | 102,771 | OK |
 
 ### Batch vs. Un-batched Updates
 
@@ -61,11 +61,11 @@ These tests measure the full pipeline: State Update → Widget Rebuild → Flutt
 
 | Framework | Time (µs) | Status |
 | --- | --- | --- |
-| **Levit** | **101** | OK |
-| BLoC | 146 | OK |
-| GetX | 163 | OK |
-| Vanilla | 316 | OK |
-| Riverpod | 1,479 | OK |
+| **Levit** | **89** | OK |
+| GetX | 131 | OK |
+| Vanilla | 160 | OK |
+| BLoC | 166 | OK |
+| Riverpod | 1,568 | OK |
 
 ### Fan-In & Fan-Out
 
@@ -73,8 +73,8 @@ These tests measure the full pipeline: State Update → Widget Rebuild → Flutt
 
 | Metric | Levit | Vanilla | GetX | Riverpod | BLoC |
 | --- | --- | --- | --- | --- | --- |
-| **Fan-In** | **29** | 50 | 84 | 43 | 173 |
-| **Fan-Out** | **79** | 39 | 96 | 328 | 683 |
+| **Fan-In** | **31** | 46 | 76 | 60 | 139 |
+| **Fan-Out** | **113** | 42 | 157 | 278 | 289 |
 
 ### Complex Graph (Diamond Problem) & Async
 
@@ -82,8 +82,8 @@ These tests measure the full pipeline: State Update → Widget Rebuild → Flutt
 
 | Metric | Levit | Vanilla | GetX | Riverpod | BLoC |
 | --- | --- | --- | --- | --- | --- |
-| **Diamond** | **9,720** | 6,766 | 6,709 | 75,315 | 2,174 |
-| **Async** | **6,667** | 6,020 | 6,613 | 7,161 | 5,955 |
+| **Diamond** | **5,952** | 6,105 | 8,065 | 93,621 | 2,964 |
+| **Async** | **3,123** | 2,815 | 5,368 | 4,095 | 5,364 |
 
 ---
 
@@ -98,11 +98,11 @@ These tests measure the full pipeline: State Update → Widget Rebuild → Flutt
 
 | Framework | Time (µs) | Status |
 | --- | --- | --- |
-| GetX | 6,851 | OK |
-| Vanilla | 6,900 | OK |
-| Riverpod | 6,908 | OK |
-| BLoC | 6,934 | OK |
-| **Levit** | **6,945** | OK |
+| GetX | 14,598 | OK |
+| Riverpod | 14,824 | OK |
+| **Levit** | **14,911** | OK |
+| BLoC | 15,008 | OK |
+| Vanilla | 15,306 | OK |
 
 ### Deep Tree Propagation
 
@@ -110,11 +110,11 @@ These tests measure the full pipeline: State Update → Widget Rebuild → Flutt
 
 | Framework | Time (µs) | Status |
 | --- | --- | --- |
-| Vanilla | 6,823 | OK |
-| GetX | 6,845 | OK |
-| **Levit** | **6,894** | OK |
-| BLoC | 6,900 | OK |
-| Riverpod | 6,917 | OK |
+| GetX | 14,778 | OK |
+| BLoC | 14,784 | OK |
+| **Levit** | **14,790** | OK |
+| Riverpod | 14,924 | OK |
+| Vanilla | 14,941 | OK |
 
 ### Animated State (60fps simulation)
 
@@ -122,11 +122,11 @@ These tests measure the full pipeline: State Update → Widget Rebuild → Flutt
 
 | Framework | Time (µs) | Status |
 | --- | --- | --- |
-| Vanilla | 6,748 | OK |
-| BLoC | 6,764 | OK |
-| GetX | 6,833 | OK |
-| Riverpod | 6,855 | OK |
-| **Levit** | **6,897** | OK |
+| BLoC | 13,794 | OK |
+| **Levit** | **14,067** | OK |
+| Riverpod | 14,120 | OK |
+| GetX | 14,371 | OK |
+| Vanilla | 14,448 | OK |
 
 ### Dynamic Grid Churn
 
@@ -134,17 +134,17 @@ These tests measure the full pipeline: State Update → Widget Rebuild → Flutt
 
 | Framework | Time (µs) | Status |
 | --- | --- | --- |
-| BLoC | 9,046 | OK |
-| GetX | 10,930 | OK |
-| **Levit** | **10,936** | OK |
-| Riverpod | 13,906 | OK |
-| Vanilla | 14,275 | OK |
+| **Levit** | **15,143** | OK |
+| Vanilla | 15,169 | OK |
+| Riverpod | 15,196 | OK |
+| GetX | 15,303 | OK |
+| BLoC | 15,603 | OK |
 
 ---
 
 ## Methodology
 
-* **Device:** iPhone 15 Pro
+* **Device:** iPhone 14
 * **Mode:** Profile/Release
 * **Flutter Version:** 3.38.7  
 * **Source:** All benchmarks are reproducible using the `/benchmarks` project included in this repository. We encourage you to run them on your own hardware.

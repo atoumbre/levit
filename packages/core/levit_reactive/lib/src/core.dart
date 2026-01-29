@@ -56,6 +56,10 @@ class _LevitReactiveCore {
     // print('UpdateFastPath: $_fastPath (Depth: $_batchDepth, Async: $_asyncZoneDepth, Prop: $_isPropagating)');
   }
 
+  // Extracted comparator to avoid closure allocation
+  static int _batchSorter(LevitReactiveNotifier a, LevitReactiveNotifier b) =>
+      a._graphDepth.compareTo(b._graphDepth);
+
   static void _flushGlobalBatch() {
     if (_batchedNotifiers.isEmpty) return;
 
@@ -66,8 +70,7 @@ class _LevitReactiveCore {
       // This prevents cascading re-notifications when a source changes
       // before its dependents have been notified.
       if (_batchedNotifiers.length > 1) {
-        _batchedNotifiers
-            .sort((a, b) => a._graphDepth.compareTo(b._graphDepth));
+        _batchedNotifiers.sort(_batchSorter);
       }
 
       // We use a while loop to handle re-entrant adds
@@ -244,13 +247,7 @@ class _LevitReactiveCore {
 /// The foundational interface for all reactive objects in the Levit ecosystem.
 ///
 /// [LxReactive] unifies various reactive sources (variables, futures, streams)
-/// under a consistent API. This allows components like [watch] and [LWatch]
-/// to observe any reactive source interchangeably.
-///
-/// ### Core Responsibilities
-/// 1.  **Observation**: Reports reads to the active [LevitReactiveObserver].
-/// 2.  **Notification**: Alerts listeners and streams when the underlying value changes.
-/// 3.  **Lifecycle**: Provides a mechanism for resource cleanup via [close].
+/// under a consistent API for observation and notification.
 abstract interface class LxReactive<T> {
   /// The current state of the reactive object.
   ///
@@ -294,11 +291,6 @@ abstract interface class LxReactive<T> {
 ///
 /// [LevitReactiveObserver] is implemented by components that need to respond
 /// to changes in reactive state without manual subscription management.
-///
-/// ### Architectural Rationale
-/// Manual subscription management (adding/removing listeners) is complex and
-/// error-prone. By using a proxy-based observer, Levit enables "reactive-by-access"
-/// patterns where dependencies are detected implicitly during execution.
 abstract class LevitReactiveObserver {
   /// Internal: Registers a [LevitReactiveNotifier] dependency.
   void addNotifier(LevitReactiveNotifier notifier);
@@ -553,17 +545,7 @@ class LevitReactiveNotifier {
 /// The primary implementation base for reactive objects.
 ///
 /// [LxBase] provides the core mechanics for value storage, stream propagation,
-/// and middleware integration. It combines the capabilities of [LevitReactiveNotifier]
-/// and [LxReactive].
-///
-/// ### Key Features
-/// 1.  **Value Storage**: Manages the underlying state and its transitions.
-/// 2.  **Stream Integration**: Provides a broadcast [stream] of value changes
-///     and supports [bind]ing to external data sources.
-/// 3.  **Middleware Execution**: Wraps value mutations with interceptors for
-///     logging, diagnostics, or state persistence.
-/// 4.  **Automatic Observation**: Reports state access to the global proxy
-///     to enable auto-tracking.
+/// and middleware integration.
 abstract class LxBase<T> extends LevitReactiveNotifier
     implements LxReactive<T> {
   static int _nextId = 0;

@@ -6,8 +6,20 @@ on:
 
 jobs:
   coverage:
-    name: Coverage (Codecov)
+    name: ${{ matrix.package.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - { name: "levit_reactive", path: "packages/core/levit_reactive" }
+          - { name: "levit_scope", path: "packages/core/levit_scope" }
+          - { name: "levit_dart_core", path: "packages/core/levit_dart_core" }
+          - { name: "levit_flutter_core", path: "packages/core/levit_flutter_core" }
+          - { name: "levit_monitor", path: "packages/core/levit_monitor" }
+          - { name: "levit_dart", path: "packages/kits/levit_dart" }
+          - { name: "levit_flutter", path: "packages/kits/levit_flutter" }
+
     steps:
       - uses: actions/checkout@v4
       
@@ -17,73 +29,25 @@ jobs:
           channel: 'stable'
           cache: true
           
-      - name: Install Coverage Tools
-        # We need lcov for merging later
-        run: |
-          sudo apt-get update 
-          sudo apt-get install -y lcov
-          
-      - name: Run Coverage Script
-        id: coverage_script
-        run: dart scripts/check_coverage.dart
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: ${{ matrix.package.path }}
         
-      - name: Merge Coverage Reports
-        # if: always() # Run even if tests fail (script exits 1 but generates lcovs)
+      - name: Run tests with coverage
+        run: flutter test --coverage
+        working-directory: ${{ matrix.package.path }}
+        
+      - name: Fix coverage paths
         run: |
-           echo "Merging coverage reports..."
-           LCOV_ARGS=""
-           # Find all lcov.info files safely
-           while IFS= read -r file; do
-             echo "Found coverage: $file"
-             LCOV_ARGS="$LCOV_ARGS -a $file"
-           done < <(find packages -name lcov.info)
-           
-           if [ -n "$LCOV_ARGS" ]; then
-             mkdir -p coverage
-             lcov $LCOV_ARGS -o coverage/merged_lcov.info --ignore-errors empty
-             echo "Merged coverage saved to coverage/merged_lcov.info"
-           else
-             echo "No coverage files found to merge."
-           fi
-           
-          
-      # Upload INDIVIDUAL reports with flags to support separate badges
-      - name: Upload levit_dart Coverage
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-           files: packages/levit_dart/coverage/lcov.info
-           flags: levit_dart
-           token: ${{ secrets.CODECOV_TOKEN }}
-           
-      - name: Upload levit_scope Coverage
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-           files: packages/levit_scope/coverage/lcov.info
-           flags: levit_scope
-           token: ${{ secrets.CODECOV_TOKEN }}
-           
-      - name: Upload levit_reactive Coverage
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-           files: packages/levit_reactive/coverage/lcov.info
-           flags: levit_reactive
-           token: ${{ secrets.CODECOV_TOKEN }}
-           
-      - name: Upload levit_flutter Coverage
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-           files: packages/levit_flutter/coverage/lcov.info
-           flags: levit_flutter
-           token: ${{ secrets.CODECOV_TOKEN }}
+          if [ -f coverage/lcov.info ]; then
+            sed -i "s|SF:lib/|SF:${{ matrix.package.path }}/lib/|g" coverage/lcov.info
+          fi
+        working-directory: ${{ matrix.package.path }}
 
-      - name: Upload levit_monitor Coverage
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v4
-        if: always()
         with:
-           files: packages/levit_monitor/coverage/lcov.info
-           flags: levit_monitor
-           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ matrix.package.path }}/coverage/lcov.info
+          flags: ${{ matrix.package.name }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false

@@ -1,10 +1,10 @@
-import 'package:flutter/widgets.dart';
+part of '../../levit_flutter.dart';
 
 /// A wrapper widget that triggers callbacks when it enters or leaves the widget tree.
 ///
 /// This is highly useful for index-based pagination or tracking impression analytics
 /// in infinite lists without managing complex ScrollControllers.
-class LListItemMonitor extends StatefulWidget {
+class LWidgetMonitor extends StatefulWidget {
   /// The widget below this widget in the tree.
   final Widget child;
 
@@ -16,7 +16,7 @@ class LListItemMonitor extends StatefulWidget {
   /// from the list, usually due to scrolling out of the cache extent).
   final VoidCallback? onDispose;
 
-  const LListItemMonitor({
+  const LWidgetMonitor({
     super.key,
     required this.child,
     this.onInit,
@@ -24,10 +24,10 @@ class LListItemMonitor extends StatefulWidget {
   });
 
   @override
-  State<LListItemMonitor> createState() => _LListItemMonitorState();
+  State<LWidgetMonitor> createState() => _LWidgetMonitorState();
 }
 
-class _LListItemMonitorState extends State<LListItemMonitor> {
+class _LWidgetMonitorState extends State<LWidgetMonitor> {
   @override
   void initState() {
     super.initState();

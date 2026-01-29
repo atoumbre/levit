@@ -15,12 +15,6 @@ part of '../levit_flutter_core.dart';
 ///
 /// LWatch(() => Text('Count: ${count.value}'))
 /// ```
-///
-/// ### Architectural Rationale
-/// Traditionally, Flutter requires manual listeners or broad rebuilds via
-/// `setState`. [LWatch] provides fine-grained updates by only rebuilding the
-/// specific subtree that depends on the changed state, significantly improving
-/// performance in complex UIs.
 class LWatch extends Widget {
   /// The builder function that constructs the reactive widget tree.
   final Widget Function() builder;
@@ -207,12 +201,8 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
 
 /// A reactive widget that observes a single, specific reactive value.
 ///
-/// Unlike [LWatch], which tracks dependencies automatically using a proxy,
-/// [LWatchVar] requires you to explicitly provide the reactive object to watch.
-///
-/// ### Usage
-/// Use [LWatchVar] when you want to be explicit about dependencies or when
-/// avoiding the minor overhead of automatic tracking.
+/// Unlike [LWatch], which tracks dependencies automatically, [LWatchVar]
+/// requires you to explicitly provide the reactive object to watch.
 ///
 /// // Example usage:
 /// ```dart
@@ -293,11 +283,11 @@ class _LWatchVarElement<T extends LxReactive> extends ComponentElement {
 
 /// A reactive widget specialized for handling the various states of an [LxStatus].
 ///
-/// [LWatchStatus] is a high-performance alternative to `LStatusBuilder` for
-/// when you already have a reactive status source. It uses a custom [Element]
-/// to manage subscriptions with minimal overhead.
+/// [LWatchStatus] is a high-performance alternative for handling asynchronous
+/// state transitions. It resolves the current state of [x] and calls the
+/// corresponding builder.
 ///
-/// ### Usage
+/// // Example usage:
 /// ```dart
 /// LWatchStatus(
 ///   myStatusRx,
@@ -318,7 +308,7 @@ class LWatchStatus<T> extends Widget {
   /// Builder for error state.
   final Widget Function(Object error, StackTrace? stackTrace)? onError;
 
-  /// Builder for idle state (initial state before loading).
+  /// Builder for idle state.
   final Widget Function()? onIdle;
 
   /// Creates a widget that specifically watches the status source [x].

@@ -8,7 +8,7 @@ class Lx {
   /// The active observer capturing dependencies.
   static LevitReactiveObserver? get proxy => _LevitReactiveCore.proxy;
 
-  /// Sets the active observer. Used by [LWatch] and [LxComputed].
+  /// Sets the active observer.
   static set proxy(LevitReactiveObserver? value) {
     _LevitReactiveCore.proxy = value;
   }

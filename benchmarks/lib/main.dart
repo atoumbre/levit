@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:levit_dart_core/levit_dart_core.dart';
+import 'package:levit_flutter/levit_flutter.dart';
+
 import 'ui/dashboard_page.dart';
 
 void main() {
-  // LevitMonitor.attach(transport: ConsoleTransport());
-
   Levit.enableAutoLinking();
-
   runApp(const BenchmarkApp());
 }
 

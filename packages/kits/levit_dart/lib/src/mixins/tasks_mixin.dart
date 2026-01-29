@@ -491,7 +491,7 @@ mixin LevitReactiveTasksMixin on LevitController {
     cancelTask(id);
   }
 
-  /// Clears all completed ([LxSuccess] or [AsyncIdle]) tasks from the state map.
+  /// Clears all completed ([LxSuccess] or [LxIdle]) tasks from the state map.
   void clearCompleted() {
     final keys = tasks.keys
         .where((id) =>

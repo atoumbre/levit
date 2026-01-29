@@ -1,5 +1,27 @@
 part of '../levit_flutter_core.dart';
 
+/// A base class for UI components that provides automatic dependency resolution and optional reactive tracking.
+///
+/// [LView] simplifies the consumption of controllers or states within a widget.
+/// It uses a [resolver] to find the dependency and a [builder] (or [buildView]
+/// override) to construct the UI.
+///
+/// ### Auto-Watch
+/// If [autoWatch] is true (default), the entire [builder] or [buildView] is
+/// wrapped in an [LWatch], making the view react to any reactive variables
+/// accessed within it.
+///
+/// // Example usage:
+/// ```dart
+/// class MyPage extends LView<MyController> {
+///   const MyPage({super.key});
+///
+///   @override
+///   Widget buildView(BuildContext context, MyController controller) {
+///     return Text(controller.title.value);
+///   }
+/// }
+/// ```
 class LView<T> extends StatefulWidget {
   /// Resolves the dependency from the context.
   final T Function(BuildContext context)? resolver;
@@ -7,7 +29,7 @@ class LView<T> extends StatefulWidget {
   /// Builds the widget tree using the resolved [controller].
   final Widget Function(BuildContext context, T controller)? builder;
 
-  /// If `true`, wraps [builder] in an [LWatch]. Defaults to `true`.
+  /// Whether to wrap the view in an [LWatch].
   final bool autoWatch;
 
   /// Creates a view with a dependency factory and a builder.
@@ -24,21 +46,23 @@ class LView<T> extends StatefulWidget {
     Key? key,
     required Widget Function(BuildContext context, T controller) builder,
     bool autoWatch = true,
-  }) =>
-      LView<T>(
-        key: key,
-        resolver: (context) => context.levit.find<T>(key: state),
-        builder: builder,
-        autoWatch: autoWatch,
-      );
+  }) {
+    return LView<T>(
+      key: key,
+      resolver: (context) => context.levit.find<T>(key: state),
+      builder: builder,
+      autoWatch: autoWatch,
+    );
+  }
 
   /// Builds the view content for the given [controller].
   ///
   /// Subclasses can override this instead of providing a [builder].
   @protected
   Widget buildView(BuildContext context, T controller) {
-    if (builder != null) {
-      return builder!(context, controller);
+    final b = builder;
+    if (b != null) {
+      return b(context, controller);
     }
     throw UnimplementedError(
       'LView: You must either provide a builder or override buildView in subclasses.',
@@ -81,7 +105,10 @@ class _LViewState<T> extends State<LView<T>> {
   }
 }
 
-/// A concrete widget for async controller resolution.
+/// A specialized widget for asynchronous dependency resolution.
+///
+/// [LAsyncView] waits for a dependency resolved via [resolver] (which returns
+/// a [Future]) and then renders the view.
 class LAsyncView<T> extends StatefulWidget {
   /// Resolves the dependency asynchronously from the context.
   final Future<T> Function(BuildContext context)? resolver;
@@ -89,7 +116,7 @@ class LAsyncView<T> extends StatefulWidget {
   /// Builds the widget tree using the resolved [controller].
   final Widget Function(BuildContext context, T controller)? builder;
 
-  /// If `true`, wraps [builder] in an [LWatch]. Defaults to `true`.
+  /// Whether to wrap the view in an [LWatch].
   final bool autoWatch;
 
   /// Builder for the loading state.
@@ -97,6 +124,9 @@ class LAsyncView<T> extends StatefulWidget {
 
   /// Builder for the error state.
   final Widget Function(BuildContext context, Object error)? error;
+
+  /// Optional dependency keys for re-resolution.
+  final List<Object?>? args;
 
   /// Creates an async view.
   const LAsyncView({
@@ -106,6 +136,7 @@ class LAsyncView<T> extends StatefulWidget {
     this.autoWatch = true,
     this.loading,
     this.error,
+    this.args,
   });
 
   /// Syntax sugar for consuming a [LevitAsyncState].
@@ -116,6 +147,7 @@ class LAsyncView<T> extends StatefulWidget {
     bool autoWatch = true,
     Widget Function(BuildContext context)? loading,
     Widget Function(BuildContext context, Object error)? error,
+    List<Object?>? args,
   }) =>
       LAsyncView<T>(
         key: key,
@@ -124,6 +156,7 @@ class LAsyncView<T> extends StatefulWidget {
         autoWatch: autoWatch,
         loading: loading,
         error: error,
+        args: args,
       );
 
   /// Builds the view content for the given [controller].
@@ -163,14 +196,30 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
   @override
   void didUpdateWidget(LAsyncView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If the widget has changed, we might want to re-resolve.
-    // However, LAsyncView is often used with LAsyncScopedView which replaces the whole scope.
-    // To be safe, we re-resolve if the resolver factory changed.
-    if (widget.resolver != oldWidget.resolver) {
+
+    bool shouldUpdate = false;
+    if (widget.args != null || oldWidget.args != null) {
+      // If args are used, they control the update (Explicit Mode)
+      shouldUpdate = !_argsMatch(widget.args, oldWidget.args);
+    } else {
+      // Fallback to resolver identity (Implicit Mode)
+      shouldUpdate = widget.resolver != oldWidget.resolver;
+    }
+
+    if (shouldUpdate) {
       setState(() {
         future = _resolveFuture();
       });
     }
+  }
+
+  bool _argsMatch(List<Object?>? a, List<Object?>? b) {
+    if (a == null || b == null) return identical(a, b);
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   Future<T> _resolveFuture() {
@@ -201,6 +250,9 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
 }
 
 /// A convenience widget that combines [LScope] and [LView].
+///
+/// [LScopedView] creates an isolated dependency scope for a specific part of
+/// the widget tree and immediately resolves a controller to build its content.
 class LScopedView<T> extends StatelessWidget {
   /// Optional factory to register dependencies in the internal scope.
   final dynamic Function(LevitScope scope)? dependencyFactory;
@@ -208,7 +260,7 @@ class LScopedView<T> extends StatelessWidget {
   /// Resolves the dependency for the view.
   final T Function(BuildContext context)? resolver;
 
-  /// Builds the content of the view with the resolved [controller].
+  /// Builds the content of the view with the resolved instance of type [T].
   final Widget Function(BuildContext context, T controller)? builder;
 
   /// Whether to automatically watch reactive variables in [builder].
@@ -218,12 +270,6 @@ class LScopedView<T> extends StatelessWidget {
   final String? scopeName;
 
   /// Optional dependency keys for reactive re-initialization.
-  ///
-  /// If provided, the internal scope will be recreated if the identity or value
-  /// of any element in [args] changes.
-  ///
-  /// If [args] is `null` (default), the scope is **stable**: it will only be
-  /// initialized once.
   final List<Object?>? args;
 
   const LScopedView({
@@ -245,23 +291,24 @@ class LScopedView<T> extends StatelessWidget {
     bool autoWatch = true,
     String? scopeName,
     List<Object?>? args,
-  }) =>
-      LScopedView<T>(
-        key: key,
-        dependencyFactory: dependencyFactory,
-        resolver: (context) => context.levit.find<T>(key: state),
-        builder: builder,
-        autoWatch: autoWatch,
-        scopeName: scopeName,
-        args: args,
-      );
+  }) {
+    return LScopedView<T>(
+      key: key,
+      dependencyFactory: dependencyFactory,
+      resolver: (context) => context.levit.find<T>(key: state),
+      builder: builder,
+      autoWatch: autoWatch,
+      scopeName: scopeName,
+      args: args,
+    );
+  }
 
   /// Called when the internal scope is being configured.
   ///
-  /// Subclasses can override this to register additional dependencies.
+  /// Subclasses can override this to register dependencies.
   @protected
   dynamic onConfigScope(LevitScope scope) {
-    dependencyFactory?.call(scope);
+    return dependencyFactory?.call(scope);
   }
 
   /// Builds the view to be wrapped in the scope.
@@ -287,19 +334,18 @@ class LScopedView<T> extends StatelessWidget {
   }
 }
 
-// A convenience widget that combines [LAsyncScope] and [LView].
+/// A convenience widget that combines [LAsyncScope] and [LView].
 ///
-/// This widget initializes an asynchronous dependency scope (showing a loading
-/// indicator) and then renders an [LView] once the scope is ready.
+/// [LAsyncScopedView] initializes an asynchronous dependency scope and then
+/// renders an [LView] once the scope is ready.
 class LAsyncScopedView<T> extends StatelessWidget {
   /// Async factory to register dependencies in the internal scope.
-  /// The view will trigger [onLoading] until this future completes.
   final Future<dynamic> Function(LevitScope scope)? dependencyFactory;
 
   /// Resolves the dependency for the view.
   final T Function(BuildContext context)? resolver;
 
-  /// Builds the content of the view with the resolved [controller].
+  /// Builds the content of the view with the resolved instance of type [T].
   final Widget Function(BuildContext context, T controller)? builder;
 
   /// Whether to automatically watch reactive variables in [builder].
@@ -308,16 +354,13 @@ class LAsyncScopedView<T> extends StatelessWidget {
   /// A descriptive name for the internal scope.
   final String? scopeName;
 
-  /// Builder for the loading state (while scope is initializing).
+  /// Builder for the loading state.
   final Widget Function(BuildContext context)? loading;
 
-  /// Builder for the error state (if scope initialization fails).
+  /// Builder for the error state.
   final Widget Function(BuildContext context, Object error)? error;
 
   /// Optional dependency keys for reactive re-initialization.
-  ///
-  /// If provided, the internal scope will be recreated if the identity or value
-  /// of any element in [args] changes.
   final List<Object?>? args;
 
   const LAsyncScopedView({
@@ -343,18 +386,19 @@ class LAsyncScopedView<T> extends StatelessWidget {
     Widget Function(BuildContext context)? loading,
     Widget Function(BuildContext context, Object error)? error,
     List<Object?>? args,
-  }) =>
-      LAsyncScopedView<T>(
-        key: key,
-        dependencyFactory: dependencyFactory,
-        resolver: (context) => context.levit.find<T>(key: state),
-        builder: builder,
-        autoWatch: autoWatch,
-        scopeName: scopeName,
-        loading: loading,
-        error: error,
-        args: args,
-      );
+  }) {
+    return LAsyncScopedView<T>(
+      key: key,
+      dependencyFactory: dependencyFactory,
+      resolver: (context) => context.levit.find<T>(key: state),
+      builder: builder,
+      autoWatch: autoWatch,
+      scopeName: scopeName,
+      loading: loading,
+      error: error,
+      args: args,
+    );
+  }
 
   /// Called when the internal scope is being configured asynchronously.
   ///

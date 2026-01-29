@@ -32,7 +32,7 @@ mixin LevitTimeMixin on LevitController {
   /// *   [callback]: The function to execute.
   ///
   /// Ensures the callback runs at most once every [duration].
-  /// If called during the cooldown period, the call is ignored.
+  /// If called during the cool down period, the call is ignored.
   void throttle(String id, Duration duration, void Function() callback) {
     if (_timers.containsKey(id)) return;
 
@@ -71,8 +71,8 @@ mixin LevitTimeMixin on LevitController {
 
   /// Starts a reactive countdown.
   ///
-  /// Returns an [LxCountdown] object that exposes the [remaining] duration
-  /// and control methods (pause, resume, stop).
+  /// Returns an [LxCountdown] object that exposes the [LxCountdown.remaining]
+  /// duration and control methods (pause, resume, stop).
   ///
   /// *   [duration]: The total duration to count down/up.
   /// *   [interval]: The tick interval (default: 1 second).

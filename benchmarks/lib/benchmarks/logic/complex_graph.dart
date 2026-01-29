@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:levit_reactive/levit_reactive.dart';
+import 'package:levit_flutter/levit_flutter.dart';
 import '../../benchmark_config.dart';
 import '../../benchmark_engine.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;

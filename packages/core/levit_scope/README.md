@@ -3,31 +3,28 @@
 [![Pub Version](https://img.shields.io/pub/v/levit_scope)](https://pub.dev/packages/levit_scope)
 [![Platforms](https://img.shields.io/badge/platforms-dart-blue)](https://pub.dev/packages/levit_scope)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-[![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg\&flag=levit_scope)](https://codecov.io/github/atoumbre/levit?flags=levit_scope)
 
 **Type-safe, hierarchical dependency injection for Dart. Explicit. Scoped. Deterministic.**
 
-`levit_scope` is a pure Dart dependency injection and service locator designed for applications requiring predictable lifecycles and explicit scoping. It provides a robust, reflection-free mechanism for managing services and controllers across the Levit ecosystem.
+`levit_scope` provides a robust, reflection-free dependency injection mechanism designed for applications requiring predictable lifecycles and explicit scoping. It serves as the core container engine for the Levit framework.
 
 ---
 
 ## Purpose & Scope
 
-`levit_scope` provides the container infrastructure for the Levit framework. Its primary responsibilities include:
-- Managing a registry of typed dependencies with optional tagging.
-- Enforcing hierarchical isolation between different layers of the application.
+`levit_scope` manages the lifecycle and resolution of dependencies. It is responsible for:
+- Enforcing hierarchical isolation between different layers of an application.
 - Orchestrating lifecycle hooks (`onInit`, `onClose`) for managed components.
-
-By maintaining a pure Dart profile, it ensures that your dependency graph remains testable and portable across CLI, server, and multi-platform environments.
+- Providing a pure Dart, side-effect-free container that works across all platforms.
 
 ---
 
 ## Conceptual Overview
 
 ### Core Abstractions
-- **`LevitScope`**: A container that holds dependency registrations. Scopes can be nested to form a tree.
-- **`LevitScopeDisposable`**: An interface that allows components to react to their own initialization and disposal.
-- **Ambient Scoping**: While `levit_scope` is the low-level engine, it is often used via the ambient `Levit` interface in `levit_dart` for boilerplate-free resolution.
+- **[LevitScope]**: A container that holds dependency registrations. Scopes form a tree where children can inherit or override parent dependencies.
+- **[LevitScopeDisposable]**: An interface that components implement to participate in the container's lifecycle.
+- **Ambient Scoping**: Automatic detection of the active scope using [Zone]-based propagation, accessible via the [Ls] static interface.
 
 ---
 
@@ -41,16 +38,15 @@ final root = LevitScope.root();
 // Register a singleton
 root.put(() => AuthService());
 
-// Create a child scope for a specific feature
-final featureScope = root.createScope('payment_flow');
-featureScope.put(() => PaymentProcessor());
+// Create a nested scope
+final featureScope = root.createScope('feature');
+featureScope.put(() => FeatureService());
 
-// Resolve from child (falls back to parent)
+// Resolve (falls back to parent if not found locally)
 final auth = featureScope.find<AuthService>();
 ```
 
 ### Lifecycle Hooks
-Implement `LevitScopeDisposable` to manage resources:
 ```dart
 class Database implements LevitScopeDisposable {
   @override
@@ -66,10 +62,10 @@ class Database implements LevitScopeDisposable {
 ## Design Principles
 
 ### Explicitness over Magic
-There is no hidden reflection or code generation. Every dependency is registered and resolved via typed builder functions.
+No reflection or code generation. Every dependency is registered via typed builders, ensuring full type safety and transparency.
 
 ### Deterministic Teardown
-When a scope is disposed, every disposable dependency it owns is guaranteed to have its `onClose` method called. This is critical for preventing memory leaks in complex applications.
+Disposing a scope guarantees that every owned dependency implementing [LevitScopeDisposable] has its `onClose` method called, preventing resource leaks.
 
-### Isolation
-Child scopes can override parent dependencies locally. This enables powerful testing patterns where you can "mock" a dependency for a specific subtree of your application without affecting the global state.
+### Hierarchical Isolation
+Scopes provide a strict hierarchy. This allows for powerful mocking and feature-specific resource allocation without global state pollution.

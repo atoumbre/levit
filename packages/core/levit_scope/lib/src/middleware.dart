@@ -3,12 +3,7 @@ part of '../levit_scope.dart';
 /// Interface for middleware hooks on dependency injection events.
 ///
 /// Implement this interface to receive callbacks when dependencies are
-/// registered, resolved, or deleted.
-///
-/// ### Architectural Rationale
-/// Middlewares provide a non-intrusive way to observe and intercept the container's
-/// internal operations. Use them for logging, performance profiling, building
-/// developer tools, or enforcing application-wide invariants.
+/// registered, resolved, or deleted across any [LevitScope].
 abstract class LevitScopeMiddleware {
   /// Base constructor.
   const LevitScopeMiddleware();

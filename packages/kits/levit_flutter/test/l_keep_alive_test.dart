@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:levit_flutter_kit/src/widgets/l_keep_alive.dart';
-import 'package:levit_flutter_kit/src/widgets/l_list_item_monitor.dart';
+import 'package:levit_flutter/levit_flutter.dart';
 
 void main() {
   group('LKeepAlive', () {
@@ -15,7 +14,7 @@ void main() {
             itemExtent: 100, // Fixed height to easily scroll out
             itemBuilder: (context, index) {
               return LKeepAlive(
-                child: LListItemMonitor(
+                child: LWidgetMonitor(
                   onDispose: () => disposeCalls.add(index),
                   child: Text('Item $index'),
                 ),
@@ -47,7 +46,7 @@ void main() {
             itemBuilder: (context, index) {
               return LKeepAlive(
                 keepAlive: false, // Don't keep alive
-                child: LListItemMonitor(
+                child: LWidgetMonitor(
                   onDispose: () => disposeCalls.add(index),
                   child: Text('Item $index'),
                 ),

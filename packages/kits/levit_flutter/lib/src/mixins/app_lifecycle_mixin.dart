@@ -1,5 +1,4 @@
-import 'package:flutter/widgets.dart';
-import 'package:levit_flutter_core/levit_flutter_core.dart';
+part of '../../levit_flutter.dart';
 
 /// A mixin that exposes [WidgetsBindingObserver] lifecycle methods to a [LevitController].
 ///

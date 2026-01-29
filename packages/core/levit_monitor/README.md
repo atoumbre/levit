@@ -1,90 +1,64 @@
-# Levit Monitor
+# levit_monitor
 
 [![Pub Version](https://img.shields.io/pub/v/levit_monitor)](https://pub.dev/packages/levit_monitor)
 [![Platforms](https://img.shields.io/badge/platforms-dart-blue)](https://pub.dev/packages/levit_monitor)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-[![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg\&flag=levit_monitor)](https://codecov.io/github/atoumbre/levit?flags=levit_monitor)
 
+**Unified observability and diagnostics for the Levit ecosystem.**
 
-A unified observability and diagnostics engine for the Levit ecosystem.
+`levit_monitor` provides deep visibility into the runtime behavior of your application by capturing and correlating events from both the dependency injection system (`levit_scope`) and the reactive state engine (`levit_reactive`).
 
-`levit_monitor` provides deep visibility into the runtime behavior of your application by capturing and correlating events from both the dependency injection system (`levit_dart`) and the reactive state engine (`levit_reactive`).
+---
 
-## Key Features
+## Purpose & Scope
 
-- **Unified Diagnostics**: A single pipeline for monitoring service lifecycles, dependency resolutions, and state mutations.
-- **Pluggable Transports**: Multiple built-in transports (Console, File, WebSocket) for local debugging or external DevTools integration.
-- **Monotonic Correlation**: Events are tagged with sequence numbers and session IDs to enable precise debugging across asynchronous gaps.
-- **Predicated Filtering**: Granular control over volume and type of captured diagnostic data.
+`levit_monitor` aggregates diagnostic data into a single, serializable pipeline. It is responsible for:
+- Collecting lifecycle and resolution events from the DI container.
+- Capturing state mutations and dependency graph changes from the reactive engine.
+- Providing pluggable transports for local logging or remote visualization.
+- Enabling monotonic correlation of events across asynchronous transitions.
+
+---
+
+## Conceptual Overview
+
+### Core Abstractions
+- **[LevitMonitor]**: The global hub for attaching and configuring the monitoring system.
+- **[MonitorEvent]**: The sealed base class for all serializable diagnostic records.
+- **[LevitTransport]**: An interface for event destinations (Console, File, WebSocket).
+- **[LevitMonitorMiddleware]**: The bridge that intercepts internal framework calls and generates monitoring events.
+
+---
 
 ## Getting Started
 
-### Installation
-
-Add `levit_monitor` to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  levit_monitor: latest
-```
-
 ### Basic Attachment
-
-The simplest way to start monitoring is to attach the default monitor at the entry point of your application. By default, it uses the `ConsoleTransport` to log JSON events to standard output.
-
 ```dart
 import 'package:levit_monitor/levit_monitor.dart';
 
 void main() {
-  LevitMonitor.attach(); // Starts capturing events immediately
+  // Starts capturing events and piping them to the console
+  LevitMonitor.attach();
   
-  // Your app entry
-  runApp(MyApp());
-}
-```
-
-## Advanced Configuration
-
-### Using WebSockets for DevTools
-
-To connect your application to an external visualizer (like Levit DevTools), use the `WebSocketTransport`:
-
-```dart
-import 'package:levit_monitor/levit_monitor.dart';
-import 'package:web_channel/io.dart'; 
-
-void main() {
-  final channel = IOWebSocketChannel.connect('ws://localhost:8080/ws');
-  final transport = WebSocketTransport(channel);
-
-  LevitMonitor.attach(transport: transport);
-  
-  runApp(MyApp());
+  // Your application logic here
 }
 ```
 
 ### Event Filtering
-
-You can suppress noisy events or focus on specific diagnostic categories using a global filter:
-
 ```dart
-// Only monitor state mutations, ignoring DI and graph changes
-LevitMonitor.setFilter((event) => event is ReactiveChangeEvent);
+// Only monitor Dependency Injection events
+LevitMonitor.setFilter((event) => event is DependencyEvent);
 ```
 
-## Built-in Transports
+---
 
-- **ConsoleTransport**: Prettified or raw JSON logging to the terminal.
-- **FileTransport**: Persists diagnostic events to the local filesystem.
-- **WebSocketTransport**: Streams events to remote servers or DevTools.
+## Design Principles
 
-## Monitoring Schema
+### Transparent Instrumentation
+Monitoring is attached non-intrusively via middlewares. The application logic remains unaware of the diagnostics layer, ensuring zero footprint when detached.
 
-All events follow a unified schema:
+### Monotonicity
+Every event is tagged with a monotonic sequence number and a session ID. This allows tools to reconstruct the exact order of operations, even when events are processed out-of-order by external consumers.
 
-| Property | Description |
-| :--- | :--- |
-| `seq` | Monotonic sequence number. |
-| `timestamp` | UTC ISO-8601 timestamp of the event. |
-| `sessionId` | Correlates events within a single execution run. |
-| `type` | The specific event identifier (e.g., `state_change`, `di_resolve`). |
+### Serializable Schema
+All events implement a `toJson()` method and follow a strictly typed hierarchy. This makes it trivial to stream diagnostics to external DevTools, databases, or analytics services.

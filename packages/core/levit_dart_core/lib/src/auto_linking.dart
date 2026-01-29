@@ -128,10 +128,6 @@ class _AutoLinkScope {
       for (final reactive in captured) {
         instance.autoDispose(reactive);
       }
-    } else if (instance is _LevitStateInstance) {
-      for (final reactive in captured) {
-        instance.autoDispose(reactive);
-      }
     }
   }
 }

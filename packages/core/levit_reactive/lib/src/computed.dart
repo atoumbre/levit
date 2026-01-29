@@ -2,14 +2,10 @@ part of '../levit_reactive.dart';
 
 /// A synchronous computed value that automatically tracks its reactive dependencies.
 ///
-/// [LxComputed] represents state derived from other reactive variables. It is:
-/// 1.  **Lazy**: Its value is only calculated when requested.
-/// 2.  **Memoized**: It caches its result and only re-evaluates when its
-///     dependencies change.
-/// 3.  **Automatic**: It detects dependencies implicitly by tracking which
-///     [LxReactive] values are read during its execution.
+/// [LxComputed] represents state derived from other reactive variables. It is
+/// lazy, memoized, and automatically re-evaluates only when its dependencies change.
 ///
-/// ### Usage
+/// // Example usage:
 /// ```dart
 /// final firstName = 'John'.lx;
 /// final lastName = 'Doe'.lx;
@@ -250,10 +246,6 @@ class LxComputed<T> extends _ComputedBase<T> {
     _reconcileDependencies(tracker.dependencies,
         reactives: tracker.trackReactives ? tracker.reactives : null);
 
-    if (_staticDeps) {
-      _hasStaticGraph = true;
-    }
-
     _releaseTracker(tracker);
   }
 
@@ -329,15 +321,10 @@ class LxComputed<T> extends _ComputedBase<T> {
 
 /// An asynchronous computed value that reflects state transitions via [LxStatus].
 ///
-/// [LxAsyncComputed] is used to derive state through asynchronous operations.
-/// Like [LxComputed], it automatically tracks dependencies accessed during
-/// its execution, even across asynchronous gaps.
+/// [LxAsyncComputed] derives state through asynchronous operations while
+/// automatically tracking dependencies accessed during execution.
 ///
-/// ### Async Tracking
-/// Levit uses specialized [Zone] integration to ensure that reactive variables
-/// read after an `await` are still correctly registered as dependencies.
-///
-/// ### Usage
+/// // Example usage:
 /// ```dart
 /// final userId = 1.lx;
 /// final user = LxAsyncComputed(() => fetchUser(userId.value));
@@ -594,12 +581,19 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
   void _cleanupSubscriptions() {
     if (_dependencySubscriptions.isEmpty) return;
 
+    // Optimization: Avoid toList() by separating listener removal from map clearing
+    if (!LevitReactiveMiddleware.hasListenerMiddlewares) {
+      for (final dep in _dependencySubscriptions.keys) {
+        dep.removeListener(_onDependencyChanged);
+      }
+      _dependencySubscriptions.clear();
+      return;
+    }
+
     final keys = _dependencySubscriptions.keys.toList();
     for (final dep in keys) {
       _unsubscribeFrom(dep);
     }
-    // _unsubscribeFrom removes entries, so map should be empty or close to it.
-    // Ensure cleared for safety.
     _dependencySubscriptions.clear();
   }
 

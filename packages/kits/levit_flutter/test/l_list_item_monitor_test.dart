@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:levit_flutter_kit/levit_flutter_kit.dart';
+import 'package:levit_flutter/levit_flutter.dart';
 
 void main() {
   group('LListItemMonitor', () {
@@ -10,7 +10,7 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LListItemMonitor(
+          child: LWidgetMonitor(
             onInit: () => initCalled = true,
             child: const Text('Test'),
           ),
@@ -27,7 +27,7 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LListItemMonitor(
+          child: LWidgetMonitor(
             onDispose: () => disposeCalled = true,
             child: const Text('Test'),
           ),
@@ -47,7 +47,7 @@ void main() {
       await tester.pumpWidget(
         const Directionality(
           textDirection: TextDirection.ltr,
-          child: LListItemMonitor(
+          child: LWidgetMonitor(
             child: Text('Content'),
           ),
         ),

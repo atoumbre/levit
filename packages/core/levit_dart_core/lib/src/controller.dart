@@ -38,16 +38,16 @@ abstract class LevitController implements LevitScopeDisposable {
   bool _closed = false;
   final List<dynamic> _disposables = [];
 
-  /// Returns `true` if [onInit] has been executed.
+  /// Whether [onInit] has been executed.
   bool get initialized => _initialized;
 
-  /// Returns `true` if the controller has been disposed and closed.
+  /// Whether the controller has been disposed and closed.
   bool get isDisposed => _disposed;
 
-  /// Returns `true` if the controller is in the process of closing or is closed.
+  /// Whether the controller is in the process of closing or is closed.
   bool get isClosed => _closed;
 
-  /// Returns `true` if the initialization phase is complete.
+  /// Whether the initialization phase is complete.
   bool get isInitialized => _initialized;
 
   /// The registration key used to identify this instance in [Levit].
@@ -106,12 +106,11 @@ abstract class LevitController implements LevitScopeDisposable {
   ///
   /// // Example usage:
   /// ```dart
-  /// final scrollController = autoDispose(ScrollController());
-  /// final subscription = autoDispose(myStream.listen((_) {}));
+  /// class MyController extends LevitController {
+  ///   late final scrollController = autoDispose(ScrollController());
+  ///   late final sub = autoDispose(myStream.listen((_) {}));
+  /// }
   /// ```
-  ///
-  /// Parameters:
-  /// - [object]: The instance to track for disposal.
   ///
   /// Returns the same [object] instance passed in.
   T autoDispose<T>(T object) {
@@ -192,8 +191,8 @@ void _levitDisposeItem(dynamic item) {
     return;
   } on NoSuchMethodError {
     // Not cancelable, fall through
-  } catch (e) {
-    // Prevent crash during cleanup
+  } on Exception catch (e) {
+    // Prevent crash during cleanup (only for Exceptions)
     dev.log('Levit: Error cancelling ${item.runtimeType}',
         error: e, name: 'levit_dart');
   }
@@ -205,7 +204,7 @@ void _levitDisposeItem(dynamic item) {
     return;
   } on NoSuchMethodError {
     // Not disposable, fall through
-  } catch (e) {
+  } on Exception catch (e) {
     dev.log('Levit: Error disposing ${item.runtimeType}',
         error: e, name: 'levit_dart');
   }
@@ -222,7 +221,7 @@ void _levitDisposeItem(dynamic item) {
     return;
   } on NoSuchMethodError {
     // Not closeable, fall through
-  } catch (e) {
+  } on Exception catch (e) {
     dev.log('Levit: Error closing ${item.runtimeType}',
         error: e, name: 'levit_dart');
   }

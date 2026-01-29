@@ -1,19 +1,24 @@
 part of '../levit_dart_core.dart';
 
-/// The primary entry point in Levit.
+/// The primary entry point for orchestrating dependency injection and reactivity in Levit.
+///
+/// [Levit] provides a unified API for managing [LevitController] lifecycles,
+/// resolving dependencies via [LevitScope], and working with reactive state.
 class Levit {
   // ------------------------------------------------------------
   //    Reactive API accessors
   // ------------------------------------------------------------
 
-  /// Whether to capture stack traces on state changes (performance intensive).
+  /// Whether to capture stack traces on state changes.
+  ///
+  /// This is performance intensive and should only be used during debugging.
   static bool get captureStackTrace => Lx.captureStackTrace;
 
   static set captureStackTrace(bool value) {
     Lx.captureStackTrace = value;
   }
 
-  /// Global flag to enable or disable performance monitoring for all [LxWorker] instances.
+  /// Whether to enable performance monitoring for all [LxWorker] instances.
   static bool get enableWatchMonitoring => Lx.enableWatchMonitoring;
 
   static set enableWatchMonitoring(bool value) {
@@ -23,14 +28,14 @@ class Levit {
   /// Executes [callback] in a synchronous batch.
   ///
   /// Notifications for all variables mutated inside the batch are deferred
-  /// until the callback completes, ensuring only a single notification per variable.
+  /// until the [callback] completes, ensuring only a single notification per variable.
   static R batch<R>(R Function() callback) {
     return Lx.batch(callback);
   }
 
   /// Executes asynchronous [callback] in a batch.
   ///
-  /// Like [batch], but maintains the batching context across asynchronous gaps.
+  /// Maintains the batching context across asynchronous gaps, similar to [batch].
   static Future<R> batchAsync<R>(Future<R> Function() callback) {
     return Lx.batchAsync(callback);
   }
@@ -71,23 +76,17 @@ class Levit {
   /// final service = Levit.put(() => MyService());
   /// ```
   ///
-  /// Parameters:
-  /// - [builder]: A function that creates the dependency instance.
-  /// - [tag]: Optional unique identifier to allow multiple instances of the same type [S].
-  /// - [permanent]: If `true`, this instance survives a non-forced [reset].
-  ///
-  /// Returns the created instance of type [S].
+  /// If [permanent] is true, the instance survives a non-forced [reset].
+  /// Use [tag] as an optional unique identifier to allow multiple instances
+  /// of the same type [S].
   static S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
     return Ls.put<S>(builder, tag: tag, permanent: permanent);
   }
 
   /// Registers a [builder] that will be executed only when the dependency is first requested.
   ///
-  /// Parameters:
-  /// - [builder]: A function that creates the dependency instance.
-  /// - [tag]: Optional unique identifier for the instance.
-  /// - [permanent]: If `true`, the registration persists through a [reset].
-  /// - [isFactory]: If `true`, a new instance is created every time [find] is called.
+  /// If [permanent] is true, the registration persists through a [reset].
+  /// If [isFactory] is true, a new instance is created every time [find] is called.
   static void lazyPut<S>(S Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
     Ls.lazyPut<S>(builder,
@@ -108,10 +107,9 @@ class Levit {
         tag: tag, permanent: permanent, isFactory: isFactory);
   }
 
-  /// * [key]: A specific key or [LevitState] to resolve.
-  /// * [tag]: The unique identifier used during registration.
+  /// Resolves a dependency of type [S] or identified by [key] or [tag].
   ///
-  /// Throws an [Exception] if no registration is found for [S], [key] or [tag].
+  /// Throws an [Exception] if no registration is found.
   static S find<S>({dynamic key, String? tag}) {
     if (key is LevitState) {
       return key.findIn(Ls.currentScope, tag: tag) as S;
@@ -134,13 +132,9 @@ class Levit {
     return Ls.findOrNull<S>(tag: tag);
   }
 
-  /// Asynchronously retrieves the registered instance of type [S].
+  /// Asynchronously resolves a dependency of type [S] or identified by [key] or [tag].
   ///
   /// Useful for dependencies registered via [lazyPutAsync].
-  ///
-  /// * [key]: A specific key or [LevitState] to resolve.
-  /// * [tag]: The unique identifier used during registration.
-  ///
   /// Throws an [Exception] if no registration is found.
   static Future<S> findAsync<S>({dynamic key, String? tag}) async {
     if (key is LevitState) {
@@ -168,7 +162,7 @@ class Levit {
     return Ls.findOrNullAsync<S>(tag: tag);
   }
 
-  /// Returns `true` if type [S] is registered in the current or any parent scope.
+  /// Whether type [S] is registered in the current or any parent scope.
   static bool isRegistered<S>({dynamic key, String? tag}) {
     if (key is LevitState) {
       return key.isRegisteredIn(Ls.currentScope, tag: tag);
@@ -176,7 +170,7 @@ class Levit {
     return Ls.isRegistered<S>(tag: tag);
   }
 
-  /// Returns `true` if type [S] has already been instantiated.
+  /// Whether type [S] has already been instantiated.
   static bool isInstantiated<S>({dynamic key, String? tag}) {
     if (key is LevitState) {
       return key.isInstantiatedIn(Ls.currentScope, tag: tag);
@@ -187,12 +181,7 @@ class Levit {
   /// Removes the registration for [S] and disposes of the instance.
   ///
   /// If the instance implements [LevitScopeDisposable], its `onClose` method is called.
-  ///
-  /// Parameters:
-  /// - [key]: A specific key or [LevitState] to delete.
-  /// - [tag]: The unique identifier used during registration.
-  /// - [force]: If `true`, deletes even if the dependency was marked as `permanent`.
-  ///
+  /// If [force] is true, deletes even if the dependency was marked as `permanent`.
   /// Returns `true` if a registration was found and removed.
   static bool delete<S>({dynamic key, String? tag, bool force = false}) {
     if (key is LevitState) {
@@ -203,17 +192,15 @@ class Levit {
 
   /// Disposes of all non-permanent dependencies in the current scope.
   ///
-  /// * [force]: If `true`, also disposes of permanent dependencies.
+  /// If [force] is true, also disposes of permanent dependencies.
   static void reset({bool force = false}) {
     Ls.reset(force: force);
   }
 
   /// Creates a new child scope branching from the current active scope.
   ///
-  /// child scopes can override parent dependencies and provide their own
-  /// isolated lifecycle.
-  ///
-  /// * [name]: A descriptive name for the scope (used in profiling and logs).
+  /// Child scopes can override parent dependencies and provide their own
+  /// isolated lifecycle. The [name] is used for profiling and logs.
   static LevitScope createScope(String name) {
     return Ls.createScope(name);
   }
