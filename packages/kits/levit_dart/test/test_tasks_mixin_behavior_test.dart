@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:test/test.dart';
-import 'package:levit_dart_core/levit_dart_core.dart';
+
 import 'package:levit_dart/levit_dart.dart';
+import 'package:test/test.dart';
 
 class TestTasksController extends LevitController with LevitReactiveTasksMixin {
   @override

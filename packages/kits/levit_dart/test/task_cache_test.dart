@@ -1,4 +1,3 @@
-import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 

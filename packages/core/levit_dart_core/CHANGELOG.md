@@ -1,4 +1,9 @@
 
+## 0.0.5
+- Production-ready documentation (Effective Dart compliance)
+- Added `topics` to pubspec for improved discoverability
+- Performance and stability improvements
+
 ## 0.0.4
 
 - Optimized `Zone.current` lookups for auto-linking (fast-path when no capture is active).

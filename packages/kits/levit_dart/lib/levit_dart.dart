@@ -4,6 +4,8 @@
 /// management, time-based operations, and selection logic.
 library levit_dart_kit;
 
+export 'package:levit_dart_core/levit_dart_core.dart';
+
 export 'src/mixins/tasks_mixin.dart';
 export 'src/mixins/time_mixin.dart';
 export 'src/mixins/selection_mixin.dart';

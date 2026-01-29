@@ -1,6 +1,5 @@
-import 'package:test/test.dart';
 import 'package:levit_dart/levit_dart.dart';
-import 'package:levit_dart_core/levit_dart_core.dart';
+import 'package:test/test.dart';
 
 class TestTimeController extends LevitController with LevitTimeMixin {}
 
@@ -44,7 +43,7 @@ void main() {
           'test', const Duration(milliseconds: 100), () => callCount++);
       expect(callCount, 1);
 
-      // Wait for cooldown
+      // Wait for cool down
       await Future.delayed(const Duration(milliseconds: 150));
 
       // Can run again

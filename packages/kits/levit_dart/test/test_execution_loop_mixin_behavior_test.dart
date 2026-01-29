@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:test/test.dart';
-import 'package:levit_dart_core/levit_dart_core.dart';
+
 import 'package:levit_dart/levit_dart.dart';
+import 'package:test/test.dart';
 
 // Top-level function for Isolate tests
 void _testIsolateLoopBody() {
@@ -108,7 +108,7 @@ void main() {
       expect(controller.getServiceStatus('stop_test'), isNull);
     });
 
-    test('registerService manages custom stopable services', () {
+    test('registerService manages custom stoppable services', () {
       final mock = MockStoppableService();
       controller.registerService('mock', mock);
       mock.start();

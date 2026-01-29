@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:levit_dart/levit_dart.dart';
-import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
 
 class TestController extends LevitController

@@ -1,6 +1,7 @@
 name: dev_tool_server
 description: A starting point for Dart libraries or applications.
 version: 1.0.0
+publish_to: 'none'
 
 environment:
   sdk: ^3.10.7

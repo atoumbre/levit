@@ -1,6 +1,5 @@
-import 'package:test/test.dart';
-import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_dart/levit_dart.dart';
+import 'package:test/test.dart';
 
 // Controller that uses the mixin but will be instantiated manually (no DI)
 class OrphanController extends LevitController with LevitReactiveTasksMixin {}

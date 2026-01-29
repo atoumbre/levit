@@ -1,7 +1,7 @@
 import 'dart:async';
+
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
-import 'package:levit_dart_core/levit_dart_core.dart';
 
 class PeriodicController extends LevitController with LevitTimeMixin {}
 

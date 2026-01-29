@@ -13,20 +13,27 @@
 ## Purpose & Scope
 
 `levit_reactive` manages reactive state and its derivation graph. It is responsible for:
-- Providing zero-boilerplate reactivity via extension methods.
-- Managing fine-grained dependency tracking for synchronous and asynchronous computations.
-- Modeling asynchronous operations as type-safe status transitions.
-- Offering a global interception mechanism via middlewares.
+
+- **Zero-Boilerplate Reactivity**: Create reactive state via simple `.lx` extensions.
+- **Automatic Dependency Tracking**: Computed values track their sources automatically.
+- **Async Status Modeling**: Type-safe `LxStatus` hierarchy for async operation states.
+- **Reactive Collections**: `LxList`, `LxMap`, and `LxSet` for collection-level reactivity.
+- **Middleware Interception**: Global hooks for logging, undo/redo, and diagnostics.
 
 ---
 
-## Conceptual Overview
+## Core Abstractions
 
-### Core Abstractions
-- **[LxReactive]**: The base interface for all reactive sources.
-- **[LxComputed]**: Derived state that automatically tracks and memoizes dependencies.
-- **[LxStatus]**: A sealed hierarchy representing the lifecycle of an async operation (Idle, Waiting, Success, Error).
-- **[Lx]**: The primary static entry point for configuration, batching, and tracking.
+| Type | Description |
+|:-----|:------------|
+| `LxReactive<T>` | Base interface for all reactive objects |
+| `LxVar<T>` | Mutable reactive variable |
+| `LxComputed<T>` | Derived state with automatic dependency tracking |
+| `LxAsyncComputed<T>` | Async derived state returning `LxStatus<T>` |
+| `LxStatus<T>` | Sealed hierarchy: `LxIdle`, `LxWaiting`, `LxSuccess`, `LxError` |
+| `LxList<E>`, `LxMap<K,V>`, `LxSet<E>` | Reactive collections |
+| `LxWorker<T>` | Side-effect observer with monitoring |
+| `Lx` | Static entry point for batching and configuration |
 
 ---
 
@@ -34,13 +41,8 @@
 
 ### Basic Reactivity
 ```dart
-// Create reactive state
 final count = 0.lx;
-
-// Listen to changes
 count.addListener(() => print('Count: ${count.value}'));
-
-// Mutate
 count.value++;
 ```
 
@@ -49,7 +51,6 @@ count.value++;
 final firstName = 'John'.lx;
 final lastName = 'Doe'.lx;
 final fullName = LxComputed(() => '${firstName.value} ${lastName.value}');
-
 print(fullName.value); // John Doe
 ```
 
@@ -62,6 +63,14 @@ if (user.isWaiting) {
 }
 ```
 
+### Batching
+```dart
+Lx.batch(() {
+  count.value = 1;
+  name.value = 'Updated';
+}); // Single notification
+```
+
 ---
 
 ## Design Principles
@@ -70,7 +79,8 @@ if (user.isWaiting) {
 Reactivity is achieved by simply reading values. No manual subscription management, annotations, or code generation required.
 
 ### Determinism
-Notifications are synchronous and topologically sorted. This ensures that a single state change never results in inconsistent derived values or redundant updates.
+Notifications are synchronous and topologically sorted. A single state change never results in inconsistent derived values or redundant updates.
 
 ### Pure Dart
-The core engine has zero dependencies and no platform-specific requirements, making it suitable for everything from backend services to complex UIs.
+Zero dependencies and no platform-specific requirements, making it suitable for backend services, CLI tools, and complex UIs.
+

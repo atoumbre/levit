@@ -4,4 +4,4 @@
 /// - `levit_dart`: Foundational types and logic.
 library levit;
 
-export 'package:levit_dart_core/levit_dart_core.dart';
+export 'package:levit_dart/levit_dart.dart';
