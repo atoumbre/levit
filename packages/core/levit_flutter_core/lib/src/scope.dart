@@ -60,6 +60,68 @@ class LScope extends StatefulWidget {
     this.args,
   });
 
+  /// A shorthand for creating a scope and immediately registering a dependency.
+  static LScope put<S>(
+    S Function() builder, {
+    Key? key,
+    required Widget child,
+    String? name,
+    String? tag,
+    bool permanent = false,
+    List<Object?>? args,
+  }) {
+    return LScope(
+      key: key,
+      name: name,
+      args: args,
+      dependencyFactory: (s) =>
+          s.put<S>(builder, tag: tag, permanent: permanent),
+      child: child,
+    );
+  }
+
+  /// A shorthand for creating a scope and registering a lazy dependency.
+  static LScope lazyPut<S>(
+    S Function() builder, {
+    Key? key,
+    required Widget child,
+    String? name,
+    String? tag,
+    bool permanent = false,
+    bool isFactory = false,
+    List<Object?>? args,
+  }) {
+    return LScope(
+      key: key,
+      name: name,
+      args: args,
+      dependencyFactory: (s) => s.lazyPut<S>(builder,
+          tag: tag, permanent: permanent, isFactory: isFactory),
+      child: child,
+    );
+  }
+
+  /// A shorthand for creating a scope and registering an async lazy dependency.
+  static LScope lazyPutAsync<S>(
+    Future<S> Function() builder, {
+    Key? key,
+    required Widget child,
+    String? name,
+    String? tag,
+    bool permanent = false,
+    bool isFactory = false,
+    List<Object?>? args,
+  }) {
+    return LScope(
+      key: key,
+      name: name,
+      args: args,
+      dependencyFactory: (s) => s.lazyPutAsync<S>(builder,
+          tag: tag, permanent: permanent, isFactory: isFactory),
+      child: child,
+    );
+  }
+
   @override
   State<LScope> createState() => _LScopeState();
 
@@ -71,13 +133,17 @@ class _LScopeState extends State<LScope> {
   late LevitScope _scope;
   bool _initialized = false;
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initScope();
+  }
+
   void _initScope() {
     if (_initialized) return;
 
     final scopeName = widget.name ?? 'LScope';
-    final parentProvider =
-        context.getInheritedWidgetOfExactType<_ScopeProvider>();
-    final parentScope = parentProvider?.scope;
+    final parentScope = _ScopeProvider.of(context);
 
     // Create the scope and link to parent if found
     _scope = parentScope != null
@@ -103,6 +169,7 @@ class _LScopeState extends State<LScope> {
     if (shouldReset) {
       _scope.dispose();
       _initialized = false;
+      _initScope();
     }
   }
 
@@ -123,7 +190,6 @@ class _LScopeState extends State<LScope> {
 
   @override
   Widget build(BuildContext context) {
-    _initScope();
     return _ScopeProvider(
       scope: _scope,
       child: widget.child,
@@ -188,8 +254,8 @@ class _LAsyncScopeState extends State<LAsyncScope> {
   bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _initScope();
   }
 
@@ -385,14 +451,29 @@ class LevitProvider {
     return Levit.put<S>(builder, tag: tag, permanent: permanent);
   }
 
-  /// Registers an asynchronous [builder] for lazy instantiation.
-  Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
-      {String? tag, bool permanent = false}) {
+  /// Registers a [builder] that will be executed only when the dependency is first requested.
+  void lazyPut<S>(S Function() builder,
+      {String? tag, bool permanent = false, bool isFactory = false}) {
     final scope = _ScopeProvider.of(_context);
     if (scope != null) {
-      return scope.lazyPutAsync<S>(builder, tag: tag, permanent: permanent);
+      scope.lazyPut<S>(builder,
+          tag: tag, permanent: permanent, isFactory: isFactory);
     } else {
-      return Levit.lazyPutAsync<S>(builder, tag: tag, permanent: permanent);
+      Levit.lazyPut<S>(builder,
+          tag: tag, permanent: permanent, isFactory: isFactory);
+    }
+  }
+
+  /// Registers an asynchronous [builder] for lazy instantiation.
+  Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
+      {String? tag, bool permanent = false, bool isFactory = false}) {
+    final scope = _ScopeProvider.of(_context);
+    if (scope != null) {
+      return scope.lazyPutAsync<S>(builder,
+          tag: tag, permanent: permanent, isFactory: isFactory);
+    } else {
+      return Levit.lazyPutAsync<S>(builder,
+          tag: tag, permanent: permanent, isFactory: isFactory);
     }
   }
 

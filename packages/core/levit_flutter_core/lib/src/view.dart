@@ -55,6 +55,39 @@ class LView<T> extends StatefulWidget {
     );
   }
 
+  /// Registers and consumes a dependency of type [T].
+  factory LView.put(
+    T Function() create, {
+    Key? key,
+    String? tag,
+    bool permanent = false,
+    required Widget Function(BuildContext context, T controller) builder,
+    bool autoWatch = true,
+  }) {
+    return LView<T>(
+      key: key,
+      resolver: (context) =>
+          context.levit.put<T>(create, tag: tag, permanent: permanent),
+      builder: builder,
+      autoWatch: autoWatch,
+    );
+  }
+
+  /// Finds and consumes an existing dependency of type [T].
+  factory LView.find({
+    Key? key,
+    String? tag,
+    required Widget Function(BuildContext context, T controller) builder,
+    bool autoWatch = true,
+  }) {
+    return LView<T>(
+      key: key,
+      resolver: (context) => context.levit.find<T>(tag: tag),
+      builder: builder,
+      autoWatch: autoWatch,
+    );
+  }
+
   /// Builds the view content for the given [controller].
   ///
   /// Subclasses can override this instead of providing a [builder].
@@ -161,6 +194,55 @@ class LAsyncView<T> extends StatefulWidget {
         error: error,
         args: args,
       );
+
+  /// Registers an async dependency of type [T] and consumes it.
+  factory LAsyncView.put(
+    Future<T> Function() create, {
+    Key? key,
+    String? tag,
+    bool permanent = false,
+    bool isFactory = false,
+    required Widget Function(BuildContext context, T controller) builder,
+    bool autoWatch = true,
+    Widget Function(BuildContext context)? loading,
+    Widget Function(BuildContext context, Object error)? error,
+    List<Object?>? args,
+  }) {
+    return LAsyncView<T>(
+      key: key,
+      resolver: (context) async {
+        context.levit.lazyPutAsync<T>(create,
+            tag: tag, permanent: permanent, isFactory: isFactory);
+        return context.levit.findAsync<T>(tag: tag);
+      },
+      builder: builder,
+      autoWatch: autoWatch,
+      loading: loading,
+      error: error,
+      args: args,
+    );
+  }
+
+  /// Finds and consumes an existing async dependency of type [T].
+  factory LAsyncView.find({
+    Key? key,
+    String? tag,
+    required Widget Function(BuildContext context, T controller) builder,
+    bool autoWatch = true,
+    Widget Function(BuildContext context)? loading,
+    Widget Function(BuildContext context, Object error)? error,
+    List<Object?>? args,
+  }) {
+    return LAsyncView<T>(
+      key: key,
+      resolver: (context) => context.levit.findAsync<T>(tag: tag),
+      builder: builder,
+      autoWatch: autoWatch,
+      loading: loading,
+      error: error,
+      args: args,
+    );
+  }
 
   /// Builds the view content for the given [controller].
   @protected

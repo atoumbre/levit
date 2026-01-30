@@ -29,10 +29,8 @@ class CounterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LScopedView(
-      resolver: (BuildContext c) {
-        return c.levit.put(() => CounterController());
-      },
+    return LScopedView.put(
+      () => CounterController(),
       builder: (context, controller) => Scaffold(
         appBar: AppBar(title: const Text('Levit Flutter Example')),
         body: Center(
