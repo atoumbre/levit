@@ -1,4 +1,11 @@
 
+## 0.0.6
+
+- **FEAT**: Added `LScopedView`, `LAsyncScopedView`, and `LScopedAsyncView` for simplified scoped dependency management.
+- **FEAT**: Added static `put`, `lazyPut`, and `lazyPutAsync` factory methods to `LScope` and `LScopedView`.
+- **FIX**: Improved `LView` mounting performance.
+- Documentation updates.
+
 ## 0.0.5
 - Production-ready documentation (Effective Dart compliance)
 - Added `topics` to pubspec for improved discoverability

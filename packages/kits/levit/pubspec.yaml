@@ -1,6 +1,6 @@
 name: levit
 description: Levit Dart Kit for Dart applications. Includes levit_reactive, levit_scope and levit_dart.
-version: 0.0.5
+version: 0.0.6
 repository: https://github.com/softilab/levit
 topics:
   - state-management
@@ -11,7 +11,7 @@ environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
-  levit_dart: ^0.0.5
+  levit_dart: ^0.0.6
   
 dev_dependencies:
   test: ^1.24.0
