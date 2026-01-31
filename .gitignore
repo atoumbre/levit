@@ -38,5 +38,4 @@ coverage_report/
 !.env.example
 .temp-docs
 **/doc/api/
-pubspec_overrides.yaml
 pana_report.md

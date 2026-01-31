@@ -1,0 +1,6 @@
+# melos_managed_dependency_overrides: levit_reactive,levit_scope
+dependency_overrides:
+  levit_reactive:
+    path: ../levit_reactive
+  levit_scope:
+    path: ../levit_scope
