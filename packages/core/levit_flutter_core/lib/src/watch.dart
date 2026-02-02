@@ -1,28 +1,24 @@
 part of '../levit_flutter_core.dart';
 
-/// A reactive widget that automatically rebuilds when accessed [LxReactive] values change.
+/// A widget that rebuilds when reactive state changes.
 ///
-/// [LWatch] is the primary bridge between the reactive state in your controllers
-/// and the Flutter UI. It uses a "proxy-based tracking" mechanism to detect
-/// which reactive variables are used during the execution of its [builder].
+/// [LWatch] tracks which [LxReactive] values are accessed within its [builder]
+/// and automatically triggers a rebuild when any of them change.
 ///
-/// ### Usage
-/// Simply wrap any widget that depends on reactive state in an [LWatch].
-///
-/// // Example usage:
+/// Example:
 /// ```dart
-/// final count = 0.lx;
-///
-/// LWatch(() => Text('Count: ${count.value}'))
+/// LWatch(() {
+///   return Text('Count: ${controller.count()}');
+/// });
 /// ```
 class LWatch extends Widget {
-  /// The builder function that constructs the reactive widget tree.
+  /// The builder function used to generate the widget tree.
   final Widget Function() builder;
 
-  /// An optional label for debugging and performance profiling.
+  /// A debug label used for profiling and logging.
   final String? debugLabel;
 
-  /// Creates a reactive [LWatch] widget.
+  /// Creates a reactive widget.
   const LWatch(this.builder, {super.key, this.debugLabel});
 
   @override
@@ -196,201 +192,5 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
   void unmount() {
     _runWithContext(_cleanupAll);
     super.unmount();
-  }
-}
-
-/// A reactive widget that observes a single, specific reactive value.
-///
-/// Unlike [LWatch], which tracks dependencies automatically, [LWatchVar]
-/// requires you to explicitly provide the reactive object to watch.
-///
-/// // Example usage:
-/// ```dart
-/// LWatchVar(myCount, (count) => Text('Value: ${count.value}'))
-/// ```
-class LWatchVar<T extends LxReactive> extends Widget {
-  /// The builder function that receives the specific reactive instance [x].
-  final Widget Function(T x) builder;
-
-  /// The reactive instance to observe.
-  final T x;
-
-  /// Creates a widget that specifically watches the reactive object [x].
-  const LWatchVar(this.x, this.builder, {super.key});
-
-  @override
-  Element createElement() => _LWatchVarElement<T>(this);
-}
-
-class _LWatchVarElement<T extends LxReactive> extends ComponentElement {
-  _LWatchVarElement(LWatchVar<T> super.widget);
-
-  @override
-  void mount(Element? parent, Object? newSlot) {
-    super.mount(parent, newSlot);
-    _runWithContext(() {
-      (widget as LWatchVar<T>).x.addListener(_onNotify);
-    });
-  }
-
-  void _onNotify() {
-    if (mounted) markNeedsBuild();
-  }
-
-  @override
-  void update(LWatchVar<T> newWidget) {
-    final oldWidget = widget as LWatchVar<T>;
-    super.update(newWidget);
-    if (newWidget.x != oldWidget.x) {
-      _runWithContext(() {
-        oldWidget.x.removeListener(_onNotify);
-        newWidget.x.addListener(_onNotify);
-      });
-    }
-    markNeedsBuild(); // Force rebuild
-    rebuild();
-  }
-
-  @override
-  Widget build() {
-    return (widget as LWatchVar<T>).builder((widget as LWatchVar<T>).x);
-  }
-
-  @override
-  void unmount() {
-    _runWithContext(() {
-      (widget as LWatchVar<T>).x.removeListener(_onNotify);
-    });
-    super.unmount();
-  }
-
-  void _runWithContext(void Function() fn) {
-    if (LevitReactiveMiddleware.hasListenerMiddlewares) {
-      Lx.runWithContext(_buildContext(), fn);
-    } else {
-      fn();
-    }
-  }
-
-  LxListenerContext _buildContext() {
-    return LxListenerContext(
-      type: 'LWatchVar',
-      id: identityHashCode(this),
-      data: {'runtimeType': widget.runtimeType.toString()},
-    );
-  }
-}
-
-/// A reactive widget specialized for handling the various states of an [LxStatus].
-///
-/// [LWatchStatus] is a high-performance alternative for handling asynchronous
-/// state transitions. It resolves the current state of [x] and calls the
-/// corresponding builder.
-///
-/// // Example usage:
-/// ```dart
-/// LWatchStatus(
-///   myStatusRx,
-///   onSuccess: (data) => Text('Data: $data'),
-///   onWaiting: () => CircularProgressIndicator(),
-/// )
-/// ```
-class LWatchStatus<T> extends Widget {
-  /// The reactive status source to watch.
-  final LxReactive<LxStatus<T>> x;
-
-  /// Builder for success state.
-  final Widget Function(T data) onSuccess;
-
-  /// Builder for waiting/loading state.
-  final Widget Function()? onWaiting;
-
-  /// Builder for error state.
-  final Widget Function(Object error, StackTrace? stackTrace)? onError;
-
-  /// Builder for idle state.
-  final Widget Function()? onIdle;
-
-  /// Creates a widget that specifically watches the status source [x].
-  const LWatchStatus(
-    this.x, {
-    super.key,
-    required this.onSuccess,
-    this.onWaiting,
-    this.onError,
-    this.onIdle,
-  });
-
-  @override
-  Element createElement() => LWatchStatusElement<T>(this);
-}
-
-class LWatchStatusElement<T> extends ComponentElement {
-  LWatchStatusElement(LWatchStatus<T> super.widget);
-
-  @override
-  void mount(Element? parent, Object? newSlot) {
-    super.mount(parent, newSlot);
-    _runWithContext(() {
-      (widget as LWatchStatus<T>).x.addListener(_onNotify);
-    });
-  }
-
-  void _onNotify() {
-    if (mounted) markNeedsBuild();
-  }
-
-  @override
-  void update(LWatchStatus<T> newWidget) {
-    final oldWidget = widget as LWatchStatus<T>;
-    super.update(newWidget);
-    if (newWidget.x != oldWidget.x) {
-      _runWithContext(() {
-        oldWidget.x.removeListener(_onNotify);
-        newWidget.x.addListener(_onNotify);
-      });
-    }
-    markNeedsBuild();
-    rebuild();
-  }
-
-  @override
-  Widget build() {
-    final w = widget as LWatchStatus<T>;
-    final status = w.x.value;
-
-    return switch (status) {
-      LxIdle<T>() =>
-        w.onIdle?.call() ?? w.onWaiting?.call() ?? const SizedBox.shrink(),
-      LxWaiting<T>() => w.onWaiting?.call() ?? const SizedBox.shrink(),
-      LxError<T>(:final error, :final stackTrace) =>
-        w.onError?.call(error, stackTrace) ??
-            Center(child: Text('Error: $error')),
-      LxSuccess<T>(:final value) => w.onSuccess(value),
-    };
-  }
-
-  @override
-  void unmount() {
-    _runWithContext(() {
-      (widget as LWatchStatus<T>).x.removeListener(_onNotify);
-    });
-    super.unmount();
-  }
-
-  void _runWithContext(void Function() fn) {
-    if (LevitReactiveMiddleware.hasListenerMiddlewares) {
-      Lx.runWithContext(_buildContext(), fn);
-    } else {
-      fn();
-    }
-  }
-
-  LxListenerContext _buildContext() {
-    return LxListenerContext(
-      type: 'LWatchStatus',
-      id: identityHashCode(this),
-      data: {'runtimeType': widget.runtimeType.toString()},
-    );
   }
 }

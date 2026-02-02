@@ -2,27 +2,27 @@ part of '../levit_reactive.dart';
 
 int _batchCounter = 0;
 
-/// Represents a discrete change in a reactive variable's state.
+/// Represents a state transition in a reactive variable.
 ///
-/// [LevitReactiveChange] is passed to middlewares to allow inspection,
-/// logging, or modification of the state transition.
+/// Captured by [LevitReactiveMiddleware] to support logging, debugging,
+/// and undo/redo operations.
 class LevitReactiveChange<T> {
-  /// The timestamp when the change was initiated.
+  /// The timestamp of the change.
   final DateTime timestamp;
 
-  /// The runtime type of the value being changed.
+  /// The runtime type of the value held.
   final Type valueType;
 
-  /// The state of the variable before the change.
+  /// The value before modification.
   final T oldValue;
 
-  /// The proposed new state of the variable.
+  /// The value after modification.
   final T newValue;
 
-  /// The stack trace at the point of mutation (if enabled).
+  /// The stack trace at the moment of change, if enabled.
   final StackTrace? stackTrace;
 
-  /// A function that restores the variable to its previous state.
+  /// A callback to restore the variable to this state.
   final void Function(dynamic value)? restore;
 
   /// Creates a record of a state change.
@@ -120,49 +120,56 @@ class LevitReactiveBatch implements LevitReactiveChange<void> {
   String toString() => '[$timestamp] Batch of ${entries.length} changes';
 }
 
-/// Base class for intercepting and observing the reactive lifecycle.
+/// Base class for intercepting reactive system events.
 ///
-/// Middlewares provide a unified way to implement cross-cutting concerns like
-/// logging, state persistence, undo/redo, and analytics.
+/// Implement this class to create cross-cutting tools like loggers,
+/// dev-tools, or state synchronization plugins.
+///
+/// You can intercept:
+/// *   State changes ([onSet], [onBatch])
+/// *   Lifecycle events ([onInit], [onDispose])
+/// *   Graph updates ([onGraphChange])
+/// *   Listener activity ([startedListening], [stoppedListening])
+/// *   Errors ([onReactiveError])
 abstract class LevitReactiveMiddleware {
-  /// Creates a [LevitReactiveMiddleware] instance.
+  /// Base constructor.
   const LevitReactiveMiddleware();
 
   static final List<LevitReactiveMiddleware> _middlewares = [];
 
   static bool _hasSetMiddlewares = false;
 
-  /// Returns `true` if any registered middleware has an [onSet] interceptor.
+  /// Whether any active middleware intercepts setting values.
   static bool get hasSetMiddlewares => _hasSetMiddlewares;
 
   static bool _hasBatchMiddlewares = false;
 
-  /// Returns `true` if any registered middleware has an [onBatch] interceptor.
+  /// Whether any active middleware intercepts batch operations.
   static bool get hasBatchMiddlewares => _hasBatchMiddlewares;
 
   static bool _hasDisposeMiddlewares = false;
 
-  /// Returns `true` if any registered middleware has an [onDispose] interceptor.
+  /// Whether any active middleware observes disposal.
   static bool get hasDisposeMiddlewares => _hasDisposeMiddlewares;
 
   static bool _hasInitMiddlewares = false;
 
-  /// Returns `true` if any registered middleware has an [onInit] observer.
+  /// Whether any active middleware observes initialization.
   static bool get hasInitMiddlewares => _hasInitMiddlewares;
 
   static bool _hasGraphChangeMiddlewares = false;
 
-  /// Returns `true` if any registered middleware has an [onGraphChange] observer.
+  /// Whether any active middleware tracks dependency graph changes.
   static bool get hasGraphChangeMiddlewares => _hasGraphChangeMiddlewares;
 
   static bool _hasListenerMiddlewares = false;
 
-  /// Returns `true` if any registered middleware has listener observers.
+  /// Whether any active middleware tracks listener attachment/detachment.
   static bool get hasListenerMiddlewares => _hasListenerMiddlewares;
 
   static bool _hasErrorMiddlewares = false;
 
-  /// Returns `true` if any registered middleware has error observers.
+  /// Whether any active middleware intercepts errors.
   static bool get hasErrorMiddlewares => _hasErrorMiddlewares;
 
   static void _updateFlags() {
@@ -228,34 +235,33 @@ abstract class LevitReactiveMiddleware {
     }
   }
 
-  /// Intercepts and optionally wraps a value mutation.
+  /// Intercepts value mutations.
+  ///
+  /// Return a wrapped function to modify or log the set operation.
   LxOnSet? get onSet => null;
 
-  /// Intercepts and optionally wraps a batch execution.
+  /// Intercepts batch operations.
   LxOnBatch? get onBatch => null;
 
-  /// Intercepts and optionally wraps the disposal of a reactive object.
+  /// Intercepts disposal.
   LxOnDispose? get onDispose => null;
 
-  /// Observes the initialization of a reactive object.
+  /// Observes initialization of new reactive objects.
   void Function(LxReactive reactive)? get onInit => null;
 
-  /// Observes dependencies change in a computed reactive object.
+  /// Observes changes to the dependency graph of a computed value.
   void Function(LxReactive computed, List<LxReactive> dependencies)?
       get onGraphChange => null;
 
-  /// Called when a listener is added to a reactive object.
+  /// Observes when a new listener is added.
   void Function(LxReactive reactive, LxListenerContext? context)?
       get startedListening => null;
 
-  /// Called when a listener is removed from a reactive object.
+  /// Observes when a listener is removed.
   void Function(LxReactive reactive, LxListenerContext? context)?
       get stoppedListening => null;
 
-  /// Called when an error occurs during notification.
-  ///
-  /// This hook is invoked after the error has been caught by the framework,
-  /// preserving the stability of the notification loop.
+  /// Observes errors caught during notification.
   void Function(Object error, StackTrace? stack, LxReactive? context)?
       get onReactiveError => null;
 }
@@ -394,13 +400,13 @@ class LevitReactiveHistoryMiddleware extends LevitReactiveMiddleware {
   /// Creates a history tracking middleware.
   LevitReactiveHistoryMiddleware();
 
-  /// Returns an unmodifiable list of all recorded changes in the undo stack.
+  /// The stack of past changes (Undo).
   List<LevitReactiveChange> get changes {
     _version.value;
     return List.unmodifiable(_undoStack);
   }
 
-  /// Returns an unmodifiable list of changes available for redo.
+  /// The stack of reverted changes (Redo).
   List<LevitReactiveChange> get redoChanges {
     _version.value;
     return List.unmodifiable(_redoStack);

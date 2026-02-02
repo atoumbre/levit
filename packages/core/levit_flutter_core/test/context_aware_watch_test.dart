@@ -45,9 +45,9 @@ void main() {
     final count = 0.lx.named('consumer_count');
 
     await tester.pumpWidget(
-      LWatchVar<LxNum<int>>(
+      LBuilder<int>(
         count,
-        (c) => Text('${c.value}', textDirection: TextDirection.ltr),
+        (c) => Text('${c}', textDirection: TextDirection.ltr),
       ),
     );
 
@@ -63,18 +63,18 @@ void main() {
     final count2 = 100.lx;
 
     await tester.pumpWidget(
-      LWatchVar<LxNum<int>>(
+      LBuilder<int>(
         count1,
-        (c) => Text('${c.value}', textDirection: TextDirection.ltr),
+        (c) => Text('${c}', textDirection: TextDirection.ltr),
       ),
     );
     expect(find.text('0'), findsOneWidget);
 
     // Swap reactive by rebuilding widget with new reactive
     await tester.pumpWidget(
-      LWatchVar<LxNum<int>>(
+      LBuilder<int>(
         count2,
-        (c) => Text('${c.value}', textDirection: TextDirection.ltr),
+        (c) => Text('${c}', textDirection: TextDirection.ltr),
       ),
     );
     expect(find.text('100'), findsOneWidget);

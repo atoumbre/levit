@@ -1,9 +1,11 @@
 part of '../../levit_flutter.dart';
 
-/// A mixin that automatically pauses execution loops when the app goes to background.
+/// A mixin that synchronizes execution loops with the app lifecycle.
 ///
-/// It requires [LevitLoopExecutionMixin] to function.
-/// LevitLoopExecutionMixin
+/// Automatically pauses all tasks in the [loopEngine] when the app enters the
+/// background, and resumes them when the app returns to the foreground.
+///
+/// Requires [LevitLoopExecutionMixin].
 mixin LevitLoopExecutionLifecycleMixin
     on LevitController, LevitLoopExecutionMixin {
   late final _LifecycleLoopObserver _lifecycleObserver;
@@ -21,10 +23,9 @@ mixin LevitLoopExecutionLifecycleMixin
     super.onClose();
   }
 
-  /// Override this to return true if you want to force pause even permanent tasks
-  /// when the app goes to background.
+  /// Whether to pause services marked as "permanent" during the app backgrounding.
   ///
-  /// Defaults to `false`.
+  /// Defaults to `false` (permanent services continue running).
   bool get pauseLifecycleServicesForce => false;
 }
 

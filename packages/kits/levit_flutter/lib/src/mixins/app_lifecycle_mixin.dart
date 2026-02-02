@@ -1,9 +1,20 @@
 part of '../../levit_flutter.dart';
 
-/// A mixin that exposes [WidgetsBindingObserver] lifecycle methods to a [LevitController].
+/// A mixin that connects a [LevitController] to the Flutter application lifecycle.
 ///
-/// Override [onAppResumed], [onAppPaused], [onAppInactive], [onAppDetached], or [onAppHidden]
-/// to handle lifecycle changes.
+/// Automatically registers a [WidgetsBindingObserver] when the controller is
+/// initialized and removes it when closed.
+///
+/// Example:
+/// ```dart
+/// class MyController extends LevitController with LevitAppLifecycleMixin {
+///   @override
+///   void onAppResumed() {
+///     print('App is back!');
+///     fetchData();
+///   }
+/// }
+/// ```
 mixin LevitAppLifecycleMixin on LevitController {
   late final _AppLifecycleObserver _observer;
 
@@ -23,14 +34,13 @@ mixin LevitAppLifecycleMixin on LevitController {
   /// Called when the application is visible and responding to user input.
   void onAppResumed() {}
 
-  /// Called when the application is not currently visible to the user, not responding to
-  /// user input, and running in the background.
+  /// Called when the application is not visible to the user and running in the background.
   void onAppPaused() {}
 
-  /// Called when the application is in an inactive state and is not receiving user input.
+  /// Called when the application is in an inactive state and not receiving input.
   void onAppInactive() {}
 
-  /// Called when the application is still hosted on a flutter engine but is detached from any host views.
+  /// Called when the flutter engine is detached from any host views.
   void onAppDetached() {}
 
   /// Called when the application is hidden.

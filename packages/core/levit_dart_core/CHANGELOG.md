@@ -1,7 +1,13 @@
 
 ## 0.0.6
 
-- Documentation updates.
+### Breaking Changes
+- **REMOVED** `LevitState`. Replaced with `LevitStore`.
+  - API remains largely similar but class name and semantics have shifted to "Store".
+
+### New Features
+- **Enhanced LevitRef**:
+  - Added `ref.put()`, `ref.lazyPut()`, and `ref.lazyPutAsync()` allowing full DI registration capabilities directly from within a store/controller definition.
 
 ## 0.0.5
 - Production-ready documentation (Effective Dart compliance)

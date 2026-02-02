@@ -49,7 +49,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<int>(
+          home: LStatusBuilder<int>(
             x,
             onSuccess: (val) => Text('Val: $val'),
           ),
@@ -70,7 +70,7 @@ void main() {
       final x = LxVar<LxStatus<int>>(LxError('err', StackTrace.empty));
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<int>(x, onSuccess: (v) => Text('$v')),
+          home: LStatusBuilder<int>(x, onSuccess: (v) => Text('$v')),
         ),
       );
       expect(find.textContaining('Error: err'), findsOneWidget);

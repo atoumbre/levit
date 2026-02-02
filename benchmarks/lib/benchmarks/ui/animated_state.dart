@@ -62,7 +62,7 @@ class LevitAnimatedBenchmark extends BenchmarkImplementation {
 
   @override
   Widget build(BuildContext context) {
-    return LWatchVar(progress, (progress) {
+    return LBuilder(progress, (progress) {
       return Container(
         width: 200,
         height: 20,
@@ -70,7 +70,7 @@ class LevitAnimatedBenchmark extends BenchmarkImplementation {
           border: Border.all(color: Colors.blue),
         ),
         child: FractionallySizedBox(
-          widthFactor: progress.value,
+          widthFactor: progress,
           alignment: Alignment.centerLeft,
           child: Container(color: Colors.blue),
         ),

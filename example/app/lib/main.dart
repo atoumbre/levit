@@ -596,7 +596,7 @@ class _TopBar extends StatelessWidget {
                   const SizedBox(width: 16),
                   // Showcase: LStatusBuilder (Pillar 6)
                   // Handles async status (loading, success, error) automatically
-                  LWatchStatus(
+                  LStatusBuilder(
                     pc.sessionTimer,
                     onSuccess: (time) => Text(
                       'Session: $time',

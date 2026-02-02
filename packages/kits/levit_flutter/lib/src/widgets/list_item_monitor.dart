@@ -1,19 +1,25 @@
 part of '../../levit_flutter.dart';
 
-/// A wrapper widget that triggers callbacks when it enters or leaves the widget tree.
+/// A widget that detects when it enters or leaves the widget tree.
 ///
-/// This is highly useful for index-based pagination or tracking impression analytics
-/// in infinite lists without managing complex ScrollControllers.
+/// Useful for triggering events like pagination loading or analytics impressions
+/// when an item is scrolled into view.
+///
+/// Example:
+/// ```dart
+/// LWidgetMonitor(
+///   onInit: () => controller.loadNextPage(),
+///   child: LoadingSpinner(),
+/// )
+/// ```
 class LWidgetMonitor extends StatefulWidget {
-  /// The widget below this widget in the tree.
+  /// The widget to monitor.
   final Widget child;
 
-  /// Called immediately when this widget's state is initialized (i.e., when
-  /// the item is built and added to the tree).
+  /// Called when the widget is initialized (mounted).
   final VoidCallback? onInit;
 
-  /// Called when this widget is disposed (i.e., when the item is removed
-  /// from the list, usually due to scrolling out of the cache extent).
+  /// Called when the widget is disposed (unmounted).
   final VoidCallback? onDispose;
 
   const LWidgetMonitor({

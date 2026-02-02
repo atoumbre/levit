@@ -1,15 +1,23 @@
 part of '../../levit_flutter.dart';
 
-/// A widget that keeps its child alive even when it is scrolled out of view or
-/// moved off-screen in a [PageView] or [TabBarView].
+/// A widget that preserves its child when scrolled off-screen.
 ///
-/// This is a wrapper around [AutomaticKeepAliveClientMixin].
+/// Wraps [AutomaticKeepAliveClientMixin] to prevent widgets from being disposed
+/// in [ListView]s or [PageView]s.
+///
+/// Example:
+/// ```dart
+/// LKeepAlive(
+///   child: MyExpensiveWidget(),
+/// )
+/// ```
 class LKeepAlive extends StatefulWidget {
+  /// The widget to keep alive.
   final Widget child;
 
-  /// Whether to keep the child alive. Defaults to true.
+  /// Whether the widget should currently be kept alive.
   ///
-  /// If changed dynamically, it will trigger an update to the keep-alive state.
+  /// Defaults to `true`. Changing this value at runtime updates the keep-alive state.
   final bool keepAlive;
 
   const LKeepAlive({

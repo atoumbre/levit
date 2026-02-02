@@ -5,7 +5,9 @@
     "language": "en",
     // words - list of words to be always considered correct
     "words": [
+        "argb",
         "atoumbre",
+        "backgrounding",
         "bluefireteam",
         "cancelables",
         "computeds",
@@ -13,6 +15,7 @@
         "dartdoc",
         "devs",
         "entrancy",
+        "expando",
         "GETX",
         "gifs",
         "inited",
@@ -29,6 +32,7 @@
         "microtask",
         "microtasks",
         "pana",
+        "pausable",
         "pubspec",
         "Pubspec",
         "reactives",
@@ -41,15 +45,14 @@
         "sublist",
         "subosito",
         "substr",
+        "todos",
         "typedefs",
         "unregisters",
         "unwatch",
         "Updateable",
         "Vite",
         "vitepress",
-        "writeln",
-        "pausable",
-        "argb"
+        "writeln"
     ],
     // flagWords - list of words to be always considered incorrect
     // This is useful for offensive words and common spelling errors.

@@ -2,6 +2,7 @@ import 'benchmark_engine.dart';
 import 'benchmarks/logic/async_computed.dart';
 import 'benchmarks/logic/batch_benchmark.dart';
 import 'benchmarks/logic/complex_graph.dart';
+import 'benchmarks/logic/computed_chain.dart';
 import 'benchmarks/logic/fan_in.dart';
 import 'benchmarks/logic/fan_out.dart';
 import 'benchmarks/logic/rapid_mutation.dart';
@@ -21,6 +22,7 @@ class BenchmarkDiscovery {
     AsyncComputedBenchmark(),
     BatchVsUnBatchedBenchmark(),
     ScopedDIBenchmark(),
+    ComputedChainBenchmark(),
 
     // UI Benchmarks
     LargeListBenchmark(),

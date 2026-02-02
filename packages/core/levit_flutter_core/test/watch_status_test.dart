@@ -13,7 +13,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<String>(
+          home: LStatusBuilder<String>(
             rx,
             onSuccess: (data) => Text('Data: $data'),
           ),
@@ -28,7 +28,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<String>(
+          home: LStatusBuilder<String>(
             rx,
             onSuccess: (data) => Text('Data: $data'),
             onWaiting: () => const Text('Loading...'),
@@ -49,7 +49,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<String>(
+          home: LStatusBuilder<String>(
             rx,
             onSuccess: (data) => Text('Data: $data'),
             onError: (err, stack) => Text('Error: $err'),
@@ -65,7 +65,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<String>(
+          home: LStatusBuilder<String>(
             rx,
             onSuccess: (data) => Text('Data: $data'),
             onWaiting: () => const Text('Waiting...'),
@@ -82,7 +82,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<String>(
+          home: LStatusBuilder<String>(
             rx1,
             onSuccess: (data) => Text('Data: $data'),
           ),
@@ -93,7 +93,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<String>(
+          home: LStatusBuilder<String>(
             rx2,
             onSuccess: (data) => Text('Data: $data'),
           ),
@@ -108,7 +108,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<String>(
+          home: LStatusBuilder<String>(
             rx,
             onSuccess: (data) => Text('Data: $data'),
           ),

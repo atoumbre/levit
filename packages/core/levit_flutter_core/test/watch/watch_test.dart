@@ -102,9 +102,9 @@ void main() {
         MaterialApp(
           home: ValueListenableBuilder<bool>(
             valueListenable: useFirst,
-            builder: (_, first, __) => LWatchVar<LxVar<String>>(
+            builder: (_, first, __) => LBuilder<String>(
               first ? value1 : value2,
-              (value) => Text('Value: ${value.value}'),
+              (value) => Text('Value: ${value}'),
             ),
           ),
         ),

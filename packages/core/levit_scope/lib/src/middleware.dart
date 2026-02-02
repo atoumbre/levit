@@ -1,76 +1,46 @@
 part of '../levit_scope.dart';
 
-/// Interface for middleware hooks on dependency injection events.
+/// Interface for observing and intercepting [LevitScope] lifecycle events.
 ///
-/// Implement this interface to receive callbacks when dependencies are
-/// registered, resolved, or deleted across any [LevitScope].
+/// Implement this interface to create middleware for logging, profiling, or
+/// custom lifecycle management.
 abstract class LevitScopeMiddleware {
-  /// Base constructor.
+  /// Creates a [LevitScopeMiddleware].
   const LevitScopeMiddleware();
 
-  /// Called when a new scope is created.
-  ///
-  /// *   [scopeId]: Unique identifier for the new scope.
-  /// *   [scopeName]: The name of the new scope.
-  /// *   [parentScopeId]: The ID of the parent scope, or null if root.
+  /// Called when a new [LevitScope] is created.
   void onScopeCreate(int scopeId, String scopeName, int? parentScopeId) {}
 
-  /// Called when a scope is disposed.
-  ///
-  /// *   [scopeId]: The unique identifier of the disposed scope.
-  /// *   [scopeName]: The name of the disposed scope.
+  /// Called when a [LevitScope] is disposed.
   void onScopeDispose(int scopeId, String scopeName) {}
 
-  /// Called when a dependency is registered via [LevitScope.put], [LevitScope.lazyPut]
-  /// or their async variants.
+  /// Called when a dependency matches a registration request.
   ///
-  /// *   [scopeId]: Unique identifier for the scope instance.
-  /// *   [scopeName]: The name of the scope where the dependency is registered.
-  /// *   [key]: The key under which the dependency is registered (type + optional tag).
-  /// *   [info]: Metadata about the registered dependency.
-  /// *   [source]: The method that triggered the event (e.g., 'put', 'lazyPut').
-  /// *   [parentScopeId]: The ID of the parent scope, or null if root.
+  /// This triggers on [LevitScope.put], [LevitScope.lazyPut], and their variants.
   void onDependencyRegister(
       int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {}
 
-  /// Called when a dependency is resolved (created or returned) via [LevitScope.find]
-  /// or its variants.
+  /// Called when a dependency instance is resolved.
   ///
-  /// *   [scopeId]: Unique identifier for the scope instance.
-  /// *   [scopeName]: The name of the scope where the dependency was found.
-  /// *   [key]: The key of the resolved dependency.
-  /// *   [info]: Metadata about the resolved dependency.
-  /// *   [source]: The method that triggered the event (e.g., 'find', 'findAsync').
-  /// *   [parentScopeId]: The ID of the parent scope, or null if root.
+  /// This triggers when [LevitScope.find] or its variants successfully return an instance.
   void onDependencyResolve(
       int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {}
 
-  /// Called when a dependency is deleted via [LevitScope.delete] or [LevitScope.reset].
+  /// Called when a dependency is removed.
   ///
-  /// *   [scopeId]: Unique identifier for the scope instance.
-  /// *   [scopeName]: The name of the scope from which the dependency was deleted.
-  /// *   [key]: The key of the deleted dependency.
-  /// *   [info]: Metadata about the deleted dependency.
-  /// *   [source]: The method that triggered the event (e.g., 'delete', 'reset').
-  /// *   [parentScopeId]: The ID of the parent scope, or null if root.
+  /// This triggers on [LevitScope.delete] or [LevitScope.reset].
   void onDependencyDelete(
       int scopeId, String scopeName, String key, LevitDependency info,
       {required String source, int? parentScopeId}) {}
 
-  /// Called when a dependency instance is being created.
+  /// Intercepts the instantiation logic of a dependency.
   ///
-  /// This method allows you to wrap the creation logic, for example, to run it
+  /// Override this to wrap the [builder], enabling custom behavior like executing
   /// within a specific [Zone].
   ///
-  /// *   [builder]: The function that creates the instance.
-  /// *   [scope]: The scope where the dependency is being registered.
-  /// *   [key]: The key of the dependency.
-  /// *   [info]: Metadata about the dependency.
-  ///
-  /// Returns a new builder function that eventually calls [builder].
-  /// If you don't need to wrap the builder, simply return [builder] (default behavior).
+  /// Returns the functional wrapper around [builder].
   S Function() onDependencyCreate<S>(
     S Function() builder,
     LevitScope scope,
@@ -79,19 +49,12 @@ abstract class LevitScopeMiddleware {
   ) =>
       builder;
 
-  /// Called when a dependency's [onInit] method is about to be executed.
+  /// Intercepts the [onInit] call of a dependency.
   ///
-  /// This method allows you to wrap the initialization logic, for example, to
-  /// capture reactive variables created during initialization.
+  /// Override this to wrap execution of [onInit], for example to auto-capture
+  /// reactive objects created during initialization.
   ///
-  /// *   [onInit]: The original onInit function.
-  /// *   [instance]: The dependency instance.
-  /// *   [scope]: The scope where the dependency is registered.
-  /// *   [key]: The key of the dependency.
-  /// *   [info]: Metadata about the dependency.
-  ///
-  /// Returns a new void function that eventually calls [onInit].
-  /// If you don't need to wrap onInit, simply return [onInit] (default behavior).
+  /// Returns the functional wrapper around [onInit].
   void Function() onDependencyInit<S>(
     void Function() onInit,
     S instance,

@@ -1,6 +1,8 @@
 
 ## 0.0.6
 
+### New Features
+- Added middleware hooks for `onDependencyCreate` and `onDependencyInit`.
 - Documentation updates.
 
 ## 0.0.5

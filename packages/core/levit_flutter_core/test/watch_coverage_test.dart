@@ -121,9 +121,9 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LWatchVar<TestReactive<int>>(rx, (r) {
+          child: LBuilder<int>(rx, (r) {
             buildCount++;
-            return Text('V: ${r.value}');
+            return Text('V: ${r}');
           }),
         ),
       );
@@ -145,9 +145,9 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LWatchVar<TestReactive<int>>(
+          child: LBuilder<int>(
             rx1,
-            (r) => Text('V: ${r.value}'),
+            (r) => Text('V: ${r}'),
             key: ValueKey('lvalue'),
           ),
         ),
@@ -159,9 +159,9 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LWatchVar<TestReactive<int>>(
+          child: LBuilder<int>(
             rx2,
-            (r) => Text('V: ${r.value}'),
+            (r) => Text('V: ${r}'),
             key: ValueKey('lvalue'),
           ),
         ),

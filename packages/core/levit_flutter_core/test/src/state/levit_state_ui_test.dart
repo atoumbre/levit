@@ -4,11 +4,11 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
   group('LevitStore UI Integration', () {
-    testWidgets('LView.state resolves and reacts', (tester) async {
+    testWidgets('LView.store resolves and reacts', (tester) async {
       final counter = LevitStore((ref) => 0.lx);
 
       await tester.pumpWidget(
-        LView.state(
+        LView.store(
           counter,
           builder: (context, count) =>
               Text('Count: ${count.value}', textDirection: TextDirection.ltr),
@@ -24,19 +24,19 @@ void main() {
       expect(find.text('Count: 1'), findsOneWidget);
     });
 
-    testWidgets('LScopedView.state creates isolated scope', (tester) async {
+    testWidgets('LScopedView.store creates isolated scope', (tester) async {
       final state = LevitStore((ref) => 'default'.lx);
 
       await tester.pumpWidget(
         Column(
           children: [
-            LScopedView.state(
+            LScopedView.store(
               state,
               scopeName: 'ScopeA',
               builder: (context, val) =>
                   Text('A: ${val.value}', textDirection: TextDirection.ltr),
             ),
-            LScopedView.state(
+            LScopedView.store(
               state,
               scopeName: 'ScopeB',
               builder: (context, val) =>

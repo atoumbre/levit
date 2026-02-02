@@ -1,9 +1,10 @@
 part of '../levit_dart_core.dart';
 
-/// The primary entry point for orchestrating dependency injection and reactivity in Levit.
+/// The central entry point for the Levit framework.
 ///
-/// [Levit] provides a unified API for managing [LevitController] lifecycles,
-/// resolving dependencies via [LevitScope], and working with reactive state.
+/// [Levit] unifies the capabilities of [LevitScope] (DI) and [Lx] (Reactivity)
+/// into a single, cohesive API. It manages controller lifecycles, configuration,
+/// and global middleware.
 class Levit {
   // ------------------------------------------------------------
   //    Reactive API accessors
@@ -11,14 +12,15 @@ class Levit {
 
   /// Whether to capture stack traces on state changes.
   ///
-  /// This is performance intensive and should only be used during debugging.
+  /// Enabling this incurs a significant performance penalty.
+  /// Use only for debugging.
   static bool get captureStackTrace => Lx.captureStackTrace;
 
   static set captureStackTrace(bool value) {
     Lx.captureStackTrace = value;
   }
 
-  /// Whether to enable performance monitoring for all [LxWorker] instances.
+  /// Whether to monitor performance metrics for [LxWorker].
   static bool get enableWatchMonitoring => Lx.enableWatchMonitoring;
 
   static set enableWatchMonitoring(bool value) {
@@ -27,36 +29,45 @@ class Levit {
 
   /// Executes [callback] in a synchronous batch.
   ///
-  /// Notifications for all variables mutated inside the batch are deferred
-  /// until the [callback] completes, ensuring only a single notification per variable.
+  /// Notifications are deferred until the batch completes, ensuring that
+  /// observers are only notified once even if multiple values change.
+  ///
+  /// Example:
+  /// ```dart
+  /// Levit.batch(() {
+  ///   firstName.value = 'Jane';
+  ///   lastName.value = 'Doe';
+  /// });
+  /// ```
   static R batch<R>(R Function() callback) {
     return Lx.batch(callback);
   }
 
-  /// Executes asynchronous [callback] in a batch.
+  /// Executes an asynchronous [callback] in a batch.
   ///
-  /// Maintains the batching context across asynchronous gaps, similar to [batch].
+  /// The batching context is maintained across await points.
   static Future<R> batchAsync<R>(Future<R> Function() callback) {
     return Lx.batchAsync(callback);
   }
 
-  /// Executes [action] while temporarily bypassing all registered middlewares.
+  /// Bypasses all state middlewares for the duration of [action].
   static void runWithoutStateMiddleware(void Function() action) {
     Lx.runWithoutMiddleware(action);
   }
 
-  /// Removes all active state middlewares.
+  /// Clears all registered state middlewares.
   static void clearStateMiddlewares() {
     Lx.clearMiddlewares();
   }
 
-  /// Checks if a particular state middleware is currently registered.
+  /// Checks if [middleware] is currently registered.
   static bool containsStateMiddleware(LevitReactiveMiddleware middleware) {
     return Lx.containsMiddleware(middleware);
   }
 
-  /// The context is passed to [LevitReactiveMiddleware.startedListening]
-  /// and [LevitReactiveMiddleware.stoppedListening].
+  /// Executes [fn] within a specific listener context.
+  ///
+  /// Used internally to attribute subscriptions to specific widgets or controllers.
   static T runWithContext<T>(LxListenerContext context, T Function() fn) {
     return Lx.runWithContext(context, fn);
   }
@@ -65,54 +76,48 @@ class Levit {
   //    Levit API accessors
   // ------------------------------------------------------------
 
-  /// Instantiates and registers a dependency using a [builder].
+  /// Instantiates and registers a dependency.
   ///
-  /// The [builder] is executed immediately. If [Levit.enableAutoLinking] is
-  /// active, any reactive variables created during execution are automatically
-  /// captured and linked to the resulting instance for cleanup.
+  /// The [builder] is executed immediately.
+  /// If [permanent] is true, the instance survives [reset].
   ///
-  /// // Example usage:
+  /// Example:
   /// ```dart
-  /// final service = Levit.put(() => MyService());
+  /// final service = Levit.put(() => AuthService());
   /// ```
-  ///
-  /// If [permanent] is true, the instance survives a non-forced [reset].
-  /// Use [tag] as an optional unique identifier to allow multiple instances
-  /// of the same type [S].
   static S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
     return Ls.put<S>(builder, tag: tag, permanent: permanent);
   }
 
-  /// Registers a [builder] that will be executed only when the dependency is first requested.
+  /// Registers a lazy dependency builder.
   ///
-  /// If [permanent] is true, the registration persists through a [reset].
-  /// If [isFactory] is true, a new instance is created every time [find] is called.
+  /// The [builder] runs only when the dependency is first requested.
+  ///
+  /// *   If [isFactory] is true, [builder] runs on every request.
+  /// *   If [permanent] is true, registration survives [reset].
   static void lazyPut<S>(S Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
     Ls.lazyPut<S>(builder,
         tag: tag, permanent: permanent, isFactory: isFactory);
   }
 
-  /// Registers an asynchronous [builder] for lazy instantiation.
+  /// Registers an asynchronous lazy dependency builder.
   ///
-  /// Use [findAsync] to retrieve the instance once the future completes.
-  ///
-  /// * [builder]: A function returning a [Future] of the dependency.
-  /// * [tag]: Optional unique identifier for the instance.
-  /// * [permanent]: If `true`, the registration persists through a [reset].
-  /// * [isFactory]: If `true`, the builder is re-run for every [findAsync] call.
+  /// Retrieve the instance using [findAsync].
   static Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
     return Ls.lazyPutAsync<S>(builder,
         tag: tag, permanent: permanent, isFactory: isFactory);
   }
 
-  /// Resolves a dependency of type [S] or identified by [key] or [tag].
+  /// Finds a registered instance of type [S].
   ///
-  /// Throws an [Exception] if no registration is found.
-  /// Resolves a dependency of type [S] or identified by [key] or [tag].
+  /// Throws if not found. Use [key] to search within a specific [LevitStore].
   ///
-  /// Throws an [Exception] if no registration is found.
+  /// Example:
+  /// ```dart
+  /// final service = Levit.find<AuthService>();
+  /// ```
   static S find<S>({dynamic key, String? tag}) {
     if (key is LevitStore) {
       return key.findIn(Ls.currentScope, tag: tag) as S;
@@ -120,10 +125,7 @@ class Levit {
     return Ls.find<S>(tag: tag);
   }
 
-  /// Retrieves the registered instance of type [S], or returns `null` if not found.
-  ///
-  /// * [key]: A specific [LevitStore] to resolve.
-  /// * [tag]: The unique identifier used during registration.
+  /// Finds an instance of type [S], or returns `null` if missing.
   static S? findOrNull<S>({dynamic key, String? tag}) {
     if (key is LevitStore) {
       try {
@@ -135,10 +137,9 @@ class Levit {
     return Ls.findOrNull<S>(tag: tag);
   }
 
-  /// Asynchronously resolves a dependency of type [S] or identified by [key] or [tag].
+  /// Asynchronously finds an instance of type [S].
   ///
-  /// Useful for dependencies registered via [lazyPutAsync].
-  /// Throws an [Exception] if no registration is found.
+  /// Use for dependencies registered via [lazyPutAsync].
   static Future<S> findAsync<S>({dynamic key, String? tag}) async {
     if (key is LevitStore) {
       final result = await key.findAsyncIn(Ls.currentScope, tag: tag);
@@ -148,10 +149,7 @@ class Levit {
     return Ls.findAsync<S>(tag: tag);
   }
 
-  /// Asynchronously retrieves the registered instance of type [S], or returns `null`.
-  ///
-  /// * [key]: A specific [LevitStore] to resolve.
-  /// * [tag]: The unique identifier used during registration.
+  /// Asynchronously finds an instance of type [S], or returning `null`.
   static Future<S?> findOrNullAsync<S>({dynamic key, String? tag}) async {
     if (key is LevitStore) {
       try {
@@ -165,7 +163,7 @@ class Levit {
     return Ls.findOrNullAsync<S>(tag: tag);
   }
 
-  /// Whether type [S] is registered in the current or any parent scope.
+  /// Returns `true` if type [S] is registered.
   static bool isRegistered<S>({dynamic key, String? tag}) {
     if (key is LevitStore) {
       return key.isRegisteredIn(Ls.currentScope, tag: tag);
@@ -173,7 +171,7 @@ class Levit {
     return Ls.isRegistered<S>(tag: tag);
   }
 
-  /// Whether type [S] has already been instantiated.
+  /// Returns `true` if type [S] is already instantiated (not just pending lazy init).
   static bool isInstantiated<S>({dynamic key, String? tag}) {
     if (key is LevitStore) {
       return key.isInstantiatedIn(Ls.currentScope, tag: tag);
@@ -242,20 +240,16 @@ class Levit {
   //   Auto-Linking
   // -------------------------------------------------------------
 
-  /// Enables the "Auto-Linking" feature.
+  /// Enables automatic linking of reactive state to controller lifecycles.
   ///
-  /// When enabled, any [LxReactive] variable created inside a [Levit.put] builder or
-  /// [LevitController.onInit] is automatically registered for cleanup with
-  /// its parent controller.
-  ///
-  /// This ensures that transient state created within business logic components
-  /// is deterministically cleaned up without manual tracking.
+  /// When enabled, [LxReactive] objects created inside [LevitController.onInit]
+  /// or [LevitApp.onInit] are automatically disposed when the controller is closed.
   static void enableAutoLinking() {
     Lx.addMiddleware(_AutoLinkMiddleware());
     LevitScope.addMiddleware(_AutoDisposeMiddleware());
   }
 
-  /// Disables the "Auto-Linking" feature.
+  /// Disables automatic linking.
   static void disableAutoLinking() {
     Lx.removeMiddleware(_AutoLinkMiddleware());
     LevitScope.removeMiddleware(_AutoDisposeMiddleware());
@@ -351,38 +345,32 @@ class Levit {
   }
 }
 
-/// Fluent API for naming reactive variables.
+/// Fluent extensions for naming and configuring reactive objects.
 extension LxNamingExtension<R extends LxReactive> on R {
-  /// Sets the debug name of this reactive object and returns it.
-  ///
-  /// Useful for chaining:
-  /// ```dart
-  /// final count = 0.lx.named('count');
-  /// ```
+  /// assigns a debug [name] to this reactive object.
   R named(String name) {
     this.name = name;
     return this;
   }
 
-  /// Registers this reactive object with an owner (fluent API).
+  /// Links this reactive object to an owner ID.
   R register(String ownerId) {
     this.ownerId = ownerId;
-
     return this;
   }
 
-  /// Marks this reactive object as sensitive (fluent API).
+  /// Marks this object as containing sensitive data (redacted in logs).
   R sensitive() {
     this.isSensitive = true;
     return this;
   }
 }
 
-/// Interface for objects that can be disposed of.
+/// Interface for objects that require explicit disposal logic.
 ///
-/// Use for complex logic that can be use inside LevitController or LevitStore
-/// and have resources to dispose when the container is disposed.
-///
+/// Implement this interface for custom classes managed by [Levit] to ensure
+/// their resources (streams, connections) are released when the scope closes.
 abstract class LevitDisposable {
+  /// Releases resources held by this object.
   void dispose();
 }

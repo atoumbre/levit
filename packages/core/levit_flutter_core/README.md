@@ -5,63 +5,105 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flags=levit_flutter_core)](https://codecov.io/github/atoumbre/levit)
 
-The Flutter integration layer for the Levit framework. Declarative. Precise. Non-invasive.
+**The essential Flutter bindings for the Levit ecosystem.**
 
-`levit_flutter_core` bridges Levit’s pure Dart core into Flutter’s widget tree. It connects the reactivity of [levit_reactive] and the lifecycle discipline of [levit_dart_core] to Flutter while strictly adhering to Flutter's architectural principles.
-
----
-
-## Purpose & Scope
-
-`levit_flutter_core` provides the necessary glue to project Levit's application logic into your UI. It is responsible for:
-
-- **Reactive UI Binding**: Mapping reactive state transitions to fine-grained widget rebuilds via [LWatch].
-- **Widget-Bound Scoping**: Providing dependency injection scopes that are lifecycle-bound to the widget tree via [LScope].
-- **View-Level Abstractions**: Standardizing view-level logic through managed base classes like [LView] and [LScopedView].
-
-It is designed as an additive layer that complements Flutter's native widgets rather than replacing them.
+`levit_flutter_core` connects your reactive business logic (`levit_reactive`) and dependency injection (`levit_scope`) directly to the Flutter widget tree. It provides widgets for **Listening** to state and **Providing** dependencies.
 
 ---
 
-## Conceptual Overview
+## Why use this?
 
-### Core Elements
+Flutter is declarative; your state management should be too. `levit_flutter_core` offers:
 
-- **[LWatch]**: The primary observer widget. It automatically rebuilds the widget tree whenever reactive variables accessed in its builder change.
-- **[LScope]**: A widget that defines an isolated dependency injection scope. It ensures that services and controllers are created and disposed exactly when needed.
-- **[LView]**: A base class for UI components that offers automatic controller resolution and reactive tracking with minimal boilerplate.
-- **[LWatchStatus]**: A declarative builder for handling asynchronous state transitions (Waiting, Success, Error) with high performance.
+*   **Granular Rebuilds**: `LWatch` rebuilds *only* what changed. No `setState` spaghetti.
+*   **Scoped Access**: `LScope` provides dependencies strictly to its subtree.
+*   **Automatic Disposal**: Resources are cleaned up as soon as widgets leave the screen.
+*   **Zero-Boilerplate Views**: `LView` resolves controllers automatically.
 
 ---
 
-## Getting Started
+## Core Widgets
 
-### 1. Simple Reactivity with `LWatch`
+### 1. The Watcher: `LWatch`
+The bread and butter of your UI. Wraps any widget and rebuilds it when reactive state changes.
 
 ```dart
+// Controller
 final count = 0.lx;
 
-LWatch(() => Text('Value: ${count.value}'))
+// UI
+LWatch(() {
+  return Text("Count: ${count.value}");
+});
 ```
 
-### 2. Dependency Scoping
+### 2. The Provider: `LScope`
+Creates a dependency injection container tied to the widget tree.
 
 ```dart
-LScope(
-  dependencyFactory: (scope) => scope.put(() => MyController()),
-  child: const MyPage(),
+LScope.put(
+  () => ProfileController(),
+  child: const ProfilePage(),
 )
 ```
 
+### 3. The Connector: `LView`
+A base class for pages or complex widgets. It finds your controller and builds the UI.
+
+```dart
+class HomePage extends LView<HomeController> {
+  @override
+  Widget buildView(BuildContext context, HomeController controller) {
+    return Scaffold(
+      appBar: AppBar(title: Text(controller.title())), 
+      body: LWatch(() => Text(controller.userData())),
+    );
+  }
+}
+```
+
 ---
 
-## Design Principles
+## Advanced Usage
 
-### Non-Invasive Reactivity
-`levit_flutter_core` localized updates to the specific widgets that consume state. It does not require global providers or broad rebuilds of the entire widget tree.
+### Async Views
+For screens that depend on async data (like user profiles), use `LAsyncView` or `LAsyncScopedView`.
 
-### Explicit Lifecycle Wiring
-Lifecycle hooks for business logic are deterministic and tied directly to the mounting and unmounting of the widgets that own them.
+```dart
+LAsyncView.put(
+  () async => await UserService.loadProfile(),
+  loading: (context) => const CircularProgressIndicator(),
+  error: (context, err) => Text('Error: $err'),
+  builder: (context, controller) => ProfileContent(controller),
+);
+```
 
-### Tree-Based Resolution
-Dependency resolution follows a predictable tree-search pattern, ensuring that components always resolve the most relevant instance of a service or controller from their current context.
+### Status Builders
+For reactive variables that represent network states (`LxStatus`), use `LStatusBuilder`.
+
+```dart
+LStatusBuilder(
+  controller.userStatus,
+  onWaiting: () => const Spinner(),
+  onError: (err, stack) => ErrorPage(err),
+  onSuccess: (user) => Text('Welcome ${user.name}'),
+);
+```
+
+---
+
+## Installation
+
+This package is usually installed as a transitive dependency of `levit`.
+
+```yaml
+dependencies:
+  levit: ^latest
+```
+
+If you are building a Flutter package that depends on Levit but not the full framework, you can depend on it directly:
+
+```yaml
+dependencies:
+  levit_flutter_core: ^latest
+```

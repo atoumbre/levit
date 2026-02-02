@@ -15,6 +15,9 @@ class AppBenchmarkController extends LevitController {
   // Selected Frameworks
   late LxSet<Framework> selectedFrameworks;
 
+  // Selected Benchmarks
+  late LxSet<Benchmark> selectedBenchmarks;
+
   // Results
   late LxMap<String, List<BenchmarkResult>> results;
 
@@ -33,6 +36,7 @@ class AppBenchmarkController extends LevitController {
     super.onInit();
 
     selectedFrameworks = LxSet(Framework.values.toSet());
+    selectedBenchmarks = LxSet(availableBenchmarks.toSet());
     results = LxMap({});
     isRunning = LxVar(false);
     currentStatus = LxVar('Ready');
@@ -54,7 +58,9 @@ class AppBenchmarkController extends LevitController {
     progress.value = 0.0;
 
     final frameworks = selectedFrameworks.toList();
-    final benchmarks = availableBenchmarks;
+    // final frameworks = selectedFrameworks.toList();
+    final benchmarks =
+        availableBenchmarks.where(selectedBenchmarks.contains).toList();
     final totalSteps = frameworks.length * benchmarks.length;
     int completedSteps = 0;
 
@@ -69,12 +75,8 @@ class AppBenchmarkController extends LevitController {
             await runner.runBenchmark(benchmark, fw, mountWidget: _mountWidget);
 
         // Store
-        Lx.batch(() {
-          if (!results.containsKey(benchmark.name)) {
-            results[benchmark.name] = [];
-          }
-          results[benchmark.name]!.add(result);
-        });
+        final currentResults = results[benchmark.name] ?? [];
+        results[benchmark.name] = [...currentResults, result];
 
         completedSteps++;
         progress.value = completedSteps / totalSteps;
@@ -108,6 +110,30 @@ class AppBenchmarkController extends LevitController {
       selectedFrameworks.remove(fw);
     } else {
       selectedFrameworks.add(fw);
+    }
+  }
+
+  void toggleBenchmark(Benchmark bench) {
+    if (selectedBenchmarks.contains(bench)) {
+      selectedBenchmarks.remove(bench);
+    } else {
+      selectedBenchmarks.add(bench);
+    }
+  }
+
+  void toggleAllFrameworks(bool selectAll) {
+    if (selectAll) {
+      selectedFrameworks.addAll(Framework.values.toSet());
+    } else {
+      selectedFrameworks.removeAll(Framework.values.toSet());
+    }
+  }
+
+  void toggleAllBenchmarks(bool selectAll) {
+    if (selectAll) {
+      selectedBenchmarks.addAll(availableBenchmarks.toSet());
+    } else {
+      selectedBenchmarks.removeAll(availableBenchmarks.toSet());
     }
   }
 }

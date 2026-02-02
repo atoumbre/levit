@@ -17,18 +17,12 @@ class _ScopeProvider extends InheritedWidget {
   bool updateShouldNotify(_ScopeProvider oldWidget) => scope != oldWidget.scope;
 }
 
-/// A widget that defines an isolated dependency injection scope bound to its position in the widget tree.
+/// A widget that creates a [LevitScope] tied to the widget tree.
 ///
-/// [LScope] allows for hierarchical dependency management and automatic resource
-/// cleanup. When the [LScope] is removed from the widget tree, all non-permanent
-/// dependencies registered within it are disposed.
+/// Use [LScope] to provide dependencies for a specific subtree.
+/// The scope is automatically closed when the widget is unmounted.
 ///
-/// ### Stability
-/// By default, [LScope] is **stable**: it will only be initialized once and will
-/// not be recreated even if [dependencyFactory] or [name] changes. To trigger
-/// reactive re-initialization, provide a list of [args].
-///
-/// // Example usage:
+/// Example:
 /// ```dart
 /// LScope(
 ///   dependencyFactory: (scope) => scope.put(() => MyController()),
@@ -197,12 +191,12 @@ class _LScopeState extends State<LScope> {
   }
 }
 
-/// An asynchronous version of [LScope] that waits for dependencies to initialize.
+/// An asynchronous version of [LScope].
 ///
-/// [LAsyncScope] creates a new [LevitScope], runs the provided [dependencyFactory],
-/// and only renders the [child] once the factory's future completes.
+/// Initializes the scope using an asynchronous [dependencyFactory] and
+/// only renders [child] when initialization completes.
 ///
-/// // Example usage:
+/// Example:
 /// ```dart
 /// LAsyncScope(
 ///   dependencyFactory: (scope) async {
@@ -346,7 +340,10 @@ class _LAsyncScopeState extends State<LAsyncScope> {
   }
 }
 
-/// A proxy for accessing Levit dependency injection via [BuildContext].
+/// Gateway for finding dependencies from [BuildContext].
+///
+/// Proxies calls to the nearest [LScope] found in the widget tree.
+/// If no local scope is found, it falls back to the global [Levit] scope.
 class LevitProvider {
   final BuildContext _context;
 
@@ -442,7 +439,9 @@ class LevitProvider {
     return Levit.isInstantiated<S>(tag: tag);
   }
 
-  /// Instantiates and registers a dependency using a [builder].
+  /// Instantiates and registers a dependency.
+  ///
+  /// Registers within the nearest [LScope] if available; otherwise uses global [Levit].
   S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
     final scope = _ScopeProvider.of(_context);
     if (scope != null) {

@@ -244,15 +244,18 @@ class _LevitReactiveCore {
   }
 }
 
-/// The foundational interface for all reactive objects in the Levit ecosystem.
+/// The foundational interface for all reactive objects.
 ///
 /// [LxReactive] unifies various reactive sources (variables, futures, streams)
 /// under a consistent API for observation and notification.
+///
+/// Implementations of this interface can be tracked by [LxComputed], [LWatch],
+/// and other observers.
 abstract interface class LxReactive<T> {
   /// The current state of the reactive object.
   ///
   /// Reading this property automatically registers the object as a dependency
-  /// for the active observer (e.g., inside an [LxComputed] or [LWatch] build).
+  /// of the currently active observer (e.g., inside an [LxComputed] or [LWatch] builder).
   T get value;
 
   /// A unique runtime identifier for this reactive instance.
@@ -267,7 +270,7 @@ abstract interface class LxReactive<T> {
   /// Unregisters a previously added [listener].
   void removeListener(void Function() listener);
 
-  /// Triggers a notification without changing the value.
+  /// Triggers a notification listeners without changing the value.
   ///
   /// This ensures that all current listeners are notified of the current state,
   /// and any associated streams emit the latest value.
@@ -288,7 +291,7 @@ abstract interface class LxReactive<T> {
 
   /// Whether this reactive object contains sensitive data.
   ///
-  /// If true, the value will be obfuscated in monitor events.
+  /// If true, the value will be obfuscated in monitor events and logs.
   bool get isSensitive;
   set isSensitive(bool value);
 }
@@ -312,7 +315,7 @@ abstract class LevitReactiveObserver {
 /// synchronous callbacks and implements several optimizations for large-scale
 /// reactive graphs.
 ///
-/// ### Performance Optimizations
+/// ## Performance Optimizations
 /// 1.  **Fast Path**: Direct call for single-listener, no-batch scenarios.
 /// 2.  **Topological Ordering**: Derived values (like computeds) notify only
 ///     after their dependencies have updated, preventing "glitches".
@@ -790,6 +793,25 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     _boundStream = null;
     _externalListeners = 0;
     _checkActive();
+  }
+
+  /// Creates a specific selection of the state that only updates when the selected value changes.
+  ///
+  /// This is useful for optimizing rebuilds when using large state objects.
+  /// The selector receives the current value of the state.
+  ///
+  /// Example:
+  /// ```dart
+  /// final state = {'count': 0, 'data': 'foo'}.lx;
+  /// final count = state.select((val) => val['count']);
+  /// ```
+  LxComputed<R> select<R>(R Function(T value) selector) {
+    return LxComputed<R>(
+      () => selector(value),
+      staticDeps: true,
+      eager: true,
+      name: name != null ? '$name.select' : null,
+    );
   }
 
   @override

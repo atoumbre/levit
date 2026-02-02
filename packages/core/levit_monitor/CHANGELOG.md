@@ -1,7 +1,12 @@
 
 ## 0.0.6
 
-- Documentation updates.
+### Breaking Changes
+- Renamed `DependencyType.state` to `DependencyType.store`.
+
+### New Features
+- Added `LevitMonitor.setObfuscator` and `obfuscate` API to handle sensitive data in snapshots and events.
+- Updated snapshot and event models to support `isSensitive` property.
 
 ## 0.0.5
 - Production-ready documentation (Effective Dart compliance)

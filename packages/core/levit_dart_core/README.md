@@ -5,74 +5,109 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flags=levit_dart_core)](https://codecov.io/github/atoumbre/levit)
 
-The foundational composition layer for the Levit ecosystem. Explicit. Reactive. Deterministic.
+**The logic and state composition layer of the Levit ecosystem.**
 
-`levit_dart_core` orchestrates the relationship between [levit_reactive] primitives and [levit_scope] dependency management into a structured framework for building pure Dart business logic.
-
----
-
-## Purpose & Scope
-
-`levit_dart_core` provides a predictable environment for managing application logic without UI dependencies. It is responsible for:
-
-- **Lifecycle Orchestration**: Defining how components are initialized, attached to scopes, and disposed.
-- **Automated Resource Management**: Ensuring all streams, timers, and reactive objects are cleaned up deterministically.
-- **Composition Conventions**: Providing both class-based ([LevitController]) and functional ([LevitStore]) abstractions for logic.
-
-It deliberately avoids UI or platform-specific logic, making it suitable for CLI tools, servers, and background services. For Flutter integration, use `levit_flutter_core`.
+`levit_dart_core` bridges the gap between raw reactivity (`levit_reactive`) and dependency injection (`levit_scope`). It provides structured patterns like **Controllers** and **Stores** for building robust, improved business logic.
 
 ---
 
-## Conceptual Overview
+## Why use this?
 
-### Application Elements
+Raw reactivity is great, but apps need structure. Who owns the state? When is it disposed? How do modules talk to each other?
 
-- **[LevitController]**: A managed component that encapsulates state and behavior. It participates in an explicit lifecycle and uses `autoDispose` for resource management.
-- **[LevitStore]**: A functional provider that acts as a factory for state instances, offering a modern alternative to class-based controllers.
-- **[Levit]**: The central registry and entry point for managing scopes and resolving dependencies.
+`levit_dart_core` answers these questions with:
 
-### Key Mechanisms
-
-- **Ambient Scoping**: Uses Zone-based propagation via `levit_scope` to resolve dependencies implicitly without manual passing.
-- **Auto-Linking**: Automatically tracks reactive state created within a controller or state builder to ensure zero-leak disposal.
+*   **Managed Lifecycles**: Controllers have clear `onInit` and `onClose` hooks.
+*   **Auto-Disposal**: Resources (streams, signals) are automatically cleaned up.
+*   **Dependency Injection**: A unified API (`Levit.find`, `Levit.put`) for accessing the scope system.
+*   **Zero-Boilerplate**: Utilities to link state to owners without manual tracking.
 
 ---
 
-## Getting Started
+## Core Concepts
 
-### 1. Define a Controller
+### 1. LevitController
+A class-based container for business logic. It has a full lifecycle and can be registered in the DI system.
 
 ```dart
-class CounterController extends LevitController {
-  // Logic is automatically registered for cleanup
-  late final count = autoDispose(0.lx);
-
-  void increment() => count.value++;
-}
-```
-
-### 2. Register and Resolve
-
-```dart
-void main() {
-  // Register the controller in the current scope
-  Levit.put(() => CounterController());
+class AuthController extends LevitController {
+  // 1. Reactive State
+  final user = Rx<User?>(null);
   
-  // Resolve and use
-  final controller = Levit.find<CounterController>();
-  controller.increment();
+  // 2. Lifecycle
+  @override
+  void onInit() {
+    // 3. Auto-Cleanup
+    // The subscription will be cancelled automatically when
+    // this controller is removed from memory.
+    autoDispose(
+      authService.userStream.listen((u) => user.value = u)
+    );
+  }
+
+  void login() => authService.login();
+}
+```
+
+### 2. LevitStore
+A functional, lightweight alternative to controllers. Think of it as a "recipe" for state that can be reused.
+
+```dart
+// Define the store
+final counterStore = LevitStore((ref) {
+  final count = 0.lx;
+  return (
+    count: count,
+    increment: () => count.value++,
+  );
+});
+
+// Use it anywhere (Lazily created on first access)
+final api = counterStore.find();
+api.increment();
+```
+
+### 3. The `Levit` Entry Point
+The unified gateway to all Levit features.
+
+| Method | Description |
+|:-------|:------------|
+| `Levit.put(() => ...)` | Registers a new dependency. |
+| `Levit.find<T>()` | Finds an existing dependency. |
+| `Levit.lazyPut(...)` | Registers a lazy builder. |
+| `Levit.reset()` | Clears the current scope (useful for testing). |
+
+---
+
+## Auto-Linking
+
+One of the most powerful features of `levit_dart_core` is **Auto-Linking**. When enabled, any reactive value created inside a controller's `onInit` is automatically "owned" by that controller.
+
+```dart
+class MyController extends LevitController {
+  @override
+  void onInit() {
+    // This reactive is automatically disposed when MyController closes!
+    // No need to manually call .close()
+    final name = 'Test'.lx; 
+  }
 }
 ```
 
 ---
 
-## Design Principles
+## Installation
 
-### Explicit over Implicit
-While [Levit] provides ambient scoping for ergonomics, every state transition and dependency link is trackable and deterministic.
+This package is usually installed as a transitive dependency of `levit`.
 
-### Managed Lifecycle
-Resources are never left to the garbage collector alone. The `onClose` hook and `autoDispose` mechanism ensure that all side effects are terminated as soon as a component is removed.
+```yaml
+dependencies:
+  levit: ^latest
+```
 
-### Functional Composition
-The framework encourages composing logic via [LevitStore] to reduce boilerplate and improve encapsulation, while providing [LevitController] for more complex or hierarchical logic.
+If you are building a pure Dart app (CLI, Server), you can depend on it directly:
+
+```yaml
+dependencies:
+  levit_dart_core: ^latest
+```

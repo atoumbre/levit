@@ -5,49 +5,40 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flags=levit_dart)](https://codecov.io/github/atoumbre/levit)
 
-**Utility mixins and tools for Levit Dart controllers.**
+**Supercharged utilities for Levit Controllers.**
 
-`levit_dart` provides high-level abstractions and utility mixins that simplify the implementation of business logic and domain services within the Levit ecosystem. It builds upon `levit_dart_core` to offer production-ready patterns for task execution, paging, and lifecycle management.
+`levit_dart` extends the core framework with advanced mixins and patterns for real-world application development.
 
----
-
-## Purpose & Scope
-
-`levit_dart` focuses on developer ergonomics for non-UI code. It is responsible for:
-- Providing structured wrappers for common patterns like isolate-based tasks.
-- Offering mixins for managing complex states like pagination and loading flags.
-- Serving as a dependency-injection friendly base for domain controllers.
+It includes:
+*   **Loop Engine**: A robust system for running tasks periodically or continuously.
+*   **Task Engine**: Structured concurrency with busy states and error handling.
+*   **Pagination**: Helpers for managing list data.
 
 ---
 
-## Conceptual Overview
+## Installation
 
-### Core Abstractions
-- **LevitTaskMixin**: A mixin that adds busy-tracking and error handling to unit of work.
-- **Isolate Support**: Tools for offloading heavy computations to background isolates with automatic state synchronization.
-- **Paging Primitives**: Standardized ways to handle cursors and offsets in data-fetching services.
+```yaml
+dependencies:
+  levit_dart: ^latest
+```
 
----
+(Note: If you use `levit` or `levit_flutter`, this is already included.)
 
-## Getting Started
+## Example: Loop execution
 
-### Using Task Mixins
 ```dart
-class MyService with LevitTaskMixin {
-  Future<void> loadData() async {
-    await runTask(() async {
-      // Your heavy work here
-    });
+class Worker extends LevitController with LevitLoopExecutionMixin {
+  @override
+  void onInit() {
+    super.onInit();
+    
+    // Start a periodic task
+    loopEngine.start(
+      'sync_data',
+      (controller) async => await sync(),
+      period: Duration(minutes: 5),
+    );
   }
 }
 ```
-
----
-
-## Design Principles
-
-### Ergonomics First
-Designed to reduce boilerplate in everyday coding tasks without sacrificing the explicitness and type-safety of the underlying core packages.
-
-### Composition over Inheritance
-Mixins are preferred for adding functionality to services, allowing for flexible and modular service design.

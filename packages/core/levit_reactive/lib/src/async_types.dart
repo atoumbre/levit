@@ -2,23 +2,21 @@ part of '../levit_reactive.dart';
 
 /// A reactive wrapper for a [Stream].
 ///
-/// [LxStream] transforms a standard Dart [Stream] into a reactive object that
-/// tracks its state using [LxStatus]. It is designed for fine-grained UI
-/// updates and follows a lazy-subscription model: the source stream is only
-/// listened to when the [LxStream] itself has active observers.
+/// [LxStream] tracks the latest state ([LxStatus]) of a source stream and
+/// supports lazy subscription. The underlying stream is only listened to when
+/// the [LxStream] itself has active observers or listeners.
 ///
-/// ### Key Features
-/// 1.  **Status Tracking**: Automatically translates stream events into
-///     [LxSuccess] and errors into [LxError].
-/// 2.  **Lazy Subscription**: Minimizes resource usage by only connecting to
-///     the source when necessary.
-/// 3.  **Rx-like Transformations**: Provides [map], [where], and [asyncMap]
-///     utilities that return new reactive streams.
+/// Key Features:
+/// *   **Status Tracking**: Automatically emits [LxSuccess], [LxError], or [LxWaiting].
+/// *   **Lazy Subscription**: Minimizes resource usage by pausing the source when unused.
+/// *   **Rx Operations**: Includes [map], [where], [expand] (etc.) that return new [LxStream]s.
 ///
-/// ### Usage
+/// Example:
 /// ```dart
-/// final messages = channel.stream.lx;
-/// LWatch(() => ListView(children: messages.value.lastValue ?? []));
+/// final counter = Stream.periodic(Duration(seconds: 1), (i) => i).lx;
+///
+/// // UI automatically rebuilds on new events
+/// LWatch(() => Text('${counter.value.data}'));
 /// ```
 class LxStream<T> extends _LxAsyncVal<T> {
   Stream<T>? _boundSourceStream;
@@ -137,13 +135,21 @@ class LxStream<T> extends _LxAsyncVal<T> {
 
 /// A reactive wrapper for a [Future].
 ///
-/// [LxFuture] manages the lifecycle and status of an asynchronous operation,
-/// providing synchronous access to its progress via [LxStatus].
+/// [LxFuture] tracks the execution state ([LxStatus]) of an asynchronous operation.
+/// It creates a synchronous access point for the Future's current status (idle, waiting, success, error).
 ///
-/// ### Usage
+/// Example:
 /// ```dart
 /// final user = fetchUser().lx;
-/// LWatch(() => user.isWaiting ? CircularProgressIndicator() : UserView(user.requireValue));
+///
+/// LWatch(() {
+///   return switch (user.status) {
+///     LxWaiting() => CircularProgressIndicator(),
+///     LxError(error: var e) => Text('Error: $e'),
+///     LxSuccess(data: var u) => UserProfile(u),
+///     _ => SizedBox(),
+///   };
+/// });
 /// ```
 class LxFuture<T> extends _LxAsyncVal<T> {
   /// Executes [future] immediately and tracks its status.
@@ -226,14 +232,14 @@ abstract class _LxAsyncVal<T> extends LxBase<LxStatus<T>> {
   }
 }
 
-/// Extension for [Stream] to support the [lx] shorthand.
+/// Extensions for converting [Stream]s to [LxStream]s.
 extension LxStreamExtension<T> on Stream<T> {
-  /// Wraps this stream in an [LxStream].
+  /// Converts this [Stream] into a reactive [LxStream].
   LxStream<T> get lx => LxStream<T>(this);
 }
 
-/// Extension for [Future] to support the [lx] shorthand.
+/// Extensions for converting [Future]s to [LxFuture]s.
 extension LxFutureExtension<T> on Future<T> {
-  /// Wraps this future in an [LxFuture].
+  /// Converts this [Future] into a reactive [LxFuture].
   LxFuture<T> get lx => LxFuture<T>(this);
 }

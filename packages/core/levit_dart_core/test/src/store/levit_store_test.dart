@@ -102,6 +102,25 @@ void main() {
       expect(mainStore.find(), 'other');
       expect(await mainAsyncStore.find(), 'otherAsync');
     });
+
+    test('ref.put, lazyPut, lazyPutAsync work as expected', () async {
+      final store = LevitStore((ref) {
+        ref.put<String>(() => 'putVal', tag: 't1');
+        ref.lazyPut<String>(() => 'lazyVal', tag: 't2');
+        ref.lazyPutAsync<String>(() async => 'asyncVal', tag: 't3');
+
+        return (
+          v1: ref.find<String>(tag: 't1'),
+          v2: ref.find<String>(tag: 't2'),
+          v3: ref.findAsync<String>(tag: 't3'),
+        );
+      });
+
+      final result = store.find();
+      expect(result.v1, 'putVal');
+      expect(result.v2, 'lazyVal');
+      expect(await result.v3, 'asyncVal');
+    });
   });
 
   group('LevitAsyncStore', () {

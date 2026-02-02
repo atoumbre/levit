@@ -1,6 +1,7 @@
 ## 0.0.6
 
-- Documentation updates.
+- **BREAKING**: Updated transitive dependencies to include breaking changes from `levit_core`.
+- **BREAKING**: `LevitState` is now `LevitStore`.
 
 ## 0.0.5
 - Production-ready documentation (Effective Dart compliance)

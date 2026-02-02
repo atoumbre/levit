@@ -1,15 +1,17 @@
 part of '../levit_reactive.dart';
 
-/// A synchronous computed value that automatically tracks its reactive dependencies.
+/// A value derived from other reactive objects.
 ///
-/// [LxComputed] represents state derived from other reactive variables. It is
-/// lazy, memoized, and automatically re-evaluates only when its dependencies change.
+/// [LxComputed] automatically tracks its dependencies and re-evaluates
+/// when they change. Calculations are lazy and memoized.
 ///
-/// // Example usage:
+/// Example:
 /// ```dart
 /// final firstName = 'John'.lx;
 /// final lastName = 'Doe'.lx;
-/// final fullName = LxComputed(() => '${firstName.value} ${lastName.value}');
+///
+/// // Updates only when firstName or lastName changes
+/// final fullName = LxComputed(() => '${firstName()} ${lastName()}');
 /// ```
 class LxComputed<T> extends _ComputedBase<T> {
   final T Function() _compute;
@@ -20,6 +22,7 @@ class LxComputed<T> extends _ComputedBase<T> {
   bool _notifiedDirty = false;
 
   final bool _staticDeps;
+  final bool _eager;
   bool _hasStaticGraph = false;
 
   // Stack to capture dependencies during initial super() call
@@ -27,18 +30,18 @@ class LxComputed<T> extends _ComputedBase<T> {
 
   /// Creates a synchronous computed value.
   ///
-  /// *   [compute]: The function to calculate the value.
-  /// *   [equals]: Optional comparison function to determine if the value has changed.
-  /// *   [staticDeps]: If `true`, the dependency graph is built only once on the
-  ///     first run. Subsequent re-evaluations skip dependency tracking.
-  ///     Use this for performance-critical scenarios where dependencies are constant.
+  /// The [compute] function is called to calculate the value.
+  /// Use [staticDeps] to optimize performance if the dependency graph never changes.
+  /// Use [equals] to define custom equality logic.
   LxComputed(
     this._compute, {
     bool Function(T previous, T current)? equals,
     bool staticDeps = false,
+    bool eager = false,
     String? name,
   })  : _equals = equals ?? ((a, b) => a == b),
         _staticDeps = staticDeps,
+        _eager = eager,
         super(_computeInitial(name, _compute), name: name) {
     _isDirty = true;
     // If we captured dependencies during init, store them for _onActive
@@ -81,11 +84,10 @@ class LxComputed<T> extends _ComputedBase<T> {
 
   /// Creates an asynchronous computed value.
   ///
-  /// *   [compute]: The async function to calculate the value.
-  /// *   [showWaiting]: If `true`, the status transitions to [LxWaiting]
-  ///     during recomputations. Defaults to `false` (stale-while-revalidate).
-  /// *   [initial]: Optional initial value.
-  /// *   [staticDeps]: If `true`, the dependency graph is built only once.
+  /// The [compute] function must return a [Future].
+  ///
+  /// Set [showWaiting] to `true` to emit [LxWaiting] when recomputing.
+  /// Set [staticDeps] to `true` if the dependency graph is constant.
   static LxAsyncComputed<T> async<T>(
     Future<T> Function() compute, {
     bool Function(T previous, T current)? equals,
@@ -158,7 +160,7 @@ class LxComputed<T> extends _ComputedBase<T> {
     if (_isClosed || !_isActive) return;
     if (!_isDirty && !_isComputing) {
       // Eager evaluation for Stream listeners (Push model)
-      if (_hasStreamListener) {
+      if (_hasStreamListener || _eager) {
         _isDirty = true;
         _recompute();
         return;
@@ -316,18 +318,20 @@ class LxComputed<T> extends _ComputedBase<T> {
   }
 
   @override
-  String toString() => 'LxComputed($value)';
+  String toString() => isSensitive ? 'LxComputed(***)' : 'LxComputed($value)';
 }
 
 /// An asynchronous computed value that reflects state transitions via [LxStatus].
 ///
-/// [LxAsyncComputed] derives state through asynchronous operations while
-/// automatically tracking dependencies accessed during execution.
+/// [LxAsyncComputed] derives state from async operations, automatically tracking
+/// dependencies. It exposes the current status (Success, Error, Waiting) of the calculation.
 ///
-/// // Example usage:
+/// Example:
 /// ```dart
 /// final userId = 1.lx;
-/// final user = LxAsyncComputed(() => fetchUser(userId.value));
+///
+/// // Re-fetches user whenever userId changes
+/// final user = LxAsyncComputed(() => fetchUser(userId()));
 /// ```
 class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
   final Future<T> Function() _compute;
@@ -590,9 +594,23 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       return;
     }
 
-    final keys = _dependencySubscriptions.keys.toList();
-    for (final dep in keys) {
-      _unsubscribeFrom(dep);
+    if (_dependencySubscriptions.isEmpty) return;
+
+    // Optimization: Avoid `toList()` allocation by iterating keys directly.
+    // We replicate `_unsubscribeFrom` logic here but skip map removal until the end.
+    for (final notifier in _dependencySubscriptions.keys) {
+      if (LevitReactiveMiddleware.hasListenerMiddlewares) {
+        Lx.runWithContext(
+            LxListenerContext(
+              type: 'LxComputed',
+              id: identityHashCode(this),
+              data: {'name': name, 'runtimeType': runtimeType.toString()},
+            ), () {
+          notifier.removeListener(_onDependencyChanged);
+        });
+      } else {
+        notifier.removeListener(_onDependencyChanged);
+      }
     }
     _dependencySubscriptions.clear();
   }

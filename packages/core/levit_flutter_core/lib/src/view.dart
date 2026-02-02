@@ -1,27 +1,26 @@
 part of '../levit_flutter_core.dart';
 
-/// A base class for UI components that provides automatic dependency resolution and optional reactive tracking.
+/// A widget that consumes a [LevitController] and builds UI.
 ///
-/// [LView] simplifies the consumption of controllers or states within a widget.
-/// It uses a [resolver] to find the dependency and a [builder] (or [buildView]
-/// override) to construct the UI.
+/// [LView] combines finding a controller and building a reactive widget key.
+/// By default, the build method acts as an [LWatch], triggering rebuilds on reactive changes.
 ///
-/// ### Auto-Watch
-/// If [autoWatch] is true (default), the entire [builder] or [buildView] is
-/// wrapped in an [LWatch], making the view react to any reactive variables
-/// accessed within it.
-///
-/// // Example usage:
-/// ```dart
-/// class MyPage extends LView<MyController> {
-///   const MyPage({super.key});
-///
-///   @override
-///   Widget buildView(BuildContext context, MyController controller) {
-///     return Text(controller.title.value);
-///   }
-/// }
-/// ```
+/// Usage:
+/// 1.  **Subclass:**
+///     ```dart
+///     class HomePage extends LView<HomeController> {
+///       @override
+///       Widget buildView(BuildContext context, HomeController controller) {
+///         return Text(controller.title());
+///       }
+///     }
+///     ```
+/// 2.  **Builder:**
+///     ```dart
+///     LView.find<HomeController>(
+///       builder: (context, controller) => Text(controller.title()),
+///     );
+///     ```
 class LView<T> extends StatefulWidget {
   /// Resolves the dependency from the context.
   final T Function(BuildContext context)? resolver;
@@ -41,7 +40,7 @@ class LView<T> extends StatefulWidget {
   });
 
   /// Syntax sugar for consuming a [LevitStore].
-  factory LView.state(
+  factory LView.store(
     LevitStore<T> state, {
     Key? key,
     required Widget Function(BuildContext context, T controller) builder,
@@ -141,10 +140,13 @@ class _LViewState<T> extends State<LView<T>> {
   }
 }
 
-/// A specialized widget for asynchronous dependency resolution.
+/// A specialized view for asynchronous dependencies.
 ///
-/// [LAsyncView] waits for a dependency resolved via [resolver] (which returns
-/// a [Future]) and then renders the view.
+/// [LAsyncView] resolves a [Future] dependency and renders [loading], [error],
+/// or [builder] (success) states. The resolution logic is memoized to prevent
+/// infinite re-fetching.
+///
+/// Use [args] to forcefully re-trigger the resolution when arguments change.
 class LAsyncView<T> extends StatefulWidget {
   /// Resolves the dependency asynchronously from the context.
   final Future<T> Function(BuildContext context)? resolver;
@@ -292,6 +294,14 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
     }
 
     if (shouldUpdate) {
+      assert(() {
+        if (widget.resolver.runtimeType.toString().contains('Closure')) {
+          debugPrint(
+              'WARNING: [LAsyncView] resolver is an anonymous closure. This causes re-fetching on every build.\n'
+              'Consider using a method reference or explicitly passing `args` to control updates.');
+        }
+        return true;
+      }());
       setState(() {
         future = _resolveFuture();
       });

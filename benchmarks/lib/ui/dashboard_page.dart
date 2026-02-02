@@ -8,82 +8,84 @@ import '../benchmark_engine.dart';
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return LScopedView<AppBenchmarkController>(
-      dependencyFactory: (s) => s.put(() => AppBenchmarkController()),
-      builder: (context, controller) => const DashboardView(),
+  static final store = LevitStore((ref) {
+    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+    final hasInitializedDrawer = false.lx;
+    final isMobile = false.lx;
+
+    final controller = ref.put(() => AppBenchmarkController());
+
+    // Declarative Effect: Triggered when isMobile OR initialized status changes
+    ref.autoDispose(LxComputed(() {
+      if (isMobile.value && !hasInitializedDrawer.value) {
+        hasInitializedDrawer.value = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          scaffoldKey.currentState?.openEndDrawer();
+        });
+      }
+    }, eager: true));
+
+    return (
+      scaffoldKey: scaffoldKey,
+      hasInitializedDrawer: hasInitializedDrawer,
+      isMobile: isMobile,
+      controller: controller,
     );
-  }
-}
-
-class DashboardView extends StatefulWidget {
-  const DashboardView({super.key});
-
-  @override
-  State<DashboardView> createState() => _DashboardViewState();
-}
-
-class _DashboardViewState extends State<DashboardView> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _hasInitializedDrawer = false;
+  });
 
   @override
   Widget build(BuildContext context) {
-    return LView<AppBenchmarkController>(
-      builder: (context, controller) => LayoutBuilder(
+    return LScopedView.store(
+      store,
+      builder: (context, state) => LayoutBuilder(
         builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 800;
-
-          // Auto-open drawer on first mobile load
-          if (isMobile && !_hasInitializedDrawer) {
-            _hasInitializedDrawer = true;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _scaffoldKey.currentState?.openEndDrawer();
-            });
-          }
+          state.isMobile.value = constraints.maxWidth < 800;
+          final isMobile = state.isMobile.value;
 
           return Scaffold(
-            key: _scaffoldKey,
+            key: state.scaffoldKey,
             appBar: AppBar(
               title: const Text('Levit Benchmarks'),
               actions: [
                 if (isMobile)
                   IconButton(
                     icon: const Icon(Icons.settings),
-                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                    onPressed: () =>
+                        state.scaffoldKey.currentState?.openEndDrawer(),
                   ),
                 if (isMobile)
                   IconButton(
                     icon: const Icon(Icons.play_arrow),
-                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                    onPressed: () =>
+                        state.scaffoldKey.currentState?.openEndDrawer(),
                   ),
                 IconButton(
                   icon: const Icon(Icons.copy),
                   tooltip: 'Copy Results',
-                  onPressed: () => controller.copyResults(),
+                  onPressed: () => state.controller.copyResults(),
                 ),
               ],
             ),
             // Use EndDrawer for settings on Mobile to avoid conflict with potential nav drawer
             endDrawer: isMobile
-                ? _SidebarContent(controller: controller, isInDrawer: true)
+                ? _SidebarContent(
+                    controller: state.controller, isInDrawer: true)
                 : null,
             body: Row(
               children: [
                 if (!isMobile)
                   SizedBox(
-                    width: 300,
+                    width: 380,
                     child: Card(
                       margin: const EdgeInsets.all(8),
-                      child: _SidebarContent(controller: controller),
+                      child: _SidebarContent(controller: state.controller),
                     ),
                   ),
                 Expanded(
                   child: Card(
                     margin: const EdgeInsets.all(8)
                         .copyWith(left: isMobile ? 8 : 0),
-                    child: _MainContent(controller: controller),
+                    child: _MainContent(controller: state.controller),
                   ),
                 ),
               ],
@@ -106,21 +108,69 @@ class _SidebarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.all(16),
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Frameworks', style: Theme.of(context).textTheme.titleLarge),
-          const Divider(),
+          Row(
+            spacing: 8,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text('Frameworks', style: Theme.of(context).textTheme.titleLarge),
+              Spacer(),
+              TextButton(
+                onPressed: () => controller.toggleAllFrameworks(true),
+                child: Text("All"),
+              ),
+              TextButton(
+                onPressed: () => controller.toggleAllFrameworks(false),
+                child: Text("None"),
+              ),
+            ],
+          ),
+          LWatch(() {
+            return Column(
+              children: Framework.values.map((fw) {
+                return CheckboxListTile(
+                  title: Text(fw.label),
+                  value: controller.selectedFrameworks.contains(fw),
+                  onChanged: (val) => controller.toggleFramework(fw),
+                );
+              }).toList(),
+            );
+          }),
+          Gap(16),
+          Row(
+            spacing: 8,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'Benchmarks',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              Spacer(),
+              TextButton(
+                onPressed: () => controller.toggleAllBenchmarks(true),
+                child: Text("All"),
+              ),
+              TextButton(
+                onPressed: () => controller.toggleAllBenchmarks(false),
+                child: Text("None"),
+              ),
+            ],
+          ),
           Expanded(
             child: LWatch(() {
               return ListView(
-                children: Framework.values.map((fw) {
+                children: controller.availableBenchmarks.map((bench) {
                   return CheckboxListTile(
-                    title: Text(fw.label),
-                    value: controller.selectedFrameworks.contains(fw),
-                    onChanged: (val) => controller.toggleFramework(fw),
+                    title: Text(bench.name),
+                    // subtitle: Text(bench.description,
+                    //     maxLines: 1, overflow: TextOverflow.ellipsis),
+                    value: controller.selectedBenchmarks.contains(bench),
+                    onChanged: (val) => controller.toggleBenchmark(bench),
                   );
                 }).toList(),
               );

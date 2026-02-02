@@ -1,24 +1,23 @@
 part of '../levit_reactive.dart';
 
-/// Metrics and metadata for a particular [LxWorker] execution.
+/// Performance metrics for an [LxWorker].
 ///
-/// [LxWorkerStat] provides insights into the performance and behavior of a
-/// reactive watcher. It tracks execution counts, durations, and asynchronous
-/// state.
+/// Tracks execution frequency, duration, and error states.
+/// Useful for profiling side-effects.
 class LxWorkerStat {
-  /// The total number of times the watcher callback has been executed.
+  /// How many times the worker callback has run.
   final int runCount;
 
-  /// The duration of the most recent execution.
+  /// The duration of the last execution.
   final Duration lastDuration;
 
-  /// The cumulative duration of all executions since the watcher was created.
+  /// The cumulative duration of all executions.
   final Duration totalDuration;
 
-  /// The timestamp of the last successful execution.
+  /// The time of the last execution.
   final DateTime? lastRun;
 
-  /// The most recent error encountered during execution, if any.
+  /// The last error that occurred during execution.
   final Object? error;
 
   /// Whether the callback is recognized as asynchronous (returns a [Future]).
@@ -65,21 +64,18 @@ class LxWorkerStat {
   }
 }
 
-/// A reactive observer that executes a side-effect when a source changes.
+/// A reactive observer for side-effects.
 ///
-/// [LxWorker] is the primary mechanism for reacting to state changes with
-/// non-reactive code (e.g., logging, navigation, or database writes).
+/// [LxWorker] executes a callback whenever a [source] reactive changes.
+/// Unlike [LxComputed], it does not produce a new value but performs an action
+/// (e.g., logging, navigation, saving to DB).
 ///
-/// Unlike a standard [StreamSubscription], [LxWorker] provides:
-/// 1.  **Observability**: It is itself an [LxReactive] that holds [LxWorkerStat].
-/// 2.  **Monitoring**: Tracks execution performance and recognizes async gaps.
-/// 3.  **Error Handling**: Provides dedicated hooks for synchronous and
-///     asynchronous errors.
-///
-/// ### Usage
+/// Example:
 /// ```dart
 /// final count = 0.lx;
-/// final watcher = LxWorker(count, (v) => print('New value: $v'));
+///
+/// // Log every change
+/// final worker = LxWorker(count, (v) => print('Changed: $v'));
 /// ```
 class LxWorker<T> extends LxBase<LxWorkerStat> {
   /// The reactive source being monitored.
@@ -208,7 +204,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
     super.close();
   }
 
-  /// Triggers [callback] only when the boolean [source] becomes `true`.
+  /// Triggers [callback] when a boolean [source] becomes `true`.
   static LxWorker<bool> watchTrue(
     LxReactive<bool> source,
     void Function() callback, {
@@ -223,7 +219,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
     );
   }
 
-  /// Triggers [callback] only when the boolean [source] becomes `false`.
+  /// Triggers [callback] when a boolean [source] becomes `false`.
   static LxWorker<bool> watchFalse(
     LxReactive<bool> source,
     void Function() callback, {
@@ -238,7 +234,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
     );
   }
 
-  /// Triggers [callback] only when [source] matches [targetValue].
+  /// Triggers [callback] when [source] equals [targetValue].
   static LxWorker<T> watchValue<T>(
     LxReactive<T> source,
     T targetValue,
@@ -254,7 +250,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
     );
   }
 
-  /// Watches an async [source] and triggers callbacks for specific state transitions.
+  /// Triggers callbacks based on status changes of an async [source].
   static LxWorker<LxStatus<T>> watchStatus<T>(
     LxReactive<LxStatus<T>> source, {
     void Function()? onIdle,
@@ -281,13 +277,11 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
   }
 }
 
-/// Shorthand extensions for creating watchers on any reactive source.
-
+/// Extensions for creating watchers from any reactive source.
 extension LxReactiveWatchExtensions<T> on LxReactive<T> {
-  /// Executes [callback] whenever this reactive value changes.
+  /// Attaches a listener to this reactive value.
   ///
-  /// Returns an [LxWorker] instance that can be used to monitor performance
-  /// or manually closed.
+  /// Returns an [LxWorker] which can be used to control the subscription.
   LxWorker<T> listen(void Function(T value) callback) {
     return LxWorker<T>(this, callback);
   }

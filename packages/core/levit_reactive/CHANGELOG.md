@@ -1,7 +1,12 @@
 
 ## 0.0.6
 
-- Documentation updates.
+### Breaking Changes
+- **Renamed** `LevitStateMiddlewareChain` to `LevitReactiveMiddlewareChain`.
+- Added `isSensitive` property to `LxReactive` interface.
+
+### New Features
+- Added `isSensitive` parameter to `lxVar` and `LxReactive` to mark sensitive data (e.g., passwords/tokens) for obfuscation in DevTools/Monitor.
 
 ## 0.0.5
 - Production-ready documentation (Effective Dart compliance)

@@ -33,7 +33,7 @@ void main() {
       Widget buildWatch(LxVar<int> v) {
         return Directionality(
           textDirection: TextDirection.ltr,
-          child: LWatchVar<LxVar<int>>(v, (x) => Text('Val: ${x.value}')),
+          child: LBuilder<int>(v, (x) => Text('Val: ${x}')),
         );
       }
 
@@ -54,7 +54,7 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LWatchStatus<String>(
+          child: LStatusBuilder<String>(
             status,
             onSuccess: (data) => Text('Success: $data'),
             onWaiting: () => const Text('Waiting'),
@@ -78,7 +78,7 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LWatchStatus<String>(
+          child: LStatusBuilder<String>(
             status2,
             onSuccess: (data) => Text('Success: $data'),
           ),

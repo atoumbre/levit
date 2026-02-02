@@ -83,7 +83,7 @@ void main() {
       expect(find.text('Val: state_val'), findsOneWidget);
     });
 
-    testWidgets('LAsyncView.state factory (Lines 116-126)', (tester) async {
+    testWidgets('LAsyncView.store factory (Lines 116-126)', (tester) async {
       final state = LevitStore.async((ref) async => 'async_val');
       await tester.runAsync(() async {
         await tester.pumpWidget(

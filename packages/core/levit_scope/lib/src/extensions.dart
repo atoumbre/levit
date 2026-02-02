@@ -1,12 +1,12 @@
 part of '../levit_scope.dart';
 
-/// Fluent extensions for immediate dependency registration.
+/// Extensions for registering instances directly into the active [LevitScope].
 extension LevitInstanceExtension<T> on T {
-  /// Registers this instance immediately in the active [LevitScope].
+  /// Registers this instance in the active [LevitScope].
   ///
-  /// This is a fluent alternative to [Ls.put].
+  /// This is a fluent shortcut for [Ls.put].
   ///
-  /// // Example usage:
+  /// Example:
   /// ```dart
   /// final service = MyService().levitPut();
   /// ```
@@ -14,19 +14,18 @@ extension LevitInstanceExtension<T> on T {
   /// Returns the registered instance.
   T levitPut() => Ls.put(() => this);
 
-  /// Registers this instance as a lazy dependency in the active [LevitScope].
+  /// Registers this instance as a lazy singleton in the active [LevitScope].
   ///
-  /// The instance will only be resolved when first requested via [Ls.find].
+  /// The instance is only retrieved when first requested via [Ls.find].
   void levitLazyPut() => Ls.lazyPut(() => this);
 }
 
-/// Fluent extensions for registration using builder functions.
+/// Extensions for registering builder functions.
 extension LevitBuilderExtension<T> on T Function() {
-  /// Executes and registers the result of this builder in the active [LevitScope].
+  /// Registers the result of this builder in the active [LevitScope].
   ///
-  /// Parameters:
-  /// - [tag]: Optional unique identifier for the instance.
-  /// - [permanent]: If `true`, the instance survives a non-forced reset.
+  /// Use [tag] to distinguish between multiple instances of the same type.
+  /// Set [permanent] to `true` to persist across resets.
   ///
   /// Returns the created instance.
   T levitPut({String? tag, bool permanent = false}) =>
@@ -34,37 +33,33 @@ extension LevitBuilderExtension<T> on T Function() {
 
   /// Registers this builder for lazy instantiation in the active [LevitScope].
   ///
-  /// Parameters:
-  /// - [tag]: Optional unique identifier for the instance.
-  /// - [permanent]: If `true`, the registration survives a non-forced reset.
-  /// - [isFactory]: If `true`, the builder is executed for every `find` call.
+  /// The builder will only be executed when the dependency is first requested.
+  ///
+  /// If [isFactory] is `true`, the builder runs for every request.
   void levitLazyPut(
           {String? tag, bool permanent = false, bool isFactory = false}) =>
       Ls.lazyPut<T>(this, tag: tag, permanent: permanent, isFactory: isFactory);
 }
 
-/// Fluent extensions for lazy asynchronous registration of futures.
+/// Extensions for registering asynchronous dependencies.
 extension LevitAsyncInstanceExtension<T> on Future<T> {
   /// Registers this [Future] as a lazy asynchronous dependency.
   ///
-  /// Parameters:
-  /// - [tag]: Optional unique identifier for the instance.
-  /// - [permanent]: If `true`, the registration survives a non-forced reset.
-  /// - [isFactory]: If `true`, the future is re-awaited for every `findAsync` call.
+  /// Use [tag] to differentiate instances.
+  /// Set [isFactory] to `true` to re-await the future on every [findAsync].
   void levitLazyPutAsync(
           {String? tag, bool permanent = false, bool isFactory = false}) =>
       Ls.lazyPutAsync(() => this,
           tag: tag, permanent: permanent, isFactory: isFactory);
 }
 
-/// Fluent extensions for lazy asynchronous registration using builders.
+/// Extensions for registering asynchronous builder functions.
 extension LevitAsyncBuilderExtension<T> on Future<T> Function() {
   /// Registers this asynchronous builder for lazy instantiation.
   ///
-  /// Parameters:
-  /// - [tag]: Optional unique identifier for the instance.
-  /// - [permanent]: If `true`, the registration survives a non-forced reset.
-  /// - [isFactory]: If `true`, the builder is re-run for every `findAsync` call.
+  /// The builder runs when [Ls.findAsync] is called.
+  ///
+  /// If [isFactory] is `true`, the builder runs for every request.
   void levitLazyPutAsync(
           {String? tag, bool permanent = false, bool isFactory = false}) =>
       Ls.lazyPutAsync(this,

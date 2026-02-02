@@ -52,9 +52,9 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LWatchVar(
+          child: LBuilder(
             v1,
-            (v) => Text('V: ${v.value}'),
+            (v) => Text('V: ${v}'),
           ),
         ),
       );
@@ -64,9 +64,9 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LWatchVar(
+          child: LBuilder(
             v2,
-            (v) => Text('V: ${v.value}'),
+            (v) => Text('V: ${v}'),
           ),
         ),
       );

@@ -1,11 +1,16 @@
 part of '../levit_dart_core.dart';
 
+/// Internal scope for capturing reactive objects creation.
+///
+/// Uses [Zone] values to intercept [LxReactive] objects initialized within
+/// its callback context.
 class _AutoLinkScope {
   static int _activeCaptureScopes = 0;
 
   static final Object _captureKey = Object();
   static final Object _ownerIdKey = Object();
 
+  /// The Zone key used to store the capture list.
   static Object get captureKey => _captureKey;
 
   static R runCaptured<R>(
@@ -139,6 +144,7 @@ class _AutoLinkMiddleware extends LevitReactiveMiddleware {
         final context = Lx.listenerContext;
         final hasOwnerContext = context != null && context.type == 'Owner';
 
+        // 0. Global Check
         if (_AutoLinkScope._activeCaptureScopes == 0 && !hasOwnerContext) {
           return;
         }
@@ -170,6 +176,7 @@ class _AutoLinkMiddleware extends LevitReactiveMiddleware {
 }
 
 class _AutoDisposeMiddleware extends LevitScopeMiddleware {
+  /// Intercepts dependency creation to wrap the builder in a capture scope.
   @override
   S Function() onDependencyCreate<S>(
     S Function() builder,
@@ -181,6 +188,7 @@ class _AutoDisposeMiddleware extends LevitScopeMiddleware {
     return _AutoLinkScope._createCaptureHook(builder, scopedKey);
   }
 
+  /// Intercepts [onInit] execution to capture reactives created during initialization.
   @override
   void Function() onDependencyInit<S>(
     void Function() onInit,

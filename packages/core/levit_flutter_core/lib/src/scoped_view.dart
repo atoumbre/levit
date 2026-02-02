@@ -1,9 +1,18 @@
 part of '../levit_flutter_core.dart';
 
-/// A convenience widget that combines [LScope] and [LView].
+/// A widget that manages its own dependency scope and builds a view.
 ///
-/// [LScopedView] creates an isolated dependency scope for a specific part of
-/// the widget tree and immediately resolves a controller to build its content.
+/// [LScopedView] creates a new [LevitScope] for its subtree, registers dependencies
+/// via [dependencyFactory], and then builds the UI using [LView].
+/// When the widget is unmounted, the scope and all its dependencies are disposed.
+///
+/// Example:
+/// ```dart
+/// LScopedView<ProfileController>.put(
+///   () => ProfileController(),
+///   builder: (context, controller) => ProfilePage(controller),
+/// );
+/// ```
 class LScopedView<T> extends LView<T> {
   /// Optional factory to register dependencies in the internal scope.
   final dynamic Function(LevitScope scope)? dependencyFactory;
@@ -25,7 +34,7 @@ class LScopedView<T> extends LView<T> {
   });
 
   /// Syntax sugar for consuming a [LevitStore] within a new scope.
-  factory LScopedView.state(
+  factory LScopedView.store(
     LevitStore<T> state, {
     Key? key,
     dynamic Function(LevitScope scope)? dependencyFactory,
@@ -101,10 +110,11 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
   }
 }
 
-/// A convenience widget that combines [LAsyncScope] and [LView].
+/// A widget that creates an async scope and builds an async view.
 ///
-/// [LAsyncScopedView] initializes an asynchronous dependency scope and then
-/// renders an [LView] once the scope is ready.
+/// [LAsyncScopedView] waits for the [dependencyFactory] (which is asynchronous)
+/// to complete, effectively delaying the creation of the scope and view until
+/// dependencies are ready.
 class LAsyncScopedView<T> extends LView<T> {
   /// Async factory to register dependencies in the internal scope.
   final Future<dynamic> Function(LevitScope scope)? dependencyFactory;
@@ -134,7 +144,7 @@ class LAsyncScopedView<T> extends LView<T> {
   });
 
   /// Syntax sugar for consuming a [LevitStore] within a new async scope.
-  factory LAsyncScopedView.state(
+  factory LAsyncScopedView.store(
     LevitStore<T> state, {
     Key? key,
     Future Function(LevitScope scope)? dependencyFactory,
@@ -195,10 +205,10 @@ class _LAsyncScopedViewState<T> extends State<LAsyncScopedView<T>> {
   }
 }
 
-/// A convenience widget that combines [LScope] and [LAsyncView].
+/// A widget that creates a synchronous scope but resolves its controller asynchronously.
 ///
-/// [LScopedAsyncView] creates an isolated dependency scope immediately,
-/// but resolves its controller asynchronously.
+/// [LScopedAsyncView] initializes the scope immediately (synchronously) but
+/// uses [LAsyncView] to wait for the controller resolution.
 class LScopedAsyncView<T> extends LAsyncView<T> {
   /// Optional factory to register dependencies in the internal scope.
   final dynamic Function(LevitScope scope)? dependencyFactory;

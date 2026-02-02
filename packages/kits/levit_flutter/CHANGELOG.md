@@ -2,9 +2,14 @@
 
 ## 0.0.6
 
+### Breaking Changes
+- **Renamed Mixins**:
+  - `LevitExecutionLoopMixin` -> `LevitLoopExecutionMixin`
+  - `LevitLifecycleLoopMixin` -> `LevitLoopExecutionLifecycleMixin`
+
+### Fixes
 - **FIX**: Resolved lifecycle observer issues in `LevitLoopLifecycleMixin`.
 - **FEAT**: Added comprehensive example project structure.
-- Documentation updates.
 
 ## 0.0.5
 - Production-ready documentation (Effective Dart compliance)

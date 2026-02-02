@@ -4,7 +4,7 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
   group('levit_flutter_core Final Gaps', () {
-    testWidgets('LAsyncView.state coverage', (tester) async {
+    testWidgets('LAsyncView.store coverage', (tester) async {
       final state = LevitAsyncStore((ref) async => 'hello');
 
       await tester.pumpWidget(
@@ -64,12 +64,12 @@ void main() {
       expect(find.text('val2'), findsOneWidget);
     });
 
-    testWidgets('LScopedView.state coverage', (tester) async {
+    testWidgets('LScopedView.store coverage', (tester) async {
       final state = LevitStore((ref) => 'scoped_val');
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LScopedView.state(
+          home: LScopedView.store(
             state,
             builder: (context, value) => Text(value),
           ),
@@ -79,12 +79,12 @@ void main() {
       expect(find.text('scoped_val'), findsOneWidget);
     });
 
-    testWidgets('LAsyncScopedView.state coverage', (tester) async {
+    testWidgets('LAsyncScopedView.store coverage', (tester) async {
       final state = LevitStore((ref) => 'async_scoped_val');
 
       await tester.pumpWidget(
         MaterialApp(
-            home: LAsyncScopedView.state(
+            home: LAsyncScopedView.store(
           state,
           builder: (context, value) => Text(value),
         )),
@@ -101,7 +101,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatchStatus<String>(
+          home: LStatusBuilder<String>(
             rx,
             onSuccess: (data) => Text('Data: $data'),
             onIdle: () => const Text('Idle'),

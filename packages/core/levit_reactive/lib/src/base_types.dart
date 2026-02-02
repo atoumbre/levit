@@ -2,14 +2,15 @@ part of '../levit_reactive.dart';
 
 /// A reactive variable that holds a mutable value.
 ///
-/// [LxVar] is the primary way to define piece of mutable state in the Levit
-/// ecosystem. It extends [LxBase] to provide a public setter for [value]
-/// and additional fluent utilities.
+/// [LxVar] ("Levit Variable") is the primary primitive for mutable state.
+/// It notifies active observers whenever its value changes.
 ///
-/// ### Usage
+/// Example:
 /// ```dart
 /// final count = LxVar(0);
-/// count.value++; // Updates and notifies
+///
+/// // Update triggers notification
+/// count.value++;
 /// ```
 class LxVar<T> extends LxBase<T> {
   /// Creates a reactive variable with an [initial] value.
@@ -19,12 +20,15 @@ class LxVar<T> extends LxBase<T> {
   /// Updates the value and triggers notifications if the value changed.
   set value(T val) => setValueInternal(val);
 
-  /// Functional-style update and retrieval.
+  /// Updates and retrieves the value using call syntax.
   ///
-  /// // Example:
+  /// If called with an argument, it updates the value.
+  /// If called without arguments, it returns the current value.
+  ///
+  /// Example:
   /// ```dart
-  /// count(5); // sets value to 5
-  /// print(count()); // returns 5
+  /// count(5); // Update
+  /// print(count()); // Read
   /// ```
   @override
   T call([T? v]) {
@@ -42,10 +46,9 @@ class LxVar<T> extends LxBase<T> {
   }
 }
 
-/// A reactive boolean with specialized state manipulation methods.
+/// A reactive boolean with specialized toggling methods.
 ///
-/// [LxBool] simplifies common boolean operations like toggling and explicit
-/// true/false assignment.
+/// [LxBool] provides semantic helpers like [toggle], [setTrue], and [setFalse].
 class LxBool extends LxVar<bool> {
   /// Creates a reactive boolean. [initial] defaults to `false`.
   LxBool([super.initial = false, String? name, bool isSensitive = false])
@@ -67,7 +70,7 @@ class LxBool extends LxVar<bool> {
   bool get isFalse => !value;
 }
 
-/// A reactive number with fluent arithmetic extensions.
+/// A reactive number with arithmetic extensions.
 class LxNum<T extends num> extends LxVar<T> {
   /// Creates a reactive number instance.
   LxNum(super.initial, {super.name, super.isSensitive});
@@ -111,10 +114,11 @@ typedef LxInt = LxNum<int>;
 /// Type alias for a reactive double.
 typedef LxDouble = LxNum<double>;
 
-/// Extensions to provide the signature `.lx` syntax for creating reactive state.
+/// Extensions to create reactive variables from primitive values.
 extension LxExtension<T> on T {
-  /// Wraps this value in a reactive [LxVar].
+  /// Creates an [LxVar] holding this value.
   ///
+  /// Example:
   /// ```dart
   /// final name = 'Levit'.lx;
   /// ```
@@ -140,7 +144,7 @@ extension LxIntExtension on int {
   LxInt get lx => LxInt(this);
 }
 
-/// Specialized `.lx` extension for doubles.
+/// Specialized extensions for [double].
 extension LxDoubleExtension on double {
   /// Creates an [LxDouble] from this value.
   LxDouble get lx => LxDouble(this);

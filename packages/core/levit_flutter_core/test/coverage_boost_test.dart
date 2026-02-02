@@ -98,7 +98,7 @@ void main() {
   });
 
   group('LScopedAsyncView Coverage', () {
-    testWidgets('LScopedAsyncView.state resolves LevitAsyncState',
+    testWidgets('LScopedAsyncView.store resolves LevitAsyncState',
         (tester) async {
       final state = LevitAsyncStore<TestController>((_) async {
         await Future.delayed(const Duration(milliseconds: 10));

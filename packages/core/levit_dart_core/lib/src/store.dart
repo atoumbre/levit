@@ -1,40 +1,55 @@
 part of '../levit_dart_core.dart';
 
-/// A lightweight bridge passed to [LevitStore] builders.
+/// A bridge for interacting with the dependency injection system from a [LevitStore].
 ///
-/// [LevitRef] provides access to dependency injection and automated resource
-/// management. It acts as a proxy to the [LevitScope] that owns the instance.
+/// [LevitRef] allows stores to find other dependencies, register new ones,
+/// and manage their own lifecycle via [onDispose].
 abstract class LevitRef {
-  /// The [LevitScope] that currently owns this instance.
+  /// The [LevitScope] that owns this store instance.
   LevitScope get scope;
 
-  /// Resolves a dependency of type [S] from the current or parent scope.
+  /// Finds an instance of type [S] in the current scope.
   S find<S>({dynamic key, String? tag});
 
-  /// Asynchronously resolves a dependency of type [S].
+  /// Asynchronously finds an instance of type [S].
   Future<S> findAsync<S>({dynamic key, String? tag});
 
-  /// Registers a [callback] to be executed when the instance is disposed.
+  /// Registers a dependency in the current scope.
+  S put<S>(S Function() builder, {String? tag, bool permanent = false});
+
+  /// Lazily registers a dependency.
+  void lazyPut<S>(S Function() builder,
+      {String? tag, bool permanent = false, bool isFactory = false});
+
+  /// Lazily registers an asynchronous dependency.
+  Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
+      {String? tag, bool permanent = false, bool isFactory = false});
+
+  /// Registers a callback to run when the store is disposed.
   void onDispose(void Function() callback);
 
-  /// Registers an [object] for automatic cleanup when the instance is disposed.
+  /// Registers [object] for automatic cleanup.
+  ///
+  /// Returns [object].
   T autoDispose<T>(T object);
 }
 
-/// A [LevitStore] is a static, initialization-once container for state and logic.
+/// A portable container definition.
 ///
-/// 1. Executes its builder when first accessed.
-/// 2. Provides a stable, persistent object (like a Controller) that stays alive until the scope is disposed.
+/// [LevitStore] works like a "recipe" for creating state. Unlike [LevitController],
+/// which you register manually, [LevitStore] is passed around by reference.
 ///
-/// Reactivity should be handled by creating [LxReactive] variables *inside* the store.
+/// When you call `store.find()`, it lazy-loads the instance in the current scope.
 ///
 /// Example:
 /// ```dart
 /// final counterStore = LevitStore((ref) {
-///   final count = 0.lx; // Reactive variable
-///   void increment() => count.value++;
-///   return (count: count, increment: increment);
+///   final count = 0.lx;
+///   return count;
 /// });
+///
+/// // Usage
+/// final count = counterStore.find();
 /// ```
 class LevitStore<T> {
   final T Function(LevitRef ref) _builder;
@@ -43,7 +58,12 @@ class LevitStore<T> {
 
   late final String _defaultKey = 'ls_store_${_getStoreTag(this, null)}';
 
-  /// Internal helper to resolve this store within a specific [scope].
+  /// Creates an asynchronous [LevitStore] definition.
+  static LevitAsyncStore<T> async<T>(Future<T> Function(LevitRef ref) builder) {
+    return LevitAsyncStore<T>(builder);
+  }
+
+  /// Finds (or creates) the store instance within [scope].
   T findIn(LevitScope scope, {String? tag}) {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
@@ -58,7 +78,7 @@ class LevitStore<T> {
     return instance.value;
   }
 
-  /// Internal helper to resolve this store asynchronously within a specific [scope].
+  /// Asynchronously finds (or creates) the store instance within [scope].
   Future<T> findAsyncIn(LevitScope scope, {String? tag}) async {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
@@ -75,41 +95,36 @@ class LevitStore<T> {
     return instance.value;
   }
 
-  /// Internal helper to delete this store from a specific [scope].
+  /// Deletes the store instance from [scope].
   bool deleteIn(LevitScope scope, {String? tag, bool force = false}) {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
     return scope.delete<_LevitStoreInstance<T>>(tag: instanceKey, force: force);
   }
 
-  /// Internal helper to check if this store is registered in a specific [scope].
+  /// Checks if the store is registered in [scope].
   bool isRegisteredIn(LevitScope scope, {String? tag}) {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
     return scope.isRegistered<_LevitStoreInstance<T>>(tag: instanceKey);
   }
 
-  /// Internal helper to check if this store is instantiated in a specific [scope].
+  /// Checks if the store is instantiated in [scope].
   bool isInstantiatedIn(LevitScope scope, {String? tag}) {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
     return scope.isInstantiated<_LevitStoreInstance<T>>(tag: instanceKey);
   }
 
-  /// Resolves the value of this store from the active [LevitScope].
+  /// Finds the value of this store in the active scope.
   T find({String? tag}) => Levit.find<T>(key: this, tag: tag);
 
-  /// Asynchronously resolves the value of this store.
+  /// Asynchronously finds the value of this store in the active scope.
   Future<T> findAsync({String? tag}) => Levit.findAsync<T>(key: this, tag: tag);
 
-  /// Removes this store instance from the active [LevitScope].
+  /// Removes this store from the active scope.
   bool delete({String? tag, bool force = false}) =>
       Levit.delete(key: this, tag: tag, force: force);
-
-  /// Creates an asynchronous [LevitStore] definition.
-  static LevitAsyncStore<T> async<T>(Future<T> Function(LevitRef ref) builder) {
-    return LevitAsyncStore<T>(builder);
-  }
 
   @override
   String toString() => 'LevitStore<$T>(id: $hashCode)';
@@ -137,6 +152,10 @@ class _LevitStoreInstance<T> extends LevitController implements LevitRef {
       // Use "Restored Zone Capture" for initialization.
       // This ensures that any `0.lx` created in the builder is captured
       // and disposed when the store closes, even if it's an orphan.
+      //
+      // If `definition._builder` throws, `_builderRun` will remain false,
+      // and the error will be re-thrown. The store will attempt to re-initialize
+      // on the next access.
       _value = _AutoLinkScope.runCaptured(
         () => definition._builder(this),
         (captured, _) {
@@ -167,6 +186,25 @@ class _LevitStoreInstance<T> extends LevitController implements LevitRef {
       return result as S;
     }
     return await scope.findAsync<S>(tag: tag);
+  }
+
+  @override
+  S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
+    return scope.put<S>(builder, tag: tag, permanent: permanent);
+  }
+
+  @override
+  void lazyPut<S>(S Function() builder,
+      {String? tag, bool permanent = false, bool isFactory = false}) {
+    scope.lazyPut<S>(builder,
+        tag: tag, permanent: permanent, isFactory: isFactory);
+  }
+
+  @override
+  Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
+      {String? tag, bool permanent = false, bool isFactory = false}) {
+    return scope.lazyPutAsync<S>(builder,
+        tag: tag, permanent: permanent, isFactory: isFactory);
   }
 
   @override

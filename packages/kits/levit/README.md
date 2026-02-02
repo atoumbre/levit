@@ -5,53 +5,45 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flags=levit)](https://codecov.io/github/atoumbre/levit)
 
-**The core kit for building application logic with the Levit ecosystem.**
+**The pure Dart logic kernel of the Levit ecosystem.**
 
-`levit` bundles and re-exports the foundational packages for reactive state management, dependency injection, and utility mixins. It serves as the primary gateway for building non-UI business logic.
+This package bundles everything you need to build reactive, robust business logic in Dart. It includes:
+*   [levit_reactive]: Signals (`.lx`), Effects, and Computed values.
+*   [levit_scope]: A powerful hierarchical dependency injection system.
+*   [levit_dart]: Utilities for structured concurrency and tasks.
 
----
-
-## Purpose & Scope
-
-`levit` provides a unified entry point for the "logic" side of Levit. It is responsible for:
-- Re-exporting foundational reactivity primitives from `levit_reactive`.
-- Re-exporting hierarchical dependency injection from `levit_scope`.
-- Providing domain-level abstractions from `levit_dart`.
+It is **framework-agnostic**. Use it for CLI tools, servers, or the domain layer of your Flutter apps.
 
 ---
 
-## Conceptual Overview
+## Quick Start
 
-### Core Abstractions
-- **[Lx]**: Static entry point for reactivity and batching.
-- **[Ls]**: Static entry point for ambient dependency resolution.
-- **[LevitScope]**: Hierarchical container for dependency management.
-
----
-
-## Getting Started
-
-### Installation
-Add `levit` to your `pubspec.yaml`:
-```yaml
-dependencies:
-  levit: latest
-```
-
-### Usage
 ```dart
 import 'package:levit/levit.dart';
 
-final count = 0.lx;
-final auth = Ls.find<AuthService>();
+void main() {
+  // 1. Reactivity
+  final count = 0.lx;
+  
+  Lx.effect(() {
+    print("Count is: ${count.value}");
+  });
+  
+  // 2. Dependency Injection
+  final scope = Levit.createScope('main');
+  
+  scope.put(() => AuthService());
+  
+  final auth = scope.find<AuthService>();
+}
 ```
 
----
+## Installation
 
-## Design Principles
+```yaml
+dependencies:
+  levit: ^latest
+```
 
-### All-in-One Gateway
-Designed to simplify imports by providing a single, authoritative package that exports everything needed to build a fully reactive domain layer.
-
-### Framework Agnostic
-While it pairs perfectly with `levit_flutter`, the `levit` kit itself has zero dependencies on Flutter and runs in any Dart environment.
+> **Building a Flutter app?**
+> You probably want `levit_flutter` instead, which includes this package plus widget bindings.

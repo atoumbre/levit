@@ -9,7 +9,7 @@ void main() {
       final status = LxFuture(Future.value(0));
 
       await tester.pumpWidget(MaterialApp(
-        home: LWatchStatus(
+        home: LStatusBuilder(
           status,
           onSuccess: (data) => Text('Success: $data'),
           onWaiting: () => const Text('Waiting'),
@@ -49,7 +49,7 @@ void main() {
         home: ListView.builder(
           itemCount: widgetCount,
           itemBuilder: (context, index) {
-            return LWatchStatus(
+            return LStatusBuilder(
               statuses[index],
               onSuccess: (data) => Text('S$index'),
               onWaiting: () => const Text('Waiting'),

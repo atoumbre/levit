@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:levit_flutter/levit_flutter.dart';
+// import 'package:levit_flutter/levit_flutter.dart';
 
 import 'ui/dashboard_page.dart';
 
 void main() {
-  Levit.enableAutoLinking();
+  // Levit.enableAutoLinking();
   runApp(const BenchmarkApp());
 }
 

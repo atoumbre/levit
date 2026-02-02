@@ -1,37 +1,30 @@
 part of '../levit_dart_core.dart';
 
-/// A base class for business logic components with automated resource management and explicit lifecycle hooks.
+/// A base class for business logic components.
 ///
-/// [LevitController] provides a structured environment for managing the lifecycle
-/// of application logic. It implements [LevitScopeDisposable] to integrate
-/// with the [Levit] dependency injection system.
+/// [LevitController] manages the lifecycle of application logic, providing
+/// automated resource cleanup and integration with the dependency injection system.
 ///
-/// The primary responsibility of a controller is to encapsulate business logic
-/// and ensure that all resources (streams, timers, reactive variables) are
-/// cleaned up when the controller is removed from its scope.
+/// Implementers should override [onInit] for setup and [onClose] for cleanup.
+/// Use [autoDispose] to simplify resource management.
 ///
-/// ### Lifecycle Lifecycle
-/// 1.  **Construction**: The controller is instantiated.
-/// 2.  **Attachment**: [didAttachToScope] is called when registered in a [LevitScope].
-/// 3.  **Initialization**: [onInit] is called once after construction and attachment.
-/// 4.  **Disposal**: [onClose] is called when the controller's scope is disposed or it is removed.
-///
-/// ### Automated Cleanup
-/// Use [autoDispose] to register objects for automatic cleanup during [onClose].
-/// This prevents memory leaks by ensuring resources are disposed in a deterministic order.
-///
-/// // Example usage:
+/// Example:
 /// ```dart
-/// class MyController extends LevitController {
-///   late final count = autoDispose(0.lx);
+/// class CounterController extends LevitController {
+///   final count = 0.lx;
 ///
 ///   @override
 ///   void onInit() {
-///     super.onInit();
-///     // Start persistent listeners or fetch initial data
+///     autoDispose(count); // Cleanup on close
 ///   }
 /// }
 /// ```
+///
+/// Lifecycle:
+/// 1.  **Construction**: Instance created.
+/// 2.  **Attachment**: Linked to a [LevitScope].
+/// 3.  **Initialization**: [onInit] called.
+/// 4.  **Disposal**: [onClose] called when scope closes.
 abstract class LevitController implements LevitScopeDisposable {
   bool _initialized = false;
   bool _disposed = false;
@@ -92,27 +85,21 @@ abstract class LevitController implements LevitScopeDisposable {
     }
   }
 
-  /// Registers an [object] to be automatically cleaned up when this controller is closed.
+  /// Registers [object] for automatic cleanup when the controller closes.
   ///
-  /// The [object] is returned to allow for inline chaining during initialization.
+  /// Supports:
+  /// *   [LxReactive] (closes the reactive)
+  /// *   [StreamSubscription] (cancels subscription)
+  /// *   [Timer] (cancels timer)
+  /// *   [Sink] (closes sink)
+  /// *   Anything with a `dispose()`, `close()`, or `cancel()` method.
   ///
-  /// ### Supported Types
-  /// *   **[LxReactive]**: Invokes `close()`.
-  /// *   **[StreamSubscription]**: Invokes `cancel()`.
-  /// *   **[Timer]**: Invokes `cancel()`.
-  /// *   **[Sink]**: Invokes `close()`.
-  /// *   **Functions**: `void Function()` is called as a cleanup callback.
-  /// *   **Duck Typing**: Objects with `dispose()`, `close()`, or `cancel()` methods.
+  /// Returns the [object] to allow inline use during initialization.
   ///
-  /// // Example usage:
+  /// Example:
   /// ```dart
-  /// class MyController extends LevitController {
-  ///   late final scrollController = autoDispose(ScrollController());
-  ///   late final sub = autoDispose(myStream.listen((_) {}));
-  /// }
+  /// late final sub = autoDispose(stream.listen((_) {}));
   /// ```
-  ///
-  /// Returns the same [object] instance passed in.
   T autoDispose<T>(T object) {
     // Check for identity to allow equal-but-distinct reactive variables
     final alreadyAdded =
@@ -132,24 +119,20 @@ abstract class LevitController implements LevitScopeDisposable {
     return object;
   }
 
-  /// Callback invoked after the controller is instantiated and registered.
+  /// Called immediately after the controller is initialized.
   ///
-  /// Override this method to perform setup logic such as starting listeners,
-  /// initializing reactive state, or pre-fetching data.
-  ///
-  /// Always call `super.onInit()` if overriding to ensure framework invariants.
+  /// Override to perform setup logic like starting API calls or setting up listeners.
+  /// Use [autoDispose] here to ensure resources are tracked.
   @override
   @mustCallSuper
   void onInit() {
     _initialized = true;
   }
 
-  /// Callback invoked when the controller is being removed from [LevitScope].
+  /// Called when the controller is removed from memory.
   ///
-  /// This method triggers the cleanup of all objects registered via [autoDispose].
-  ///
-  /// Always call `super.onClose()` if overriding. Once closed, the controller
-  /// is considered disposed and cannot be reused.
+  /// Releases all resources registered via [autoDispose].
+  /// Override to perform additional custom cleanup.
   @override
   @mustCallSuper
   void onClose() {

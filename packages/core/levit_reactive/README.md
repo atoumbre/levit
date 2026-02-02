@@ -5,83 +5,103 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flags=levit_reactive)](https://codecov.io/github/atoumbre/levit)
 
-**A pure Dart reactive engine. Deterministic. Fine-grained. Dependency-free.**
+**A high-performance, fine-grained reactive engine for Dart.**
 
-`levit_reactive` is the foundational reactivity layer of the Levit ecosystem. It provides a high-performance, zero-boilerplate way to model state, derived values, and asynchronous data flows in any Dart environment.
-
----
-
-## Purpose & Scope
-
-`levit_reactive` manages reactive state and its derivation graph. It is responsible for:
-
-- **Zero-Boilerplate Reactivity**: Create reactive state via simple `.lx` extensions.
-- **Automatic Dependency Tracking**: Computed values track their sources automatically.
-- **Async Status Modeling**: Type-safe `LxStatus` hierarchy for async operation states.
-- **Reactive Collections**: `LxList`, `LxMap`, and `LxSet` for collection-level reactivity.
-- **Middleware Interception**: Global hooks for logging, undo/redo, and diagnostics.
+`levit_reactive` powers the state management capabilities of the Levit ecosystem. It provides a modern, signal-based reactivity system that is transparent, glitch-free, and dependency-free.
 
 ---
 
-## Core Abstractions
+## The Core Concept
 
-| Type | Description |
-|:-----|:------------|
-| `LxReactive<T>` | Base interface for all reactive objects |
-| `LxVar<T>` | Mutable reactive variable |
-| `LxComputed<T>` | Derived state with automatic dependency tracking |
-| `LxAsyncComputed<T>` | Async derived state returning `LxStatus<T>` |
-| `LxStatus<T>` | Sealed hierarchy: `LxIdle`, `LxWaiting`, `LxSuccess`, `LxError` |
-| `LxList<E>`, `LxMap<K,V>`, `LxSet<E>` | Reactive collections |
-| `LxWorker<T>` | Side-effect observer with monitoring |
-| `Lx` | Static entry point for batching and configuration |
+At the heart of `levit_reactive` are **Signals** (`LxVar`) and **Effects** (`LxWorker` / `LxComputed`). The system automatically tracks dependencies by simply *reading* values, eliminating the need for manual subscriptions or code generation.
 
----
+### Quick Example
 
-## Getting Started
-
-### Basic Reactivity
 ```dart
+// 1. Create reactive state
 final count = 0.lx;
-count.addListener(() => print('Count: ${count.value}'));
-count.value++;
+
+// 2. Derive state (updates automatically)
+final doubleCount = LxComputed(() => count() * 2);
+
+// 3. React to changes
+LxWorker(count, (val) => print('Count changed to: $val'));
+
+// 4. Update
+count.value++; // Prints: "Count changed to: 1"
 ```
 
-### Computed Values
-```dart
-final firstName = 'John'.lx;
-final lastName = 'Doe'.lx;
-final fullName = LxComputed(() => '${firstName.value} ${lastName.value}');
-print(fullName.value); // John Doe
-```
+---
 
-### Async State
-```dart
-final user = LxAsyncComputed(() => fetchUser(123));
+## Key Features
 
-if (user.isWaiting) {
-  print('Loading...');
+### 1. Fine-Grained Reactivity
+Updates are surgically precise. If a computed value depends on `A` and `B`, unrelated changes to `C` will never trigger a re-computation.
+
+### 2. Glitch-Free by Design
+The engine uses **topological sorting** to ensure derived state is always consistent. You will never see a "stale" or "intermediate" value during a complex update chain.
+
+### 3. Async State Management
+First-class support for asynchronous flows with `LxStatus`.
+
+```dart
+final userId = 1.lx;
+
+// Automatically re-fetches when userId changes
+final user = LxAsyncComputed(() => api.fetchUser(userId()));
+
+// Type-safe status usage
+switch (user.value) {
+  case LxWaiting(): print('Loading...');
+  case LxSuccess(value: final u): print('Hello ${u.name}');
+  case LxError(error: final e): print('Error: $e');
+  case LxIdle(): print('Ready');
 }
 ```
 
-### Batching
+### 4. Reactive Collections
+Modifying `LxList`, `LxMap`, or `LxSet` automatically notifies observers.
+
 ```dart
-Lx.batch(() {
-  count.value = 1;
-  name.value = 'Updated';
-}); // Single notification
+final todos = <String>[].lx;
+todos.add('Buy milk'); // Triggers UI update
 ```
+
+### 5. Middleware & Tooling
+Built-in hooks for logging, time-travel debugging (undo/redo), and performance profiling.
 
 ---
 
-## Design Principles
+## Detailed API
 
-### Transparent Reactivity
-Reactivity is achieved by simply reading values. No manual subscription management, annotations, or code generation required.
+### Reactive Primitives
 
-### Determinism
-Notifications are synchronous and topologically sorted. A single state change never results in inconsistent derived values or redundant updates.
+| Type | Description |
+|:-----|:------------|
+| `LxVar<T>` | A mutable reactive variable (Signal). Created via `.lx` extension. |
+| `LxComputed<T>` | A derived readonly value. Lazily evaluated and memoized. |
+| `LxAsyncComputed<T>` | Derived state from a `Future`. Returns `LxStatus<T>`. |
+| `LxWorker<T>` | A side-effect runner (watcher). Captures metrics. |
 
-### Pure Dart
-Zero dependencies and no platform-specific requirements, making it suitable for backend services, CLI tools, and complex UIs.
+### Utilities
 
+| Method | Description |
+|:-------|:------------|
+| `Lx.batch(() => ...)` | Groups multiple updates into a single notification cycle. |
+| `Lx.untracked(() => ...)` | Reads reactive values without creating a dependency. |
+
+---
+
+## Integration
+
+While `levit_reactive` is pure Dart and framework-agnostic, it is designed to pair perfectly with **Levit Flutter Core**.
+
+*   **State Management**: Use `Lx` types inside your Controllers.
+*   **UI Binding**: Use `LWatch` or `Obx` (in Flutter) to bind signals to widgets.
+
+```dart
+// In a Flutter Widget
+LWatch((context) {
+  return Text('Count: ${controller.count()}');
+});
+```
