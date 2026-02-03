@@ -599,18 +599,14 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     // Optimization: Avoid `toList()` allocation by iterating keys directly.
     // We replicate `_unsubscribeFrom` logic here but skip map removal until the end.
     for (final notifier in _dependencySubscriptions.keys) {
-      if (LevitReactiveMiddleware.hasListenerMiddlewares) {
-        Lx.runWithContext(
-            LxListenerContext(
-              type: 'LxComputed',
-              id: identityHashCode(this),
-              data: {'name': name, 'runtimeType': runtimeType.toString()},
-            ), () {
-          notifier.removeListener(_onDependencyChanged);
-        });
-      } else {
+      Lx.runWithContext(
+          LxListenerContext(
+            type: 'LxComputed',
+            id: identityHashCode(this),
+            data: {'name': name, 'runtimeType': runtimeType.toString()},
+          ), () {
         notifier.removeListener(_onDependencyChanged);
-      }
+      });
     }
     _dependencySubscriptions.clear();
   }

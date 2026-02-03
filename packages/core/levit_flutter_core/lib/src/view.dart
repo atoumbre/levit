@@ -294,14 +294,14 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
     }
 
     if (shouldUpdate) {
-      assert(() {
-        if (widget.resolver.runtimeType.toString().contains('Closure')) {
+      if (kDebugMode) {
+        if (widget.resolver.runtimeType.toString().contains('Closure') ||
+            widget.resolver.runtimeType.toString().contains('=>')) {
           debugPrint(
               'WARNING: [LAsyncView] resolver is an anonymous closure. This causes re-fetching on every build.\n'
               'Consider using a method reference or explicitly passing `args` to control updates.');
         }
-        return true;
-      }());
+      }
       setState(() {
         future = _resolveFuture();
       });

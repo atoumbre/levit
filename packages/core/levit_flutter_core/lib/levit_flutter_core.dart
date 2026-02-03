@@ -16,6 +16,7 @@ library;
 
 export 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
 
 part 'src/scope.dart';
