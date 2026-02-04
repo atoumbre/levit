@@ -95,10 +95,11 @@ class LevitDependency<S> {
 /// 2.  **Parent Delegation**: If not found locally, recursively searches parent scopes.
 /// 3.  **Isolation**: Dependencies registered in a child scope are not visible to parents.
 ///
-/// ## Lifecycle
-/// When a scope is disposed via [dispose]:
-/// *   All locally registered dependencies invoking [LevitScopeDisposable] will receive an [onClose] callback.
-/// *   The scope becomes unusable and should be discarded.
+  /// ## Lifecycle
+  /// When a scope is disposed via [dispose]:
+  /// *   All locally registered dependencies implementing [LevitScopeDisposable]
+  ///     will receive a [LevitScopeDisposable.onClose] callback.
+  /// *   The scope becomes unusable and should be discarded.
 class LevitScope {
   /// Internal counter for unique scope IDs.
   static int _nextId = 0;

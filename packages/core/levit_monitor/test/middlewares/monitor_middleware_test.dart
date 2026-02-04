@@ -199,6 +199,35 @@ void main() {
       );
       expect(event.instance, isNotNull);
     });
+
+    test('reactive errors omit stack trace by default', () async {
+      final reactive = 0.lx.named('stackless');
+      reactive.addListener(() {
+        throw StateError('boom');
+      });
+
+      reactive.value = 1;
+      await Future<void>.delayed(Duration.zero);
+
+      final errorEvent = transport.events.whereType<ReactiveErrorEvent>().first;
+      expect(errorEvent.stack, isNull);
+    });
+
+    test('reactive errors include stack trace when enabled', () async {
+      await middleware.updateTransport(includeStackTrace: true);
+      transport.events.clear();
+
+      final reactive = 0.lx.named('with_stack');
+      reactive.addListener(() {
+        throw StateError('boom');
+      });
+
+      reactive.value = 1;
+      await Future<void>.delayed(Duration.zero);
+
+      final errorEvent = transport.events.whereType<ReactiveErrorEvent>().first;
+      expect(errorEvent.stack, isNotNull);
+    });
   });
 }
 

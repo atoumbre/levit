@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 
+/// Runs the `levit_flutter_core` example application.
 void main() {
   runApp(const MyApp());
 }
 
+/// The root widget for the example application.
 class MyApp extends StatelessWidget {
+  /// Creates the root widget for the example application.
   const MyApp({super.key});
 
   @override
@@ -16,15 +19,20 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// A controller that owns a single reactive counter value.
 class CounterController extends LevitController {
+  /// The current counter value.
   final count = 0.lx;
 
+  /// Increments [count] by one.
   void increment() {
     count.value++;
   }
 }
 
+/// A page that displays and updates a counter using Levit widgets.
 class CounterPage extends StatelessWidget {
+  /// Creates the counter page.
   const CounterPage({super.key});
 
   @override

@@ -33,5 +33,27 @@ void main() {
     // Shadow state should be updated with the value from the batch
     expect(state.variables[rx.id]?.value, '42',
         reason: 'Value should be updated by BatchEvent');
+    expect(state.variables[rx.id]?.valueType, 'int',
+        reason: 'Value type should be updated by BatchEvent');
+  });
+
+  test('StateSnapshot batch keeps sensitive values obfuscated', () {
+    final state = StateSnapshot();
+    final sid = 'test-session';
+    final rx = 'secret-token'.lxVar(named: 'token', isSensitive: true);
+
+    state.applyEvent(ReactiveInitEvent(sessionId: sid, reactive: rx));
+
+    final change = LevitReactiveChange<String>(
+      timestamp: DateTime.now(),
+      valueType: String,
+      oldValue: 'secret-token',
+      newValue: 'new-secret-token',
+    );
+    final batch = LevitReactiveBatch([(rx, change)]);
+    state.applyEvent(ReactiveBatchEvent(sessionId: sid, change: batch));
+
+    expect(state.variables[rx.id]?.value, '***');
+    expect(state.variables[rx.id]?.valueType, 'String');
   });
 }

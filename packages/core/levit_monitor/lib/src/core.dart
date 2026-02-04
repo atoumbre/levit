@@ -88,7 +88,11 @@ class LevitMonitor {
 
   /// Detaches the monitor from the application and releases associated resources.
   static void detach() {
-    _middleware?.disable();
+    final middleware = _middleware;
     _middleware = null;
+    if (middleware == null) return;
+
+    middleware.disable();
+    unawaited(middleware.close().catchError((_) {}));
   }
 }

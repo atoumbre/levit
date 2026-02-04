@@ -44,6 +44,7 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
 
   // Optimized: Use List instead of Set for zero-allocation capture
   List<LevitReactiveNotifier>? _newNotifiers;
+  final Set<LevitReactiveNotifier> _scratchNotifiers = {};
 
   bool _isDirty = false;
 
@@ -140,13 +141,13 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
       _usingSinglePath = false;
     }
 
-    // Process Notifiers
-    final currentNots = _notifiers;
+    // Process notifiers with reusable scratch set (avoid per-build toSet allocation)
     final targetNots = _notifiers ??= {};
-    final nextSet = nextNotifiers.toSet();
+    _scratchNotifiers.clear();
 
-    // Add new
-    for (final n in nextSet) {
+    // Add new / keep current
+    for (final n in nextNotifiers) {
+      if (!_scratchNotifiers.add(n)) continue;
       if (targetNots.add(n)) {
         _runWithContext(() {
           n.addListener(_triggerRebuild);
@@ -154,10 +155,10 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
       }
     }
 
-    // Remove old
-    if (currentNots != null && currentNots.isNotEmpty) {
-      currentNots.removeWhere((notifier) {
-        if (nextSet.contains(notifier)) return false;
+    // Remove stale
+    if (targetNots.isNotEmpty) {
+      targetNots.removeWhere((notifier) {
+        if (_scratchNotifiers.contains(notifier)) return false;
         _runWithContext(() {
           notifier.removeListener(_triggerRebuild);
         });

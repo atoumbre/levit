@@ -2,8 +2,10 @@ part of '../../levit_flutter.dart';
 
 /// A widget that detects when it enters or leaves the widget tree.
 ///
-/// Useful for triggering events like pagination loading or analytics impressions
-/// when an item is scrolled into view.
+/// Useful for triggering one-shot setup or teardown hooks tied to mount/unmount.
+///
+/// Note: This does not detect viewport visibility. It only reports insertion
+/// and removal from the widget tree.
 ///
 /// Example:
 /// ```dart

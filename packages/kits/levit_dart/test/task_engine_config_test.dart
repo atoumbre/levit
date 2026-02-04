@@ -71,6 +71,24 @@ void main() {
       expect(lastError, 'new_error2');
     });
 
+    test('accepts null onTaskError to clear handler', () async {
+      Object? lastError;
+      engine.config(onTaskError: (e, s) => lastError = e);
+
+      try {
+        await engine.schedule(() => throw 'error_before_clear');
+      } catch (_) {}
+      expect(lastError, 'error_before_clear');
+
+      lastError = null;
+      engine.config(onTaskError: null);
+
+      try {
+        await engine.schedule(() => throw 'error_after_clear');
+      } catch (_) {}
+      expect(lastError, isNull);
+    });
+
     test('updates cacheProvider', () async {
       final cache1 = MockCache();
       final cache2 = MockCache();

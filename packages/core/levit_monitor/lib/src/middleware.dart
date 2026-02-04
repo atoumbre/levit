@@ -207,7 +207,7 @@ class LevitMonitorMiddleware
               sessionId: sessionId,
               reactive: reactive,
               error: error,
-              stack: stack,
+              stack: includeStackTrace ? stack : null,
             ));
           };
 

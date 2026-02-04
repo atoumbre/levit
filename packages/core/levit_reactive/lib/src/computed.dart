@@ -587,7 +587,10 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
   /// Clears all existing subscriptions and tracking.
   /// Clears all existing subscriptions and tracking.
   void _cleanupSubscriptions() {
-    if (_dependencySubscriptions.isEmpty) return;
+    if (_dependencySubscriptions.isEmpty) {
+      graphDepth = 0;
+      return;
+    }
 
     // Optimization: Avoid toList() by separating listener removal from map clearing
     if (!LevitReactiveMiddleware.hasListenerMiddlewares) {
@@ -595,6 +598,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
         dep.removeListener(_onDependencyChanged);
       }
       _dependencySubscriptions.clear();
+      graphDepth = 0;
       return;
     }
 
@@ -613,6 +617,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       });
     }
     _dependencySubscriptions.clear();
+    graphDepth = 0;
   }
 
   /// Subscribes to a specific dependency if not already tracked.
@@ -632,6 +637,12 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       notifier.addListener(_onDependencyChanged);
     }
     _dependencySubscriptions[notifier] = null;
+
+    final candidateDepth = notifier.graphDepth + 1;
+    if (candidateDepth > graphDepth) {
+      graphDepth = candidateDepth;
+    }
+
     return true;
   }
 
@@ -650,6 +661,18 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     } else {
       notifier.removeListener(_onDependencyChanged);
     }
+    _recalculateGraphDepth(_dependencySubscriptions.keys);
+  }
+
+  void _recalculateGraphDepth(Iterable<LevitReactiveNotifier> dependencies) {
+    var nextDepth = 0;
+    for (final dependency in dependencies) {
+      final dependencyDepth = dependency.graphDepth + 1;
+      if (dependencyDepth > nextDepth) {
+        nextDepth = dependencyDepth;
+      }
+    }
+    graphDepth = nextDepth;
   }
 
   /// Reconciles dependencies for sync computed.
@@ -672,6 +695,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
 
     // If hash and length match, graph is stable - skip reconciliation
     if (hash == _lastDepsHash && length == _lastDepsLength) {
+      _recalculateGraphDepth(depSet);
       return;
     }
 
@@ -689,6 +713,8 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     for (final dep in depSet) {
       if (!_dependencySubscriptions.containsKey(dep)) _subscribeTo(dep);
     }
+
+    _recalculateGraphDepth(depSet);
 
     // 3. Notify middlewares
     if (reactives != null) {

@@ -46,7 +46,7 @@ extension LevitAsyncInstanceExtension<T> on Future<T> {
   /// Registers this [Future] as a lazy asynchronous dependency.
   ///
   /// Use [tag] to differentiate instances.
-  /// Set [isFactory] to `true` to re-await the future on every [findAsync].
+  /// Set [isFactory] to `true` to re-await the future on every [Ls.findAsync].
   void levitLazyPutAsync(
           {String? tag, bool permanent = false, bool isFactory = false}) =>
       Ls.lazyPutAsync(() => this,

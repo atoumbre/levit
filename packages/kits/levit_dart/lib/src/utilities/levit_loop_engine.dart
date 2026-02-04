@@ -246,6 +246,8 @@ class _IsolateLoopService implements StoppableService {
 
   SendPort? _commandPort;
   Isolate? _isolate;
+  ReceivePort? _receivePort;
+  StreamSubscription<dynamic>? _receiveSubscription;
 
   _IsolateLoopService(this._body, {Duration? delay, String? debugName})
       : _delay = delay,
@@ -255,24 +257,46 @@ class _IsolateLoopService implements StoppableService {
   LxReactive<LxStatus<dynamic>> get status => _status;
 
   @override
-  void start() async {
+  void start() {
     if (_status.value is! LxIdle) return;
+    unawaited(_start());
+  }
+
+  Future<void> _start() async {
     _status.value = LxWaiting();
 
-    final receivePort = ReceivePort();
-    _isolate = await Isolate.spawn(
-      _isolateEntry,
-      _IsolateConfig(_body, receivePort.sendPort, _delay),
-      debugName: _debugName,
-    );
+    await _closeReceivePort();
+    try {
+      _receivePort = ReceivePort();
+      _receiveSubscription = _receivePort!.listen(
+        (message) {
+          if (message is SendPort) {
+            _commandPort = message;
+          } else if (message is LxStatus<dynamic>) {
+            _status.value = message;
+          }
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          _status.value = LxError(error, stackTrace);
+        },
+      );
 
-    receivePort.listen((message) {
-      if (message is SendPort) {
-        _commandPort = message;
-      } else if (message is LxStatus<dynamic>) {
-        _status.value = message;
+      final isolate = await Isolate.spawn(
+        _isolateEntry,
+        _IsolateConfig(_body, _receivePort!.sendPort, _delay),
+        debugName: _debugName,
+      );
+
+      if (_status.value is LxIdle) {
+        isolate.kill(priority: Isolate.beforeNextEvent);
+        await _closeReceivePort();
+        return;
       }
-    });
+      _isolate = isolate;
+    } catch (e, s) {
+      _status.value = LxError(e, s);
+      await _closeReceivePort();
+    }
   }
 
   @override
@@ -291,8 +315,17 @@ class _IsolateLoopService implements StoppableService {
   void stop() {
     _commandPort?.send('stop');
     _isolate?.kill(priority: Isolate.beforeNextEvent);
+    _commandPort = null;
     _isolate = null;
+    unawaited(_closeReceivePort());
     _status.value = LxIdle();
+  }
+
+  Future<void> _closeReceivePort() async {
+    await _receiveSubscription?.cancel();
+    _receiveSubscription = null;
+    _receivePort?.close();
+    _receivePort = null;
   }
 
   static void _isolateEntry(_IsolateConfig config) async {
@@ -305,13 +338,17 @@ class _IsolateLoopService implements StoppableService {
       (status) => config.mainSendPort.send(status),
     );
 
-    commandPort.listen((message) {
+    late final StreamSubscription<dynamic> commandSubscription;
+    commandSubscription = commandPort.listen((message) {
       if (message == 'pause') {
         executor.pause();
       } else if (message == 'resume') {
         executor.resume();
       } else if (message == 'stop') {
         executor.stop();
+        commandSubscription.cancel();
+        commandPort.close();
+        Isolate.exit();
       }
     });
 

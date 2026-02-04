@@ -84,7 +84,9 @@ class LevitTaskEngine implements LevitDisposable {
   void Function(Object error, StackTrace stackTrace)? onTaskError;
 
   final Map<String, _ActiveTask> _activeTasks = {};
-  final Queue<_QueuedTask> _queue = Queue<_QueuedTask>();
+  final Queue<_QueuedTask> _highPriorityQueue = Queue<_QueuedTask>();
+  final Queue<_QueuedTask> _normalPriorityQueue = Queue<_QueuedTask>();
+  final Queue<_QueuedTask> _lowPriorityQueue = Queue<_QueuedTask>();
 
   /// Creates a task engine with [maxConcurrent] workers.
   LevitTaskEngine({
@@ -97,6 +99,8 @@ class LevitTaskEngine implements LevitDisposable {
 
   static String _generateTaskId() =>
       'task_${DateTime.now().microsecondsSinceEpoch}_${_nextTaskId++}';
+
+  static void _onTaskErrorUnset(Object error, StackTrace stackTrace) {}
 
   // static final _defaultCacheProvider = InMemoryTaskCacheProvider();
 
@@ -166,7 +170,7 @@ class LevitTaskEngine implements LevitDisposable {
     } else {
       // Enqueue
       final completer = Completer<T?>();
-      _queue.add(_QueuedTask<T>(
+      _enqueue(_QueuedTask<T>(
         id: taskId,
         task: task,
         priority: priority,
@@ -183,18 +187,36 @@ class LevitTaskEngine implements LevitDisposable {
         runInIsolate: runInIsolate,
         debugName: debugName,
       ));
-      _sortQueue(); // Ensure highest priority is first
       return completer.future;
     }
   }
 
-  void _sortQueue() {
-    // Sort logic: High (0) < Normal (1) < Low (2). Min first.
-    final list = _queue.toList(growable: false);
-    list.sort((a, b) => a.priority.index.compareTo(b.priority.index));
-    _queue
-      ..clear()
-      ..addAll(list);
+  void _enqueue(_QueuedTask item) {
+    switch (item.priority) {
+      case TaskPriority.high:
+        _highPriorityQueue.add(item);
+        break;
+      case TaskPriority.normal:
+        _normalPriorityQueue.add(item);
+        break;
+      case TaskPriority.low:
+        _lowPriorityQueue.add(item);
+        break;
+    }
+  }
+
+  bool get _hasQueuedTasks =>
+      _highPriorityQueue.isNotEmpty ||
+      _normalPriorityQueue.isNotEmpty ||
+      _lowPriorityQueue.isNotEmpty;
+
+  _QueuedTask? _takeNextQueuedTask() {
+    if (_highPriorityQueue.isNotEmpty) return _highPriorityQueue.removeFirst();
+    if (_normalPriorityQueue.isNotEmpty) {
+      return _normalPriorityQueue.removeFirst();
+    }
+    if (_lowPriorityQueue.isNotEmpty) return _lowPriorityQueue.removeFirst();
+    return null;
   }
 
   Future<T?> _execute<T>({
@@ -280,8 +302,9 @@ class LevitTaskEngine implements LevitDisposable {
 
   void _processQueue() {
     // Start as many queued tasks as possible up to maxConcurrent limit
-    while (_queue.isNotEmpty && _activeTasks.length < maxConcurrent) {
-      final next = _queue.removeFirst(); // Takes highest priority
+    while (_hasQueuedTasks && _activeTasks.length < maxConcurrent) {
+      final next = _takeNextQueuedTask();
+      if (next == null) return;
       _runQueued(next);
     }
   }
@@ -303,7 +326,9 @@ class LevitTaskEngine implements LevitDisposable {
         runInIsolate: item.runInIsolate,
         debugName: item.debugName,
       );
-      item.completer.complete(result);
+      if (!item.completer.isCompleted) {
+        item.completer.complete(result);
+      }
     } catch (e, s) {
       if (!item.completer.isCompleted) {
         item.completer.completeError(e, s);
@@ -320,14 +345,46 @@ class LevitTaskEngine implements LevitDisposable {
   void config({
     int? maxConcurrent,
     LevitTaskCacheProvider? cacheProvider,
-    void Function(Object error, StackTrace stackTrace)? onTaskError,
+    void Function(Object error, StackTrace stackTrace)? onTaskError =
+        _onTaskErrorUnset,
   }) {
     if (maxConcurrent != null) {
       this.maxConcurrent = maxConcurrent;
       _processQueue();
     }
     if (cacheProvider != null) this.cacheProvider = cacheProvider;
-    if (onTaskError != null) this.onTaskError = onTaskError;
+    if (!identical(onTaskError, _onTaskErrorUnset)) {
+      this.onTaskError = onTaskError;
+    }
+  }
+
+  void _cancelQueuedTask(_QueuedTask item) {
+    item.onCancel?.call();
+    if (!item.completer.isCompleted) {
+      item.completer.complete(null);
+    }
+  }
+
+  void _cancelQueuedByIdInQueue(Queue<_QueuedTask> queue, String id) {
+    if (queue.isEmpty) return;
+    final retained = Queue<_QueuedTask>();
+    for (final item in queue) {
+      if (item.id == id) {
+        _cancelQueuedTask(item);
+      } else {
+        retained.add(item);
+      }
+    }
+    queue
+      ..clear()
+      ..addAll(retained);
+  }
+
+  void _cancelAllQueuedInQueue(Queue<_QueuedTask> queue) {
+    for (final item in queue) {
+      _cancelQueuedTask(item);
+    }
+    queue.clear();
   }
 
   /// Cancels a running or queued task by [id].
@@ -335,7 +392,9 @@ class LevitTaskEngine implements LevitDisposable {
     if (_activeTasks.containsKey(id)) {
       _activeTasks[id]!.isCancelled = true;
     }
-    _queue.removeWhere((item) => item.id == id);
+    _cancelQueuedByIdInQueue(_highPriorityQueue, id);
+    _cancelQueuedByIdInQueue(_normalPriorityQueue, id);
+    _cancelQueuedByIdInQueue(_lowPriorityQueue, id);
   }
 
   /// Cancels all running and queued tasks.
@@ -343,7 +402,9 @@ class LevitTaskEngine implements LevitDisposable {
     for (var t in _activeTasks.values) {
       t.isCancelled = true;
     }
-    _queue.clear();
+    _cancelAllQueuedInQueue(_highPriorityQueue);
+    _cancelAllQueuedInQueue(_normalPriorityQueue);
+    _cancelAllQueuedInQueue(_lowPriorityQueue);
   }
 
   @override

@@ -245,8 +245,9 @@ class Levit {
 
   /// Enables automatic linking of reactive state to controller lifecycles.
   ///
-  /// When enabled, [LxReactive] objects created inside [LevitController.onInit]
-  /// or [LevitApp.onInit] are automatically disposed when the controller is closed.
+  /// When enabled, [LxReactive] objects created while instantiating or
+  /// initializing a [LevitController] are automatically registered via
+  /// [LevitController.autoDispose] and disposed when the controller is closed.
   static void enableAutoLinking() {
     if (_autoLinkMiddleware != null) return; // Already enabled
 

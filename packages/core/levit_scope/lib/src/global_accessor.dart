@@ -19,7 +19,8 @@ class Ls {
 
   /// Returns the currently active [LevitScope].
   ///
-  /// If run within a [LevitScope.run] zone, returns that scope.
+  /// If run within a [LevitScopeImplicitScopeExtension.run] zone, returns that
+  /// scope.
   /// Otherwise, returns the global root scope.
   static LevitScope get currentScope {
     final implicit = Zone.current[Ls.zoneScopeKey];
@@ -59,7 +60,7 @@ class Ls {
 
   /// Registers an asynchronous dependency in the active scope.
   ///
-  /// Use [findAsync] to retrieve the instance.
+  /// Use [Ls.findAsync] to retrieve the instance.
   ///
   /// Use [tag] to differentiate multiple instances of the same type.
   /// Set [permanent] to `true` to persist the registration across resets.

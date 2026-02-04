@@ -1,6 +1,18 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
+import 'package:logger/logger.dart';
 import 'package:test/test.dart';
+
+class _CapturePrinter extends LogPrinter {
+  final List<String> lines = <String>[];
+
+  @override
+  List<String> log(LogEvent event) {
+    final line = '${event.message}';
+    lines.add(line);
+    return [line];
+  }
+}
 
 void main() {
   group('ConsoleTransport', () {
@@ -185,6 +197,36 @@ void main() {
     test('close does not throw', () async {
       final t = ConsoleTransport();
       await expectLater(t.close(), completes);
+    });
+
+    test('obfuscates sensitive values in logged messages', () async {
+      LevitMonitor.setObfuscator(null);
+      final printer = _CapturePrinter();
+      final t = ConsoleTransport(
+        minLevel: LevitLogLevel.all,
+        printer: printer,
+      );
+
+      final reactive = 'sensitive-value'
+          .lxVar(named: 'password', isSensitive: true);
+
+      t.send(ReactiveInitEvent(sessionId: 'test', reactive: reactive));
+      t.send(ReactiveChangeEvent(
+        sessionId: 'test',
+        reactive: reactive,
+        change: LevitReactiveChange<String>(
+          timestamp: DateTime.now(),
+          valueType: String,
+          oldValue: 'sensitive-value',
+          newValue: 'new-sensitive-value',
+        ),
+      ));
+
+      final output = printer.lines.join('\n');
+      expect(output, contains('***'));
+      expect(output, isNot(contains('new-sensitive-value')));
+
+      await t.close();
     });
   });
 

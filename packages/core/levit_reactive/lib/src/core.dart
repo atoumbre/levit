@@ -249,13 +249,13 @@ class _LevitReactiveCore {
 /// [LxReactive] unifies various reactive sources (variables, futures, streams)
 /// under a consistent API for observation and notification.
 ///
-/// Implementations of this interface can be tracked by [LxComputed], [LWatch],
+/// Implementations of this interface can be tracked by [LxComputed]
 /// and other observers.
 abstract interface class LxReactive<T> {
   /// The current state of the reactive object.
   ///
   /// Reading this property automatically registers the object as a dependency
-  /// of the currently active observer (e.g., inside an [LxComputed] or [LWatch] builder).
+  /// of the currently active observer (e.g., inside an [LxComputed] builder).
   T get value;
 
   /// A unique runtime identifier for this reactive instance.

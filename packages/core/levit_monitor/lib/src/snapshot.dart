@@ -198,10 +198,17 @@ class StateSnapshot {
     reactive.isSensitive = event.reactive.isSensitive;
 
     if (event is ReactiveInitEvent) {
-      reactive.value = event.toJson()['initialValue'];
-      reactive.valueType = event.toJson()['valueType'];
+      reactive.value = MonitorEvent._stringify(
+        event.reactive.value,
+        isSensitive: event.reactive.isSensitive,
+      );
+      reactive.valueType = event.reactive.value?.runtimeType.toString() ?? 'dynamic';
     } else if (event is ReactiveChangeEvent) {
-      reactive.value = (event.toJson()['newValue']);
+      reactive.value = MonitorEvent._stringify(
+        event.change.newValue,
+        isSensitive: event.reactive.isSensitive,
+      );
+      reactive.valueType = event.change.valueType.toString();
     } else if (event is ReactiveDisposeEvent) {
       variables.remove(event.reactive.id);
     } else if (event is ReactiveGraphChangeEvent) {
@@ -214,28 +221,42 @@ class StateSnapshot {
   }
 
   void _applyBatchEvent(ReactiveBatchEvent event) {
-    final json = event.toJson();
-    final entries = json['entries'] as List;
-
-    for (final entry in entries) {
-      final id = int.tryParse(entry['reactiveId'].toString());
-      if (id != null) {
-        final reactive = variables[id];
-        if (reactive != null) {
-          reactive.value = entry['newValue'];
-        }
+    for (final entry in event.change.entries) {
+      final reactiveDef = entry.$1;
+      final reactive = variables[reactiveDef.id];
+      if (reactive != null) {
+        reactive.value = MonitorEvent._stringify(
+          entry.$2.newValue,
+          isSensitive: reactiveDef.isSensitive,
+        );
+        reactive.valueType = entry.$2.valueType.toString();
       }
     }
   }
 }
 
+/// A serializable representation of a dependency injection scope.
+///
+/// A [ScopeModel] describes a scope node (including its parent relationship) in
+/// a transport-friendly form.
 class ScopeModel {
+  /// The scope identifier.
   final int id;
+
+  /// The human-readable scope name.
   final String name;
+
+  /// The parent scope identifier, if this scope has a parent.
   final int? parentScopeId;
 
+  /// Creates a scope snapshot model.
+  ///
+  /// [id] is the scope identifier.
+  /// [name] is the scope name.
+  /// [parentScopeId] is the parent scope identifier, if any.
   ScopeModel({required this.id, required this.name, this.parentScopeId});
 
+  /// Converts this model to a JSON-serializable map.
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
@@ -243,20 +264,51 @@ class ScopeModel {
       };
 }
 
+/// The lifecycle state of a dependency registration within a scope.
 enum DependencyStatus { registered, creating, active }
 
+/// A coarse classification of a resolved dependency instance.
 enum DependencyType { controller, store, other }
 
+/// A serializable representation of a dependency registration.
+///
+/// A [DependencyModel] describes the registration metadata and current instance
+/// state as observed by [StateSnapshot].
 class DependencyModel {
+  /// The owning scope identifier.
   final int scopeId;
+
+  /// The registration key within the scope.
   final String key;
+
+  /// Whether this registration is lazy (created on first lookup).
   final bool isLazy;
+
+  /// Whether this registration is a factory (created on every lookup).
   final bool isFactory;
+
+  /// Whether this registration uses an asynchronous builder.
   final bool isAsync;
+
+  /// The current registration lifecycle status.
   DependencyStatus status;
+
+  /// The detected instance classification.
   DependencyType type;
+
+  /// A string representation of the instance, if available.
   String? value;
 
+  /// Creates a dependency snapshot model.
+  ///
+  /// [scopeId] is the owning scope identifier.
+  /// [key] is the registration key within the scope.
+  /// [isLazy] indicates whether the registration is lazy.
+  /// [isFactory] indicates whether the registration is a factory.
+  /// [isAsync] indicates whether the registration is asynchronous.
+  /// [status] is the current lifecycle status.
+  /// [type] is the detected classification of the instance.
+  /// [value] is a string representation of the instance, if present.
   DependencyModel({
     required this.scopeId,
     required this.key,
@@ -268,6 +320,7 @@ class DependencyModel {
     this.value,
   });
 
+  /// Converts this model to a JSON-serializable map.
   Map<String, dynamic> toJson() => {
         'scopeId': scopeId,
         'key': key,
@@ -280,23 +333,51 @@ class DependencyModel {
       };
 }
 
+/// A serializable representation of a reactive object and its metadata.
+///
+/// A [ReactiveModel] describes a reactive variable, including its owner
+/// information, listener count, and dependency graph links.
 class ReactiveModel {
+  /// The reactive identifier.
   final int id;
+
+  /// The reactive name, if provided by the producer.
   final String name;
+
+  /// The owner identifier associated with the reactive, if any.
   String? ownerId;
+
+  /// Whether the value should be treated as sensitive for display/export.
   bool isSensitive;
+
+  /// The latest stringified value as observed by the monitor.
   dynamic value;
+
+  /// The runtime type name of [value], if known.
   String? valueType;
 
   // Parsed metadata
+
+  /// The parsed scope identifier from [ownerId], if present.
   int? scopeId;
+
+  /// The parsed owner key from [ownerId], if present.
   String? ownerKey;
 
   // Graph links (IDs of upstream dependencies)
+
+  /// The IDs of upstream reactive dependencies for this reactive.
   List<int> dependencies = [];
 
+  /// The number of active listeners currently attached to this reactive.
   int listenerCount = 0;
 
+  /// Creates a reactive snapshot model.
+  ///
+  /// [id] is the reactive identifier.
+  /// [name] is the reactive name.
+  /// [ownerId] is the owner identifier, if any.
+  /// [isSensitive] indicates whether the reactive value is considered sensitive.
   ReactiveModel({
     required this.id,
     required this.name,
@@ -306,6 +387,7 @@ class ReactiveModel {
     parseOwnerId();
   }
 
+  /// Parses [ownerId] into [scopeId] and [ownerKey] when possible.
   void parseOwnerId() {
     if (ownerId == null) return;
     if (ownerId!.contains(':')) {
@@ -320,6 +402,7 @@ class ReactiveModel {
     }
   }
 
+  /// Converts this model to a JSON-serializable map.
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,

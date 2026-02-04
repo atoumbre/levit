@@ -5,61 +5,52 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flags=levit_monitor)](https://codecov.io/github/atoumbre/levit)
 
-**Unified observability and diagnostics for the Levit ecosystem.**
-
-`levit_monitor` provides deep visibility into the runtime behavior of your application by capturing and correlating events from both the dependency injection system (`levit_scope`) and the reactive state engine (`levit_reactive`).
-
----
-
 ## Purpose & Scope
 
-`levit_monitor` aggregates diagnostic data into a single, serializable pipeline. It is responsible for:
-- Collecting lifecycle and resolution events from the DI container.
-- Capturing state mutations and dependency graph changes from the reactive engine.
-- Providing pluggable transports for local logging or remote visualization.
-- Enabling monotonic correlation of events across asynchronous transitions.
+`levit_monitor` is the monitoring and diagnostics layer for the Levit ecosystem.
 
----
+It is responsible for:
+- Capturing structured events from dependency injection and reactive state systems.
+- Filtering and obfuscating event payloads before export.
+- Dispatching events to one or more transports.
+
+It intentionally does not provide:
+- UI tooling (it emits data; you decide how to visualize or store it).
 
 ## Conceptual Overview
 
-### Core Abstractions
-- **[LevitMonitor]**: The global hub for attaching and configuring the monitoring system.
-- **[MonitorEvent]**: The sealed base class for all serializable diagnostic records.
-- **[LevitTransport]**: An interface for event destinations (Console, File, WebSocket).
-- **[LevitMonitorMiddleware]**: The bridge that intercepts internal framework calls and generates monitoring events.
+Monitoring is opt-in.
+Attaching `LevitMonitor` installs middleware that observes Levit activity and forwards events through a transport pipeline:
 
----
+1. Events are produced by the Levit runtime.
+2. An optional filter decides whether an event is exported.
+3. An obfuscator can hide sensitive values.
+4. Transports deliver the events (console, file, WebSocket, or custom).
 
 ## Getting Started
 
-### Basic Attachment
+Install:
+
+```yaml
+dependencies:
+  levit_monitor: ^latest
+```
+
+Minimal usage:
+
 ```dart
 import 'package:levit_monitor/levit_monitor.dart';
 
 void main() {
-  // Starts capturing events and piping them to the console
   LevitMonitor.attach();
-  
-  // Your application logic here
+
+  // Optional: reduce noise or exclude sensitive sources.
+  LevitMonitor.setFilter((event) => true);
 }
 ```
 
-### Event Filtering
-```dart
-// Only monitor Dependency Injection events
-LevitMonitor.setFilter((event) => event is DependencyEvent);
-```
-
----
-
 ## Design Principles
 
-### Transparent Instrumentation
-Monitoring is attached non-intrusively via middlewares. The application logic remains unaware of the diagnostics layer, ensuring zero footprint when detached.
-
-### Monotonicity
-Every event is tagged with a monotonic sequence number and a session ID. This allows tools to reconstruct the exact order of operations, even when events are processed out-of-order by external consumers.
-
-### Serializable Schema
-All events implement a `toJson()` method and follow a strictly typed hierarchy. This makes it trivial to stream diagnostics to external DevTools, databases, or analytics services.
+- Opt-in observability: monitoring is disabled until attached.
+- Privacy by default: sensitive values can be obfuscated consistently.
+- Transport-agnostic: export is defined by the `LevitTransport` interface.

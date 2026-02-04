@@ -231,13 +231,16 @@ class ConsoleTransport implements LevitTransport {
   }
 
   String _formatMessage(MonitorEvent event) {
+    String safeValue(dynamic value, {bool sensitive = false}) =>
+        '${MonitorEvent._stringify(value, isSensitive: sensitive)}';
+
     return switch (event) {
       ReactiveChangeEvent e =>
-        'VAL: ${e.reactive.name ?? '[anon]'} <${e.change.valueType}> -> ${e.change.newValue}',
+        'VAL: ${e.reactive.name ?? '[anon]'} <${e.change.valueType}> -> ${safeValue(e.change.newValue, sensitive: e.reactive.isSensitive)}',
       ReactiveBatchEvent e =>
         'BATCH: ${e.change.batchId} (${e.change.length} changes)',
       ReactiveInitEvent e =>
-        'INIT: ${e.reactive.name ?? '[anon]'} <${e.reactive.runtimeType}> = ${e.reactive.value}',
+        'INIT: ${e.reactive.name ?? '[anon]'} <${e.reactive.runtimeType}> = ${safeValue(e.reactive.value, sensitive: e.reactive.isSensitive)}',
       ReactiveDisposeEvent e => 'DISPOSE: ${e.reactive.name ?? '[anon]'}',
       ReactiveGraphChangeEvent e =>
         'GRAPH: ${e.reactive.name} dependencies changed',
@@ -254,7 +257,7 @@ class ConsoleTransport implements LevitTransport {
       ReactiveListenerRemovedEvent e =>
         'Listener removed: ${e.reactive.name} (Context: ${e.context?.type})',
       ReactiveErrorEvent e =>
-        'ERROR: ${e.reactive?.name ?? '[anon]'} - ${e.error}',
+        'ERROR: ${e.reactive?.name ?? '[anon]'} - ${safeValue(e.error, sensitive: e.reactive?.isSensitive ?? false)}',
       ScopeCreateEvent e =>
         'SCOPE CREATE: ${e.scopeName}#${e.scopeId} (Parent: ${e.parentScopeId})',
       ScopeDisposeEvent e => 'SCOPE DISPOSE: ${e.scopeName}#${e.scopeId}',

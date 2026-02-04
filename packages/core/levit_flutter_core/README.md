@@ -5,105 +5,80 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flags=levit_flutter_core)](https://codecov.io/github/atoumbre/levit)
 
-**The essential Flutter bindings for the Levit ecosystem.**
+## Purpose & Scope
 
-`levit_flutter_core` connects your reactive business logic (`levit_reactive`) and dependency injection (`levit_scope`) directly to the Flutter widget tree. It provides widgets for **Listening** to state and **Providing** dependencies.
+`levit_flutter_core` is the Flutter binding layer for the Levit ecosystem.
 
----
+It is responsible for:
+- Connecting `levit_reactive` dependency tracking to Flutter rebuilds.
+- Providing widget-tree-scoped dependency injection with deterministic disposal.
+- Bridging widget-tree scoping (InheritedWidget) with Levit's `Zone`-based scoping.
 
-## Why use this?
+It intentionally does not provide:
+- Higher-level app patterns and add-on widgets (see `levit_flutter`).
 
-Flutter is declarative; your state management should be too. `levit_flutter_core` offers:
+## Conceptual Overview
 
-*   **Granular Rebuilds**: `LWatch` rebuilds *only* what changed. No `setState` spaghetti.
-*   **Scoped Access**: `LScope` provides dependencies strictly to its subtree.
-*   **Automatic Disposal**: Resources are cleaned up as soon as widgets leave the screen.
-*   **Zero-Boilerplate Views**: `LView` resolves controllers automatically.
+`levit_flutter_core` provides low-level widgets that:
+- Create and propagate a `LevitScope` through the widget tree (`LScope`).
+- Rebuild a widget subtree when the reactive values read during build change (`LWatch`).
+- Manage controller-driven views with explicit lifecycles (`LView` / `LScopedView`).
 
----
+## Getting Started
 
-## Core Widgets
-
-### 1. The Watcher: `LWatch`
-The bread and butter of your UI. Wraps any widget and rebuilds it when reactive state changes.
-
-```dart
-// Controller
-final count = 0.lx;
-
-// UI
-LWatch(() {
-  return Text("Count: ${count.value}");
-});
-```
-
-### 2. The Provider: `LScope`
-Creates a dependency injection container tied to the widget tree.
-
-```dart
-LScope.put(
-  () => ProfileController(),
-  child: const ProfilePage(),
-)
-```
-
-### 3. The Connector: `LView`
-A base class for pages or complex widgets. It finds your controller and builds the UI.
-
-```dart
-class HomePage extends LView<HomeController> {
-  @override
-  Widget buildView(BuildContext context, HomeController controller) {
-    return Scaffold(
-      appBar: AppBar(title: Text(controller.title())), 
-      body: LWatch(() => Text(controller.userData())),
-    );
-  }
-}
-```
-
----
-
-## Advanced Usage
-
-### Async Views
-For screens that depend on async data (like user profiles), use `LAsyncView` or `LAsyncScopedView`.
-
-```dart
-LAsyncView.put(
-  () async => await UserService.loadProfile(),
-  loading: (context) => const CircularProgressIndicator(),
-  error: (context, err) => Text('Error: $err'),
-  builder: (context, controller) => ProfileContent(controller),
-);
-```
-
-### Status Builders
-For reactive variables that represent network states (`LxStatus`), use `LStatusBuilder`.
-
-```dart
-LStatusBuilder(
-  controller.userStatus,
-  onWaiting: () => const Spinner(),
-  onError: (err, stack) => ErrorPage(err),
-  onSuccess: (user) => Text('Welcome ${user.name}'),
-);
-```
-
----
-
-## Installation
-
-This package is usually installed as a transitive dependency of `levit`.
-
-```yaml
-dependencies:
-  levit: ^latest
-```
-
-If you are building a Flutter package that depends on Levit but not the full framework, you can depend on it directly:
+Install:
 
 ```yaml
 dependencies:
   levit_flutter_core: ^latest
 ```
+
+Minimal usage:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:levit_flutter_core/levit_flutter_core.dart';
+
+class CounterController extends LevitController {
+  final count = 0.lx;
+  void increment() => count(count() + 1);
+}
+
+class CounterText extends StatelessWidget {
+  const CounterText({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Levit.find<CounterController>();
+    return LWatch(() => Text('Count: ${controller.count()}'));
+  }
+}
+
+void main() {
+  runApp(
+    MaterialApp(
+      home: LScope.put(
+        () => CounterController(),
+        child: Scaffold(
+          body: const Center(child: CounterText()),
+          floatingActionButton: Builder(
+            builder: (context) {
+              final controller = Levit.find<CounterController>();
+              return FloatingActionButton(
+                onPressed: controller.increment,
+                child: const Icon(Icons.add),
+              );
+            },
+          ),
+        ),
+      ),
+    ),
+  );
+}
+```
+
+## Design Principles
+
+- Explicit scoping: UI lifecycles own dependency scopes; disposal happens on unmount.
+- Fine-grained rebuilds: only widgets that read a reactive value rebuild when it changes.
+- Minimal surface area: higher-level patterns live in `levit_flutter`.

@@ -287,7 +287,7 @@ typedef LxOnDispose = void Function() Function(
 
 /// Internal utility for applying the middleware chain.
 abstract class LevitReactiveMiddlewareChain {
-  /// Applies the [onSet] chain to a value mutation.
+  /// Applies the [LevitReactiveMiddleware.onSet] chain to a value mutation.
   static void Function(T) applyOnSet<T>(
     void Function(T) next,
     LxReactive reactive,
@@ -307,7 +307,7 @@ abstract class LevitReactiveMiddlewareChain {
     return (T val) => current(val);
   }
 
-  /// Applies the [onBatch] chain to a batch operation.
+  /// Applies the [LevitReactiveMiddleware.onBatch] chain to a batch operation.
   static dynamic Function() applyOnBatch(
     dynamic Function() next,
     LevitReactiveBatch change,
@@ -322,7 +322,7 @@ abstract class LevitReactiveMiddlewareChain {
     return current;
   }
 
-  /// Applies the [onDispose] chain to a reactive object disposal.
+  /// Applies the [LevitReactiveMiddleware.onDispose] chain to a reactive object disposal.
   static void Function() applyOnDispose(
     void Function() next,
     LxReactive reactive,

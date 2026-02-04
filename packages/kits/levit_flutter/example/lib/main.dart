@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 
+/// Runs the `levit_flutter` example application.
 void main() {
   // Link all LxVar and LxList to their parent controller
   // All LxVar and LxList will be automatically disposed when the parent controller is disposed
@@ -10,15 +11,32 @@ void main() {
   runApp(const MyApp());
 }
 
+/// Immutable configuration and reactive state for a single simulated circle.
 class CircleData {
+  /// A stable identifier for this circle.
   final String id;
+
+  /// The display color for this circle.
   final Color color;
+
+  /// The speed scalar used by the simulation.
   final double speed;
 
   // Reactive properties that the UI will "watch" via Animated widgets
+
+  /// The current center position of the circle.
   late final LxVar<Offset> position;
+
+  /// The current radius of the circle.
   late final LxVar<double> radius;
 
+  /// Creates a circle with an initial position and radius.
+  ///
+  /// [id] is the circle identifier.
+  /// [initialPosition] is the initial center position.
+  /// [initialRadius] is the initial radius.
+  /// [color] is the display color.
+  /// [speed] is the simulation speed scalar.
   CircleData({
     required this.id,
     required Offset initialPosition,
@@ -32,23 +50,32 @@ class CircleData {
 
   // Even with auto-linking enabled, we can still manually dispose of the LxVar and LxList
   // This is useful for cleaning up resources when the object is no longer needed
+
+  /// Closes the reactive state owned by this circle.
   void dispose() {
     position.close();
     radius.close();
   }
 }
 
+/// A controller that simulates and renders a set of animated circles.
 class CircleController extends LevitController
     with
         LevitLoopExecutionMixin,
         LevitLoopExecutionLifecycleMixin,
         LevitSelectionMixin<String> {
+  /// The active circles in the simulation.
   final circles = LxList<CircleData>().named('circles');
+
+  /// Whether the simulation is currently paused.
   final isSimulationPaused = LxVar(false).named('isSimulationPaused');
 
   final _random = Random();
+
+  /// The current size of the canvas used for bounds checking.
   Size canvasSize = Size.zero;
 
+  /// Initializes the controller and starts the simulation loops.
   @override
   void onInit() {
     super.onInit();
@@ -70,9 +97,9 @@ class CircleController extends LevitController
 
     // 3. Shrink Loop
     // Smoothly shrink radius
-    loopEngine.startLoop('shrink', () async {
-      _shrinkCircles();
-    }, delay: const Duration(milliseconds: 100));
+      loopEngine.startLoop('shrink', () async {
+        _shrinkCircles();
+      }, delay: const Duration(milliseconds: 100));
   }
 
   void _spawnCircle() {
@@ -137,10 +164,12 @@ class CircleController extends LevitController
     }
   }
 
+  /// Updates [canvasSize] used by the simulation bounds.
   void updateCanvasSize(Size size) {
     canvasSize = size;
   }
 
+  /// Pauses or resumes the simulation loops.
   void toggleSimulation() {
     isSimulationPaused.value = !isSimulationPaused.value;
     if (isSimulationPaused.value) {
@@ -150,6 +179,7 @@ class CircleController extends LevitController
     }
   }
 
+  /// Resumes all loop services unless the simulation is manually paused.
   void resumeAllServices({bool force = false}) {
     // If simulation is manually paused, do not auto-resume on app foreground
     if (isSimulationPaused.value) return;
@@ -157,7 +187,9 @@ class CircleController extends LevitController
   }
 }
 
+/// The root widget for the example application.
 class MyApp extends StatelessWidget {
+  /// Creates the root widget for the example application.
   const MyApp({super.key});
 
   @override
@@ -174,19 +206,24 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// A page that displays an animated circle simulation driven by a controller.
 class CircleCanvasPage extends LScopedView<CircleController> {
+  /// Creates the circle canvas page.
   const CircleCanvasPage({super.key});
 
+  /// Creates and registers the controller instance in the view scope.
   @override
   CircleController onConfigScope(LevitScope scope) {
     return scope.put(() => CircleController());
   }
 
-  @override
   // True by default
   // Override if you want to manually manage rebuilds with LWatch
+  /// Whether the view automatically rebuilds when reactive values change.
+  @override
   bool get autoWatch => true;
 
+  /// Builds the view widget tree.
   @override
   Widget buildView(BuildContext context, CircleController controller) {
     return Scaffold(

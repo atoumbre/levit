@@ -45,6 +45,33 @@ void main() {
       expect(r.ownerId, isNull);
       r.close();
     });
+
+    test('disableAutoLinking fully detaches auto-link middlewares', () {
+      LxReactive? linked;
+      runCapturedForTesting(() {
+        linked = 0.lx;
+      }, 'owner:on');
+      expect(linked!.ownerId, 'owner:on');
+      linked!.close();
+
+      Levit.disableAutoLinking();
+
+      LxReactive? unlinked;
+      runCapturedForTesting(() {
+        unlinked = 1.lx;
+      }, 'owner:off');
+      expect(unlinked!.ownerId, isNull);
+      unlinked!.close();
+
+      Levit.enableAutoLinking();
+
+      LxReactive? relinked;
+      runCapturedForTesting(() {
+        relinked = 2.lx;
+      }, 'owner:on:again');
+      expect(relinked!.ownerId, 'owner:on:again');
+      relinked!.close();
+    });
   });
 }
 
