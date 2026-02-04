@@ -21,10 +21,10 @@ class MultiTransport implements LevitTransport {
   }
 
   @override
-  void close() {
+  Future<void> close() async {
     for (final transport in transports) {
       try {
-        transport.close();
+        await transport.close();
       } catch (e) {
         print('Error closing transport ${transport.runtimeType}: $e');
       }

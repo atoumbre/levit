@@ -109,7 +109,7 @@ void main() {
 
       await Future.delayed(Duration(milliseconds: 1100));
       expect(channelBuilderCalls, greaterThanOrEqualTo(2));
-      transport.close();
+      await transport.close();
     });
 
     test('Handling disconnect during send triggers reconnect', () async {
@@ -131,7 +131,7 @@ void main() {
 
       await Future.delayed(Duration(milliseconds: 1100));
       expect(connectCount, greaterThanOrEqualTo(2));
-      transport.close();
+      await transport.close();
     });
   });
 }

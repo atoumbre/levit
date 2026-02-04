@@ -112,7 +112,7 @@ void main() {
     });
 
     test('close closes the connection', () async {
-      transport.close();
+      await transport.close();
 
       bool received = false;
       final sub = mockChannel.outgoing.stream.listen((_) => received = true);

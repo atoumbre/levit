@@ -20,9 +20,6 @@ class LScopedView<T> extends LView<T> {
   /// A descriptive name for the internal scope.
   final String? scopeName;
 
-  /// Optional dependency keys for reactive re-initialization.
-  final List<Object?>? args;
-
   const LScopedView({
     super.key,
     this.dependencyFactory,
@@ -30,7 +27,7 @@ class LScopedView<T> extends LView<T> {
     super.builder,
     super.autoWatch = true,
     this.scopeName,
-    this.args,
+    super.args,
   });
 
   /// Syntax sugar for consuming a [LevitStore] within a new scope.
@@ -103,7 +100,9 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
           if (widget.autoWatch) {
             return LWatch(() => widget.buildView(context, controller));
           }
-          return widget.buildView(context, controller);
+
+          return LScope.runBridged(
+              context, () => widget.buildView(context, controller));
         },
       ),
     );
@@ -198,7 +197,8 @@ class _LAsyncScopedViewState<T> extends State<LAsyncScopedView<T>> {
           if (widget.autoWatch) {
             return LWatch(() => widget.buildView(context, controller));
           }
-          return widget.buildView(context, controller);
+          return LScope.runBridged(
+              context, () => widget.buildView(context, controller));
         },
       ),
     );

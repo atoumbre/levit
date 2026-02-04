@@ -306,7 +306,11 @@ class LevitScope {
       // Try cached parent scope (Type-based)
       final cachedScope = _typeResolutionCache[S];
       if (cachedScope != null) {
-        return cachedScope.find<S>();
+        try {
+          return cachedScope.find<S>();
+        } catch (_) {
+          _typeResolutionCache.remove(S);
+        }
       }
 
       // Try parent
@@ -337,7 +341,11 @@ class LevitScope {
     // Try Cache
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
-      return cachedScope.find<S>(tag: tag);
+      try {
+        return cachedScope.find<S>(tag: tag);
+      } catch (_) {
+        _resolutionCache.remove(key);
+      }
     }
 
     // Try Parent
@@ -377,7 +385,11 @@ class LevitScope {
     // 2. Try Cache
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
-      return cachedScope.findOrNull<S>(tag: tag);
+      try {
+        return cachedScope.findOrNull<S>(tag: tag);
+      } catch (_) {
+        _resolutionCache.remove(key);
+      }
     }
 
     // 3. Try Parent
@@ -409,7 +421,11 @@ class LevitScope {
     // 2. Try Cache
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
-      return cachedScope.findAsync<S>(tag: tag);
+      try {
+        return cachedScope.findAsync<S>(tag: tag);
+      } catch (_) {
+        _resolutionCache.remove(key);
+      }
     }
 
     // 3. Try Parent
@@ -440,7 +456,11 @@ class LevitScope {
     // 2. Try Cache
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
-      return cachedScope.findOrNullAsync<S>(tag: tag);
+      try {
+        return cachedScope.findOrNullAsync<S>(tag: tag);
+      } catch (_) {
+        _resolutionCache.remove(key);
+      }
     }
 
     // 3. Try Parent
@@ -505,6 +525,15 @@ class LevitScope {
         try {
           final instance =
               await _createInstanceAsync<S>(info.asyncBuilder!, key, info);
+          if (!identical(_registry[key], info)) {
+            if (instance is LevitScopeDisposable) {
+              instance.onClose();
+            }
+            throw StateError(
+              'LevitScope($name): Dependency "$key" was disposed while initializing.',
+            );
+          }
+
           info.instance = instance;
           _initializeInstance(instance, key, info);
           _notifyResolve(key, info, 'findAsync');

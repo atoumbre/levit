@@ -3,9 +3,8 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 // Helper to implement LxReactive for testing
-class TestReactive<T> extends LxBase<T> {
+class TestReactive<T> extends LxVar<T> {
   TestReactive(super.initial);
-  set value(T v) => setValueInternal(v);
 }
 
 void main() {

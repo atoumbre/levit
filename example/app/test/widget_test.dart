@@ -22,17 +22,6 @@ void main() {
     Levit.put(() => ProjectController(channel: FakeWebSocketChannel()));
   });
 
-  // Set large screen size to avoid overflow
-  setUpAll(() {
-    // We can't use tester here as it's not available.
-    // We rely on individual tests to set size or use TestWidgetsFlutterBinding if needed.
-    // Given the previous code used tester inside individual tests (mostly),
-    // and the setUpAll in original file was commented out for deprecated window approach:
-    // We will leave this empty or remove it if not needed.
-    // Checking original file (Step 56), setUpAll contained commented out code.
-    // So we can leave it empty.
-  });
-
   testWidgets('App starts with login overlay', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;

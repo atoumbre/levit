@@ -11,7 +11,7 @@ class MockTransport implements LevitTransport {
   }
 
   @override
-  void close() {}
+  Future<void> close() async {}
 
   @override
   Stream<void> get onConnect => const Stream.empty();

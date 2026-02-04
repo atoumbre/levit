@@ -89,7 +89,7 @@ void main() {
     expect(updateEvent['newValue'], '1');
     expect(updateEvent['name'], 'test_sig');
 
-    transport.close();
+    await transport.close();
   });
 }
 

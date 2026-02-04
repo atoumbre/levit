@@ -45,7 +45,9 @@ class _AutoLinkScope {
               .then((resolvedResult) {
                 processor(captured, resolvedResult);
               })
-              .catchError((_) {})
+              .catchError((_) {
+                _disposeCaptured(captured);
+              })
               .whenComplete(() {
                 _activeCaptureScopes--;
               });
@@ -56,6 +58,7 @@ class _AutoLinkScope {
 
         return result;
       } catch (e) {
+        _disposeCaptured(captured);
         _activeCaptureScopes--;
         rethrow;
       }
@@ -65,6 +68,12 @@ class _AutoLinkScope {
       return Lx.runWithOwner(ownerId, core);
     }
     return core();
+  }
+
+  static void _disposeCaptured(List<LxReactive> captured) {
+    for (final reactive in captured) {
+      reactive.close();
+    }
   }
 
   static S Function() _createCaptureHook<S>(

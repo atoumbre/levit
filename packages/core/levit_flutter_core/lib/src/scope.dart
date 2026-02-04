@@ -9,8 +9,11 @@ class _ScopeProvider extends InheritedWidget {
     required super.child,
   });
 
-  static LevitScope? of(BuildContext context) {
-    return context.getInheritedWidgetOfExactType<_ScopeProvider>()?.scope;
+  static LevitScope? of(BuildContext context, {bool listen = false}) {
+    final provider = listen
+        ? context.dependOnInheritedWidgetOfExactType<_ScopeProvider>()
+        : context.getInheritedWidgetOfExactType<_ScopeProvider>();
+    return provider?.scope;
   }
 
   @override
@@ -116,20 +119,40 @@ class LScope extends StatefulWidget {
     );
   }
 
+  /// Executes [builder] within the [Zone] of the nearest [LScope].
+  ///
+  /// This bridges the gap between Widget-tree scoping ([InheritedWidget]) and
+  /// static scoping ([Zone]), allowing [Levit.find] to work correctly.
+  static R runBridged<R>(BuildContext context, R Function() builder) {
+    final scope = _ScopeProvider.of(context);
+    // If the widget scope differs from the current Zone scope, we bridge it.
+    if (scope != null && scope != Ls.currentScope) {
+      return scope.run(builder);
+    }
+    return builder();
+  }
+
   @override
   State<LScope> createState() => _LScopeState();
 
   /// The nearest [LevitScope] from the widget tree.
-  static LevitScope? of(BuildContext context) => _ScopeProvider.of(context);
+  static LevitScope? of(BuildContext context, {bool listen = false}) =>
+      _ScopeProvider.of(context, listen: listen);
 }
 
 class _LScopeState extends State<LScope> {
   late LevitScope _scope;
   bool _initialized = false;
+  LevitScope? _parentScope;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final newParent = _ScopeProvider.of(context, listen: true);
+    if (_initialized && !identical(_parentScope, newParent)) {
+      _scope.dispose();
+      _initialized = false;
+    }
     _initScope();
   }
 
@@ -138,14 +161,20 @@ class _LScopeState extends State<LScope> {
 
     final scopeName = widget.name ?? 'LScope';
     final parentScope = _ScopeProvider.of(context);
+    _parentScope = parentScope;
 
     // Create the scope and link to parent if found
     _scope = parentScope != null
         ? parentScope.createScope(scopeName)
         : Levit.createScope(scopeName);
 
-    widget.dependencyFactory?.call(_scope);
-    _initialized = true;
+    try {
+      widget.dependencyFactory?.call(_scope);
+      _initialized = true;
+    } catch (_) {
+      _scope.dispose();
+      rethrow;
+    }
   }
 
   @override
@@ -153,6 +182,10 @@ class _LScopeState extends State<LScope> {
     super.didUpdateWidget(oldWidget);
 
     bool shouldReset = false;
+
+    if (widget.name != oldWidget.name) {
+      shouldReset = true;
+    }
 
     if (widget.args != null || oldWidget.args != null) {
       if (!_argsMatch(widget.args, oldWidget.args)) {
@@ -246,10 +279,16 @@ class _LAsyncScopeState extends State<LAsyncScope> {
 
   // Track initialization to prevent re-running logic on standard rebuilds
   bool _initialized = false;
+  LevitScope? _parentScope;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final newParent = _ScopeProvider.of(context, listen: true);
+    if (_initialized && !identical(_parentScope, newParent)) {
+      _scope.dispose();
+      _initialized = false;
+    }
     _initScope();
   }
 
@@ -260,6 +299,7 @@ class _LAsyncScopeState extends State<LAsyncScope> {
 
     // We use the internal provider to find the parent scope
     final parentScope = _ScopeProvider.of(context);
+    _parentScope = parentScope;
 
     // Create the scope and link to parent if found
     _scope = parentScope != null
@@ -267,7 +307,10 @@ class _LAsyncScopeState extends State<LAsyncScope> {
         : Levit.createScope(scopeName);
 
     // Start the async initialization
-    _initFuture = widget.dependencyFactory(_scope);
+    _initFuture = widget.dependencyFactory(_scope).catchError((e) {
+      _scope.dispose();
+      throw e;
+    });
     _initialized = true;
   }
 
@@ -276,6 +319,10 @@ class _LAsyncScopeState extends State<LAsyncScope> {
     super.didUpdateWidget(oldWidget);
 
     bool shouldReset = false;
+
+    if (widget.name != oldWidget.name) {
+      shouldReset = true;
+    }
 
     // Check if arguments changed to trigger a re-init
     if (widget.args != null || oldWidget.args != null) {

@@ -27,8 +27,6 @@ void main() {
       expect(computed(), 0);
     });
 
-    // Removed LevitReactiveMiddleware default methods test as it tested deprecated API.
-
     // LxStream gap: ensure onInit called for observer
     test('LxStream constructor calls observer.onInit', () {
       final obs = GapTestObserver();

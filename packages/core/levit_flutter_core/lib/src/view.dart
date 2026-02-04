@@ -31,12 +31,16 @@ class LView<T> extends StatefulWidget {
   /// Whether to wrap the view in an [LWatch].
   final bool autoWatch;
 
+  /// Optional dependency keys for re-resolution.
+  final List<Object?>? args;
+
   /// Creates a view with a dependency factory and a builder.
   const LView({
     super.key,
     this.resolver,
     this.builder,
     this.autoWatch = true,
+    this.args,
   });
 
   /// Syntax sugar for consuming a [LevitStore].
@@ -45,12 +49,14 @@ class LView<T> extends StatefulWidget {
     Key? key,
     required Widget Function(BuildContext context, T controller) builder,
     bool autoWatch = true,
+    List<Object?>? args,
   }) {
     return LView<T>(
       key: key,
       resolver: (context) => context.levit.find<T>(key: state),
       builder: builder,
       autoWatch: autoWatch,
+      args: args,
     );
   }
 
@@ -62,6 +68,7 @@ class LView<T> extends StatefulWidget {
     bool permanent = false,
     required Widget Function(BuildContext context, T controller) builder,
     bool autoWatch = true,
+    List<Object?>? args,
   }) {
     return LView<T>(
       key: key,
@@ -69,6 +76,7 @@ class LView<T> extends StatefulWidget {
           context.levit.put<T>(create, tag: tag, permanent: permanent),
       builder: builder,
       autoWatch: autoWatch,
+      args: args,
     );
   }
 
@@ -78,12 +86,14 @@ class LView<T> extends StatefulWidget {
     String? tag,
     required Widget Function(BuildContext context, T controller) builder,
     bool autoWatch = true,
+    List<Object?>? args,
   }) {
     return LView<T>(
       key: key,
       resolver: (context) => context.levit.find<T>(tag: tag),
       builder: builder,
       autoWatch: autoWatch,
+      args: args,
     );
   }
 
@@ -122,11 +132,27 @@ class _LViewState<T> extends State<LView<T>> {
   @override
   void didUpdateWidget(LView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    controller = _resolveController();
+
+    final shouldUpdate = (widget.args != null || oldWidget.args != null)
+        ? !_argsMatch(widget.args, oldWidget.args)
+        : false;
+
+    if (shouldUpdate) {
+      controller = _resolveController();
+    }
   }
 
   T _resolveController() {
     return widget.resolver?.call(context) ?? context.levit.find<T>();
+  }
+
+  bool _argsMatch(List<Object?>? a, List<Object?>? b) {
+    if (a == null || b == null) return identical(a, b);
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   @override
@@ -136,7 +162,9 @@ class _LViewState<T> extends State<LView<T>> {
     if (widget.autoWatch) {
       return LWatch(() => widget.buildView(context, controller));
     }
-    return widget.buildView(context, controller);
+
+    return LScope.runBridged(
+        context, () => widget.buildView(context, controller));
   }
 }
 
@@ -335,7 +363,9 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
           if (widget.autoWatch) {
             return LWatch(() => widget.buildView(context, controller));
           }
-          return widget.buildView(context, controller);
+
+          return LScope.runBridged(
+              context, () => widget.buildView(context, controller));
         }
 
         return widget.buildLoading(context);

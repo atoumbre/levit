@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('ConsoleTransport Coverage', () {
-    test('handles all monitor events', () {
+    test('handles all monitor events', () async {
       final transport = ConsoleTransport();
       final sessionId = 'test-session';
       final reactive = 0.lx;
@@ -38,10 +38,10 @@ void main() {
         instance: 42,
       ));
 
-      transport.close();
+      await transport.close();
     });
 
-    test('handles all monitor events with overrides', () {
+    test('handles all monitor events with overrides', () async {
       final transport = ConsoleTransport(
         levelOverrides: const LevitLogLevelConfig(
           graphChange: LevitLogLevel.info,
@@ -78,7 +78,7 @@ void main() {
         instance: 42,
       ));
 
-      transport.close();
+      await transport.close();
     });
   });
 }

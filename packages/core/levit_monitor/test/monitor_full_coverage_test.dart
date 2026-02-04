@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('Levit Monitor Full Coverage', () {
-    test('ConsoleTransport formatting and levels', () {
+    test('ConsoleTransport formatting and levels', () async {
       final transport = ConsoleTransport();
       final sid = 'session';
       final rx = 0.lx.named('test_rx');
@@ -80,7 +80,7 @@ void main() {
         // Call toJson to ensure coverage for serialization paths
         event.toJson();
       }
-      transport.close();
+      await transport.close();
     });
 
     test('LevitMonitorMiddleware snapshot sync on connect', () async {
@@ -95,7 +95,7 @@ void main() {
       expect(transport.sentEvents.any((e) => e is SnapshotEvent), isTrue);
 
       middleware.disable();
-      middleware.close();
+      await middleware.close();
     });
 
     test('MonitorEvent stringify fallback', () {
@@ -122,8 +122,8 @@ class MockTransport extends LevitTransport {
   Stream<void> get onConnect => onConnectController.stream;
 
   @override
-  void close() {
-    onConnectController.close();
+  Future<void> close() async {
+    await onConnectController.close();
   }
 }
 

@@ -15,9 +15,9 @@ class MockTransport implements LevitTransport {
   }
 
   @override
-  void close() {
+  Future<void> close() async {
     isClosed = true;
-    _connectController.close();
+    await _connectController.close();
   }
 
   @override
@@ -35,9 +35,7 @@ class FailingTransport implements LevitTransport {
   }
 
   @override
-  void close() {
-    throw Exception('Close failed');
-  }
+  Future<void> close() async => throw Exception('Close failed');
 
   @override
   Stream<void> get onConnect => const Stream.empty();
@@ -78,12 +76,12 @@ void main() {
       expect(t3.sentEvents, contains(event));
     });
 
-    test('closes all transports', () {
+    test('closes all transports', () async {
       final t1 = MockTransport();
       final t2 = MockTransport();
       final multi = MultiTransport([t1, t2]);
 
-      multi.close();
+      await multi.close();
 
       expect(t1.isClosed, isTrue);
       expect(t2.isClosed, isTrue);

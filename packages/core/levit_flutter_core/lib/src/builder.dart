@@ -53,7 +53,8 @@ class _LBuilderElement<T> extends ComponentElement
 
   @override
   Widget build() {
-    return (widget as LBuilder<T>).builder((widget as LBuilder<T>).x.value);
+    return LScope.runBridged(this,
+        () => (widget as LBuilder<T>).builder((widget as LBuilder<T>).x.value));
   }
 
   @override
@@ -133,7 +134,8 @@ class _LSelectBuilderElement<T> extends ComponentElement
 
   @override
   Widget build() {
-    return (widget as LSelectorBuilder<T>).builder(_computed.value);
+    return LScope.runBridged(
+        this, () => (widget as LSelectorBuilder<T>).builder(_computed.value));
   }
 
   @override
@@ -218,18 +220,20 @@ class _LStatusBuilderElement<T> extends ComponentElement
 
   @override
   Widget build() {
-    final w = widget as LStatusBuilder<T>;
-    final status = w.x.value;
+    return LScope.runBridged(this, () {
+      final w = widget as LStatusBuilder<T>;
+      final status = w.x.value;
 
-    return switch (status) {
-      LxIdle<T>() =>
-        w.onIdle?.call() ?? w.onWaiting?.call() ?? const SizedBox.shrink(),
-      LxWaiting<T>() => w.onWaiting?.call() ?? const SizedBox.shrink(),
-      LxError<T>(:final error, :final stackTrace) =>
-        w.onError?.call(error, stackTrace) ??
-            Center(child: Text('Error: $error')),
-      LxSuccess<T>(:final value) => w.onSuccess(value),
-    };
+      return switch (status) {
+        LxIdle<T>() =>
+          w.onIdle?.call() ?? w.onWaiting?.call() ?? const SizedBox.shrink(),
+        LxWaiting<T>() => w.onWaiting?.call() ?? const SizedBox.shrink(),
+        LxError<T>(:final error, :final stackTrace) =>
+          w.onError?.call(error, stackTrace) ??
+              Center(child: Text('Error: $error')),
+        LxSuccess<T>(:final value) => w.onSuccess(value),
+      };
+    });
   }
 
   @override

@@ -14,7 +14,7 @@ class MockTransport implements LevitTransport {
   Stream<void> get onConnect => const Stream<void>.empty();
 
   @override
-  void close() {}
+  Future<void> close() async {}
 }
 
 void main() {
@@ -75,7 +75,7 @@ void main() {
     test('updateTransport changes transport and settings', () async {
       final newTransport = MockTransport();
 
-      middleware.updateTransport(
+      await middleware.updateTransport(
         transport: newTransport,
         includeStackTrace: true,
       );

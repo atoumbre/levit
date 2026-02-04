@@ -3,9 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 // Helper
-class TestReactive<T> extends LxBase<T> {
+class TestReactive<T> extends LxVar<T> {
   TestReactive(super.initial);
-  set value(T v) => setValueInternal(v);
 }
 
 void main() {

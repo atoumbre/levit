@@ -25,6 +25,7 @@ class LevitMonitorMiddleware
 
   final StreamController<MonitorEvent> _eventStream = StreamController();
   StreamSubscription<MonitorEvent>? _subscription;
+  StreamSubscription<void>? _connectSubscription;
 
   /// Creates a monitor middleware instance.
   LevitMonitorMiddleware({
@@ -45,7 +46,8 @@ class LevitMonitorMiddleware
         transport.send(event);
       });
       // Listen for reconnection
-      transport.onConnect.listen((_) {
+      _connectSubscription?.cancel();
+      _connectSubscription = transport.onConnect.listen((_) {
         _sendSnapshot();
       });
     }
@@ -66,17 +68,25 @@ class LevitMonitorMiddleware
       _enabled = false;
       _subscription?.cancel();
       _subscription = null;
+      _connectSubscription?.cancel();
+      _connectSubscription = null;
     }
   }
 
   /// Swaps the active transport or updates configuration dynamically.
-  void updateTransport({
+  Future<void> updateTransport({
     LevitTransport? transport,
     bool? includeStackTrace,
-  }) {
+  }) async {
     if (transport != null) {
-      this.transport.close();
+      _connectSubscription?.cancel();
+      await this.transport.close();
       this.transport = transport;
+      if (_enabled) {
+        _connectSubscription = this.transport.onConnect.listen((_) {
+          _sendSnapshot();
+        });
+      }
     }
     if (includeStackTrace != null) {
       this.includeStackTrace = includeStackTrace;
@@ -298,9 +308,14 @@ class LevitMonitorMiddleware
   }
 
   /// Closes the event stream and releases the underlying transport.
-  void close() {
-    _eventStream.close();
-    _subscription?.cancel();
-    transport.close();
+  Future<void> close() async {
+    await _subscription?.cancel();
+    await _connectSubscription?.cancel();
+    if (_eventStream.hasListener) {
+      await _eventStream.close();
+    } else {
+      _eventStream.close();
+    }
+    await transport.close();
   }
 }

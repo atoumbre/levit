@@ -8,9 +8,8 @@ class TestController {
   TestController(this.value);
 }
 
-class TestReactiveController extends LxBase<int> {
+class TestReactiveController extends LxVar<int> {
   TestReactiveController() : super(0);
-  set value(int v) => setValueInternal(v);
 }
 
 class TestView extends StatelessWidget {

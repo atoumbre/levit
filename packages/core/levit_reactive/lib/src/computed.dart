@@ -75,10 +75,14 @@ class LxComputed<T> extends _ComputedBase<T> {
     _LevitReactiveCore.proxy = tracker;
 
     try {
-      return compute();
+      final value = compute();
+      _initialDepStack.add(tracker);
+      return value;
+    } catch (_) {
+      _releaseTracker(tracker);
+      rethrow;
     } finally {
       _LevitReactiveCore.proxy = previousProxy;
-      _initialDepStack.add(tracker);
     }
   }
 
@@ -208,7 +212,7 @@ class LxComputed<T> extends _ComputedBase<T> {
 
       // Direct equality check
       if (!_equals(super.value, resultValue)) {
-        setValueInternal(resultValue, notifyListeners: !_notifiedDirty);
+        _setValueInternal(resultValue, notifyListeners: !_notifiedDirty);
       }
 
       _isDirty = false;
@@ -238,7 +242,7 @@ class LxComputed<T> extends _ComputedBase<T> {
 
     // Direct equality check for T values (fixed: was checking LxSuccess<T>)
     if (!_equals(super.value, resultValue)) {
-      setValueInternal(resultValue, notifyListeners: !_notifiedDirty);
+      _setValueInternal(resultValue, notifyListeners: !_notifiedDirty);
     }
 
     _isDirty = false;
@@ -397,7 +401,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
     }
 
     if (_showWaiting || isInitial) {
-      setValueInternal(LxWaiting<T>(lastKnown));
+      _setValueInternal(LxWaiting<T>(lastKnown));
     }
 
     Future<T>? future;
@@ -448,7 +452,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
     if (syncFailed) {
       if (myExecutionId == _executionId) {
         _hasProducedResult = true;
-        setValueInternal(LxError<T>(syncError!, syncStack!, lastKnown));
+        _setValueInternal(LxError<T>(syncError!, syncStack!, lastKnown));
 
         // Even on error, if we were building a static graph, we lock it?
         // Maybe safer to only lock on success, or lock what we found.
@@ -462,7 +466,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
     // Handle Future Result
     if (future != null) {
       future.then((result) {
-        if (myExecutionId == _executionId) {
+        if (myExecutionId == _executionId && !_isClosed) {
           _hasProducedResult = true;
           _applyResult(result, isInitial: isInitial);
 
@@ -476,9 +480,9 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
           }
         }
       }).catchError((e, st) {
-        if (myExecutionId == _executionId) {
+        if (myExecutionId == _executionId && !_isClosed) {
           _hasProducedResult = true;
-          setValueInternal(LxError<T>(e, st, lastKnown));
+          _setValueInternal(LxError<T>(e, st, lastKnown));
 
           if (tracker != null) {
             _notifyDependencyGraph(tracker.reactives);
@@ -503,14 +507,14 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
       // If we were waiting, flip to Success with same value.
       // If we were waiting, flip to Success with same value.
       if (value is LxWaiting<T>) {
-        setValueInternal(LxSuccess<T>(result));
+        _setValueInternal(LxSuccess<T>(result));
       }
       return;
     }
 
     _lastComputedValue = result;
     _hasValue = true;
-    setValueInternal(LxSuccess<T>(result));
+    _setValueInternal(LxSuccess<T>(result));
   }
 
   LxStatus<T> get status => value;
@@ -653,11 +657,15 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     Iterable<LevitReactiveNotifier> newDependencies, {
     Iterable<LxReactive>? reactives,
   }) {
+    final depSet = newDependencies is Set<LevitReactiveNotifier>
+        ? newDependencies
+        : newDependencies.toSet();
+
     // Fast path: Hash-based stability check
     // Compute a fast hash from identity hash codes
     int hash = 0;
     int length = 0;
-    for (final dep in newDependencies) {
+    for (final dep in depSet) {
       hash ^= identityHashCode(dep);
       length++;
     }
@@ -674,11 +682,11 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     // 1. Identify Removed: Iterate current keys
     final currentDeps = _dependencySubscriptions.keys.toList(growable: false);
     for (final dep in currentDeps) {
-      if (!newDependencies.contains(dep)) _unsubscribeFrom(dep);
+      if (!depSet.contains(dep)) _unsubscribeFrom(dep);
     }
 
     // 2. Identify Added: Iterate new deps
-    for (final dep in newDependencies) {
+    for (final dep in depSet) {
       if (!_dependencySubscriptions.containsKey(dep)) _subscribeTo(dep);
     }
 
@@ -749,7 +757,7 @@ class _DependencyTracker implements LevitReactiveObserver {
     _useSet = false;
     _setDeps.clear();
     _listDeps.clear();
-    if (trackReactives) reactives.clear();
+    reactives.clear();
   }
 
   Iterable<LevitReactiveNotifier> get dependencies =>

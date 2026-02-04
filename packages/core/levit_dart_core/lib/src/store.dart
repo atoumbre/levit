@@ -87,7 +87,7 @@ class LevitStore<T> {
         await scope.findOrNullAsync<_LevitStoreInstance<T>>(tag: instanceKey);
 
     if (instance == null) {
-      scope.put(() => _LevitStoreInstance<T>(this), tag: instanceKey);
+      scope.lazyPut(() => _LevitStoreInstance<T>(this), tag: instanceKey);
       instance =
           await scope.findAsync<_LevitStoreInstance<T>>(tag: instanceKey);
     }

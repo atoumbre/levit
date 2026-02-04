@@ -33,7 +33,7 @@ void main() {
 
       transport.send(event);
       await Future.delayed(Duration(milliseconds: 100)); // Allow flush
-      transport.close();
+      await transport.close();
 
       final file = File(filePath);
       expect(file.existsSync(), isTrue);
@@ -63,7 +63,7 @@ void main() {
 
       transport.send(event);
       await Future.delayed(Duration(milliseconds: 100)); // Allow flush
-      transport.close();
+      await transport.close();
 
       final file = File(filePath);
       expect(file.existsSync(), isTrue);
@@ -78,7 +78,7 @@ void main() {
 
     test('close releases resources', () async {
       final transport = FileTransport(filePath);
-      transport.close();
+      await transport.close();
     });
   });
 }

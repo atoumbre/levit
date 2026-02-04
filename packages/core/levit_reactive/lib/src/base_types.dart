@@ -12,13 +12,13 @@ part of '../levit_reactive.dart';
 /// // Update triggers notification
 /// count.value++;
 /// ```
-class LxVar<T> extends LxBase<T> {
+class LxVar<T> extends LxBase<T> with _LxMutable<T> {
   /// Creates a reactive variable with an [initial] value.
   LxVar(super.initial,
       {super.onListen, super.onCancel, super.name, super.isSensitive});
 
   /// Updates the value and triggers notifications if the value changed.
-  set value(T val) => setValueInternal(val);
+  set value(T val) => _setValueInternal(val);
 
   /// Updates and retrieves the value using call syntax.
   ///
@@ -44,6 +44,53 @@ class LxVar<T> extends LxBase<T> {
   LxStream<R> transform<R>(Stream<R> Function(Stream<T> stream) transformer) {
     return LxStream<R>(transformer(stream));
   }
+}
+
+/// A reactive state container for immutable data flow.
+///
+/// [LxState] is similar to [LxVar], but enforces explicit state transitions
+/// via [emit] or [update] instead of property setters.
+///
+/// It is ideal for managing complex state objects where you want to ensure
+/// controlled modification.
+///
+/// Unlike [LxVar], it does not expose in-place mutation helpers or stream
+/// binding APIs.
+class LxState<T> extends LxBase<T> {
+  /// Creates a state container with an [initial] value.
+  LxState(super.initial,
+      {super.onListen, super.onCancel, super.name, super.isSensitive});
+
+  /// Emits a new [state].
+  ///
+  /// This triggers a notification to all listeners if the [state] is different
+  /// from the current value.
+  @protected
+  void emit(T state) => _setValueInternal(state);
+
+  /// Updates the state by applying a [reducer] function to the current value.
+  ///
+  /// Example:
+  /// ```dart
+  /// state.update((s) => s.copyWith(count: s.count + 1));
+  /// ```
+  void update(T Function(T state) reducer) {
+    _setValueInternal(reducer(value));
+  }
+
+  /// LxState is immutable and cannot be bound to external streams.
+  @override
+  void bind(Stream<T> externalStream) {
+    throw StateError(
+        'LxState is immutable and cannot be bound to external streams. '
+        'Use LxVar or LxStream instead.');
+  }
+
+  /// Exposes this state as a read-only [LxReactive] interface.
+  ///
+  /// Useful for exposing public API from a controller while keeping the
+  /// mutation logic private.
+  LxReactive<T> get asReactive => this;
 }
 
 /// A reactive boolean with specialized toggling methods.

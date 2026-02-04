@@ -13,9 +13,9 @@ void main() {
       silentTransport = ConsoleTransport(minLevel: LevitLogLevel.off);
     });
 
-    tearDown(() {
-      transport.close();
-      silentTransport.close();
+    tearDown(() async {
+      await transport.close();
+      await silentTransport.close();
     });
 
     test('formats ReactiveChangeEvent', () {
@@ -182,9 +182,9 @@ void main() {
       expect(() => silentTransport.send(event), returnsNormally);
     });
 
-    test('close does not throw', () {
+    test('close does not throw', () async {
       final t = ConsoleTransport();
-      expect(() => t.close(), returnsNormally);
+      await expectLater(t.close(), completes);
     });
   });
 
@@ -223,7 +223,7 @@ void main() {
       expect(config.diInit, LevitLogLevel.debug);
     });
 
-    test('custom overrides are applied', () {
+    test('custom overrides are applied', () async {
       final transport = ConsoleTransport(
         minLevel: LevitLogLevel.off,
         levelOverrides: const LevitLogLevelConfig(
@@ -245,10 +245,10 @@ void main() {
       );
 
       expect(() => transport.send(event), returnsNormally);
-      transport.close();
+      await transport.close();
     });
 
-    test('reactiveDispose override is applied (line 188)', () {
+    test('reactiveDispose override is applied (line 188)', () async {
       final transport = ConsoleTransport(
         minLevel: LevitLogLevel.off,
         levelOverrides: const LevitLogLevelConfig(
@@ -264,7 +264,7 @@ void main() {
 
       // This triggers the reactiveDispose branch in _levelFor
       expect(() => transport.send(event), returnsNormally);
-      transport.close();
+      await transport.close();
     });
   });
 

@@ -21,7 +21,7 @@ void main() {
       expect(transport.events.isNotEmpty, true);
 
       // Close middleware
-      middleware.close();
+      await middleware.close();
 
       // Verify transport was closed
       expect(transport.closeCalled, true);
@@ -38,16 +38,16 @@ void main() {
       Levit.reset(force: true);
     });
 
-    test('close() can be called multiple times safely', () {
+    test('close() can be called multiple times safely', () async {
       final transport = TestTransport();
       final middleware = LevitMonitorMiddleware(transport: transport);
 
       middleware.enable();
 
       // Call close multiple times
-      middleware.close();
-      middleware.close();
-      middleware.close();
+      await middleware.close();
+      await middleware.close();
+      await middleware.close();
 
       expect(transport.closeCalled, true);
     });
@@ -69,7 +69,7 @@ class TestTransport implements LevitTransport {
   Stream<void> get onConnect => const Stream<void>.empty();
 
   @override
-  void close() {
+  Future<void> close() async {
     closeCalled = true;
   }
 }

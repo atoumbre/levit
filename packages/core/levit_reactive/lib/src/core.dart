@@ -669,8 +669,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   }
 
   /// Internal setter for subclasses (Computed, etc.)
-  @visibleForTesting
-  void setValueInternal(T val, {bool notifyListeners = true}) {
+  void _setValueInternal(T val, {bool notifyListeners = true}) {
     // Fast Path (No Middleware)
     if (LevitReactiveMiddleware.bypassMiddleware ||
         !LevitReactiveMiddleware.hasSetMiddlewares) {
@@ -758,9 +757,8 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     unbind();
 
     _boundStream = externalStream.map((event) {
-      _value = event;
-      _controller?.add(event);
-      super.notify();
+      // Use _setValueInternal to respect middleware chain (monitoring, time-travel, etc.)
+      _setValueInternal(event);
       return event;
     }).transform(
       StreamTransformer<T, T>.fromHandlers(
@@ -884,12 +882,6 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   @override
   void notify() => refresh();
 
-  /// Mutates the value in place and triggers a refresh.
-  void mutate(void Function(T value) mutator) {
-    mutator(_value);
-    refresh();
-  }
-
   @override
   void addListener(void Function() listener) {
     super.addListener(listener);
@@ -911,17 +903,29 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     }
   }
 
-  /// Updates the value using a transformation function.
-  void updateValue(T Function(T val) fn) {
-    setValueInternal(fn(_value));
-  }
-
   @override
   String toString() => _value.toString();
 
   /// Whether the reactive object has been closed/disposed.
   @override
   bool get isDisposed => super.isDisposed;
+}
+
+/// Mixin for reactive types that allow mutable updates.
+///
+/// Kept off [LxBase] so immutable containers (like [LxState]) don't inherit
+/// mutation helpers.
+mixin _LxMutable<T> on LxBase<T> {
+  /// Mutates the value in place and triggers a refresh.
+  void mutate(void Function(T value) mutator) {
+    mutator(_value);
+    refresh();
+  }
+
+  /// Updates the value using a transformation function.
+  void updateValue(T Function(T val) fn) {
+    _setValueInternal(fn(_value));
+  }
 }
 
 /// A standard context descriptor for reactive listeners.

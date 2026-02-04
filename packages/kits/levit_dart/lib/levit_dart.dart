@@ -5,6 +5,7 @@
 library levit_dart;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:isolate';
 import 'dart:math' as math;
 

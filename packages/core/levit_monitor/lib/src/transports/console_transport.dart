@@ -266,7 +266,7 @@ class ConsoleTransport implements LevitTransport {
   Stream<void> get onConnect => const Stream<void>.empty();
 
   @override
-  void close() {
+  Future<void> close() async {
     _logger.close();
   }
 }

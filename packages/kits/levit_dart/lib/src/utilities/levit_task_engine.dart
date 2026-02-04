@@ -84,7 +84,7 @@ class LevitTaskEngine implements LevitDisposable {
   void Function(Object error, StackTrace stackTrace)? onTaskError;
 
   final Map<String, _ActiveTask> _activeTasks = {};
-  final List<_QueuedTask> _queue = [];
+  final Queue<_QueuedTask> _queue = Queue<_QueuedTask>();
 
   /// Creates a task engine with [maxConcurrent] workers.
   LevitTaskEngine({
@@ -190,7 +190,11 @@ class LevitTaskEngine implements LevitDisposable {
 
   void _sortQueue() {
     // Sort logic: High (0) < Normal (1) < Low (2). Min first.
-    _queue.sort((a, b) => a.priority.index.compareTo(b.priority.index));
+    final list = _queue.toList(growable: false);
+    list.sort((a, b) => a.priority.index.compareTo(b.priority.index));
+    _queue
+      ..clear()
+      ..addAll(list);
   }
 
   Future<T?> _execute<T>({
@@ -277,7 +281,7 @@ class LevitTaskEngine implements LevitDisposable {
   void _processQueue() {
     // Start as many queued tasks as possible up to maxConcurrent limit
     while (_queue.isNotEmpty && _activeTasks.length < maxConcurrent) {
-      final next = _queue.removeAt(0); // Takes highest priority
+      final next = _queue.removeFirst(); // Takes highest priority
       _runQueued(next);
     }
   }

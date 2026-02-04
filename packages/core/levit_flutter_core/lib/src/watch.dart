@@ -97,7 +97,7 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
 
     final Widget result;
     try {
-      result = (widget as LWatch).builder();
+      result = LScope.runBridged(this, () => (widget as LWatch).builder());
     } finally {
       Lx.proxy = previousProxy;
     }
@@ -143,10 +143,10 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
     // Process Notifiers
     final currentNots = _notifiers;
     final targetNots = _notifiers ??= {};
+    final nextSet = nextNotifiers.toSet();
 
     // Add new
-    for (var i = 0; i < nextNotifiers.length; i++) {
-      final n = nextNotifiers[i];
+    for (final n in nextSet) {
       if (targetNots.add(n)) {
         _runWithContext(() {
           n.addListener(_triggerRebuild);
@@ -157,9 +157,7 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
     // Remove old
     if (currentNots != null && currentNots.isNotEmpty) {
       currentNots.removeWhere((notifier) {
-        for (var i = 0; i < nextNotifiers.length; i++) {
-          if (identical(notifier, nextNotifiers[i])) return false;
-        }
+        if (nextSet.contains(notifier)) return false;
         _runWithContext(() {
           notifier.removeListener(_triggerRebuild);
         });

@@ -16,7 +16,7 @@ class MockTransport implements LevitTransport {
   }
 
   @override
-  void close() {}
+  Future<void> close() async {}
 }
 
 void main() {

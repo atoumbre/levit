@@ -50,11 +50,11 @@ void main() {
   group('LevitMonitorMiddleware default transport', () {
     test(
         'LevitMonitorMiddleware uses default ConsoleTransport when none provided',
-        () {
+        () async {
       // This covers line 30 in state.dart: transport = transport ?? ConsoleTransport()
       final middleware = LevitMonitorMiddleware();
       expect(middleware.transport, isA<ConsoleTransport>());
-      middleware.close();
+      await middleware.close();
     });
   });
 }

@@ -121,6 +121,31 @@ void main() {
       expect(result.v2, 'lazyVal');
       expect(await result.v3, 'asyncVal');
     });
+
+    test('findAsyncIn does not dispose existing instance on concurrent calls',
+        () async {
+      final scope = LevitScope.root('race_store');
+      int closed = 0;
+      final store = LevitStore((ref) => _TestController(() => closed++));
+
+      final f1 = store.findAsyncIn(scope);
+      final f2 = store.findAsyncIn(scope);
+      final results = await Future.wait([f1, f2]);
+
+      expect(identical(results[0], results[1]), isTrue);
+      expect(closed, 0);
+    });
+
+    test('builder error disposes captured reactives', () {
+      late LxVar<int> orphan;
+      final store = LevitStore((ref) {
+        orphan = LxVar(0);
+        throw StateError('boom');
+      });
+
+      expect(() => store.find(), throwsStateError);
+      expect(orphan.isDisposed, isTrue);
+    });
   });
 
   group('LevitAsyncStore', () {
@@ -131,6 +156,18 @@ void main() {
       });
 
       expect(await store.find(), 100);
+    });
+
+    test('async builder error disposes captured reactives', () async {
+      late LxVar<int> orphan;
+      final store = LevitStore.async((ref) async {
+        orphan = LxVar(0);
+        await Future.delayed(Duration.zero);
+        throw StateError('boom');
+      });
+
+      await expectLater(store.find(), throwsStateError);
+      expect(orphan.isDisposed, isTrue);
     });
   });
 }
@@ -144,3 +181,14 @@ class LevitDisposableCallback implements LevitDisposable {
 }
 
 typedef VoidCallback = void Function();
+
+class _TestController extends LevitController {
+  final VoidCallback _onClose;
+  _TestController(this._onClose);
+
+  @override
+  void onClose() {
+    _onClose();
+    super.onClose();
+  }
+}

@@ -240,19 +240,32 @@ class Levit {
   //   Auto-Linking
   // -------------------------------------------------------------
 
+  static LevitReactiveMiddleware? _autoLinkMiddleware;
+  static LevitScopeMiddleware? _autoDisposeMiddleware;
+
   /// Enables automatic linking of reactive state to controller lifecycles.
   ///
   /// When enabled, [LxReactive] objects created inside [LevitController.onInit]
   /// or [LevitApp.onInit] are automatically disposed when the controller is closed.
   static void enableAutoLinking() {
-    Lx.addMiddleware(_AutoLinkMiddleware());
-    LevitScope.addMiddleware(_AutoDisposeMiddleware());
+    if (_autoLinkMiddleware != null) return; // Already enabled
+
+    _autoLinkMiddleware = _AutoLinkMiddleware();
+    _autoDisposeMiddleware = _AutoDisposeMiddleware();
+
+    Lx.addMiddleware(_autoLinkMiddleware!);
+    LevitScope.addMiddleware(_autoDisposeMiddleware!);
   }
 
   /// Disables automatic linking.
   static void disableAutoLinking() {
-    Lx.removeMiddleware(_AutoLinkMiddleware());
-    LevitScope.removeMiddleware(_AutoDisposeMiddleware());
+    if (_autoLinkMiddleware == null) return; // Already disabled
+
+    Lx.removeMiddleware(_autoLinkMiddleware!);
+    LevitScope.removeMiddleware(_autoDisposeMiddleware!);
+
+    _autoLinkMiddleware = null;
+    _autoDisposeMiddleware = null;
   }
 
 // -------------------------------------------------------------

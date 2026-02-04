@@ -1,8 +1,14 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 Future<void> main(List<String> args) async {
   final rootDir = Directory.current;
   final generateReportFile = args.contains('--generate-report');
+  final changedOnly = args.contains('--changed');
+  final onlyPackages = _parseCsvArg(args, '--only');
+  final maxPackages = _parseIntArg(args, '--max-packages');
+  final timeoutSeconds = _parseIntArg(args, '--timeout');
   final targetPaths = args.where((arg) => !arg.startsWith('--')).toList();
 
   if (targetPaths.isEmpty) {
@@ -12,6 +18,18 @@ Future<void> main(List<String> args) async {
   print('🔍 Scanning for packages in: ${targetPaths.join(', ')}...');
   if (generateReportFile) {
     print('📝 Report file generation enabled.');
+  }
+  if (changedOnly) {
+    print('🧩 Filtering to changed packages only.');
+  }
+  if (onlyPackages != null && onlyPackages.isNotEmpty) {
+    print('🎯 Filtering to packages: ${onlyPackages.join(', ')}');
+  }
+  if (maxPackages != null) {
+    print('⏱️  Limiting to $maxPackages package(s).');
+  }
+  if (timeoutSeconds != null) {
+    print('⏲️  Per-package timeout: ${timeoutSeconds}s');
   }
 
   final packages = <Directory>[];
@@ -47,6 +65,28 @@ Future<void> main(List<String> args) async {
   final uniquePaths = <String>{};
   packages.retainWhere((dir) => uniquePaths.add(dir.path));
 
+  if (changedOnly) {
+    final changedPaths = await _getChangedPaths(rootDir.path);
+    if (changedPaths.isEmpty) {
+      print('⚠️ Warning: No changed files detected. Skipping.');
+      exit(0);
+    }
+    packages.retainWhere(
+        (dir) => changedPaths.any((path) => path.startsWith(dir.path)));
+  }
+
+  if (onlyPackages != null && onlyPackages.isNotEmpty) {
+    final onlySet = onlyPackages.toSet();
+    packages.retainWhere((dir) {
+      final name = dir.path.split(Platform.pathSeparator).last;
+      return onlySet.contains(name) || onlySet.contains(dir.path);
+    });
+  }
+
+  if (maxPackages != null && packages.length > maxPackages) {
+    packages.removeRange(maxPackages, packages.length);
+  }
+
   print(
     'Found ${packages.length} packages: ${packages.map((d) => d.path.split(Platform.pathSeparator).last).join(', ')}\n',
   );
@@ -79,13 +119,20 @@ Future<void> main(List<String> args) async {
 
     // Run tests with coverage
     // We suppress output to keep the terminal clean, unless there's an error
-    final result = await Process.run(
-        'flutter',
-        [
-          'test',
-          '--coverage',
-        ],
-        workingDirectory: package.path);
+    final result = await _runProcess(
+      ['flutter', 'test', '--coverage'],
+      workingDirectory: package.path,
+      timeout: timeoutSeconds == null
+          ? null
+          : Duration(seconds: timeoutSeconds),
+    );
+    if (result.timedOut) {
+      print(
+        '⏱️  [$packageName] Timed out after ${timeoutSeconds}s. Skipping.',
+      );
+      hasFailures = true;
+      continue;
+    }
     if (result.exitCode != 0) {
       print('❌ [$packageName] Tests failed!');
       print(result.stdout);
@@ -285,6 +332,58 @@ class PackageStats {
   }
 }
 
+List<String>? _parseCsvArg(List<String> args, String key) {
+  final prefix = '$key=';
+  for (final arg in args) {
+    if (arg.startsWith(prefix)) {
+      final value = arg.substring(prefix.length).trim();
+      if (value.isEmpty) return null;
+      return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    }
+  }
+  return null;
+}
+
+int? _parseIntArg(List<String> args, String key) {
+  final prefix = '$key=';
+  for (final arg in args) {
+    if (arg.startsWith(prefix)) {
+      final value = arg.substring(prefix.length).trim();
+      if (value.isEmpty) return null;
+      return int.tryParse(value);
+    }
+  }
+  return null;
+}
+
+Future<Set<String>> _getChangedPaths(String repoRoot) async {
+  final result = await Process.run(
+    'git',
+    ['status', '--porcelain'],
+    workingDirectory: repoRoot,
+  );
+
+  if (result.exitCode != 0) {
+    print('⚠️ Warning: Unable to read git status. Skipping changed filter.');
+    return {};
+  }
+
+  final paths = <String>{};
+  final lines = result.stdout.toString().split('\n');
+  for (final line in lines) {
+    if (line.trim().isEmpty) continue;
+    if (line.length < 4) continue;
+    var path = line.substring(3).trim();
+    if (path.contains('->')) {
+      path = path.split('->').last.trim();
+    }
+    if (path.isEmpty) continue;
+    paths.add(Directory('$repoRoot/$path').absolute.path);
+  }
+
+  return paths;
+}
+
 PackageStats _parseLcov(File file, String packageName) {
   final stats = PackageStats(packageName);
 
@@ -359,4 +458,55 @@ void _fixLcovPaths(File lcovFile, String packagePath, String rootPath) {
         content.replaceAll('SF:lib/', 'SF:$relativePkgPath/lib/');
     lcovFile.writeAsStringSync(fixedContent);
   }
+}
+
+class _ProcessOutcome {
+  final int exitCode;
+  final String stdout;
+  final String stderr;
+  final bool timedOut;
+
+  _ProcessOutcome({
+    required this.exitCode,
+    required this.stdout,
+    required this.stderr,
+    required this.timedOut,
+  });
+}
+
+Future<_ProcessOutcome> _runProcess(
+  List<String> command, {
+  required String workingDirectory,
+  Duration? timeout,
+}) async {
+  final process = await Process.start(
+    command.first,
+    command.sublist(1),
+    workingDirectory: workingDirectory,
+  );
+
+  final stdoutFuture = process.stdout.transform(utf8.decoder).join();
+  final stderrFuture = process.stderr.transform(utf8.decoder).join();
+
+  int exitCode;
+  bool timedOut = false;
+  try {
+    exitCode = timeout == null
+        ? await process.exitCode
+        : await process.exitCode.timeout(timeout);
+  } on TimeoutException {
+    timedOut = true;
+    process.kill(ProcessSignal.sigterm);
+    exitCode = -1;
+  }
+
+  final stdout = await stdoutFuture;
+  final stderr = await stderrFuture;
+
+  return _ProcessOutcome(
+    exitCode: exitCode,
+    stdout: stdout,
+    stderr: stderr,
+    timedOut: timedOut,
+  );
 }

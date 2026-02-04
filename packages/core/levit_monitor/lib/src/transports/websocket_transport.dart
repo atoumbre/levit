@@ -123,11 +123,16 @@ class WebSocketTransport implements LevitTransport {
   }
 
   @override
-  void close() {
+  Future<void> close() async {
+    if (_isDisposed) return;
     _isDisposed = true;
     _reconnectTimer?.cancel();
-    _channel?.sink.close();
+    try {
+      await _channel?.sink.close();
+    } catch (_) {}
     _channel = null;
-    _onConnectController.close();
+    try {
+      await _onConnectController.close();
+    } catch (_) {}
   }
 }

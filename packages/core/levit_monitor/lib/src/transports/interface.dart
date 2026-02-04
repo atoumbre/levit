@@ -16,7 +16,7 @@ abstract class LevitTransport {
   ///
   /// This method should be called when the transport is no longer needed,
   /// typically during [LevitMonitor.detach].
-  void close() {}
+  Future<void> close() async {}
 
   /// Stream that emits when a connection is established or re-established.
   Stream<void> get onConnect => const Stream<void>.empty();

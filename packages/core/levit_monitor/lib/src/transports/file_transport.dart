@@ -31,7 +31,8 @@ class FileTransport implements LevitTransport {
   }
 
   @override
-  void close() {
-    _sink.close();
+  Future<void> close() async {
+    await _sink.flush();
+    await _sink.close();
   }
 }

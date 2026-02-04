@@ -77,7 +77,7 @@ class LxWorkerStat {
 /// // Log every change
 /// final worker = LxWorker(count, (v) => print('Changed: $v'));
 /// ```
-class LxWorker<T> extends LxBase<LxWorkerStat> {
+class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
   /// The reactive source being monitored.
   final LxReactive<T> source;
 

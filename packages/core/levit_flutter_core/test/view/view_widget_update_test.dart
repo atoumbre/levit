@@ -8,7 +8,7 @@ class TestController extends LevitController {
 }
 
 void main() {
-  testWidgets('LView re-resolves controller on didUpdateWidget',
+  testWidgets('LView re-resolves controller when args change',
       (tester) async {
     final controller1 = TestController('One');
     final controller2 = TestController('Two');
@@ -44,6 +44,7 @@ void main() {
         home: Scaffold(
           body: LView<TestController>(
             resolver: (_) => controller,
+            args: [controller],
             builder: (_, c) => Text(c.label),
           ),
         ),
@@ -56,5 +57,29 @@ void main() {
     // Trigger didUpdateWidget by pumping a new widget instance with different resolver result
     await tester.pumpWidget(buildStage(controller2));
     expect(find.text('Two'), findsOneWidget);
+  });
+
+  testWidgets('LView does not re-resolve controller without args',
+      (tester) async {
+    final controller1 = TestController('One');
+    final controller2 = TestController('Two');
+
+    Widget buildStage(TestController controller) {
+      return MaterialApp(
+        home: Scaffold(
+          body: LView<TestController>(
+            resolver: (_) => controller,
+            builder: (_, c) => Text(c.label),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(buildStage(controller1));
+    expect(find.text('One'), findsOneWidget);
+
+    await tester.pumpWidget(buildStage(controller2));
+    expect(find.text('One'), findsOneWidget);
+    expect(find.text('Two'), findsNothing);
   });
 }
