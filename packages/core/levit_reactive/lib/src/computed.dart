@@ -775,7 +775,8 @@ class _DependencyTracker implements LevitReactiveObserver {
   final Set<LevitReactiveNotifier> _setDeps = {};
   bool _useSet = false;
 
-  final Set<LxReactive> reactives = {}; // Graph reporting for middleware/monitoring.
+  final Set<LxReactive> reactives =
+      {}; // Graph reporting for middleware/monitoring.
   bool trackReactives = false;
 
   _DependencyTracker();
@@ -820,7 +821,8 @@ class _DependencyTracker implements LevitReactiveObserver {
 class _AsyncLiveTracker implements LevitReactiveObserver {
   final LxAsyncComputed _computed;
   final int _executionId;
-  final Set<LxReactive> reactives = {}; // Graph reporting for middleware/monitoring.
+  final Set<LxReactive> reactives =
+      {}; // Graph reporting for middleware/monitoring.
   final bool trackReactives;
 
   _AsyncLiveTracker(this._computed, this._executionId,

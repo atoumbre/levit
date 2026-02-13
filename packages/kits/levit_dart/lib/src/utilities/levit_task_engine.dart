@@ -160,7 +160,6 @@ class LevitTaskEngine implements LevitDisposable {
     onTaskEvent?.call(event);
   }
 
-
   /// Schedules a [task] for execution.
   ///
   /// *   If active tasks < [maxConcurrent], executes immediately.

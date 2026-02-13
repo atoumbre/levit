@@ -284,7 +284,10 @@ class ScopeCreateEvent extends DependencyEvent {
     required super.scopeId,
     required super.scopeName,
     required this.parentScopeId,
-  }) : super(key: '', info: LevitDependency()); // Scope lifecycle events have no dependency payload.
+  }) : super(
+            key: '',
+            info:
+                LevitDependency()); // Scope lifecycle events have no dependency payload.
 
   @override
   Map<String, dynamic> toJson() => {
@@ -300,7 +303,10 @@ class ScopeDisposeEvent extends DependencyEvent {
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
-  }) : super(key: '', info: LevitDependency()); // Scope lifecycle events have no dependency payload.
+  }) : super(
+            key: '',
+            info:
+                LevitDependency()); // Scope lifecycle events have no dependency payload.
 
   @override
   Map<String, dynamic> toJson() => {

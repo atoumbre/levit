@@ -292,8 +292,7 @@ class LevitScope {
     String? tag,
   }) {
     if (_registry.containsKey(key)) {
-      if (info.isLazy || info.isFactory) {
-      }
+      if (info.isLazy || info.isFactory) {}
     }
 
     _registry[key] = info;
