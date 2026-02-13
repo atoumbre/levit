@@ -363,7 +363,7 @@ class _IsolateLoopService implements StoppableService {
       }
     });
 
-    // Start the executor directly
+    // Isolate loop starts only after command port handshake is established.
     executor.start();
   }
 }

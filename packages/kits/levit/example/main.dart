@@ -1,9 +1,7 @@
 import 'package:levit/levit.dart';
 
 void main() {
-  // Levit kit re-exports levit_dart, levit_scope, and levit_reactive.
-
-  // Example of using Lx (Reactive)
+  // `levit` exposes reactive, scope, and dart-core APIs from one import.
   final count = 0.lx;
   count.addListener(() {
     print('Count changed: ${count.value}');

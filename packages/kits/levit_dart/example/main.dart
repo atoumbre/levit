@@ -18,14 +18,12 @@ class LoopExampleController extends LevitController
 /// A comprehensive example demonstrating the high-level utility mixins
 /// provided by the `levit_dart` package.
 void main() async {
-  // Initialize the Levit ecosystem using the root scope.
+  // Example runs in an isolated root scope and disposes it at the end.
   final scope = LevitScope.root();
 
   print('--- Levit Dart Example ---');
 
-  // 1. TasksMixin Demo: Managing asynchronous operations
   print('\n1. TasksMixin Demo - Execution Queue & Retries');
-  // Register the controller in the scope.
   final taskController = scope.put(() => TaskExampleController());
 
   print('Starting a task that fails once but succeeds on retry...');
@@ -44,8 +42,6 @@ void main() async {
   );
   print('Result: $result');
 
-  // 2. SelectionMixin Demo: Managing item selection
-
   print('\n2. SelectionMixin Demo - Multi-selection');
   final selectionController =
       scope.put(() => SelectionExampleController<String>());
@@ -58,8 +54,6 @@ void main() async {
   selectionController.toggle('Banana');
   print('After toggling "Banana": ${selectionController.selectedItems.value}');
 
-  // 3. TimeMixin Demo: Debouncing & Throttling
-
   print('\n3. TimeMixin Demo - Debouncing');
   final timeController = scope.put(() => TimeExampleController());
 
@@ -71,8 +65,6 @@ void main() async {
     });
   }
   await Future.delayed(const Duration(milliseconds: 500));
-
-  // 4. ExecutionLoopMixin Demo: Background services
 
   print('\n4. ExecutionLoopMixin Demo - Periodic Loops');
   final loopController = scope.put(() => LoopExampleController());

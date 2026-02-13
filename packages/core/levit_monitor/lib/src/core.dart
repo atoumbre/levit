@@ -66,7 +66,7 @@ class LevitMonitor {
   }) {
     detach(); // Ensure an idempotent state
 
-    // Ensure auto-linking is enabled to capture ID generation and owner associations
+    // Monitoring relies on owner paths produced by auto-linking.
     Levit.enableAutoLinking();
 
     final List<LevitTransport> allTransports = [];

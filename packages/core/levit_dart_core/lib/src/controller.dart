@@ -74,8 +74,7 @@ abstract class LevitController implements LevitScopeDisposable {
     _scope = scope;
     _registrationKey = key;
 
-    // Retroactively update ownerId for auto-disposed reactives
-    // This handles the case where variables are initialized before attachment
+    // Attachment may happen after reactive creation; ownership must be reconciled.
     if (key != null) {
       _cachedOwnerPath = null; // Force recalculation if key changed
       final path = ownerPath;
@@ -115,7 +114,7 @@ abstract class LevitController implements LevitScopeDisposable {
   /// late final sub = autoDispose(stream.listen((_) {}));
   /// ```
   T autoDispose<T>(T object) {
-    // Check for identity to allow equal-but-distinct reactive variables
+    // Use identity to allow separate reactives with equal values.
     final alreadyAdded =
         _disposables.any((element) => identical(element, object));
 
@@ -123,7 +122,7 @@ abstract class LevitController implements LevitScopeDisposable {
       _disposables.add(object);
     }
 
-    // Auto-linking: If the reactive object doesn't have an ownerId, adopt it.
+    // Respect explicit ownership and only backfill missing ownerId.
     if (object is LxReactive) {
       if (object.ownerId == null) {
         object.ownerId = ownerPath;

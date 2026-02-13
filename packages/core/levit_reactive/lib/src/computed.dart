@@ -18,14 +18,14 @@ class LxComputed<T> extends _ComputedBase<T> {
   final bool Function(T previous, T current) _equals;
   bool _isDirty = true;
   bool _isComputing = false;
-  // Track if we already notified "Dirty" state to avoid double notification on update
+  // Prevent duplicate reactive updates when dirty-state was already emitted.
   bool _notifiedDirty = false;
 
   final bool _staticDeps;
   final bool _eager;
   bool _hasStaticGraph = false;
 
-  // Stack to capture dependencies during initial super() call
+  // Captures first-run dependencies during constructor initialization.
   static final List<_DependencyTracker> _initialDepStack = [];
 
   /// Creates a synchronous computed value.
@@ -44,7 +44,7 @@ class LxComputed<T> extends _ComputedBase<T> {
         _eager = eager,
         super(_computeInitial(name, _compute), name: name) {
     _isDirty = true;
-    // If we captured dependencies during init, store them for _onActive
+    // Initial dependencies are reused on first activation to avoid a second run.
     if (_initialDepStack.isNotEmpty) {
       final tracker = _initialDepStack.removeLast();
       _capturedDeps = tracker.dependencies.toList();
@@ -59,14 +59,14 @@ class LxComputed<T> extends _ComputedBase<T> {
         maybeNotifyGraphChange(_capturedReactives!);
       }
 
-      // We have the value, so not dirty. We will subscribe in _onActive.
+      // Constructor already produced a value; subscriptions are attached on activation.
       _isDirty = false;
       _releaseTracker(tracker);
     }
   }
 
   static T _computeInitial<T>(String? name, T Function() compute) {
-    // Optimization: Capture dependencies during initial value computation
+    // Capture first dependency graph during initial compute.
     final tracker = _getTracker();
     tracker.trackReactives = LevitReactiveMiddleware.hasGraphChangeMiddlewares;
     tracker.clear();
@@ -140,7 +140,7 @@ class LxComputed<T> extends _ComputedBase<T> {
   void _onActive() {
     _isActive = true;
     if (_capturedDeps != null) {
-      // First activation: Use dependencies captured during construction
+      // Apply constructor-captured graph on first activation.
       _reconcileDependencies(_capturedDeps!, reactives: _capturedReactives);
       _capturedDeps = null;
       _capturedReactives = null;
@@ -163,22 +163,22 @@ class LxComputed<T> extends _ComputedBase<T> {
   void _onDependencyChanged() {
     if (_isClosed || !_isActive) return;
     if (!_isDirty && !_isComputing) {
-      // Eager evaluation for Stream listeners (Push model)
+      // Stream listeners require eager recompute to push latest value.
       if (_hasStreamListener || _eager) {
         _isDirty = true;
         _recompute();
         return;
       }
 
-      // Lazy evaluation for Notifier listeners (Pull model)
+      // Plain listeners observe dirty state and pull on next read.
       _isDirty = true;
       _notifiedDirty = true;
-      // Lazy evaluation: Just verify change propagation without recomputing
+      // Emit reactive update without forcing immediate recomputation.
       _notifyListenersOnly();
     }
   }
 
-  // Pool for dependency trackers to avoid allocations
+  // Reusable tracker pool to reduce allocation pressure.
   static final List<_DependencyTracker> _trackerPool = [];
 
   static _DependencyTracker _getTracker() {
@@ -198,8 +198,7 @@ class LxComputed<T> extends _ComputedBase<T> {
     _isComputing = true;
     _isDirty = false;
 
-    // OPTIMIZATION: Static Dependencies
-    // If staticDeps is true and we already have a graph, skip tracking completely.
+    // Static dependency mode skips graph tracking after first successful capture.
     if (_staticDeps && _hasStaticGraph) {
       T resultValue;
       try {
@@ -210,7 +209,7 @@ class LxComputed<T> extends _ComputedBase<T> {
         _isComputing = false;
       }
 
-      // Direct equality check
+      // Skip reactive update when value comparator reports no change.
       if (!_equals(super.value, resultValue)) {
         _setValueInternal(resultValue, notifyListeners: !_notifiedDirty);
       }
@@ -220,11 +219,11 @@ class LxComputed<T> extends _ComputedBase<T> {
       return;
     }
 
-    // Use pooled tracker to avoid allocations.
+    // Tracker reuse keeps recompute allocations stable.
     final tracker = _getTracker();
-    // We only track reactives if middlewares or observers are present
+    // Reactive graph capture is only needed when middleware requests it.
     tracker.trackReactives = LevitReactiveMiddleware.hasGraphChangeMiddlewares;
-    // tracker.clear() is called in release, so it's clean (or we clear here to be safe)
+    // Clear defensively in case tracker state leaked from previous use.
     tracker.clear();
 
     final previousProxy = _LevitReactiveCore.proxy;
@@ -240,7 +239,7 @@ class LxComputed<T> extends _ComputedBase<T> {
       _isComputing = false;
     }
 
-    // Direct equality check for T values (fixed: was checking LxSuccess<T>)
+    // Compare raw values, not wrapped status payloads.
     if (!_equals(super.value, resultValue)) {
       _setValueInternal(resultValue, notifyListeners: !_notifiedDirty);
     }
@@ -248,7 +247,7 @@ class LxComputed<T> extends _ComputedBase<T> {
     _isDirty = false;
     _notifiedDirty = false;
 
-    // Capture dependencies from tracker
+    // Reconcile subscriptions against the latest dependency graph.
     _reconcileDependencies(tracker.dependencies,
         reactives: tracker.trackReactives ? tracker.reactives : null);
 
@@ -268,10 +267,10 @@ class LxComputed<T> extends _ComputedBase<T> {
       return super.value;
     }
 
-    // Pull-on-read mode
+    // Inactive computed values evaluate on demand.
     final existingProxy = Lx.proxy;
 
-    // If no proxy is listening, track for graph purposes (if middlewares are active)
+    // Without active observer, capture graph only when middleware requires it.
     if (existingProxy == null) {
       if (!LevitReactiveMiddleware.hasGraphChangeMiddlewares) {
         try {
@@ -294,7 +293,7 @@ class LxComputed<T> extends _ComputedBase<T> {
           throw e;
         }
 
-        // Notify middlewares of dependency graph change
+        // Publish graph changes only when dependency set was observed.
         if (tracker.reactives.isNotEmpty) {
           maybeNotifyGraphChange(tracker.reactives);
         }
@@ -305,7 +304,7 @@ class LxComputed<T> extends _ComputedBase<T> {
       }
     }
 
-    // Existing proxy is active (e.g., LWatch) - just compute
+    // Active observer already captures dependencies upstream.
     try {
       return _compute();
     } catch (e) {
@@ -394,8 +393,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
     final lastKnown = value.lastValue;
     final isInitial = !_hasProducedResult;
 
-    // Async strategy: Clean immediately, subscribe as we go (via Live Tracker).
-    // OPTIMIZATION: Skip cleanup if static graph is already established
+    // Dynamic async runs rebuild subscriptions; static graphs keep existing links.
     if (!(_staticDeps && _hasStaticGraph)) {
       _cleanupSubscriptions();
     }
@@ -409,13 +407,11 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
     StackTrace? syncStack;
     bool syncFailed = false;
 
-    // We only need a tracker if we are NOT using the static optimization
-    // OR if this is the first run of a static computed (to build the graph).
+    // Track dependencies unless static mode has already locked the graph.
     _AsyncLiveTracker? tracker;
 
     if (_staticDeps && _hasStaticGraph) {
-      // FAST PATH: Static & Ready
-      // No Zone, No Tracker, No Proxy
+      // Static graph fast path avoids Zone/proxy instrumentation.
       try {
         future = _compute();
       } catch (e, st) {
@@ -424,7 +420,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
         syncFailed = true;
       }
     } else {
-      // NORMAL PATH: Dynamic OR First Static Run
+      // Dynamic mode (or first static run) records live dependencies.
       tracker = _AsyncLiveTracker(this, myExecutionId,
           trackReactives: LevitReactiveMiddleware.hasGraphChangeMiddlewares);
       final previousProxy = Lx.proxy;
@@ -448,14 +444,13 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
       }
     }
 
-    // Handle Synchronous Error
+    // Sync failures produce error status for the current execution.
     if (syncFailed) {
       if (myExecutionId == _executionId) {
         _hasProducedResult = true;
         _setValueInternal(LxError<T>(syncError!, syncStack!, lastKnown));
 
-        // Even on error, if we were building a static graph, we lock it?
-        // Maybe safer to only lock on success, or lock what we found.
+        // Static mode locks dependency graph after first completed execution.
         if (_staticDeps && !_hasStaticGraph) {
           _hasStaticGraph = true;
         }
@@ -463,7 +458,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
       return;
     }
 
-    // Handle Future Result
+    // Async completion updates status only for the latest execution token.
     if (future != null) {
       future.then((result) {
         if (myExecutionId == _executionId && !_isClosed) {
@@ -474,7 +469,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
             _notifyDependencyGraph(tracker.reactives);
           }
 
-          // Lock static graph after first successful async completion
+          // Static graph is finalized after the first settled execution.
           if (_staticDeps && !_hasStaticGraph) {
             _hasStaticGraph = true;
           }
@@ -503,9 +498,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
 
   void _applyResult(T result, {required bool isInitial}) {
     if (!isInitial && _hasValue && _equals(_lastComputedValue as T, result)) {
-      // Value unchanged.
-      // If we were waiting, flip to Success with same value.
-      // If we were waiting, flip to Success with same value.
+      // Preserve reactive update semantics when value is unchanged after waiting.
       if (value is LxWaiting<T>) {
         _setValueInternal(LxSuccess<T>(result));
       }
@@ -520,9 +513,6 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
   LxStatus<T> get status => value;
 
   /// Whether there are active listeners.
-  // Note: hasListener is in the abstract base if not overridden or if defined in base.
-  // But _ComputedBase is LxBase, which has hasListener.
-
   void refresh() => _run();
 
   @override
@@ -592,7 +582,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       return;
     }
 
-    // Optimization: Avoid toList() by separating listener removal from map clearing
+    // Remove listeners without creating a snapshot list when middleware is disabled.
     if (!LevitReactiveMiddleware.hasListenerMiddlewares) {
       for (final dep in _dependencySubscriptions.keys) {
         dep.removeListener(_onDependencyChanged);
@@ -604,8 +594,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
 
     if (_dependencySubscriptions.isEmpty) return;
 
-    // Optimization: Avoid `toList()` allocation by iterating keys directly.
-    // We replicate `_unsubscribeFrom` logic here but skip map removal until the end.
+    // Middleware path keeps context attribution while still avoiding snapshot copies.
     for (final notifier in _dependencySubscriptions.keys) {
       Lx.runWithContext(
           LxListenerContext(
@@ -687,8 +676,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
         ? newDependencies
         : newDependencies.toSet();
 
-    // Fast path: Hash-based stability check
-    // Compute a fast hash from identity hash codes
+    // Hash+length check skips full reconciliation for stable graphs.
     int hash = 0;
     int length = 0;
     for (final dep in depSet) {
@@ -696,9 +684,8 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       length++;
     }
 
-    // If hash and length match, graph is stable - skip reconciliation
+    // Confirm membership to guard against hash collisions.
     if (hash == _lastDepsHash && length == _lastDepsLength) {
-      // Guard against rare hash collisions by confirming membership.
       var isSameSet = true;
       for (final dep in depSet) {
         if (!_dependencySubscriptions.containsKey(dep)) {
@@ -715,8 +702,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     _lastDepsHash = hash;
     _lastDepsLength = length;
 
-    // Slow path: Full reconciliation
-    // 1. Identify Removed: Iterate current keys
+    // Reconcile removed dependencies before adding new ones.
     final currentDeps = _dependencySubscriptions.keys.toList(growable: false);
     for (final dep in currentDeps) {
       if (!depSet.contains(dep)) {
@@ -724,14 +710,14 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       }
     }
 
-    // 2. Identify Added: Iterate new deps
+    // Subscribe only to newly discovered dependencies.
     for (final dep in depSet) {
       if (!_dependencySubscriptions.containsKey(dep)) _subscribeTo(dep);
     }
 
     _recalculateGraphDepth(_dependencySubscriptions.keys);
 
-    // 3. Notify middlewares
+    // Emit graph event after subscriptions match the new dependency set.
     if (reactives != null) {
       maybeNotifyGraphChange(reactives);
     }
@@ -755,7 +741,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     _lastReactivesHash = hash;
     _lastReactivesLength = length;
 
-    // Reuse list if input is already a List, otherwise cache the conversion
+    // Reuse list input when available to avoid extra allocations.
     if (reactives is List<LxReactive>) {
       _cachedReactivesList = reactives;
     } else {
@@ -784,12 +770,12 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
 
 /// Captures all dependencies into a set (for Sync Computed).
 class _DependencyTracker implements LevitReactiveObserver {
-  // Hybrid storage: Use List for small N, Set for large N.
+  // Small graphs use list storage; larger graphs switch to set semantics.
   final List<LevitReactiveNotifier> _listDeps = [];
   final Set<LevitReactiveNotifier> _setDeps = {};
   bool _useSet = false;
 
-  final Set<LxReactive> reactives = {}; // For DevTools graph
+  final Set<LxReactive> reactives = {}; // Graph reporting for middleware/monitoring.
   bool trackReactives = false;
 
   _DependencyTracker();
@@ -834,7 +820,7 @@ class _DependencyTracker implements LevitReactiveObserver {
 class _AsyncLiveTracker implements LevitReactiveObserver {
   final LxAsyncComputed _computed;
   final int _executionId;
-  final Set<LxReactive> reactives = {}; // For DevTools graph
+  final Set<LxReactive> reactives = {}; // Graph reporting for middleware/monitoring.
   final bool trackReactives;
 
   _AsyncLiveTracker(this._computed, this._executionId,
@@ -853,7 +839,7 @@ class _AsyncLiveTracker implements LevitReactiveObserver {
   }
 }
 
-// Top-level handlers to avoid closure allocation on each async computed run
+// Top-level Zone handlers avoid per-run closure allocation in async computed paths.
 R _asyncRunHandler<R>(
     Zone self, ZoneDelegate parent, Zone zone, R Function() f) {
   _LevitReactiveCore._enterAsyncScope();

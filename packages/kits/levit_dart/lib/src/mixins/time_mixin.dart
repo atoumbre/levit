@@ -76,14 +76,7 @@ mixin LevitTimeMixin on LevitController {
       onTick: onTick,
       onFinish: onFinish,
     );
-    // Auto-dispose the countdown with the controller
-    // Note: Since LxCountdown isn't a reactive itself but holds one, we rely on its dispose.
-    // We can't use autoDispose() directly on it unless it's a Disposable.
-    // Let's ensure LxCountdown implements Disposable or we track it.
-    // For now, we return it and let the user manage or we track it internally if we want rigorous safety.
-    // Better: Add to a list of disposables.
-    // For simplicity in this mixin, we return it. Ideally, the user calls .dispose() or we track it.
-    // To be safe, let's track it in a separate list.
+    // Countdown owns a reactive field internally, so this mixin tracks disposal explicitly.
     _countdowns.add(countdown);
     countdown.start();
     return countdown;
@@ -161,7 +154,7 @@ class LxCountdown {
     _timer?.cancel();
     _timer = null;
     remaining.value =
-        totalDuration; // Reset? Or keep at stopped val? Reset is usually 'stop'.
+        totalDuration; // `stop` resets countdown to the initial duration.
     _isPaused = false;
   }
 

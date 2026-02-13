@@ -305,7 +305,7 @@ class Levit {
   static void _levitDisposeItem(dynamic item) {
     if (item == null) return;
 
-    // 1. Framework Specifics (Priority)
+    // Prefer framework contracts before duck-typed cleanup methods.
 
     if (item is LxReactive) {
       item.close();
@@ -322,8 +322,7 @@ class Levit {
       return;
     }
 
-    // 2. The "Cancel" Group (Async tasks)
-    // Most common: StreamSubscription, Timer
+    // Cancelables are handled before disposal/close to preserve task semantics.
     if (item is StreamSubscription) {
       item.cancel();
       return;
@@ -334,31 +333,29 @@ class Levit {
     }
 
     try {
-      // Duck typing for other cancelables (like CancelableOperation)
+      // Fallback for cancelable types without shared interface.
       (item as dynamic).cancel();
       return;
     } on NoSuchMethodError {
-      // Not cancelable, fall through
+      // Continue with dispose/close heuristics.
     } on Exception catch (e) {
-      // Prevent crash during cleanup (only for Exceptions)
+      // Cleanup must remain best-effort.
       dev.log('Levit: Error cancelling ${item.runtimeType}',
           error: e, name: 'levit_dart');
     }
 
-    // 3. The "Dispose" Group (Flutter Controllers)
-    // Most common: TextEditingController, ChangeNotifier, FocusNode
+    // Dispose handles UI/resource holders that are not cancelable.
     try {
       (item as dynamic).dispose();
       return;
     } on NoSuchMethodError {
-      // Not disposable, fall through
+      // Continue with close heuristics.
     } on Exception catch (e) {
       dev.log('Levit: Error disposing ${item.runtimeType}',
           error: e, name: 'levit_dart');
     }
 
-    // 4. The "Close" Group (Sinks, BLoCs, IO)
-    // Most common: StreamController, Sink, Bloc
+    // Close covers stream-like and IO-style resources.
     if (item is Sink) {
       item.close();
       return;
@@ -368,13 +365,13 @@ class Levit {
       (item as dynamic).close();
       return;
     } on NoSuchMethodError {
-      // Not closeable, fall through
+      // Continue with callback fallback.
     } on Exception catch (e) {
       dev.log('Levit: Error closing ${item.runtimeType}',
           error: e, name: 'levit_dart');
     }
 
-    // 5. The "Callable" Group (Cleanup Callbacks)
+    // Last fallback: explicit cleanup callback.
     if (item is void Function()) {
       try {
         item();

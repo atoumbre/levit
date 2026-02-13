@@ -272,13 +272,8 @@ class _LevitStoreInstance<T> extends LevitController implements LevitRef {
 
   T get value {
     if (!_builderRun) {
-      // Use "Restored Zone Capture" for initialization.
-      // This ensures that any `0.lx` created in the builder is captured
-      // and disposed when the store closes, even if it's an orphan.
-      //
-      // If `definition._builder` throws, `_builderRun` will remain false,
-      // and the error will be re-thrown. The store will attempt to re-initialize
-      // on the next access.
+      // Capture builder-created reactives so store-owned state is auto-disposed.
+      // `_builderRun` stays false on failure, allowing a retry on next read.
       _value = _AutoLinkScope.runCaptured(
         () => definition._builder(this),
         (captured, _) {

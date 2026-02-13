@@ -14,7 +14,7 @@ class MultiTransport implements LevitTransport {
       try {
         transport.send(event);
       } catch (e) {
-        // Suppress errors from individual transports to prevent disrupting others
+        // One failing sink must not block delivery to other sinks.
         print('Error sending event to transport ${transport.runtimeType}: $e');
       }
     }
@@ -33,11 +33,8 @@ class MultiTransport implements LevitTransport {
 
   @override
   Stream<void> get onConnect {
-    // Merge onConnect streams from all transports
+    // Surface a connect signal when any underlying transport reconnects.
     if (transports.isEmpty) return const Stream.empty();
-
-    // We want to notify if ANY transport connects.
-    // Ideally, we might want to merge them.
     final controller = StreamController<void>.broadcast();
     final subscriptions = <StreamSubscription>[];
 

@@ -52,13 +52,13 @@ class StateSnapshot {
   }
 
   void _restore(Map<String, dynamic> state) {
-    // Clear current state
+    // A snapshot replaces the entire shadow state.
     scopes.clear();
     dependencies.clear();
     variables.clear();
     _eventCache.clear();
 
-    // Rehydrate Scopes
+    // Restore scopes first so dependency/owner references can resolve.
     if (state['scopes'] != null) {
       for (final s in state['scopes']) {
         final scope = ScopeModel(
@@ -67,7 +67,7 @@ class StateSnapshot {
       }
     }
 
-    // Rehydrate Dependencies
+    // Restore dependency registrations and lifecycle metadata.
     if (state['dependencies'] != null) {
       for (final d in state['dependencies']) {
         final dep = DependencyModel(
@@ -87,7 +87,7 @@ class StateSnapshot {
       }
     }
 
-    // Rehydrate Variables
+    // Restore reactive values after scopes/dependencies are available.
     if (state['variables'] != null) {
       for (final v in state['variables']) {
         final reactive = ReactiveModel(
@@ -117,12 +117,7 @@ class StateSnapshot {
       return;
     } else if (event is ScopeDisposeEvent) {
       scopes.remove(event.scopeId);
-      // Clean up dependencies belonging to this scope
-      // Note: LxMap iteration might need .value.entries or similar if safe iteration is needed
-      // But typically .removeWhere works on LxMap too.
-      // If LxMap doesn't support removeWhere, we iterate keys.
-      // Let's assume standard Map methods are going to be proxy or use .value
-      // Actually, safely we can collect keys to remove.
+      // Remove by key list to avoid mutating while iterating reactive map views.
       final keysToRemove = dependencies.values
           .where((d) => d.scopeId == event.scopeId)
           .map((d) => '${d.scopeId}:${d.key}')
@@ -134,7 +129,7 @@ class StateSnapshot {
       return;
     }
 
-    // Ensure scope exists (fallback for legacy/race conditions)
+    // Late or replayed events may reference a scope before its create event arrives.
     if (!scopes.containsKey(event.scopeId)) {
       scopes[event.scopeId] =
           ScopeModel(id: event.scopeId, name: event.scopeName);
@@ -161,7 +156,7 @@ class StateSnapshot {
         dep.status = DependencyStatus.active;
         dep.value = '<${MonitorEvent._instanceType(event.instance)}>';
 
-        // Detect Dependency Type
+        // Dependency type is derived from runtime shape for monitor grouping.
         final instance = event.instance;
         if (instance is LevitController) {
           dep.type = DependencyType.controller;
@@ -187,14 +182,14 @@ class StateSnapshot {
       ),
     );
 
-    // Update owner info if changed/new
+    // Owner parsing is refreshed only when ownership actually changes.
     if (event.reactive.ownerId != null &&
         reactive.ownerId != event.reactive.ownerId) {
       reactive.ownerId = event.reactive.ownerId;
       reactive.parseOwnerId();
     }
 
-    // Update sensitivity
+    // Sensitivity can change at runtime and must mirror the latest event.
     reactive.isSensitive = event.reactive.isSensitive;
 
     if (event is ReactiveInitEvent) {
@@ -357,7 +352,7 @@ class ReactiveModel {
   /// The runtime type name of [value], if known.
   String? valueType;
 
-  // Parsed metadata
+  // Parsed owner metadata for monitor queries.
 
   /// The parsed scope identifier from [ownerId], if present.
   int? scopeId;
@@ -365,7 +360,7 @@ class ReactiveModel {
   /// The parsed owner key from [ownerId], if present.
   String? ownerKey;
 
-  // Graph links (IDs of upstream dependencies)
+  // Upstream reactive IDs in the dependency graph.
 
   /// The IDs of upstream reactive dependencies for this reactive.
   List<int> dependencies = [];
@@ -393,7 +388,7 @@ class ReactiveModel {
     if (ownerId == null) return;
     if (ownerId!.contains(':')) {
       final parts = ownerId!.split(':');
-      // Format: scopeId:ownerKey
+      // Owner path format is "<scopeId>:<registrationKey>".
       if (parts.length >= 2) {
         scopeId = int.tryParse(parts[0]);
         ownerKey = parts.sublist(1).join(':');

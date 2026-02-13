@@ -5,8 +5,7 @@ import 'package:levit_flutter/levit_flutter.dart';
 
 /// Runs the `levit_flutter` example application.
 void main() {
-  // Link all LxVar and LxList to their parent controller
-  // All LxVar and LxList will be automatically disposed when the parent controller is disposed
+  // Auto-linking ensures controller-owned reactives are disposed with controller lifecycle.
   Levit.enableAutoLinking();
   runApp(const MyApp());
 }
@@ -22,7 +21,7 @@ class CircleData {
   /// The speed scalar used by the simulation.
   final double speed;
 
-  // Reactive properties that the UI will "watch" via Animated widgets
+  // UI animations subscribe to these reactives for position/radius updates.
 
   /// The current center position of the circle.
   late final LxVar<Offset> position;
@@ -48,8 +47,7 @@ class CircleData {
     radius = LxVar(initialRadius).named('rad_$id');
   }
 
-  // Even with auto-linking enabled, we can still manually dispose of the LxVar and LxList
-  // This is useful for cleaning up resources when the object is no longer needed
+  // Manual disposal is still required when a circle leaves the simulation.
 
   /// Closes the reactive state owned by this circle.
   void dispose() {
@@ -81,22 +79,19 @@ class CircleController extends LevitController
     super.onInit();
     autoDispose(circles);
 
-    // 1. Spawning Loop
+    // Spawn loop adds circles while canvas bounds are known.
     loopEngine.startLoop('spawn', () async {
       if (canvasSize != Size.zero) {
         _spawnCircle();
       }
     }, delay: const Duration(milliseconds: 500));
 
-    // 2. Path Generation Loop (like a location stream)
-    // Every 500ms, we pick a new target for all circles.
-    // The UI's AnimatedPositioned will interpolate to this new target.
+    // Path loop publishes new targets; UI tweening handles interpolation.
     loopEngine.startLoop('path', () async {
       _updateCircleTargets();
     }, delay: const Duration(milliseconds: 500));
 
-    // 3. Shrink Loop
-    // Smoothly shrink radius
+    // Shrink loop reduces radius and removes exhausted circles.
     loopEngine.startLoop('shrink', () async {
       _shrinkCircles();
     }, delay: const Duration(milliseconds: 100));
@@ -128,7 +123,7 @@ class CircleController extends LevitController
 
   void _updateCircleTargets() {
     for (final circle in circles) {
-      // Pick a new random target nearby (random walk)
+      // Random walk keeps movement local and visually continuous.
       final offset = Offset(
         (_random.nextDouble() - 0.5) * 200,
         (_random.nextDouble() - 0.5) * 200,
@@ -136,7 +131,7 @@ class CircleController extends LevitController
 
       var newPos = circle.position.value + offset;
 
-      // Keep within bounds
+      // Clamp to canvas to keep circles visible.
       newPos = Offset(
         newPos.dx.clamp(0, canvasSize.width),
         newPos.dy.clamp(0, canvasSize.height),
@@ -181,7 +176,7 @@ class CircleController extends LevitController
 
   /// Resumes all loop services unless the simulation is manually paused.
   void resumeAllServices({bool force = false}) {
-    // If simulation is manually paused, do not auto-resume on app foreground
+    // Manual pause state takes precedence over lifecycle-driven resume.
     if (isSimulationPaused.value) return;
     loopEngine.resumeAllServices(force: force);
   }
@@ -217,8 +212,6 @@ class CircleCanvasPage extends LScopedView<CircleController> {
     return scope.put(() => CircleController());
   }
 
-  // True by default
-  // Override if you want to manually manage rebuilds with LWatch
   /// Whether the view automatically rebuilds when reactive values change.
   @override
   bool get autoWatch => true;
@@ -260,7 +253,7 @@ class CircleCanvasPage extends LScopedView<CircleController> {
           final size = Size(constraints.maxWidth, constraints.maxHeight);
           controller.updateCanvasSize(size);
 
-          // LWatch need as we are in a builder
+          // Explicit watch keeps reactive tracking scoped to this builder.
           return LWatch(
             () => Stack(
               children: [
@@ -282,8 +275,7 @@ class _AnimatedCircle extends LView<CircleController> {
 
   @override
   Widget buildView(BuildContext context, CircleController controller) {
-    // We use AnimatedPositioned and AnimatedContainer for buttery smooth
-    // transitions between the locations emitted by the controller.
+    // Animated widgets smooth discrete simulation updates into continuous motion.
 
     return AnimatedPositioned(
       duration: const Duration(

@@ -108,8 +108,7 @@ class _LViewState<T> extends State<LView<T>> {
   @override
   void initState() {
     super.initState();
-    // SAFETY: Resolver runs exactly ONCE.
-    // This prevents accidental re-calculation during parent rebuilds.
+    // Resolver is memoized per widget lifecycle to avoid rebuild-driven side effects.
     controller = _resolveController();
     _boundScope = LScope.of(context);
   }
@@ -152,8 +151,7 @@ class _LViewState<T> extends State<LView<T>> {
 
   @override
   Widget build(BuildContext context) {
-    // We delegate back to the widget's buildView method
-    // This supports both the 'builder' param and subclass overrides.
+    // Single dispatch path supports both builder callback and subclass override.
     if (widget.autoWatch) {
       return LWatch(() => widget.buildView(context, controller));
     }
@@ -278,8 +276,7 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
   @override
   void initState() {
     super.initState();
-    // SAFETY: Future created ONCE.
-    // Prevents the "Infinite Loading Loop" problem.
+    // Future is memoized per lifecycle to avoid repeated asynchronous resolution.
     future = _resolveFuture();
     _boundScope = LScope.of(context);
   }
@@ -300,10 +297,10 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
 
     bool shouldUpdate = false;
     if (widget.args != null || oldWidget.args != null) {
-      // If args are used, they control the update (Explicit Mode)
+      // Explicit args override resolver identity checks.
       shouldUpdate = !_argsMatch(widget.args, oldWidget.args);
     } else {
-      // Fallback to resolver identity (Implicit Mode)
+      // Resolver identity is used when explicit args are not provided.
       shouldUpdate = widget.resolver != oldWidget.resolver;
     }
 

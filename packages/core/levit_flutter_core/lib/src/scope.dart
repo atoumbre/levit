@@ -125,7 +125,7 @@ class LScope extends StatefulWidget {
   /// static scoping ([Zone]), allowing [Levit.find] to work correctly.
   static R runBridged<R>(BuildContext context, R Function() builder) {
     final scope = _ScopeProvider.of(context);
-    // If the widget scope differs from the current Zone scope, we bridge it.
+    // Bridge widget-tree scope into Zone scope for `Levit.find` consistency.
     if (scope != null && scope != Ls.currentScope) {
       return scope.run(builder);
     }
@@ -163,7 +163,7 @@ class _LScopeState extends State<LScope> {
     final parentScope = _ScopeProvider.of(context);
     _parentScope = parentScope;
 
-    // Create the scope and link to parent if found
+    // Scope hierarchy must mirror widget hierarchy for deterministic resolution.
     _scope = parentScope != null
         ? parentScope.createScope(scopeName)
         : Levit.createScope(scopeName);
@@ -278,7 +278,7 @@ class _LAsyncScopeState extends State<LAsyncScope> {
   late LevitScope _scope;
   late Future<void> _initFuture;
 
-  // Track initialization to prevent re-running logic on standard rebuilds
+  // Guard against re-initializing async scope during normal rebuilds.
   bool _initialized = false;
   LevitScope? _parentScope;
 
@@ -298,16 +298,16 @@ class _LAsyncScopeState extends State<LAsyncScope> {
 
     final scopeName = widget.name ?? 'LAsyncScope';
 
-    // We use the internal provider to find the parent scope
+    // Parent scope is resolved from inherited context, not global scope.
     final parentScope = _ScopeProvider.of(context);
     _parentScope = parentScope;
 
-    // Create the scope and link to parent if found
+    // Scope hierarchy must mirror widget hierarchy for deterministic resolution.
     _scope = parentScope != null
         ? parentScope.createScope(scopeName)
         : Levit.createScope(scopeName);
 
-    // Start the async initialization
+    // Initialization future is created once per scope lifecycle.
     _initFuture = widget.dependencyFactory(_scope).catchError((e) {
       _scope.dispose();
       throw e;
@@ -325,7 +325,7 @@ class _LAsyncScopeState extends State<LAsyncScope> {
       shouldReset = true;
     }
 
-    // Check if arguments changed to trigger a re-init
+    // Explicit args control when async dependencies are recreated.
     if (widget.args != null || oldWidget.args != null) {
       if (!_argsMatch(widget.args, oldWidget.args)) {
         shouldReset = true;
@@ -361,7 +361,7 @@ class _LAsyncScopeState extends State<LAsyncScope> {
     return FutureBuilder<void>(
       future: _initFuture,
       builder: (context, snapshot) {
-        // 1. Handle Error
+        // Error state keeps the failed scope isolated from the subtree.
         if (snapshot.hasError) {
           return widget.error?.call(context, snapshot.error!) ??
               Center(
@@ -372,16 +372,15 @@ class _LAsyncScopeState extends State<LAsyncScope> {
               );
         }
 
-        // 2. Handle Success
+        // Publish scope only after dependency initialization completes.
         if (snapshot.connectionState == ConnectionState.done) {
-          // Inject the initialized scope into the tree
           return _ScopeProvider(
             scope: _scope,
             child: widget.child,
           );
         }
 
-        // 3. Handle Loading
+        // Loading state avoids exposing a partially initialized scope.
         return widget.loading?.call(context) ?? const SizedBox.shrink();
       },
     );

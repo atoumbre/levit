@@ -8,12 +8,12 @@ class WebSocketTransport implements LevitTransport {
   /// Whether the user has explicitly closed the transport.
   bool _isDisposed = false;
 
-  // Managed connection details
+  // These fields are set only for self-managed connections.
   final String? _url;
   final String? _appId;
   final WebSocketChannel Function(Uri uri)? _channelBuilder;
 
-  // Reconnection state
+  // Reconnect backoff state.
   Timer? _reconnectTimer;
   int _retryAttempts = 0;
 
@@ -69,13 +69,13 @@ class WebSocketTransport implements LevitTransport {
 
     channel.stream.listen(
       (_) {
-        // Connection is already considered established once listen starts.
+        // Incoming payloads are handled by downstream monitor consumers.
       },
       onDone: _handleDisconnect,
       onError: (_) => _handleDisconnect(),
       cancelOnError: true,
     );
-    // Emit connect event
+    // A successful listen subscription marks this transport as connected.
     if (!_onConnectController.isClosed) {
       _onConnectController.add(null);
     }

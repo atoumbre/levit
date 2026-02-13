@@ -90,12 +90,9 @@ class _AutoLinkScope {
     S instance,
   ) {
     return () {
-      // Determine the capture list implementation
+      // Controllers use live capture so async onInit allocations are linked immediately.
       List<LxReactive> captured;
       if (instance is LevitController) {
-        // Use "Live Capture" for controllers.
-        // This immediately registers and auto-disposes variables as they are created,
-        // creating a robust solution for async onInit scenarios.
         captured = _LiveCaptureList(instance);
       } else {
         captured = <LxReactive>[];
@@ -109,8 +106,7 @@ class _AutoLinkScope {
 
       _AutoLinkScope._activeCaptureScopes++;
       try {
-        // Cast to dynamic to allow capturing return value (Future or null)
-        // from a statically typed void Function().
+        // `onInit` may return `Future` despite the static `void` signature.
         final dynamic result = runZoned(
           () => (onInit as dynamic)(),
           zoneValues: {
@@ -146,16 +142,15 @@ class _AutoLinkScope {
 class _AutoLinkMiddleware extends LevitReactiveMiddleware {
   @override
   void Function(LxReactive)? get onInit => (reactive) {
-        // Optimization: Early exit if neither Zone-capture nor Context-owner is active
+        // Fast exit when neither capture nor owner context is active.
         final context = Lx.listenerContext;
         final hasOwnerContext = context != null && context.type == 'Owner';
 
-        // 0. Global Check
         if (_AutoLinkScope._activeCaptureScopes == 0 && !hasOwnerContext) {
           return;
         }
 
-        // 1. Capture for auto-dispose (Only if Zone capture is active)
+        // Capture reactives for controller-owned auto-dispose.
         if (_AutoLinkScope._activeCaptureScopes > 0) {
           final captureList = Zone.current[_AutoLinkScope._captureKey];
           if (captureList is List<LxReactive>) {
@@ -163,15 +158,15 @@ class _AutoLinkMiddleware extends LevitReactiveMiddleware {
           }
         }
 
-        // 2. Set ownerId from context if not already set
+        // Preserve explicit ownership and only fill missing ownerId.
         if (reactive.ownerId == null) {
-          // Check Zone first (Fast Path for runCaptured)
+          // Zone owner is the authoritative source inside capture scopes.
           final zonedOwnerId =
               Zone.current[_AutoLinkScope._ownerIdKey] as String?;
           if (zonedOwnerId != null) {
             reactive.ownerId = zonedOwnerId;
           } else if (hasOwnerContext) {
-            // Check static Context (for Lx.runWithOwner)
+            // Fallback for explicit `Lx.runWithOwner` contexts.
             final data = context.data;
             if (data is Map<String, dynamic>) {
               reactive.ownerId = data['ownerId'] as String?;
@@ -232,8 +227,7 @@ class _LiveCaptureList extends ListBase<LxReactive> {
   void add(LxReactive element) {
     _inner.add(element);
 
-    // Live Capture Logic
-    // We register immediately to avoid race conditions in synchronous tests.
+    // Register on insert so capture order cannot race with async init logic.
     _controller.autoDispose(element);
   }
 }

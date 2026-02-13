@@ -160,7 +160,6 @@ class LevitTaskEngine implements LevitDisposable {
     onTaskEvent?.call(event);
   }
 
-  // static final _defaultCacheProvider = InMemoryTaskCacheProvider();
 
   /// Schedules a [task] for execution.
   ///
@@ -207,17 +206,17 @@ class LevitTaskEngine implements LevitDisposable {
             ));
             return result;
           } catch (e) {
-            // If deserialization fails, treat as cache miss and delete
+            // Corrupt cache entries are purged and treated as cache misses.
             await cacheProvider.delete(cacheKey);
           }
         } else {
-          // Expired
+          // Expired entries are removed eagerly to keep cache reads deterministic.
           await cacheProvider.delete(cacheKey);
         }
       }
     }
 
-    // If we can run now, run.
+    // Run immediately when capacity exists; otherwise enqueue by priority.
     if (_activeTasks.length < maxConcurrent) {
       return _execute<T>(
         id: taskId,
@@ -236,7 +235,6 @@ class LevitTaskEngine implements LevitDisposable {
         debugName: debugName,
       );
     } else {
-      // Enqueue
       final completer = Completer<T?>();
       _enqueue(_QueuedTask<T>(
         id: taskId,
@@ -311,7 +309,7 @@ class LevitTaskEngine implements LevitDisposable {
     bool runInIsolate = false,
     String? debugName,
   }) async {
-    // Track active task
+    // Active task map is the source of truth for cancellation/progress.
     final activeTaskNode = _ActiveTask(id, onProgress: onProgress);
     _activeTasks[id] = activeTaskNode;
 
@@ -409,7 +407,7 @@ class LevitTaskEngine implements LevitDisposable {
           continue; // Retry loop
         }
 
-        // Final failure
+        // Retries exhausted: propagate terminal failure or cancellation.
         _finalize(id);
         if (activeTaskNode.isCancelled) {
           onCancel?.call();
@@ -451,7 +449,7 @@ class LevitTaskEngine implements LevitDisposable {
   }
 
   void _processQueue() {
-    // Start as many queued tasks as possible up to maxConcurrent limit
+    // Drain queues until concurrency limit is reached.
     while (_hasQueuedTasks && _activeTasks.length < maxConcurrent) {
       final next = _takeNextQueuedTask();
       if (next == null) return;

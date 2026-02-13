@@ -161,7 +161,7 @@ mixin LevitReactiveTasksMixin on LevitController {
       );
     }
 
-    // Initialize reactive state
+    // Register reactive fields once so disposal remains controller-owned.
     autoDispose(tasks);
 
     totalProgress = (() {
@@ -221,7 +221,7 @@ mixin LevitReactiveTasksMixin on LevitController {
   }) async {
     final taskId = id ?? LevitTaskEngine._generateTaskId();
 
-    // Check for duplicate task ID
+    // Invariant: a task id maps to at most one active execution.
     if (tasks.containsKey(taskId) && tasks[taskId]?.status is LxWaiting) {
       throw StateError('Task with id "$taskId" is already running. '
           'Use a unique ID or cancel the existing task first.');
@@ -230,7 +230,7 @@ mixin LevitReactiveTasksMixin on LevitController {
     _cleanupTimers[taskId]?.cancel();
     _cleanupTimers.remove(taskId);
 
-    // Prune history
+    // Keep bounded task history while preserving running entries.
     if (tasks.length >= maxTaskHistory && !tasks.containsKey(taskId)) {
       final keyToRemove = tasks.keys.firstWhere(
         (k) => tasks[k]?.status is! LxWaiting,
@@ -241,7 +241,7 @@ mixin LevitReactiveTasksMixin on LevitController {
       }
     }
 
-    // Initialize reactive state immediately for both active and queued tasks
+    // Create waiting state immediately so queued tasks are visible to observers.
     tasks[taskId] = TaskDetails(
       status: LxWaiting<dynamic>(tasks[taskId]?.status.lastValue),
       weight: weight,

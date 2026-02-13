@@ -198,7 +198,7 @@ class LevitScope {
 
     final info = LevitDependency<S>(permanent: permanent);
 
-    // Instance creation logic shifted here to allow hook access to 'info'
+    // Instance creation happens before registration so middleware sees final metadata.
     info.instance = _createInstance<S>(builder, keyString, info);
 
     _registerBinding(key, keyString, info, 'put', tag: tag);
@@ -293,17 +293,12 @@ class LevitScope {
   }) {
     if (_registry.containsKey(key)) {
       if (info.isLazy || info.isFactory) {
-        // For lazy/factory, only replace if not instantiated or if we really want to overwrite.
-        // But put() logic typically deletes first. lazyPut checks existence.
-        // Let's keep original semantics:
-        // put: always overwrites (handled in put() by calling delete)
-        // lazyPut: returns early if exists & instantiated.
       }
     }
 
     _registry[key] = info;
 
-    // Fast-path: also register by Type for tag-less registrations
+    // Tag-less bindings are mirrored in type registries for O(1) lookups.
     if (tag == null) {
       _typeRegistry[S] = info;
       _typeResolutionCache.remove(S);
@@ -326,36 +321,36 @@ class LevitScope {
   ///
   /// Throws an [Exception] if [S] is not registered in this scope or any ancestor.
   S find<S>({String? tag}) {
-    // ULTRA-FAST PATH: Direct instance cache lookup (no indirection)
+    // Tag-less singleton lookups use a direct instance cache.
     if (tag == null) {
       final cached = _instanceCache[S];
       if (cached != null) {
         return cached as S;
       }
 
-      // Fast path: Type registry lookup
+      // Type registry is the primary lookup path for untagged dependencies.
       final info = _typeRegistry[S];
       if (info != null) {
-        // Already instantiated singleton - cache and return
+        // Reuse existing singleton and seed instance cache.
         final instance = info.instance;
         if (instance != null && !info.isFactory) {
           _instanceCache[S] = instance;
           return instance as S;
         }
-        // Slower path: needs instantiation
+        // Lazy registrations instantiate on first resolve.
         final result = _findLocal<S>(
           info as LevitDependency<S>,
           LevitScopeKey.of<S>().debugString,
           null,
         );
-        // Cache if it's a singleton (not factory)
+        // Factories must never be cached.
         if (!info.isFactory && info.instance != null) {
           _instanceCache[S] = info.instance;
         }
         return result;
       }
 
-      // Try cached parent scope (Type-based)
+      // Parent resolution cache avoids repeated ancestor traversal.
       final cachedScope = _typeResolutionCache[S];
       if (cachedScope != null) {
         try {
@@ -365,14 +360,14 @@ class LevitScope {
         }
       }
 
-      // Try parent
+      // Parent fallback preserves scope hierarchy resolution.
       if (_parentScope != null) {
         try {
           final instance = _parentScope!.find<S>();
           _typeResolutionCache[S] = _parentScope!;
           return instance;
         } catch (_) {
-          // Fallthrough to throw below
+          // Cached parent may be stale after resets; fall through.
         }
       }
 
@@ -382,7 +377,7 @@ class LevitScope {
       );
     }
 
-    // SLOW PATH: With tag - use String-based registry
+    // Tagged lookups use composite key registries.
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
@@ -391,7 +386,7 @@ class LevitScope {
       return _findLocal<S>(info as LevitDependency<S>, keyString, tag);
     }
 
-    // Try Cache
+    // Reuse cached ancestor that previously resolved this key.
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
       try {
@@ -401,14 +396,14 @@ class LevitScope {
       }
     }
 
-    // Try Parent
+    // Fallback to parent scope chain.
     if (_parentScope != null) {
       try {
         final instance = _parentScope!.find<S>(tag: tag);
         _cacheScope(key, _parentScope!);
         return instance;
       } catch (_) {
-        // Fallthrough to throw below
+        // Cached ancestry may be invalidated by parent resets.
       }
     }
 
@@ -426,7 +421,7 @@ class LevitScope {
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
-    // 1. Try Local
+    // Resolution order matches `find`: local, cached ancestor, then parent.
     final info = _registry[key];
     if (info != null) {
       try {
@@ -436,7 +431,6 @@ class LevitScope {
       }
     }
 
-    // 2. Try Cache
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
       try {
@@ -446,7 +440,6 @@ class LevitScope {
       }
     }
 
-    // 3. Try Parent
     if (_parentScope != null) {
       final instance = _parentScope!.findOrNull<S>(tag: tag);
       if (instance != null) {
@@ -467,14 +460,13 @@ class LevitScope {
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
-    // 1. Try Local
+    // Async lookup follows the same local/cache/parent search order.
     final info = _registry[key];
     if (info != null) {
       return _findLocalAsync<S>(
           info as LevitDependency<S>, key, keyString, tag);
     }
 
-    // 2. Try Cache
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
       try {
@@ -484,7 +476,6 @@ class LevitScope {
       }
     }
 
-    // 3. Try Parent
     if (_parentScope != null) {
       try {
         final instance = await _parentScope!.findAsync<S>(tag: tag);
@@ -504,14 +495,13 @@ class LevitScope {
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
-    // 1. Try Local
+    // Nullable async lookup follows the same search order as `findAsync`.
     final info = _registry[key];
     if (info != null) {
       return _findLocalAsync<S>(
           info as LevitDependency<S>, key, keyString, tag);
     }
 
-    // 2. Try Cache
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
       try {
@@ -521,7 +511,6 @@ class LevitScope {
       }
     }
 
-    // 3. Try Parent
     if (_parentScope != null) {
       final instance = await _parentScope!.findOrNullAsync<S>(tag: tag);
       if (instance != null) {
@@ -537,17 +526,16 @@ class LevitScope {
     if (_resolutionCache.containsKey(key)) {
       _resolutionCache[key] = scope;
     } else {
-      // Prevent unbounded growth from dynamic tags
+      // Bound cache growth for high-cardinality tag usage.
       if (_resolutionCache.length > 500) {
-        // Simple purge strategy: clear the cache if it gets too large.
-        // We could do LRU, but cleared cache just means slower lookups, which is safe.
+        // Full purge is safe; it only affects lookup speed until cache warms.
         _resolutionCache.clear();
       }
       _resolutionCache[key] = scope;
     }
   }
 
-  // Cache for in-flight async initializations to prevent race conditions
+  // In-flight async singleton initializations keyed by dependency key.
   final Map<LevitScopeKey, Future<dynamic>> _pendingInit = {};
 
   Future<S> _findLocalAsync<S>(LevitDependency<S> info, LevitScopeKey key,
@@ -556,7 +544,7 @@ class LevitScope {
       return info.instance as S;
     }
 
-    // Handle Async Factory
+    // Factories always create a fresh instance.
     if (info.isFactory && info.isAsync) {
       final instance =
           await _createInstanceAsync<S>(info.asyncBuilder!, keyString, info);
@@ -565,7 +553,7 @@ class LevitScope {
       return instance;
     }
 
-    // Handle Sync Factory
+    // `findAsync` supports sync factories for API parity.
     if (info.isFactory && info.builder != null) {
       final instance = _createInstance<S>(info.builder!, keyString, info);
       _initializeInstance(instance, keyString, info);
@@ -573,7 +561,7 @@ class LevitScope {
       return instance;
     }
 
-    // Handle Lazy Async Singleton
+    // Concurrent async resolves share one initializer future per key.
     if (info.isLazy && info.isAsync) {
       if (_pendingInit.containsKey(key)) {
         return await _pendingInit[key] as S;
@@ -605,7 +593,7 @@ class LevitScope {
       return future;
     }
 
-    // Fallback to sync local find (e.g. for standard lazyPut accessed via findAsync)
+    // `findAsync` can resolve sync registrations when no async builder exists.
     return _findLocal<S>(info, keyString, tag);
   }
 
@@ -616,7 +604,7 @@ class LevitScope {
       );
     }
 
-    // Handle Sync Factory
+    // Factories bypass cached instance storage.
     if (info.isFactory && info.builder != null) {
       final instance = _createInstance<S>(info.builder!, key, info);
       _initializeInstance(instance, key, info);
@@ -624,7 +612,7 @@ class LevitScope {
       return instance;
     }
 
-    // Handle Lazy Sync Singleton
+    // Lazy singleton instantiates once and is reused afterward.
     if (info.isLazy && !info.isInstantiated) {
       info.instance = _createInstance<S>(info.builder!, key, info);
       _initializeInstance(info.instance, key, info);
@@ -704,7 +692,7 @@ class LevitScope {
     _registry.remove(key);
     _pendingInit.remove(key);
 
-    // Also clear from fast-path registry if tag-less
+    // Keep fast-path registries consistent with primary registry removals.
     if (tag == null) {
       _typeRegistry.remove(S);
       _typeResolutionCache.remove(S);
@@ -741,7 +729,7 @@ class LevitScope {
       _pendingInit.remove(key);
       _resolutionCache.remove(key);
 
-      // Clear fast-path registries only for removed tag-less entries.
+      // Only untagged entries participate in type-based fast paths.
       if (key.tag == null) {
         _typeRegistry.remove(key.type);
         _typeResolutionCache.remove(key.type);
@@ -750,7 +738,7 @@ class LevitScope {
     }
 
     if (force) {
-      // Full reset, including preserved-cache state.
+      // Force reset also drops all lookup caches.
       _typeRegistry.clear();
       _typeResolutionCache.clear();
       _instanceCache.clear();
@@ -790,7 +778,7 @@ class LevitScope {
   String toString() =>
       'LevitScope($name, ${_registry.length} local registrations)';
 
-  // Middleware System
+  // Global scope middleware registry.
   static final List<LevitScopeMiddleware> _middlewares = [];
   static final Map<Object, LevitScopeMiddleware> _middlewaresByToken = {};
 

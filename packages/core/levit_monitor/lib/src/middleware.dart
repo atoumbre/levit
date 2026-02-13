@@ -49,7 +49,7 @@ class LevitMonitorMiddleware
           Zone.current.handleUncaughtError(e, s);
         }
       });
-      // Listen for reconnection
+      // Re-send full state after reconnect to rehydrate remote clients.
       _connectSubscription?.cancel();
       _connectSubscription = transport.onConnect.listen((_) {
         _sendSnapshot();
@@ -103,7 +103,7 @@ class LevitMonitorMiddleware
   }
 
   void _addToBuffer(MonitorEvent event) {
-    // Filter out internal shadow state events to prevent feedback loops
+    // Ignore monitor-owned reactives to avoid monitor->monitor feedback loops.
     if (event is ReactiveEvent) {
       if (identical(event.reactive, _stateSnapshot.variables) ||
           identical(event.reactive, _stateSnapshot.scopes)) {
@@ -112,7 +112,7 @@ class LevitMonitorMiddleware
     }
 
     if (!_eventStream.isClosed && LevitMonitor.shouldProcess(event)) {
-      // Update local state first
+      // Keep shadow state in sync before forwarding externally.
       _stateSnapshot.applyEvent(event);
       _eventStream.add(event);
     }

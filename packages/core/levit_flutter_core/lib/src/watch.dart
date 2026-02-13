@@ -39,14 +39,14 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
     rebuild();
   }
 
-  // Fast path for single notifier (most common case)
+  // Single-dependency fast path avoids set allocations and diffing.
   LevitReactiveNotifier? _singleNotifier;
   bool _usingSinglePath = false;
 
-  // Slow path for multiple dependencies
+  // Multi-dependency path keeps a stable subscription set.
   Set<LevitReactiveNotifier>? _notifiers;
 
-  // Optimized: Use List instead of Set for zero-allocation capture
+  // Builder capture uses list semantics; duplicates are deduped later.
   List<LevitReactiveNotifier>? _newNotifiers;
   final Set<LevitReactiveNotifier> _scratchNotifiers = {};
   LxListenerContext? _cachedContext;
@@ -60,7 +60,7 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
 
   @override
   void addReactive(LxReactive reactive) {
-    // No-op
+    // Graph-only tracking is not required for widget rebuild subscriptions.
   }
 
   void _cleanupAll() {
@@ -114,11 +114,11 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
   }
 
   void _updateSubscriptions(List<LevitReactiveNotifier>? nextNotifiers) {
-    // 1. FAST PATH: Single Notifier
+    // Single dependency can be swapped with constant-time checks.
     if (nextNotifiers != null && nextNotifiers.length == 1) {
       final notifier = nextNotifiers[0];
       if (_usingSinglePath && identical(_singleNotifier, notifier)) {
-        return; // Exact match, zero work
+        return; // No subscription changes.
       }
 
       _cleanupAll();
@@ -130,7 +130,7 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
       return;
     }
 
-    // 2. EMPTY PATH: No dependencies
+    // No dependencies means the watch should hold no subscriptions.
     if (nextNotifiers == null) {
       if (_usingSinglePath || (_notifiers?.isNotEmpty ?? false)) {
         _runWithContext(_cleanupAll);
@@ -138,19 +138,18 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
       return;
     }
 
-    // 3. SLOW PATH: Multiple Notifiers
-    // Clean up fast path if used
+    // Multi-dependency reconciliation path.
     if (_usingSinglePath) {
       _singleNotifier?.removeListener(_triggerRebuild);
       _singleNotifier = null;
       _usingSinglePath = false;
     }
 
-    // Process notifiers with reusable scratch set (avoid per-build toSet allocation)
+    // Scratch set enables dedupe without allocating a new set each build.
     final targetNots = _notifiers ??= {};
     _scratchNotifiers.clear();
 
-    // Add new / keep current
+    // Subscribe new dependencies and keep existing ones.
     for (final n in nextNotifiers) {
       if (!_scratchNotifiers.add(n)) continue;
       if (targetNots.add(n)) {
@@ -160,7 +159,7 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
       }
     }
 
-    // Remove stale
+    // Unsubscribe dependencies no longer observed by the builder.
     if (targetNots.isNotEmpty) {
       targetNots.removeWhere((notifier) {
         if (_scratchNotifiers.contains(notifier)) return false;
