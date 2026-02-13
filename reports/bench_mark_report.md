@@ -1,102 +1,111 @@
 # Benchmark Results
-Date: 2026-01-29 05:41:01.360776
+Date: 2026-02-13 11:10:07.017313
 
 ## Rapid State Mutation
 | Framework | Time (µs) | Status |
 |---|---|---|
-| Levit | 6403 | OK |
-| Vanilla | 8525 | OK |
-| GetX | 15078 | OK |
-| BLoC | 34840 | OK |
-| Riverpod | 102771 | OK |
+| Levit | 5943 | OK |
+| Vanilla | 7816 | OK |
+| GetX | 15828 | OK |
+| BLoC | 40426 | OK |
+| Riverpod | 113575 | OK |
 
 ## Complex Graph (Diamond)
 | Framework | Time (µs) | Status |
 |---|---|---|
-| BLoC | 2964 | OK |
-| Levit | 5952 | OK |
-| Vanilla | 6105 | OK |
-| GetX | 8065 | OK |
-| Riverpod | 93621 | OK |
+| BLoC | 277 | OK |
+| Levit | 728 | OK |
+| Vanilla | 966 | OK |
+| GetX | 977 | OK |
+| Riverpod | 10633 | OK |
 
 ## Fan Out Update
 | Framework | Time (µs) | Status |
 |---|---|---|
-| Vanilla | 42 | OK |
-| Levit | 113 | OK |
-| GetX | 157 | OK |
-| Riverpod | 278 | OK |
-| BLoC | 289 | OK |
+| GetX | 27 | OK |
+| Vanilla | 35 | OK |
+| Levit | 76 | OK |
+| Riverpod | 134 | OK |
+| BLoC | 218 | OK |
 
 ## Fan In Update
 | Framework | Time (µs) | Status |
 |---|---|---|
-| Levit | 31 | OK |
-| Vanilla | 46 | OK |
-| Riverpod | 60 | OK |
-| GetX | 76 | OK |
-| BLoC | 139 | OK |
+| Levit | 24 | OK |
+| Vanilla | 25 | OK |
+| GetX | 31 | OK |
+| Riverpod | 38 | OK |
+| BLoC | 68 | OK |
 
 ## Async Computed
 | Framework | Time (µs) | Status |
 |---|---|---|
-| Vanilla | 2815 | OK |
-| Levit | 3123 | OK |
-| Riverpod | 4095 | OK |
-| BLoC | 5364 | OK |
-| GetX | 5368 | OK |
+| GetX | 2350 | OK |
+| Levit | 2451 | OK |
+| BLoC | 2493 | OK |
+| Vanilla | 2738 | OK |
+| Riverpod | 2950 | OK |
 
 ## Batch vs Un-batched
 | Framework | Time (µs) | Status |
 |---|---|---|
-| Levit | 89 | OK |
-| GetX | 131 | OK |
-| Vanilla | 160 | OK |
-| BLoC | 166 | OK |
-| Riverpod | 1568 | OK |
+| GetX | 40 | OK |
+| BLoC | 54 | OK |
+| Levit | 61 | OK |
+| Vanilla | 127 | OK |
+| Riverpod | 493 | OK |
 
 ## Scoped DI Lookup
 | Framework | Time (µs) | Status |
 |---|---|---|
-| Vanilla | 43 | OK |
-| BLoC | 43 | OK |
-| Levit | 53 | OK |
-| Riverpod | 218 | OK |
-| GetX | 2700 | OK |
+| BLoC | 10 | OK |
+| Vanilla | 11 | OK |
+| Levit | 17 | OK |
+| Riverpod | 47 | OK |
+| GetX | 1381 | OK |
+
+## Computed Chain (Deep Propagation)
+| Framework | Time (µs) | Status |
+|---|---|---|
+| Vanilla | 32188 | OK |
+| Levit | 32404 | OK |
+| GetX | 49979 | OK |
+| BLoC | 52926 | OK |
+| Riverpod | 507927 | OK |
 
 ## Large List Update (UI)
 | Framework | Time (µs) | Status |
 |---|---|---|
-| GetX | 14598 | OK |
-| Riverpod | 14824 | OK |
-| Levit | 14911 | OK |
-| BLoC | 15008 | OK |
-| Vanilla | 15306 | OK |
+| Levit | 6858 | OK |
+| Vanilla | 6883 | OK |
+| Riverpod | 6980 | OK |
+| GetX | 7088 | OK |
+| BLoC | 3615871 | OK |
 
 ## Deep Tree Propagation (UI)
 | Framework | Time (µs) | Status |
 |---|---|---|
-| GetX | 14778 | OK |
-| BLoC | 14784 | OK |
-| Levit | 14790 | OK |
-| Riverpod | 14924 | OK |
-| Vanilla | 14941 | OK |
+| GetX | 6665 | OK |
+| Levit | 6846 | OK |
+| Vanilla | 7026 | OK |
+| Riverpod | 69105 | OK |
+| BLoC | 83960 | OK |
 
 ## Dynamic Grid Churn (UI)
 | Framework | Time (µs) | Status |
 |---|---|---|
-| Levit | 15143 | OK |
-| Vanilla | 15169 | OK |
-| Riverpod | 15196 | OK |
-| GetX | 15303 | OK |
-| BLoC | 15603 | OK |
+| Levit | 7026 | OK |
+| GetX | 7149 | OK |
+| BLoC | 7157 | OK |
+| Vanilla | 7293 | OK |
+| Riverpod | 7304 | OK |
 
 ## Animated State - 60fps (UI)
 | Framework | Time (µs) | Status |
 |---|---|---|
-| BLoC | 13794 | OK |
-| Levit | 14067 | OK |
-| Riverpod | 14120 | OK |
-| GetX | 14371 | OK |
-| Vanilla | 14448 | OK |
+| BLoC | 6672 | OK |
+| Vanilla | 6675 | OK |
+| Riverpod | 6713 | OK |
+| GetX | 6734 | OK |
+| Levit | 6787 | OK |
 
