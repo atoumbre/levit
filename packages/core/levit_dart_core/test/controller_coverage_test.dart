@@ -90,9 +90,6 @@ class ThrowingReactive implements LxReactive<int> {
   int get value => 0;
 
   @override
-  set value(int _) {}
-
-  @override
   void close() {
     if (throwOnClose) {
       throw StateError('close fail');
