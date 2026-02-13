@@ -16,7 +16,8 @@ class _TestController extends LevitController {
 }
 
 void main() {
-  testWidgets('LScope rebinds to new parent scope on reparent', (tester) async {
+  testWidgets('LScope rebinds to new parent scope on re-parent',
+      (tester) async {
     Widget buildStage(String label) {
       return MaterialApp(
         home: LScope(
@@ -105,7 +106,7 @@ void main() {
     expect(find.text('local'), findsOneWidget);
   });
 
-  testWidgets('LAsyncScope rebinds to new parent scope on reparent',
+  testWidgets('LAsyncScope rebinds to new parent scope on re-parent',
       (tester) async {
     Widget buildStage(String label) {
       return MaterialApp(

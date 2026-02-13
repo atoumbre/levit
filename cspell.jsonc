@@ -13,6 +13,7 @@
         "computeds",
         "cupertino",
         "dartdoc",
+        "dedupe",
         "devs",
         "entrancy",
         "expando",
@@ -37,6 +38,7 @@
         "Pubspec",
         "reactives",
         "recomputations",
+        "reflectee",
         "rethrown",
         "Riverpod",
         "runtimes",
@@ -47,12 +49,14 @@
         "substr",
         "todos",
         "typedefs",
+        "unawaited",
         "unregisters",
         "unwatch",
         "Updateable",
         "Vite",
         "vitepress",
-        "writeln"
+        "writeln",
+        "ltrb"
     ],
     // flagWords - list of words to be always considered incorrect
     // This is useful for offensive words and common spelling errors.

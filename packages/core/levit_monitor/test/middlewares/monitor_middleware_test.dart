@@ -201,7 +201,7 @@ void main() {
     });
 
     test('reactive errors omit stack trace by default', () async {
-      final reactive = 0.lx.named('stackless');
+      final reactive = 0.lx.named('stack-less');
       reactive.addListener(() {
         throw StateError('boom');
       });

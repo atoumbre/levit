@@ -18,7 +18,7 @@ void main() {
       expect(child.find<String>(tag: 't'), 'root');
     });
 
-    test('find(tagless) falls back when cached scope throws', () {
+    test('find(tag-less) falls back when cached scope throws', () {
       final root = LevitScope.root('root2');
       root.put<int>(() => 42);
 

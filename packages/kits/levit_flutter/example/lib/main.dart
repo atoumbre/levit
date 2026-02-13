@@ -86,7 +86,7 @@ class CircleController extends LevitController
       }
     }, delay: const Duration(milliseconds: 500));
 
-    // Path loop publishes new targets; UI tweening handles interpolation.
+    // Path loop publishes new targets; UI tween handles interpolation.
     loopEngine.startLoop('path', () async {
       _updateCircleTargets();
     }, delay: const Duration(milliseconds: 500));

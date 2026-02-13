@@ -44,11 +44,11 @@ void main() {
       expect(Levit.findOrNull<String>(tag: 'missing'), isNull);
 
       // findAsync
-      Levit.lazyPutAsync(() async => 'aval', tag: 'aval_tag');
-      expect(await Levit.findAsync<String>(tag: 'aval_tag'), 'aval');
+      Levit.lazyPutAsync(() async => 'a_val', tag: 'a_val_tag');
+      expect(await Levit.findAsync<String>(tag: 'a_val_tag'), 'a_val');
 
       // findOrNullAsync
-      expect(await Levit.findOrNullAsync<String>(tag: 'aval_tag'), 'aval');
+      expect(await Levit.findOrNullAsync<String>(tag: 'a_val_tag'), 'a_val');
       expect(await Levit.findOrNullAsync<String>(tag: 'missing_async'), isNull);
 
       // isRegistered and isInstantiated for LevitStore

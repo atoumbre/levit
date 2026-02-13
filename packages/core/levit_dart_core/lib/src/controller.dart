@@ -141,7 +141,7 @@ abstract class LevitController implements LevitScopeDisposable {
   /// If [cancelOnClose] is `true` and the controller is already closed, this
   /// method returns `null` without invoking [action].
   ///
-  /// If [onError] is provided, it is called before rethrowing any error from [action].
+  /// If [onError] is provided, it is called before re-throwing any error from [action].
   ///
   /// Returns the computed value when still valid for this lifecycle, otherwise `null`.
   ///

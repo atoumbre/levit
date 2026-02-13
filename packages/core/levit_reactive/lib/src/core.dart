@@ -390,7 +390,7 @@ class LevitReactiveNotifier {
       if (_setListeners!.isEmpty) {
         _setListeners = null;
         _notifySnapshot = null;
-        // Keep set-mode to avoid representation thrashing on churny listeners.
+        // Keep set-mode to avoid representation thrashing on churn listeners.
       }
     }
   }
