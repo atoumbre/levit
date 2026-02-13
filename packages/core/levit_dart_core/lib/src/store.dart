@@ -3,7 +3,8 @@ part of '../levit_dart_core.dart';
 /// A bridge for interacting with the dependency injection system from a [LevitStore].
 ///
 /// [LevitRef] allows stores to find other dependencies, register new ones,
-/// and manage their own lifecycle via [onDispose].
+/// and manage their own lifecycle via [onDispose]. It provides a scoped access
+/// to the [Levit] tree without needing global static access.
 abstract class LevitRef {
   /// The [LevitScope] that owns this store instance.
   LevitScope get scope;
@@ -73,23 +74,13 @@ abstract class LevitRef {
   T autoDispose<T>(T object);
 }
 
-/// A portable container definition.
+/// A portable container definition for managing reusable state.
 ///
 /// [LevitStore] works like a "recipe" for creating state. Unlike [LevitController],
-/// which you register manually, [LevitStore] is passed around by reference.
+/// which you register manually, [LevitStore] is passed around by reference and
+/// instantiated on demand.
 ///
-/// When you call `store.find()`, it lazy-loads the instance in the current scope.
-///
-/// Example:
-/// ```dart
-/// final counterStore = LevitStore((ref) {
-///   final count = 0.lx;
-///   return count;
-/// });
-///
-/// // Usage
-/// final count = counterStore.find();
-/// ```
+/// When you call [find], it lazy-loads the instance in the current scope.
 class LevitStore<T> {
   final T Function(LevitRef ref) _builder;
 

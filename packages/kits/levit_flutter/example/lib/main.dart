@@ -97,9 +97,9 @@ class CircleController extends LevitController
 
     // 3. Shrink Loop
     // Smoothly shrink radius
-      loopEngine.startLoop('shrink', () async {
-        _shrinkCircles();
-      }, delay: const Duration(milliseconds: 100));
+    loopEngine.startLoop('shrink', () async {
+      _shrinkCircles();
+    }, delay: const Duration(milliseconds: 100));
   }
 
   void _spawnCircle() {

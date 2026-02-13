@@ -207,8 +207,8 @@ void main() {
         printer: printer,
       );
 
-      final reactive = 'sensitive-value'
-          .lxVar(named: 'password', isSensitive: true);
+      final reactive =
+          'sensitive-value'.lxVar(named: 'password', isSensitive: true);
 
       t.send(ReactiveInitEvent(sessionId: 'test', reactive: reactive));
       t.send(ReactiveChangeEvent(

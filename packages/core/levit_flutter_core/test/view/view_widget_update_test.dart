@@ -8,8 +8,7 @@ class TestController extends LevitController {
 }
 
 void main() {
-  testWidgets('LView re-resolves controller when args change',
-      (tester) async {
+  testWidgets('LView re-resolves controller when args change', (tester) async {
     final controller1 = TestController('One');
     final controller2 = TestController('Two');
 
@@ -83,8 +82,7 @@ void main() {
     expect(find.text('Two'), findsNothing);
   });
 
-  testWidgets('LView re-resolves when inherited scope changes',
-      (tester) async {
+  testWidgets('LView re-resolves when inherited scope changes', (tester) async {
     Widget buildStage(int arg) {
       return MaterialApp(
         home: LScope(

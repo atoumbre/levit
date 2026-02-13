@@ -41,16 +41,13 @@ class _AutoLinkScope {
         );
 
         if (result is Future) {
-          result
-              .then((resolvedResult) {
-                processor(captured, resolvedResult);
-              })
-              .catchError((_) {
-                _disposeCaptured(captured);
-              })
-              .whenComplete(() {
-                _activeCaptureScopes--;
-              });
+          result.then((resolvedResult) {
+            processor(captured, resolvedResult);
+          }).catchError((_) {
+            _disposeCaptured(captured);
+          }).whenComplete(() {
+            _activeCaptureScopes--;
+          });
         } else {
           processor(captured, result);
           _activeCaptureScopes--;

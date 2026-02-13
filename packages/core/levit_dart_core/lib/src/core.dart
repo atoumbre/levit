@@ -2,9 +2,11 @@ part of '../levit_dart_core.dart';
 
 /// The central entry point for the Levit framework.
 ///
-/// [Levit] unifies the capabilities of [LevitScope] (DI) and [Lx] (Reactivity)
-/// into a single, cohesive API. It manages controller lifecycles, configuration,
-/// and global middleware.
+/// [Levit] unifies the capabilities of `levit_scope` (Dependency Injection)
+/// and `levit_reactive` (Reactivity) into a single, cohesive API. It manages
+/// controller lifecycles, configuration, and global middleware.
+///
+/// Use [put] to register dependencies and [find] to retrieve them.
 class Levit {
   // ------------------------------------------------------------
   //    Reactive API accessors
