@@ -43,7 +43,11 @@ class LevitMonitorMiddleware
       Levit.addDependencyMiddleware(this);
       _enabled = true;
       _subscription = _eventStream.stream.listen((event) {
-        transport.send(event);
+        try {
+          transport.send(event);
+        } catch (e, s) {
+          Zone.current.handleUncaughtError(e, s);
+        }
       });
       // Listen for reconnection
       _connectSubscription?.cancel();

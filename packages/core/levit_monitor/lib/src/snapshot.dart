@@ -159,7 +159,7 @@ class StateSnapshot {
       final dep = dependencies[depKey];
       if (dep != null) {
         dep.status = DependencyStatus.active;
-        dep.value = event.instance.toString();
+        dep.value = '<${MonitorEvent._instanceType(event.instance)}>';
 
         // Detect Dependency Type
         final instance = event.instance;
@@ -202,7 +202,8 @@ class StateSnapshot {
         event.reactive.value,
         isSensitive: event.reactive.isSensitive,
       );
-      reactive.valueType = event.reactive.value?.runtimeType.toString() ?? 'dynamic';
+      reactive.valueType =
+          event.reactive.value?.runtimeType.toString() ?? 'dynamic';
     } else if (event is ReactiveChangeEvent) {
       reactive.value = MonitorEvent._stringify(
         event.change.newValue,

@@ -199,6 +199,7 @@ void main() {
       levit.reset();
 
       expect(levit.isRegistered<_TestService>(), isTrue);
+      expect(levit.find<_TestService>().value, 'permanent');
       expect(levit.isRegistered<_DisposableService>(), isFalse);
     });
 

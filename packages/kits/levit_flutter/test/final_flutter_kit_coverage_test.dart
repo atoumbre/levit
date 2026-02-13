@@ -42,6 +42,10 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(
+            useMaterial3: false,
+            splashFactory: NoSplash.splashFactory,
+          ),
           home: StatefulBuilder(
             builder: (context, setState) {
               return Column(

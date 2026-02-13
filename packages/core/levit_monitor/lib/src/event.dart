@@ -42,6 +42,10 @@ sealed class MonitorEvent {
       return '<unprintable>';
     }
   }
+
+  /// Safeguard for dependency instance payloads: emit only runtime type.
+  static String _instanceType(dynamic instance) =>
+      instance == null ? 'null' : instance.runtimeType.toString();
 }
 
 // ============================================================================
@@ -362,7 +366,8 @@ class DependencyInstanceReadyEvent extends DependencyEvent {
   Map<String, dynamic> toJson() => {
         ...super.toJson(),
         'type': 'di_instance_init',
-        'instance': MonitorEvent._stringify(instance),
+        'instance': '<${MonitorEvent._instanceType(instance)}>',
+        'instanceType': MonitorEvent._instanceType(instance),
       };
 }
 
@@ -383,7 +388,8 @@ class DependencyResolveEvent extends DependencyEvent {
         ...super.toJson(),
         'type': 'di_resolve',
         'source': source,
-        'instance': MonitorEvent._stringify(info.instance),
+        'instance': '<${MonitorEvent._instanceType(info.instance)}>',
+        'instanceType': MonitorEvent._instanceType(info.instance),
       };
 }
 

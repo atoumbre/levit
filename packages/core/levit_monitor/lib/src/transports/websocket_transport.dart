@@ -63,19 +63,22 @@ class WebSocketTransport implements LevitTransport {
   }
 
   void _listenToChannel(WebSocketChannel channel) {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    _retryAttempts = 0;
+
     channel.stream.listen(
       (_) {
-        // Connection confirmed on first message or just open?
-        // WebSocketChannel usually doesn't emit on open, but we know it's open if we are here.
-        // Actually, we should emit on successful connection establishment.
-        if (_retryAttempts > 0) _retryAttempts = 0;
+        // Connection is already considered established once listen starts.
       },
       onDone: _handleDisconnect,
       onError: (_) => _handleDisconnect(),
       cancelOnError: true,
     );
     // Emit connect event
-    _onConnectController.add(null);
+    if (!_onConnectController.isClosed) {
+      _onConnectController.add(null);
+    }
   }
 
   void _handleDisconnect() {

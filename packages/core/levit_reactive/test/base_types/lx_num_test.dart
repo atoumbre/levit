@@ -40,5 +40,25 @@ void main() {
       price.divide(4);
       expect(price.value, 2.5);
     });
+
+    test('LxInt divide throws on non-integer result', () {
+      final count = 1.lx;
+      expect(
+        () => count.divide(2),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            contains('Use intDivide()'),
+          ),
+        ),
+      );
+    });
+
+    test('LxInt divide allows exact integer result', () {
+      final count = 8.lx;
+      count.divide(2);
+      expect(count.value, 4);
+    });
   });
 }

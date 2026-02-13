@@ -160,7 +160,8 @@ void main() {
 
       final json = event.toJson();
       expect(json['type'], 'di_resolve');
-      expect(json['instance'], 'resolved_value');
+      expect(json['instance'], '<String>');
+      expect(json['instanceType'], 'String');
       expect(json['source'], 'find');
     });
 
@@ -221,7 +222,8 @@ void main() {
 
       final json = event.toJson();
       expect(json['type'], 'di_instance_init');
-      expect(json['instance'], 'initialized');
+      expect(json['instance'], '<String>');
+      expect(json['instanceType'], 'String');
     });
 
     test('Event sequence numbers increment', () {

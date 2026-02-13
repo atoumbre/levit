@@ -138,7 +138,22 @@ class LxNum<T extends num> extends LxVar<T> {
   void multiply(num other) => value = (value * other) as T;
 
   /// Divides the current value by [other].
-  void divide(num other) => value = (value / other) as T;
+  void divide(num other) {
+    final result = value / other;
+
+    if (T == int) {
+      if (result % 1 != 0) {
+        throw StateError(
+          'LxInt.divide produced non-integer result ($value / $other = $result). '
+          'Use intDivide() for integer math.',
+        );
+      }
+      value = result.toInt() as T;
+      return;
+    }
+
+    value = result as T;
+  }
 
   /// Performs integer division by [other].
   void intDivide(num other) => value = (value ~/ other) as T;

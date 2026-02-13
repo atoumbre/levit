@@ -343,6 +343,7 @@ class LxMap<K, V> extends LxVar<Map<K, V>> implements Map<K, V> {
 
   @override
   V? remove(Object? key) {
+    if (!value.containsKey(key)) return null;
     final result = value.remove(key);
     refresh();
     return result;
@@ -356,6 +357,7 @@ class LxMap<K, V> extends LxVar<Map<K, V>> implements Map<K, V> {
 
   @override
   void clear() {
+    if (value.isEmpty) return;
     value.clear();
     refresh();
   }

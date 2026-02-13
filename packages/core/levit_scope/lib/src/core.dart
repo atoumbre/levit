@@ -739,15 +739,23 @@ class LevitScope {
     for (final key in keysToRemove) {
       _registry.remove(key);
       _pendingInit.remove(key);
-      if (_resolutionCache.isNotEmpty) {
-        _resolutionCache.remove(key);
+      _resolutionCache.remove(key);
+
+      // Clear fast-path registries only for removed tag-less entries.
+      if (key.tag == null) {
+        _typeRegistry.remove(key.type);
+        _typeResolutionCache.remove(key.type);
+        _instanceCache.remove(key.type);
       }
     }
 
-    // Clear fast-path registries
-    _typeRegistry.clear();
-    _typeResolutionCache.clear();
-    _instanceCache.clear();
+    if (force) {
+      // Full reset, including preserved-cache state.
+      _typeRegistry.clear();
+      _typeResolutionCache.clear();
+      _instanceCache.clear();
+      _resolutionCache.clear();
+    }
   }
 
   /// Disposes the scope and all its dependencies.

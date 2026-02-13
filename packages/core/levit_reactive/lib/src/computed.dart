@@ -647,7 +647,8 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
   }
 
   /// Unsubscribes from a specific dependency.
-  void _unsubscribeFrom(LevitReactiveNotifier notifier) {
+  void _unsubscribeFrom(LevitReactiveNotifier notifier,
+      {bool recalculateDepth = true}) {
     _dependencySubscriptions.remove(notifier);
     if (LevitReactiveMiddleware.hasListenerMiddlewares) {
       Lx.runWithContext(
@@ -661,7 +662,9 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     } else {
       notifier.removeListener(_onDependencyChanged);
     }
-    _recalculateGraphDepth(_dependencySubscriptions.keys);
+    if (recalculateDepth) {
+      _recalculateGraphDepth(_dependencySubscriptions.keys);
+    }
   }
 
   void _recalculateGraphDepth(Iterable<LevitReactiveNotifier> dependencies) {
@@ -695,8 +698,18 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
 
     // If hash and length match, graph is stable - skip reconciliation
     if (hash == _lastDepsHash && length == _lastDepsLength) {
-      _recalculateGraphDepth(depSet);
-      return;
+      // Guard against rare hash collisions by confirming membership.
+      var isSameSet = true;
+      for (final dep in depSet) {
+        if (!_dependencySubscriptions.containsKey(dep)) {
+          isSameSet = false;
+          break;
+        }
+      }
+      if (isSameSet) {
+        _recalculateGraphDepth(depSet);
+        return;
+      }
     }
 
     _lastDepsHash = hash;
@@ -706,7 +719,9 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     // 1. Identify Removed: Iterate current keys
     final currentDeps = _dependencySubscriptions.keys.toList(growable: false);
     for (final dep in currentDeps) {
-      if (!depSet.contains(dep)) _unsubscribeFrom(dep);
+      if (!depSet.contains(dep)) {
+        _unsubscribeFrom(dep, recalculateDepth: false);
+      }
     }
 
     // 2. Identify Added: Iterate new deps
@@ -714,7 +729,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       if (!_dependencySubscriptions.containsKey(dep)) _subscribeTo(dep);
     }
 
-    _recalculateGraphDepth(depSet);
+    _recalculateGraphDepth(_dependencySubscriptions.keys);
 
     // 3. Notify middlewares
     if (reactives != null) {

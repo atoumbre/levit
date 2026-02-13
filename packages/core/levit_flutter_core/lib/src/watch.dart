@@ -30,7 +30,11 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
 
   @override
   void update(LWatch newWidget) {
+    final oldWidget = widget as LWatch;
     super.update(newWidget);
+    if (oldWidget.debugLabel != newWidget.debugLabel) {
+      _cachedContext = null;
+    }
     markNeedsBuild(); // Force rebuild on update
     rebuild();
   }
@@ -45,6 +49,7 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
   // Optimized: Use List instead of Set for zero-allocation capture
   List<LevitReactiveNotifier>? _newNotifiers;
   final Set<LevitReactiveNotifier> _scratchNotifiers = {};
+  LxListenerContext? _cachedContext;
 
   bool _isDirty = false;
 
@@ -176,7 +181,7 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
   }
 
   LxListenerContext _buildContext() {
-    return LxListenerContext(
+    return _cachedContext ??= LxListenerContext(
       type: 'LWatch',
       id: identityHashCode(this),
       data: {

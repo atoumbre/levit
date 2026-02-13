@@ -103,6 +103,7 @@ class LView<T> extends StatefulWidget {
 
 class _LViewState<T> extends State<LView<T>> {
   late T controller;
+  LevitScope? _boundScope;
 
   @override
   void initState() {
@@ -110,6 +111,17 @@ class _LViewState<T> extends State<LView<T>> {
     // SAFETY: Resolver runs exactly ONCE.
     // This prevents accidental re-calculation during parent rebuilds.
     controller = _resolveController();
+    _boundScope = LScope.of(context);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextScope = LScope.of(context, listen: true);
+    if (!identical(_boundScope, nextScope)) {
+      _boundScope = nextScope;
+      controller = _resolveController();
+    }
   }
 
   @override
@@ -261,6 +273,7 @@ class LAsyncView<T> extends StatefulWidget {
 
 class _LAsyncViewState<T> extends State<LAsyncView<T>> {
   late Future<T> future;
+  LevitScope? _boundScope;
 
   @override
   void initState() {
@@ -268,6 +281,17 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
     // SAFETY: Future created ONCE.
     // Prevents the "Infinite Loading Loop" problem.
     future = _resolveFuture();
+    _boundScope = LScope.of(context);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextScope = LScope.of(context, listen: true);
+    if (!identical(_boundScope, nextScope)) {
+      _boundScope = nextScope;
+      future = _resolveFuture();
+    }
   }
 
   @override
