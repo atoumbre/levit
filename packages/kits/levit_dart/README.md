@@ -51,6 +51,54 @@ class RefreshController extends LevitController with LevitReactiveTasksMixin {
 }
 ```
 
+## Task Lifecycle Instrumentation
+
+`LevitTaskEngine` now exposes structured task lifecycle events via `onTaskEvent`.
+
+Event coverage includes:
+- `queued`
+- `started`
+- `retryScheduled`
+- `finished`
+- `failed`
+- `skipped` (with reasons such as `cacheHit` and cancellation paths)
+
+Engine-level example:
+
+```dart
+import 'package:levit_dart/levit_dart.dart';
+
+void main() {
+  final engine = LevitTaskEngine(
+    maxConcurrent: 2,
+    onTaskEvent: (event) {
+      print('[${event.type}] id=${event.taskId} attempt=${event.attempt}');
+      if (event.type == LevitTaskEventType.retryScheduled) {
+        print('retry in ${event.retryIn}');
+      }
+      if (event.type == LevitTaskEventType.skipped) {
+        print('skip reason: ${event.skipReason}');
+      }
+    },
+  );
+
+  engine.schedule(() async => 'ok', id: 'demo');
+}
+```
+
+Controller mixin example:
+
+```dart
+import 'package:levit_dart/levit_dart.dart';
+
+class SyncController extends LevitController with LevitTasksMixin {
+  @override
+  void Function(LevitTaskEvent event)? get onTaskEvent => (event) {
+        print('task event: ${event.type} (${event.taskId})');
+      };
+}
+```
+
 ## Design Principles
 
 - Controller-first: utilities are designed to be owned and disposed by `LevitController`.

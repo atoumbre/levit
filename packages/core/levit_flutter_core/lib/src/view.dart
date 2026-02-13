@@ -17,7 +17,7 @@ part of '../levit_flutter_core.dart';
 ///     ```
 /// 2.  **Builder:**
 ///     ```dart
-///     LView.find<HomeController>(
+///     LView<HomeController>(
 ///       builder: (context, controller) => Text(controller.title()),
 ///     );
 ///     ```
@@ -74,23 +74,6 @@ class LView<T> extends StatefulWidget {
       key: key,
       resolver: (context) =>
           context.levit.put<T>(create, tag: tag, permanent: permanent),
-      builder: builder,
-      autoWatch: autoWatch,
-      args: args,
-    );
-  }
-
-  /// Finds and consumes an existing dependency of type [T].
-  factory LView.find({
-    Key? key,
-    String? tag,
-    required Widget Function(BuildContext context, T controller) builder,
-    bool autoWatch = true,
-    List<Object?>? args,
-  }) {
-    return LView<T>(
-      key: key,
-      resolver: (context) => context.levit.find<T>(tag: tag),
       builder: builder,
       autoWatch: autoWatch,
       args: args,
@@ -245,27 +228,6 @@ class LAsyncView<T> extends StatefulWidget {
             tag: tag, permanent: permanent, isFactory: isFactory);
         return context.levit.findAsync<T>(tag: tag);
       },
-      builder: builder,
-      autoWatch: autoWatch,
-      loading: loading,
-      error: error,
-      args: args,
-    );
-  }
-
-  /// Finds and consumes an existing async dependency of type [T].
-  factory LAsyncView.find({
-    Key? key,
-    String? tag,
-    required Widget Function(BuildContext context, T controller) builder,
-    bool autoWatch = true,
-    Widget Function(BuildContext context)? loading,
-    Widget Function(BuildContext context, Object error)? error,
-    List<Object?>? args,
-  }) {
-    return LAsyncView<T>(
-      key: key,
-      resolver: (context) => context.levit.findAsync<T>(tag: tag),
       builder: builder,
       autoWatch: autoWatch,
       loading: loading,

@@ -238,6 +238,20 @@ class _LoopService implements StoppableService {
   void stop() => _executor.stop();
 }
 
+typedef _IsolateSpawner = Future<Isolate> Function(
+  void Function(_IsolateConfig) entryPoint,
+  _IsolateConfig message, {
+  String? debugName,
+});
+
+_IsolateSpawner _spawnIsolate = (
+  void Function(_IsolateConfig) entryPoint,
+  _IsolateConfig message, {
+  String? debugName,
+}) {
+  return Isolate.spawn(entryPoint, message, debugName: debugName);
+};
+
 class _IsolateLoopService implements StoppableService {
   final FutureOr<void> Function() _body;
   final Duration? _delay;
@@ -276,12 +290,9 @@ class _IsolateLoopService implements StoppableService {
             _status.value = message;
           }
         },
-        onError: (Object error, StackTrace stackTrace) {
-          _status.value = LxError(error, stackTrace);
-        },
       );
 
-      final isolate = await Isolate.spawn(
+      final isolate = await _spawnIsolate(
         _isolateEntry,
         _IsolateConfig(_body, _receivePort!.sendPort, _delay),
         debugName: _debugName,

@@ -49,7 +49,7 @@ class CounterText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Levit.find<CounterController>();
+    final controller = context.levit.find<CounterController>();
     return LWatch(() => Text('Count: ${controller.count()}'));
   }
 }
@@ -63,7 +63,7 @@ void main() {
           body: const Center(child: CounterText()),
           floatingActionButton: Builder(
             builder: (context) {
-              final controller = Levit.find<CounterController>();
+              final controller = context.levit.find<CounterController>();
               return FloatingActionButton(
                 onPressed: controller.increment,
                 child: const Icon(Icons.add),
@@ -82,3 +82,22 @@ void main() {
 - Explicit scoping: UI lifecycles own dependency scopes; disposal happens on unmount.
 - Fine-grained rebuilds: only widgets that read a reactive value rebuild when it changes.
 - Minimal surface area: higher-level patterns live in `levit_flutter`.
+
+## Async Scoped Patterns
+
+Use explicit composition for async scope setup with a sync resolver:
+
+```dart
+LAsyncScope(
+  dependencyFactory: (scope) async {
+    final config = await Config.load();
+    scope.put<Config>(() => config);
+  },
+  child: LView<MyController>(
+    resolver: (context) => context.levit.find<MyController>(),
+    builder: (context, controller) => MyPage(controller: controller),
+  ),
+);
+```
+
+Use `LScopedAsyncView<T>` when scope setup is sync but controller/view resolution is async.

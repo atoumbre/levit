@@ -7,18 +7,20 @@ class TestController extends LevitController {
 }
 
 void main() {
-  testWidgets('LAsyncScopedView supports autoWatch: false', (tester) async {
+  testWidgets('LAsyncScope + LView supports autoWatch: false', (tester) async {
     final controller = TestController();
 
     await tester.pumpWidget(MaterialApp(
-      home: LAsyncScopedView<TestController>(
+      home: LAsyncScope(
         dependencyFactory: (scope) async {
           await Future.delayed(const Duration(milliseconds: 10));
           scope.put(() => controller);
         },
-        autoWatch: false,
-        builder: (context, c) => Text('Count: ${c.count.value}'),
         loading: (_) => const Text('Loading...'),
+        child: LView<TestController>(
+          autoWatch: false,
+          builder: (context, c) => Text('Count: ${c.count.value}'),
+        ),
       ),
     ));
 

@@ -61,19 +61,21 @@ class CounterController extends LevitController {
   void increment() => count(count() + 1);
 }
 
-class CounterPage extends LScopedView<CounterController> {
+class CounterPage extends StatelessWidget {
   const CounterPage({super.key});
 
   @override
-  CounterController createController() => CounterController();
-
-  @override
-  Widget buildContent(BuildContext context, CounterController controller) {
-    return Scaffold(
-      body: Center(child: LWatch(() => Text('Count: ${controller.count()}'))),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.increment,
-        child: const Icon(Icons.add),
+  Widget build(BuildContext context) {
+    return LScopedView<CounterController>.put(
+      () => CounterController(),
+      builder: (context, controller) => Scaffold(
+        body: Center(
+          child: LWatch(() => Text('Count: ${controller.count()}')),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: controller.increment,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -131,6 +133,37 @@ flowchart LR
     FlutterCore --> DartCore
 ```
 
+## Decision Shortcuts
+
+Use these defaults for consistent architecture choices:
+
+- **Logic:** `LevitController` for lifecycle orchestration; `LevitStore<T>` for sync state recipes; `LevitAsyncStore<T>` for async recipes.
+- **Scopes:** `put` for eager registrations, `lazyPut` for sync lazy singletons/factories, `lazyPutAsync` for async lazy registrations (no `putAsync`).
+- **Scoped tests/utilities:** `Levit.runInScope(() { ... })` for temporary child scopes with automatic teardown.
+- **Task diagnostics:** use `LevitTaskEngine(onTaskEvent: ...)` (or `LevitTasksMixin.onTaskEvent`) to trace queue/start/retry/finish/skip/fail transitions.
+- **Flutter rebuilds:** `LBuilder` / `LSelectorBuilder` in hot paths, `LWatch` for broad page composition.
+- **Async scope + sync view:** compose explicitly with `LAsyncScope + LView`.
+- **Sync scope + async view:** use `LScopedAsyncView`.
+
+## Middleware Lifecycle
+
+Token-based middleware registration is the default convention:
+
+- Use one stable token per concern.
+- Re-register with the same token to replace in place.
+- Remove by token on feature teardown.
+
+Reference docs with concrete examples:
+- DI middleware lifecycle: [`packages/core/levit_scope/README.md`](./packages/core/levit_scope/README.md)
+- Reactive middleware lifecycle: [`packages/core/levit_reactive/README.md`](./packages/core/levit_reactive/README.md)
+- Unified `Levit` facade middleware lifecycle: [`packages/core/levit_dart_core/README.md`](./packages/core/levit_dart_core/README.md)
+
+## Documentation Structure
+
+- API semantics live in inline Dartdoc on public APIs.
+- Package-level usage guidance lives in each package `README.md`.
+- This root README keeps cross-package architecture and adoption guidance.
+
 ## Contributing
 
 ```bash
@@ -138,5 +171,13 @@ melos bootstrap
 melos run test
 cd benchmarks && flutter run -t lib/main.dart
 ```
+
+## Examples
+
+Showcase applications live under [`examples/`](./examples):
+- [`examples/task_board`](./examples/task_board)
+- [`examples/async_catalog`](./examples/async_catalog)
+- [`examples/scope_playground`](./examples/scope_playground)
+- [`examples/nexus_studio`](./examples/nexus_studio) (advanced reference)
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

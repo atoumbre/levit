@@ -112,70 +112,38 @@ class Levit {
 
   /// Finds a registered instance of type [S].
   ///
-  /// Throws if not found. Use [key] to search within a specific [LevitStore].
-  ///
   /// Example:
   /// ```dart
   /// final service = Levit.find<AuthService>();
   /// ```
-  static S find<S>({dynamic key, String? tag}) {
-    if (key is LevitStore) {
-      return key.findIn(Ls.currentScope, tag: tag) as S;
-    }
+  static S find<S>({String? tag}) {
     return Ls.find<S>(tag: tag);
   }
 
   /// Finds an instance of type [S], or returns `null` if missing.
-  static S? findOrNull<S>({dynamic key, String? tag}) {
-    if (key is LevitStore) {
-      try {
-        return key.findIn(Ls.currentScope, tag: tag) as S;
-      } catch (_) {
-        return null;
-      }
-    }
+  static S? findOrNull<S>({String? tag}) {
     return Ls.findOrNull<S>(tag: tag);
   }
 
   /// Asynchronously finds an instance of type [S].
   ///
   /// Use for dependencies registered via [lazyPutAsync].
-  static Future<S> findAsync<S>({dynamic key, String? tag}) async {
-    if (key is LevitStore) {
-      final result = await key.findAsyncIn(Ls.currentScope, tag: tag);
-      if (result is Future && result is! S) return await result as S;
-      return result as S;
-    }
+  static Future<S> findAsync<S>({String? tag}) async {
     return Ls.findAsync<S>(tag: tag);
   }
 
   /// Asynchronously finds an instance of type [S], or returning `null`.
-  static Future<S?> findOrNullAsync<S>({dynamic key, String? tag}) async {
-    if (key is LevitStore) {
-      try {
-        final result = await key.findAsyncIn(Ls.currentScope, tag: tag);
-        if (result is Future && result is! S?) return await result as S?;
-        return result as S?;
-      } catch (_) {
-        return null;
-      }
-    }
+  static Future<S?> findOrNullAsync<S>({String? tag}) async {
     return Ls.findOrNullAsync<S>(tag: tag);
   }
 
   /// Returns `true` if type [S] is registered.
-  static bool isRegistered<S>({dynamic key, String? tag}) {
-    if (key is LevitStore) {
-      return key.isRegisteredIn(Ls.currentScope, tag: tag);
-    }
+  static bool isRegistered<S>({String? tag}) {
     return Ls.isRegistered<S>(tag: tag);
   }
 
   /// Returns `true` if type [S] is already instantiated (not just pending lazy init).
-  static bool isInstantiated<S>({dynamic key, String? tag}) {
-    if (key is LevitStore) {
-      return key.isInstantiatedIn(Ls.currentScope, tag: tag);
-    }
+  static bool isInstantiated<S>({String? tag}) {
     return Ls.isInstantiated<S>(tag: tag);
   }
 
@@ -184,10 +152,7 @@ class Levit {
   /// If the instance implements [LevitScopeDisposable], its `onClose` method is called.
   /// If [force] is true, deletes even if the dependency was marked as `permanent`.
   /// Returns `true` if a registration was found and removed.
-  static bool delete<S>({dynamic key, String? tag, bool force = false}) {
-    if (key is LevitStore) {
-      return key.deleteIn(Ls.currentScope, tag: tag, force: force);
-    }
+  static bool delete<S>({String? tag, bool force = false}) {
     return Ls.delete<S>(tag: tag, force: force);
   }
 
@@ -206,6 +171,32 @@ class Levit {
     return Ls.createScope(name);
   }
 
+  /// Runs [callback] in a fresh child scope and disposes it automatically.
+  ///
+  /// This helper is useful in tests and short-lived workflows where manual
+  /// `createScope`/`dispose` plumbing adds noise.
+  static FutureOr<R> runInScope<R>(
+    FutureOr<R> Function() callback, {
+    String name = 'scoped_run',
+    LevitScope? parentScope,
+  }) {
+    final scope = (parentScope ?? Ls.currentScope).createScope(name);
+    try {
+      final result = scope.run(callback);
+      if (result is Future<R>) {
+        return result.whenComplete(scope.dispose);
+      }
+      if (result is Future) {
+        return result.whenComplete(scope.dispose).then((value) => value as R);
+      }
+      scope.dispose();
+      return result;
+    } catch (_) {
+      scope.dispose();
+      rethrow;
+    }
+  }
+
   // -------------------------------------------------------------
   //    Middleware accessors
   // -------------------------------------------------------------
@@ -217,8 +208,11 @@ class Levit {
   static List<String> get registeredKeys => Ls.registeredKeys;
 
   /// Adds a global middleware for receiving dependency injection events.
-  static void addDependencyMiddleware(LevitScopeMiddleware middleware) {
-    Ls.addMiddleware(middleware);
+  static void addDependencyMiddleware(
+    LevitScopeMiddleware middleware, {
+    Object? token,
+  }) {
+    Ls.addMiddleware(middleware, token: token);
   }
 
   /// Removes a DI middleware.
@@ -226,14 +220,27 @@ class Levit {
     Ls.removeMiddleware(middleware);
   }
 
+  /// Removes a DI middleware by [token].
+  static bool removeDependencyMiddlewareByToken(Object token) {
+    return Ls.removeMiddlewareByToken(token);
+  }
+
   /// Adds a middleware to the list of active middlewares.
-  static void addStateMiddleware(LevitReactiveMiddleware middleware) {
-    Lx.addMiddleware(middleware);
+  static void addStateMiddleware(
+    LevitReactiveMiddleware middleware, {
+    Object? token,
+  }) {
+    Lx.addMiddleware(middleware, token: token);
   }
 
   /// Removes a middleware from the list of active middlewares.
   static void removeStateMiddleware(LevitReactiveMiddleware middleware) {
     Lx.removeMiddleware(middleware);
+  }
+
+  /// Removes a state middleware by [token].
+  static bool removeStateMiddlewareByToken(Object token) {
+    return Lx.removeMiddlewareByToken(token);
   }
 
   // -------------------------------------------------------------

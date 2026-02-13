@@ -78,7 +78,14 @@ abstract class LevitController implements LevitScopeDisposable {
             item.ownerId = path;
             try {
               item.refresh();
-            } catch (_) {}
+            } catch (e, s) {
+              dev.log(
+                'LevitController: failed to refresh auto-linked reactive',
+                name: 'levit_dart',
+                error: e,
+                stackTrace: s,
+              );
+            }
           }
         }
       }
@@ -119,6 +126,28 @@ abstract class LevitController implements LevitScopeDisposable {
     return object;
   }
 
+  /// Executes [action] and suppresses its result if this controller closes first.
+  ///
+  /// This is a cooperative lifecycle guard: it does not cancel the underlying
+  /// operation, but it prevents stale post-await code from using a result after
+  /// disposal when [cancelOnClose] is `true`.
+  Future<T?> runGuardedAsync<T>(
+    FutureOr<T> Function() action, {
+    bool cancelOnClose = true,
+    void Function(Object error, StackTrace stackTrace)? onError,
+  }) async {
+    if (cancelOnClose && isClosed) return null;
+
+    try {
+      final result = await action();
+      if (cancelOnClose && isClosed) return null;
+      return result;
+    } catch (e, s) {
+      onError?.call(e, s);
+      rethrow;
+    }
+  }
+
   /// Called immediately after the controller is initialized.
   ///
   /// Override to perform setup logic like starting API calls or setting up listeners.
@@ -141,7 +170,16 @@ abstract class LevitController implements LevitScopeDisposable {
     _disposed = true;
 
     for (final disposable in _disposables) {
-      Levit._levitDisposeItem(disposable);
+      try {
+        Levit._levitDisposeItem(disposable);
+      } catch (e, s) {
+        dev.log(
+          'LevitController: failed to dispose ${disposable.runtimeType}',
+          name: 'levit_dart',
+          error: e,
+          stackTrace: s,
+        );
+      }
     }
     _disposables.clear();
   }

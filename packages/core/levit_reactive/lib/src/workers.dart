@@ -82,7 +82,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
   final LxReactive<T> source;
 
   /// The callback to execute whenever the source notifies a change.
-  final void Function(T value) callback;
+  final FutureOr<void> Function(T value) callback;
 
   final Function(Object error, StackTrace stackTrace)? _onError;
   final Function(Object error, StackTrace stackTrace)? _onProcessingError;
@@ -115,7 +115,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
       final start = monitoring ? DateTime.now() : null;
 
       try {
-        final result = (callback as dynamic)(value);
+        final result = callback(value);
 
         if (result is Future) {
           if (monitoring && (!this.value.isAsync || !this.value.isProcessing)) {
@@ -250,6 +250,114 @@ class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
     );
   }
 
+  /// Triggers [callback] only when [source] transitions from `false` to `true`.
+  static LxWorker<bool> onRising(
+    LxReactive<bool> source,
+    void Function() callback, {
+    Function(Object error, StackTrace stackTrace)? onProcessingError,
+  }) {
+    var previous = source.value;
+    return LxWorker<bool>(
+      source,
+      (value) {
+        final didRise = !previous && value;
+        previous = value;
+        if (didRise) callback();
+      },
+      onProcessingError: onProcessingError,
+    );
+  }
+
+  /// Triggers [callback] only when [source] transitions from `true` to `false`.
+  static LxWorker<bool> onFalling(
+    LxReactive<bool> source,
+    void Function() callback, {
+    Function(Object error, StackTrace stackTrace)? onProcessingError,
+  }) {
+    var previous = source.value;
+    return LxWorker<bool>(
+      source,
+      (value) {
+        final didFall = previous && !value;
+        previous = value;
+        if (didFall) callback();
+      },
+      onProcessingError: onProcessingError,
+    );
+  }
+
+  /// Triggers [callback] when [source] emits a value distinct from the previous one.
+  ///
+  /// Useful when values may be re-notified without changing
+  /// (for example via manual refresh calls).
+  static LxWorker<T> onChangeDistinct<T>(
+    LxReactive<T> source,
+    void Function(T value) callback, {
+    Function(Object error, StackTrace stackTrace)? onProcessingError,
+  }) {
+    var previous = source.value;
+    return LxWorker<T>(
+      source,
+      (value) {
+        if (value == previous) return;
+        previous = value;
+        callback(value);
+      },
+      onProcessingError: onProcessingError,
+    );
+  }
+
+  /// Triggers [callback] after [duration] has passed without new source updates.
+  static LxWorker<T> debounce<T>(
+    LxReactive<T> source,
+    Duration duration,
+    void Function(T value) callback, {
+    Function(Object error, StackTrace stackTrace)? onProcessingError,
+  }) {
+    Timer? timer;
+    return _LxManagedWorker<T>(
+      source,
+      (value) {
+        timer?.cancel();
+        timer = Timer(duration, () => callback(value));
+      },
+      onProcessingError: onProcessingError,
+      onClose: () {
+        timer?.cancel();
+        timer = null;
+      },
+    );
+  }
+
+  /// Triggers [callback] immediately, then ignores updates for [duration].
+  static LxWorker<T> throttle<T>(
+    LxReactive<T> source,
+    Duration duration,
+    void Function(T value) callback, {
+    Function(Object error, StackTrace stackTrace)? onProcessingError,
+  }) {
+    Timer? timer;
+    var isThrottled = false;
+    return _LxManagedWorker<T>(
+      source,
+      (value) {
+        if (isThrottled) return;
+        isThrottled = true;
+        callback(value);
+        timer?.cancel();
+        timer = Timer(duration, () {
+          isThrottled = false;
+        });
+      },
+      onProcessingError: onProcessingError,
+      onClose: () {
+        timer?.cancel();
+        timer = null;
+        isThrottled = false;
+      },
+    );
+  }
+
   /// Triggers callbacks based on status changes of an async [source].
   static LxWorker<LxStatus<T>> watchStatus<T>(
     LxReactive<LxStatus<T>> source, {
@@ -284,5 +392,25 @@ extension LxReactiveWatchExtensions<T> on LxReactive<T> {
   /// Returns an [LxWorker] which can be used to control the subscription.
   LxWorker<T> listen(void Function(T value) callback) {
     return LxWorker<T>(this, callback);
+  }
+}
+
+class _LxManagedWorker<T> extends LxWorker<T> {
+  final void Function()? _onClose;
+
+  _LxManagedWorker(
+    super.source,
+    super.callback, {
+    super.onError,
+    super.onProcessingError,
+    super.enableMonitoring,
+    super.name,
+    void Function()? onClose,
+  }) : _onClose = onClose;
+
+  @override
+  void close() {
+    _onClose?.call();
+    super.close();
   }
 }

@@ -85,6 +85,39 @@ class LevitDependency<S> {
   });
 }
 
+/// Typed key for dependency registrations.
+///
+/// This avoids relying on `Type.toString()` (or `S.toString()`) for identity,
+/// which can change under obfuscation/minification. String representations are
+/// kept for debugging/middleware only.
+class LevitScopeKey {
+  static final Map<Type, String> _debugTypeCache = {};
+
+  final Type type;
+  final String? tag;
+
+  const LevitScopeKey(this.type, this.tag);
+
+  static LevitScopeKey of<S>({String? tag}) => LevitScopeKey(S, tag);
+
+  String get debugString {
+    final typeString = _debugTypeCache[type] ??= type.toString();
+    if (tag == null) return typeString;
+    // Preserve historical format: Type_tag
+    return '${typeString}_$tag';
+  }
+
+  @override
+  String toString() => debugString;
+
+  @override
+  bool operator ==(Object other) =>
+      other is LevitScopeKey && other.type == type && other.tag == tag;
+
+  @override
+  int get hashCode => Object.hash(type, tag);
+}
+
 /// A hierarchical dependency injection container.
 ///
 /// [LevitScope] manages the lifecycle of dependencies, supports hierarchical
@@ -95,11 +128,11 @@ class LevitDependency<S> {
 /// 2.  **Parent Delegation**: If not found locally, recursively searches parent scopes.
 /// 3.  **Isolation**: Dependencies registered in a child scope are not visible to parents.
 ///
-  /// ## Lifecycle
-  /// When a scope is disposed via [dispose]:
-  /// *   All locally registered dependencies implementing [LevitScopeDisposable]
-  ///     will receive a [LevitScopeDisposable.onClose] callback.
-  /// *   The scope becomes unusable and should be discarded.
+/// ## Lifecycle
+/// When a scope is disposed via [dispose]:
+/// *   All locally registered dependencies implementing [LevitScopeDisposable]
+///     will receive a [LevitScopeDisposable.onClose] callback.
+/// *   The scope becomes unusable and should be discarded.
 class LevitScope {
   /// Internal counter for unique scope IDs.
   static int _nextId = 0;
@@ -114,7 +147,7 @@ class LevitScope {
   final LevitScope? _parentScope;
 
   /// The local registry of dependencies (Key -> Metadata).
-  final Map<String, LevitDependency> _registry = {};
+  final Map<LevitScopeKey, LevitDependency> _registry = {};
 
   /// Fast-path registry for tag-less lookups (Type -> Metadata).
   final Map<Type, LevitDependency> _typeRegistry = {};
@@ -123,7 +156,7 @@ class LevitScope {
   final Map<Type, dynamic> _instanceCache = {};
 
   /// Cache for resolved keys to speed up parent scope lookups.
-  final Map<String, LevitScope> _resolutionCache = {};
+  final Map<LevitScopeKey, LevitScope> _resolutionCache = {};
 
   /// Fast-path cache for tag-less parent scope lookups.
   final Map<Type, LevitScope> _typeResolutionCache = {};
@@ -157,6 +190,7 @@ class LevitScope {
   /// Returns the created instance.
   S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
     final key = _getKey<S>(tag);
+    final keyString = key.debugString;
 
     if (_registry.containsKey(key)) {
       delete<S>(tag: tag, force: true);
@@ -165,11 +199,11 @@ class LevitScope {
     final info = LevitDependency<S>(permanent: permanent);
 
     // Instance creation logic shifted here to allow hook access to 'info'
-    info.instance = _createInstance<S>(builder, key, info);
+    info.instance = _createInstance<S>(builder, keyString, info);
 
-    _registerBinding(key, info, 'put', tag: tag);
+    _registerBinding(key, keyString, info, 'put', tag: tag);
 
-    _initializeInstance(info.instance, key, info);
+    _initializeInstance(info.instance, keyString, info);
 
     return info.instance as S;
   }
@@ -185,6 +219,7 @@ class LevitScope {
   void lazyPut<S>(S Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
     final key = _getKey<S>(tag);
+    final keyString = key.debugString;
 
     if (!isFactory &&
         _registry.containsKey(key) &&
@@ -199,7 +234,13 @@ class LevitScope {
       isFactory: isFactory,
     );
 
-    _registerBinding(key, info, isFactory ? 'putFactory' : 'lazyPut', tag: tag);
+    _registerBinding(
+      key,
+      keyString,
+      info,
+      isFactory ? 'putFactory' : 'lazyPut',
+      tag: tag,
+    );
   }
 
   /// Registers an asynchronous dependency to be lazily instantiated.
@@ -217,6 +258,7 @@ class LevitScope {
     bool isFactory = false,
   }) {
     final key = _getKey<S>(tag);
+    final keyString = key.debugString;
 
     if (!isFactory &&
         _registry.containsKey(key) &&
@@ -231,14 +273,20 @@ class LevitScope {
       isFactory: isFactory,
     );
 
-    _registerBinding(key, info, isFactory ? 'putFactoryAsync' : 'lazyPutAsync',
-        tag: tag);
+    _registerBinding(
+      key,
+      keyString,
+      info,
+      isFactory ? 'putFactoryAsync' : 'lazyPutAsync',
+      tag: tag,
+    );
 
     return () => findAsync<S>(tag: tag);
   }
 
   void _registerBinding<S>(
-    String key,
+    LevitScopeKey key,
+    String keyString,
     LevitDependency<S> info,
     String source, {
     String? tag,
@@ -265,7 +313,7 @@ class LevitScope {
       _resolutionCache.remove(key);
     }
 
-    _notifyRegister(key, info, source);
+    _notifyRegister(keyString, info, source);
   }
 
   /// Finds and returns a registered instance of type [S].
@@ -295,8 +343,11 @@ class LevitScope {
           return instance as S;
         }
         // Slower path: needs instantiation
-        final result =
-            _findLocal<S>(info as LevitDependency<S>, S.toString(), null);
+        final result = _findLocal<S>(
+          info as LevitDependency<S>,
+          LevitScopeKey.of<S>().debugString,
+          null,
+        );
         // Cache if it's a singleton (not factory)
         if (!info.isFactory && info.instance != null) {
           _instanceCache[S] = info.instance;
@@ -333,10 +384,11 @@ class LevitScope {
 
     // SLOW PATH: With tag - use String-based registry
     final key = _getKey<S>(tag);
+    final keyString = key.debugString;
 
     final info = _registry[key];
     if (info != null) {
-      return _findLocal<S>(info as LevitDependency<S>, key, tag);
+      return _findLocal<S>(info as LevitDependency<S>, keyString, tag);
     }
 
     // Try Cache
@@ -372,12 +424,13 @@ class LevitScope {
   /// if the dependency is missing.
   S? findOrNull<S>({String? tag}) {
     final key = _getKey<S>(tag);
+    final keyString = key.debugString;
 
     // 1. Try Local
     final info = _registry[key];
     if (info != null) {
       try {
-        return _findLocal<S>(info as LevitDependency<S>, key, tag);
+        return _findLocal<S>(info as LevitDependency<S>, keyString, tag);
       } catch (_) {
         return null;
       }
@@ -412,18 +465,20 @@ class LevitScope {
   /// Throws an [Exception] if [S] is not registered.
   Future<S> findAsync<S>({String? tag}) async {
     final key = _getKey<S>(tag);
+    final keyString = key.debugString;
 
     // 1. Try Local
     final info = _registry[key];
     if (info != null) {
-      return _findLocalAsync<S>(info as LevitDependency<S>, key, tag);
+      return _findLocalAsync<S>(
+          info as LevitDependency<S>, key, keyString, tag);
     }
 
     // 2. Try Cache
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
       try {
-        return cachedScope.findAsync<S>(tag: tag);
+        return await cachedScope.findAsync<S>(tag: tag);
       } catch (_) {
         _resolutionCache.remove(key);
       }
@@ -447,18 +502,20 @@ class LevitScope {
   /// Asynchronously finds an instance of type [S], or returns `null` if not found.
   Future<S?> findOrNullAsync<S>({String? tag}) async {
     final key = _getKey<S>(tag);
+    final keyString = key.debugString;
 
     // 1. Try Local
     final info = _registry[key];
     if (info != null) {
-      return _findLocalAsync<S>(info as LevitDependency<S>, key, tag);
+      return _findLocalAsync<S>(
+          info as LevitDependency<S>, key, keyString, tag);
     }
 
     // 2. Try Cache
     final cachedScope = _resolutionCache[key];
     if (cachedScope != null) {
       try {
-        return cachedScope.findOrNullAsync<S>(tag: tag);
+        return await cachedScope.findOrNullAsync<S>(tag: tag);
       } catch (_) {
         _resolutionCache.remove(key);
       }
@@ -476,7 +533,7 @@ class LevitScope {
     return null;
   }
 
-  void _cacheScope(String key, LevitScope scope) {
+  void _cacheScope(LevitScopeKey key, LevitScope scope) {
     if (_resolutionCache.containsKey(key)) {
       _resolutionCache[key] = scope;
     } else {
@@ -491,10 +548,10 @@ class LevitScope {
   }
 
   // Cache for in-flight async initializations to prevent race conditions
-  final Map<String, Future<dynamic>> _pendingInit = {};
+  final Map<LevitScopeKey, Future<dynamic>> _pendingInit = {};
 
-  Future<S> _findLocalAsync<S>(
-      LevitDependency<S> info, String key, String? tag) async {
+  Future<S> _findLocalAsync<S>(LevitDependency<S> info, LevitScopeKey key,
+      String keyString, String? tag) async {
     if (info.isInstantiated) {
       return info.instance as S;
     }
@@ -502,17 +559,17 @@ class LevitScope {
     // Handle Async Factory
     if (info.isFactory && info.isAsync) {
       final instance =
-          await _createInstanceAsync<S>(info.asyncBuilder!, key, info);
-      _initializeInstance(instance, key, info);
-      _notifyResolve(key, info, 'findAsync');
+          await _createInstanceAsync<S>(info.asyncBuilder!, keyString, info);
+      _initializeInstance(instance, keyString, info);
+      _notifyResolve(keyString, info, 'findAsync');
       return instance;
     }
 
     // Handle Sync Factory
     if (info.isFactory && info.builder != null) {
-      final instance = _createInstance<S>(info.builder!, key, info);
-      _initializeInstance(instance, key, info);
-      _notifyResolve(key, info, 'findAsync');
+      final instance = _createInstance<S>(info.builder!, keyString, info);
+      _initializeInstance(instance, keyString, info);
+      _notifyResolve(keyString, info, 'findAsync');
       return instance;
     }
 
@@ -524,20 +581,20 @@ class LevitScope {
 
       final future = (() async {
         try {
-          final instance =
-              await _createInstanceAsync<S>(info.asyncBuilder!, key, info);
+          final instance = await _createInstanceAsync<S>(
+              info.asyncBuilder!, keyString, info);
           if (!identical(_registry[key], info)) {
             if (instance is LevitScopeDisposable) {
               instance.onClose();
             }
             throw StateError(
-              'LevitScope($name): Dependency "$key" was disposed while initializing.',
+              'LevitScope($name): Dependency "$keyString" was disposed while initializing.',
             );
           }
 
           info.instance = instance;
-          _initializeInstance(instance, key, info);
-          _notifyResolve(key, info, 'findAsync');
+          _initializeInstance(instance, keyString, info);
+          _notifyResolve(keyString, info, 'findAsync');
           return instance;
         } finally {
           _pendingInit.remove(key);
@@ -549,7 +606,7 @@ class LevitScope {
     }
 
     // Fallback to sync local find (e.g. for standard lazyPut accessed via findAsync)
-    return _findLocal<S>(info, key, tag);
+    return _findLocal<S>(info, keyString, tag);
   }
 
   S _findLocal<S>(LevitDependency<S> info, String key, String? tag) {
@@ -630,6 +687,7 @@ class LevitScope {
   /// Returns `true` if the dependency was found and deleted.
   bool delete<S>({String? tag, bool force = false}) {
     final key = _getKey<S>(tag);
+    final keyString = key.debugString;
 
     if (!_registry.containsKey(key)) return false;
 
@@ -641,7 +699,7 @@ class LevitScope {
       (info.instance as LevitScopeDisposable).onClose();
     }
 
-    _notifyDelete(key, info, 'delete');
+    _notifyDelete(keyString, info, 'delete');
 
     _registry.remove(key);
     _pendingInit.remove(key);
@@ -663,7 +721,7 @@ class LevitScope {
   ///
   /// Dependencies marked as `permanent` are preserved unless [force] is `true`.
   void reset({bool force = false}) {
-    final keysToRemove = <String>[];
+    final keysToRemove = <LevitScopeKey>[];
 
     for (final entry in _registry.entries) {
       final info = entry.value;
@@ -674,7 +732,7 @@ class LevitScope {
         (info.instance as LevitScopeDisposable).onClose();
       }
 
-      _notifyDelete(entry.key, info, 'reset');
+      _notifyDelete(entry.key.debugString, info, 'reset');
       keysToRemove.add(entry.key);
     }
 
@@ -711,20 +769,14 @@ class LevitScope {
     return LevitScope._(name, parentScope: this);
   }
 
-  static final Map<Type, String> _typeCache = {};
-
-  String _getKey<S>(String? tag) {
-    final typeString = _typeCache[S] ??= S.toString();
-    final base = tag != null ? '${typeString}_$tag' : typeString;
-    // Format: Type_tag
-    return base;
-  }
+  LevitScopeKey _getKey<S>(String? tag) => LevitScopeKey.of<S>(tag: tag);
 
   /// The number of dependencies registered locally in this scope.
   int get registeredCount => _registry.length;
 
   /// A list of keys for all locally registered dependencies (for debugging).
-  List<String> get registeredKeys => _registry.keys.toList();
+  List<String> get registeredKeys =>
+      _registry.keys.map((k) => k.debugString).toList();
 
   @override
   String toString() =>
@@ -732,15 +784,75 @@ class LevitScope {
 
   // Middleware System
   static final List<LevitScopeMiddleware> _middlewares = [];
+  static final Map<Object, LevitScopeMiddleware> _middlewaresByToken = {};
 
   /// Adds a global middleware to be notified of DI events.
-  static void addMiddleware(LevitScopeMiddleware middleware) {
+  ///
+  /// Registration is idempotent by instance identity.
+  /// If [token] is provided, registration is unique per token:
+  /// adding another middleware with the same token replaces the previous one.
+  static void addMiddleware(
+    LevitScopeMiddleware middleware, {
+    Object? token,
+  }) {
+    if (token != null) {
+      final existingByToken = _middlewaresByToken[token];
+      if (existingByToken != null) {
+        if (identical(existingByToken, middleware)) {
+          return;
+        }
+
+        final index = _middlewares.indexOf(existingByToken);
+        if (index >= 0) {
+          _middlewares[index] = middleware;
+        } else {
+          _middlewares.add(middleware);
+        }
+        _middlewaresByToken[token] = middleware;
+        return;
+      }
+
+      if (_middlewares.contains(middleware)) {
+        _middlewaresByToken[token] = middleware;
+        return;
+      }
+
+      _middlewares.add(middleware);
+      _middlewaresByToken[token] = middleware;
+      return;
+    }
+
+    if (_middlewares.contains(middleware)) {
+      return;
+    }
+
     _middlewares.add(middleware);
   }
 
   /// Removes a previously added middleware.
   static void removeMiddleware(LevitScopeMiddleware middleware) {
-    _middlewares.remove(middleware);
+    final removed = _middlewares.remove(middleware);
+    if (removed) {
+      _middlewaresByToken
+          .removeWhere((_, registered) => identical(registered, middleware));
+    }
+  }
+
+  /// Removes a middleware by [token].
+  static bool removeMiddlewareByToken(Object token) {
+    final middleware = _middlewaresByToken.remove(token);
+    if (middleware == null) return false;
+    return _middlewares.remove(middleware);
+  }
+
+  /// Returns `true` if [middleware] is currently registered.
+  static bool containsMiddleware(LevitScopeMiddleware middleware) {
+    return _middlewares.contains(middleware);
+  }
+
+  /// Returns `true` if [token] is currently registered.
+  static bool containsMiddlewareToken(Object token) {
+    return _middlewaresByToken.containsKey(token);
   }
 
   /// Whether any middlewares are registered.

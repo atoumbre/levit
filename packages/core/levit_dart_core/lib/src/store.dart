@@ -9,10 +9,19 @@ abstract class LevitRef {
   LevitScope get scope;
 
   /// Finds an instance of type [S] in the current scope.
-  S find<S>({dynamic key, String? tag});
+  S find<S>({String? tag});
 
   /// Asynchronously finds an instance of type [S].
-  Future<S> findAsync<S>({dynamic key, String? tag});
+  Future<S> findAsync<S>({String? tag});
+
+  /// Finds the value of a [store] within the current scope.
+  R findStore<R>(LevitStore<R> store, {String? tag});
+
+  /// Asynchronously finds the value of a [store] within the current scope.
+  Future<R> findStoreAsync<R>(LevitStore<R> store, {String? tag});
+
+  /// Asynchronously finds and resolves the value of an async [store] within the current scope.
+  Future<R> findAsyncStore<R>(LevitAsyncStore<R> store, {String? tag});
 
   /// Registers a dependency in the current scope.
   S put<S>(S Function() builder, {String? tag, bool permanent = false});
@@ -117,22 +126,67 @@ class LevitStore<T> {
   }
 
   /// Finds the value of this store in the active scope.
-  T find({String? tag}) => Levit.find<T>(key: this, tag: tag);
+  T find({String? tag}) => findIn(Ls.currentScope, tag: tag);
 
   /// Asynchronously finds the value of this store in the active scope.
-  Future<T> findAsync({String? tag}) => Levit.findAsync<T>(key: this, tag: tag);
+  Future<T> findAsync({String? tag}) => findAsyncIn(Ls.currentScope, tag: tag);
 
   /// Removes this store from the active scope.
   bool delete({String? tag, bool force = false}) =>
-      Levit.delete(key: this, tag: tag, force: force);
+      deleteIn(Ls.currentScope, tag: tag, force: force);
 
   @override
   String toString() => 'LevitStore<$T>(id: $hashCode)';
 }
 
-/// A specialized [LevitStore] for asynchronous initialization.
-class LevitAsyncStore<T> extends LevitStore<Future<T>> {
-  LevitAsyncStore(super.builder);
+/// A specialized store for asynchronous initialization.
+///
+/// Unlike `LevitStore<Future<T>>`, this type provides ergonomic lookup methods
+/// that always resolve to `Future<T>` (single await).
+class LevitAsyncStore<T> {
+  final LevitStore<Future<T>> _inner;
+
+  LevitAsyncStore(Future<T> Function(LevitRef ref) builder)
+      : _inner = LevitStore<Future<T>>(builder);
+
+  /// Finds (or creates) and resolves the store value within [scope].
+  Future<T> findIn(LevitScope scope, {String? tag}) {
+    return _inner.findIn(scope, tag: tag);
+  }
+
+  /// Asynchronously finds (or creates) and resolves the store value within [scope].
+  Future<T> findAsyncIn(LevitScope scope, {String? tag}) async {
+    final future = await _inner.findAsyncIn(scope, tag: tag);
+    return await future;
+  }
+
+  /// Finds and resolves the store value in the active scope.
+  Future<T> find({String? tag}) => findIn(Ls.currentScope, tag: tag);
+
+  /// Asynchronously finds and resolves the store value in the active scope.
+  Future<T> findAsync({String? tag}) => findAsyncIn(Ls.currentScope, tag: tag);
+
+  /// Deletes the store instance from [scope].
+  bool deleteIn(LevitScope scope, {String? tag, bool force = false}) {
+    return _inner.deleteIn(scope, tag: tag, force: force);
+  }
+
+  /// Checks if the store is registered in [scope].
+  bool isRegisteredIn(LevitScope scope, {String? tag}) {
+    return _inner.isRegisteredIn(scope, tag: tag);
+  }
+
+  /// Checks if the store is instantiated in [scope].
+  bool isInstantiatedIn(LevitScope scope, {String? tag}) {
+    return _inner.isInstantiatedIn(scope, tag: tag);
+  }
+
+  /// Removes this store from the active scope.
+  bool delete({String? tag, bool force = false}) =>
+      deleteIn(Ls.currentScope, tag: tag, force: force);
+
+  @override
+  String toString() => 'LevitAsyncStore<$T>(id: $hashCode)';
 }
 
 /// The actual holder of a [LevitStore] instance within a [LevitScope].
@@ -171,21 +225,28 @@ class _LevitStoreInstance<T> extends LevitController implements LevitRef {
   }
 
   @override
-  S find<S>({dynamic key, String? tag}) {
-    if (key is LevitStore) {
-      return key.findIn(scope, tag: tag) as S;
-    }
+  S find<S>({String? tag}) {
     return scope.find<S>(tag: tag);
   }
 
   @override
-  Future<S> findAsync<S>({dynamic key, String? tag}) async {
-    if (key is LevitStore) {
-      final result = await key.findAsyncIn(scope, tag: tag);
-      if (result is Future) return await result as S;
-      return result as S;
-    }
+  Future<S> findAsync<S>({String? tag}) async {
     return await scope.findAsync<S>(tag: tag);
+  }
+
+  @override
+  R findStore<R>(LevitStore<R> store, {String? tag}) {
+    return store.findIn(scope, tag: tag);
+  }
+
+  @override
+  Future<R> findStoreAsync<R>(LevitStore<R> store, {String? tag}) {
+    return store.findAsyncIn(scope, tag: tag);
+  }
+
+  @override
+  Future<R> findAsyncStore<R>(LevitAsyncStore<R> store, {String? tag}) {
+    return store.findIn(scope, tag: tag);
   }
 
   @override

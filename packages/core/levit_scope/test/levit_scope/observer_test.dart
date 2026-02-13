@@ -90,7 +90,7 @@ void main() {
       test('is called for put (simulated async)', () async {
         final instance = await Future.value(AsyncService());
         levit.put(() => instance);
-        // putAsync calls put internally
+        // Async lookup still resolves registrations done via put.
         expect(observer.events,
             anyElement(startsWith('register:put:root:AsyncService')));
       });

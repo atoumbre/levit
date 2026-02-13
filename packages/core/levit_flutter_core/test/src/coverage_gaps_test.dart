@@ -100,14 +100,18 @@ void main() {
       });
     });
 
-    testWidgets('LAsyncScopedView update (Lines 340-372)', (tester) async {
+    testWidgets('LAsyncScope + LView update path', (tester) async {
       Widget buildView(int arg) {
         return Directionality(
           textDirection: TextDirection.ltr,
-          child: LAsyncScopedView<String>(
+          child: LAsyncScope(
             args: [arg],
-            resolver: (context) => 'val $arg',
-            builder: (context, val) => Text('Val: $val'),
+            dependencyFactory: (_) async {},
+            child: LView<String>(
+              resolver: (context) => 'val $arg',
+              args: [arg],
+              builder: (context, val) => Text('Val: $val'),
+            ),
           ),
         );
       }

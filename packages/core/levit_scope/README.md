@@ -57,6 +57,45 @@ void main() {
 }
 ```
 
+## Middleware Lifecycle (Token-Based)
+
+Use one token per concern so registration is idempotent and teardown is explicit.
+
+```dart
+import 'package:levit_scope/levit_scope.dart';
+
+const appTelemetryToken = #di_app_telemetry;
+const featureAuditToken = #di_feature_audit;
+
+class AppTelemetryMiddleware extends LevitScopeMiddleware {}
+
+class FeatureAuditMiddleware extends LevitScopeMiddleware {
+  final bool v2;
+  const FeatureAuditMiddleware({this.v2 = false});
+}
+
+void configureDiMiddlewares() {
+  LevitScope.addMiddleware(AppTelemetryMiddleware(), token: appTelemetryToken);
+  LevitScope.addMiddleware(FeatureAuditMiddleware(), token: featureAuditToken);
+}
+
+void reconfigureFeatureMiddleware() {
+  LevitScope.addMiddleware(
+    FeatureAuditMiddleware(v2: true),
+    token: featureAuditToken,
+  ); // replaces previous middleware for that token
+}
+
+void teardownFeatureMiddleware() {
+  LevitScope.removeMiddlewareByToken(featureAuditToken);
+}
+```
+
+Canonical pattern:
+- App-level middleware: one stable token for app lifetime concerns.
+- Feature/module middleware: one token per module concern.
+- Teardown: always remove by token during module shutdown.
+
 ## Design Principles
 
 - Explicit lifecycles: objects can participate in deterministic initialization and teardown.

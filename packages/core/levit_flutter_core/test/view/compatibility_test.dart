@@ -35,21 +35,22 @@ class ExtendedLScopedView extends LScopedView<TestController> {
   }
 }
 
-class ExtendedLAsyncScopedView extends LAsyncScopedView<TestController> {
-  ExtendedLAsyncScopedView({super.key})
-      : super(
-          loading: (_) => const Text('Loading...'),
-        );
+class ExtendedLAsyncScopeView extends StatelessWidget {
+  const ExtendedLAsyncScopeView({super.key});
 
   @override
-  Future<void> onConfigScope(LevitScope scope) async {
-    await Future.delayed(const Duration(milliseconds: 10));
-    scope.put(() => TestController());
-  }
-
-  @override
-  Widget buildView(BuildContext context, TestController controller) {
-    return Text('ExtendedAsyncScoped: ${controller.count.value}');
+  Widget build(BuildContext context) {
+    return LAsyncScope(
+      dependencyFactory: (scope) async {
+        await Future.delayed(const Duration(milliseconds: 10));
+        scope.put(() => TestController());
+      },
+      loading: (_) => const Text('Loading...'),
+      child: LView<TestController>(
+        builder: (context, controller) =>
+            Text('ExtendedAsyncScope: ${controller.count.value}'),
+      ),
+    );
   }
 }
 
@@ -111,32 +112,34 @@ void main() {
       expect(find.text('ExtendedScoped: 1'), findsOneWidget);
     });
 
-    testWidgets('LAsyncScopedView supports Composition', (tester) async {
+    testWidgets('LAsyncScope + LView supports Composition', (tester) async {
       await tester.pumpWidget(MaterialApp(
-        home: LAsyncScopedView<TestController>(
+        home: LAsyncScope(
           dependencyFactory: (scope) async {
             await Future.delayed(const Duration(milliseconds: 10));
             scope.put(() => TestController());
           },
           loading: (_) => const Text('Loading...'),
-          builder: (context, c) =>
-              Text('AsyncScopedComposition: ${c.count.value}'),
+          child: LView<TestController>(
+            builder: (context, c) =>
+                Text('AsyncScopeComposition: ${c.count.value}'),
+          ),
         ),
       ));
 
       expect(find.text('Loading...'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 20));
-      expect(find.text('AsyncScopedComposition: 1'), findsOneWidget);
+      expect(find.text('AsyncScopeComposition: 1'), findsOneWidget);
     });
 
-    testWidgets('LAsyncScopedView supports Extension', (tester) async {
+    testWidgets('LAsyncScope + LView supports Extension', (tester) async {
       await tester.pumpWidget(MaterialApp(
-        home: ExtendedLAsyncScopedView(),
+        home: const ExtendedLAsyncScopeView(),
       ));
 
       expect(find.text('Loading...'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 20));
-      expect(find.text('ExtendedAsyncScoped: 1'), findsOneWidget);
+      expect(find.text('ExtendedAsyncScope: 1'), findsOneWidget);
     });
   });
 }

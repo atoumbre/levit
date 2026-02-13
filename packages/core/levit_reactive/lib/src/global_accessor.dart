@@ -32,14 +32,23 @@ class Lx {
   }
 
   /// Registers a new [LevitReactiveMiddleware] to intercept or observe state changes.
+  ///
+  /// If [token] is provided, registration is unique for that token.
   static LevitReactiveMiddleware addMiddleware(
-      LevitReactiveMiddleware middleware) {
-    return LevitReactiveMiddleware.add(middleware);
+    LevitReactiveMiddleware middleware, {
+    Object? token,
+  }) {
+    return LevitReactiveMiddleware.add(middleware, token: token);
   }
 
   /// Unregisters a previously added middleware.
   static bool removeMiddleware(LevitReactiveMiddleware middleware) {
     return LevitReactiveMiddleware.remove(middleware);
+  }
+
+  /// Unregisters a middleware by [token].
+  static bool removeMiddlewareByToken(Object token) {
+    return LevitReactiveMiddleware.removeByToken(token);
   }
 
   /// Removes all active middlewares.
@@ -50,6 +59,11 @@ class Lx {
   /// Checks if a particular middleware is currently registered.
   static bool containsMiddleware(LevitReactiveMiddleware middleware) {
     return LevitReactiveMiddleware.contains(middleware);
+  }
+
+  /// Checks whether a middleware token is currently registered.
+  static bool containsMiddlewareToken(Object token) {
+    return LevitReactiveMiddleware.containsToken(token);
   }
 
   /// Executes [action] while temporarily bypassing all registered middlewares.

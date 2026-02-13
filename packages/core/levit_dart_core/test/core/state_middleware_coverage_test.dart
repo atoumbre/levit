@@ -43,6 +43,33 @@ void main() {
 
       Levit.removeStateMiddleware(middleware);
     });
+
+    test('token-based state middleware registration is unique per token', () {
+      final calls = <String>[];
+      final first = _TestMiddleware(
+        onSetCallback: (next, reactive, change) {
+          calls.add('first');
+          return next;
+        },
+      );
+      final second = _TestMiddleware(
+        onSetCallback: (next, reactive, change) {
+          calls.add('second');
+          return next;
+        },
+      );
+
+      Levit.addStateMiddleware(first, token: 'state_mw');
+      Levit.addStateMiddleware(second, token: 'state_mw');
+
+      final counter = 0.lx;
+      counter.value = 1;
+
+      expect(calls, ['second']);
+      expect(Lx.containsMiddleware(first), isFalse);
+      expect(Lx.containsMiddleware(second), isTrue);
+      expect(Levit.removeStateMiddlewareByToken('state_mw'), isTrue);
+    });
   });
 }
 

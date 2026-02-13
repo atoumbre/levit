@@ -96,6 +96,36 @@ void main() {
 
       Levit.delete<InterceptController>(force: true);
     });
+
+    test('nested runCaptured creates chained capture list that forwards ops',
+        () {
+      final created = <LxReactive>{};
+
+      runCapturedForTesting(() {
+        runCapturedForTesting(() {
+          final list =
+              Zone.current[autoLinkCaptureKeyForTesting] as List<LxReactive>;
+
+          // Create a reactive to ensure the list has elements.
+          created.add(0.lx);
+
+          // These operations hit ListBase overrides on _ChainedCaptureList.
+          expect(list.length, greaterThanOrEqualTo(0));
+          list.length = list.length;
+
+          final first = list[0];
+          list[0] = first;
+
+          final extra = 1.lx;
+          created.add(extra);
+          list.add(extra);
+        }, 'inner');
+      }, 'outer');
+
+      for (final reactive in created) {
+        reactive.close();
+      }
+    });
   });
 }
 

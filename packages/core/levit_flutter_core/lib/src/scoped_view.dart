@@ -109,106 +109,14 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
   }
 }
 
-/// A widget that creates an async scope and builds an async view.
-///
-/// [LAsyncScopedView] waits for the [dependencyFactory] (which is asynchronous)
-/// to complete, effectively delaying the creation of the scope and view until
-/// dependencies are ready.
-class LAsyncScopedView<T> extends LView<T> {
-  /// Async factory to register dependencies in the internal scope.
-  final Future<dynamic> Function(LevitScope scope)? dependencyFactory;
-
-  /// A descriptive name for the internal scope.
-  final String? scopeName;
-
-  /// Builder for the loading state.
-  final Widget Function(BuildContext context)? loading;
-
-  /// Builder for the error state.
-  final Widget Function(BuildContext context, Object error)? error;
-
-  /// Optional dependency keys for reactive re-initialization.
-  final List<Object?>? args;
-
-  const LAsyncScopedView({
-    super.key,
-    this.dependencyFactory,
-    super.resolver,
-    super.builder,
-    super.autoWatch = true,
-    this.scopeName,
-    this.loading,
-    this.error,
-    this.args,
-  });
-
-  /// Syntax sugar for consuming a [LevitStore] within a new async scope.
-  factory LAsyncScopedView.store(
-    LevitStore<T> state, {
-    Key? key,
-    Future Function(LevitScope scope)? dependencyFactory,
-    required Widget Function(BuildContext context, T controller) builder,
-    bool autoWatch = true,
-    String? scopeName,
-    Widget Function(BuildContext context)? loading,
-    Widget Function(BuildContext context, Object error)? error,
-    List<Object?>? args,
-  }) {
-    return LAsyncScopedView<T>(
-      key: key,
-      dependencyFactory: dependencyFactory,
-      resolver: (context) => context.levit.find<T>(key: state),
-      builder: builder,
-      autoWatch: autoWatch,
-      scopeName: scopeName,
-      loading: loading,
-      error: error,
-      args: args,
-    );
-  }
-
-  /// Called when the internal scope is being configured asynchronously.
-  ///
-  /// Subclasses can override this to register additional dependencies.
-  @protected
-  Future<void> onConfigScope(LevitScope scope) async {
-    if (dependencyFactory != null) {
-      await dependencyFactory!(scope);
-    }
-  }
-
-  @override
-  State<LAsyncScopedView<T>> createState() => _LAsyncScopedViewState<T>();
-}
-
-class _LAsyncScopedViewState<T> extends State<LAsyncScopedView<T>> {
-  @override
-  Widget build(BuildContext context) {
-    return LAsyncScope(
-      name: widget.scopeName,
-      args: widget.args,
-      dependencyFactory: widget.onConfigScope,
-      loading: widget.loading,
-      error: widget.error,
-      child: Builder(
-        builder: (context) {
-          final controller =
-              widget.resolver?.call(context) ?? context.levit.find<T>();
-          if (widget.autoWatch) {
-            return LWatch(() => widget.buildView(context, controller));
-          }
-          return LScope.runBridged(
-              context, () => widget.buildView(context, controller));
-        },
-      ),
-    );
-  }
-}
-
 /// A widget that creates a synchronous scope but resolves its controller asynchronously.
 ///
-/// [LScopedAsyncView] initializes the scope immediately (synchronously) but
-/// uses [LAsyncView] to wait for the controller resolution.
+/// [LScopedAsyncView] initializes the scope immediately with [LScope], then
+/// uses [LAsyncView] to wait for async controller resolution.
+///
+/// In short:
+/// - **Sync scope setup**
+/// - **Async controller resolution**
 class LScopedAsyncView<T> extends LAsyncView<T> {
   /// Optional factory to register dependencies in the internal scope.
   final dynamic Function(LevitScope scope)? dependencyFactory;

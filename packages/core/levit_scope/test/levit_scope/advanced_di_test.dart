@@ -103,7 +103,7 @@ void main() {
       expect(s1.initCalled, isTrue);
     });
 
-    test('putAsync registers instance asynchronously', () async {
+    test('sync put supports async lookup', () async {
       final service = AsyncService('async_put');
       levit.put(() =>
           service); // put is synchronous, but takes an already awaited instance

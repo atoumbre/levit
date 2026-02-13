@@ -134,13 +134,21 @@ class Ls {
   static List<String> get registeredKeys => currentScope.registeredKeys;
 
   /// Adds a global middleware to intercept dependency injection events.
-  static void addMiddleware(LevitScopeMiddleware middleware) {
-    LevitScope.addMiddleware(middleware);
+  static void addMiddleware(
+    LevitScopeMiddleware middleware, {
+    Object? token,
+  }) {
+    LevitScope.addMiddleware(middleware, token: token);
   }
 
   /// Removes a global middleware.
   static void removeMiddleware(LevitScopeMiddleware middleware) {
     LevitScope.removeMiddleware(middleware);
+  }
+
+  /// Removes a global middleware by [token].
+  static bool removeMiddlewareByToken(Object token) {
+    return LevitScope.removeMiddlewareByToken(token);
   }
 }
 

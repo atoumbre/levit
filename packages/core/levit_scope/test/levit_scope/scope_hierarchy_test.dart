@@ -82,7 +82,7 @@ void main() {
     test('Async Methods in Scopes', () async {
       final scope = levit.createScope('async_scope');
 
-      // putAsync in scope -> put (simulated)
+      // Synchronous registration, async resolution path.
       scope.put<Service>(() => ScopeService());
       expect(await scope.findAsync<Service>(), isA<ScopeService>());
 

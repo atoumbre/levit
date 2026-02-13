@@ -90,12 +90,12 @@ void main() {
       final otherAsyncStore = LevitStore.async((ref) async => 'otherAsync');
 
       final mainStore = LevitStore((ref) {
-        final val = ref.find<String>(key: otherStore);
+        final val = ref.findStore(otherStore);
         return val;
       });
 
       final mainAsyncStore = LevitStore.async((ref) async {
-        final val = await ref.findAsync<String>(key: otherAsyncStore);
+        final val = await ref.findAsyncStore(otherAsyncStore);
         return val;
       });
 
@@ -156,6 +156,16 @@ void main() {
       });
 
       expect(await store.find(), 100);
+      expect(await store.findAsync(), 100);
+      expect(store.toString(), contains('LevitAsyncStore'));
+    });
+
+    test('findAsyncIn resolves with single await', () async {
+      final scope = LevitScope.root('async_store_scope');
+      final store = LevitStore.async((ref) async => 'ok');
+
+      expect(await store.findAsyncIn(scope), 'ok');
+      expect(await store.findIn(scope), 'ok');
     });
 
     test('async builder error disposes captured reactives', () async {

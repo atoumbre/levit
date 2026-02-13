@@ -1,4 +1,9 @@
 
+## Unreleased
+
+### Breaking Changes
+- Removed `LAsyncScopedView`; use explicit `LAsyncScope + LView` composition instead.
+
 ## 0.0.6
 
 ### Breaking Changes

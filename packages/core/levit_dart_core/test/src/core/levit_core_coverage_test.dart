@@ -9,32 +9,29 @@ void main() {
     });
 
     test('Levit Core methods fallback coverage', () async {
-      final state = LevitStore((ref) => 'ok');
-
       // findOrNull success/fail
-      expect(Levit.findOrNull<String>(key: state), 'ok');
-      final throwingState =
-          LevitStore<String>((ref) => throw Exception('error'));
-      expect(Levit.findOrNull<String>(key: throwingState), isNull);
+      Levit.put(() => 'ok', tag: 'ok_tag');
+      expect(Levit.findOrNull<String>(tag: 'ok_tag'), 'ok');
+
+      Levit.lazyPut<String>(() => throw Exception('error'),
+          tag: 'throwing_tag');
+      expect(Levit.findOrNull<String>(tag: 'throwing_tag'), isNull);
 
       // findAsync success
-      final asyncState = LevitStore.async((ref) async => 'async');
-      expect(await Levit.findAsync<String>(key: asyncState), 'async');
+      Levit.lazyPutAsync(() async => 'async', tag: 'async_tag');
+      expect(await Levit.findAsync<String>(tag: 'async_tag'), 'async');
 
-      // findOrNullAsync success
-      expect(await Levit.findOrNullAsync<String>(key: asyncState), 'async');
+      // findOrNullAsync success/fail
+      expect(await Levit.findOrNullAsync<String>(tag: 'async_tag'), 'async');
+      expect(await Levit.findOrNullAsync<String>(tag: 'missing_async'), isNull);
 
-      final unregisteredAsync =
-          LevitStore.async((ref) async => throw Exception('error'));
-      expect(
-          await Levit.findOrNullAsync<String>(key: unregisteredAsync), isNull);
-
-      // isRegistered/isInstantiated (Lines 172, 181)
-      final provider = LevitStore((ref) => 'p');
-      expect(Levit.isRegistered(key: provider), false);
-      provider.find();
-      expect(Levit.isRegistered(key: provider), true);
-      expect(Levit.isInstantiated(key: provider), true);
+      // isRegistered/isInstantiated coverage
+      expect(Levit.isRegistered<String>(tag: 'dep'), false);
+      Levit.lazyPut<String>(() => 'dep', tag: 'dep');
+      expect(Levit.isRegistered<String>(tag: 'dep'), true);
+      expect(Levit.isInstantiated<String>(tag: 'dep'), false);
+      expect(Levit.find<String>(tag: 'dep'), 'dep');
+      expect(Levit.isInstantiated<String>(tag: 'dep'), true);
     });
 
     test('Auto-linking coverage gaps', () {

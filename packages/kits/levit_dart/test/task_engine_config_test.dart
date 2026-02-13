@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:mirrors';
+
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
@@ -107,6 +109,20 @@ void main() {
       engine.config(cacheProvider: cache2);
       await engine.schedule(() => 99, id: 't2', cachePolicy: policy);
       expect(cache2.storage.containsKey('t2'), isTrue);
+    });
+
+    test('private sentinel onTaskError unset is callable (coverage)', () {
+      final classMirror = reflectClass(LevitTaskEngine);
+      final lib = classMirror.owner as LibraryMirror;
+      final symbol = MirrorSystem.getSymbol('_onTaskErrorUnset', lib);
+
+      expect(
+        () => classMirror.invoke(
+          symbol,
+          [StateError('noop'), StackTrace.current],
+        ),
+        returnsNormally,
+      );
     });
   });
 }

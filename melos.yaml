@@ -3,10 +3,9 @@ repository: https://github.com/softilab/levit
 
 packages:
   - benchmarks
-  - example/**
+  - examples/**
   - packages/**
   - stress_tests
-  - tools/**
 
 command:
   bootstrap:
@@ -31,7 +30,6 @@ scripts:
         - levit_stress_tests
         - dev_tool_server
 
-
   test:flutter:
     run: flutter test
     description: Run Flutter tests
@@ -46,11 +44,11 @@ scripts:
         - flutter_dev_tool
 
   coverage:
-    run: dart run tools/scripts/check_coverage.dart
+    run: dart run scripts/check_coverage.dart
     description: Run coverage checks
 
   stress:
-    run: dart run tools/scripts/stress_test.dart
+    run: dart run scripts/stress_test.dart
     description: Run stress tests
 
   benchmarks:
@@ -71,7 +69,5 @@ scripts:
       concurrency: 1
       failFast: true
     packageFilters:
-      scope: 
+      scope:
         - levit_flutter
-
-

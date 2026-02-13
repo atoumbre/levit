@@ -31,19 +31,14 @@ jobs:
           cache: true
           
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          flutter pub get
         working-directory: ${{ matrix.package.path }}
         
       - name: Run tests with coverage
-        run: flutter test --coverage
-        working-directory: ${{ matrix.package.path }}
-        
-      - name: Fix coverage paths
         run: |
-          if [ -f coverage/lcov.info ]; then
-            sed -i "s|SF:lib/|SF:${{ matrix.package.path }}/lib/|g" coverage/lcov.info
-          fi
-        working-directory: ${{ matrix.package.path }}
+          dart scripts/check_coverage.dart --timeout=600 --only=${{ matrix.package.name }} packages/core packages/kits
+        working-directory: .
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4

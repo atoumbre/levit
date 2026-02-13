@@ -56,6 +56,64 @@ void main() {
 }
 ```
 
+## Scoped Test Container Helper
+
+Use `Levit.runInScope` when you want automatic scope teardown (especially in tests):
+
+```dart
+import 'package:levit_dart_core/levit_dart_core.dart';
+
+Future<void> main() async {
+  await Levit.runInScope(() async {
+    Levit.put(() => 42, tag: 'value');
+    assert(Levit.find<int>(tag: 'value') == 42);
+  }, name: 'test_case');
+
+  // The temporary scope is already disposed here.
+  assert(Levit.findOrNull<int>(tag: 'value') == null);
+}
+```
+
+## Middleware Lifecycle (Token-Based)
+
+When using the `Levit` facade, prefer token-based registration for both DI and state middleware.
+
+```dart
+import 'package:levit_dart_core/levit_dart_core.dart';
+
+const diToken = #di_telemetry;
+const stateToken = #state_history;
+
+class DependencyTelemetryMiddleware extends LevitScopeMiddleware {}
+
+class StateAnalyticsMiddleware extends LevitReactiveMiddleware {
+  final bool v2;
+  const StateAnalyticsMiddleware({this.v2 = false});
+}
+
+void configureMiddlewares() {
+  Levit.addDependencyMiddleware(DependencyTelemetryMiddleware(), token: diToken);
+  Levit.addStateMiddleware(StateAnalyticsMiddleware(), token: stateToken);
+}
+
+void updateStateMiddleware() {
+  Levit.addStateMiddleware(
+    StateAnalyticsMiddleware(v2: true),
+    token: stateToken,
+  );
+}
+
+void teardownFeature() {
+  Levit.removeDependencyMiddlewareByToken(diToken);
+  Levit.removeStateMiddlewareByToken(stateToken);
+}
+```
+
+Canonical pattern:
+- App-level middleware tokens for long-lived global concerns.
+- Feature/module tokens for replaceable concern-specific middleware.
+- Remove by token during feature teardown.
+
 ## Design Principles
 
 - Ownership is explicit: reactive objects can be tied to controller lifecycles and disposed deterministically.

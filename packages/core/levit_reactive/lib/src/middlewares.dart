@@ -136,6 +136,7 @@ abstract class LevitReactiveMiddleware {
   const LevitReactiveMiddleware();
 
   static final List<LevitReactiveMiddleware> _middlewares = [];
+  static final Map<Object, LevitReactiveMiddleware> _middlewaresByToken = {};
 
   static bool _hasSetMiddlewares = false;
 
@@ -195,7 +196,47 @@ abstract class LevitReactiveMiddleware {
   }
 
   /// Adds a middleware to the global registry.
-  static LevitReactiveMiddleware add(LevitReactiveMiddleware middleware) {
+  ///
+  /// Registration is idempotent by instance identity.
+  /// If [token] is provided, registration is unique per token:
+  /// adding another middleware with the same token replaces the previous one.
+  static LevitReactiveMiddleware add(
+    LevitReactiveMiddleware middleware, {
+    Object? token,
+  }) {
+    if (token != null) {
+      final existingByToken = _middlewaresByToken[token];
+      if (existingByToken != null) {
+        if (identical(existingByToken, middleware)) {
+          return middleware;
+        }
+
+        final index = _middlewares.indexOf(existingByToken);
+        if (index >= 0) {
+          _middlewares[index] = middleware;
+        } else {
+          _middlewares.add(middleware);
+        }
+        _middlewaresByToken[token] = middleware;
+        _updateFlags();
+        return middleware;
+      }
+
+      if (_middlewares.contains(middleware)) {
+        _middlewaresByToken[token] = middleware;
+        return middleware;
+      }
+
+      _middlewares.add(middleware);
+      _middlewaresByToken[token] = middleware;
+      _updateFlags();
+      return middleware;
+    }
+
+    if (_middlewares.contains(middleware)) {
+      return middleware;
+    }
+
     _middlewares.add(middleware);
     _updateFlags();
     return middleware;
@@ -204,19 +245,41 @@ abstract class LevitReactiveMiddleware {
   /// Removes a middleware from the global registry.
   static bool remove(LevitReactiveMiddleware middleware) {
     final result = _middlewares.remove(middleware);
-    _updateFlags();
+    if (result) {
+      _middlewaresByToken
+          .removeWhere((_, registered) => identical(registered, middleware));
+      _updateFlags();
+    }
     return result;
+  }
+
+  /// Removes a middleware by [token].
+  static bool removeByToken(Object token) {
+    final middleware = _middlewaresByToken.remove(token);
+    if (middleware == null) return false;
+
+    final removed = _middlewares.remove(middleware);
+    if (removed) {
+      _updateFlags();
+    }
+    return removed;
   }
 
   /// Clears all currently registered middlewares.
   static void clear() {
     _middlewares.clear();
+    _middlewaresByToken.clear();
     _updateFlags();
   }
 
   /// Returns `true` if the middleware is currently registered.
   static bool contains(LevitReactiveMiddleware middleware) {
     return _middlewares.contains(middleware);
+  }
+
+  /// Returns `true` if [token] is currently registered.
+  static bool containsToken(Object token) {
+    return _middlewaresByToken.containsKey(token);
   }
 
   static bool _bypassMiddleware = false;

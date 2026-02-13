@@ -20,6 +20,9 @@ mixin LevitTasksMixin on LevitController {
   /// If provided, this function is called when a task fails after all retries.
   void Function(Object error, StackTrace? stackTrace)? get onTaskError => null;
 
+  /// Optional lifecycle instrumentation callback for task engine events.
+  void Function(LevitTaskEvent event)? get onTaskEvent => null;
+
   /// The cache provider used by this mixin.
   ///
   /// Override this to provide a persistent storage implementation.
@@ -40,6 +43,7 @@ mixin LevitTasksMixin on LevitController {
         maxConcurrent: maxConcurrentTasks,
         cacheProvider: taskCacheProvider,
         onTaskError: onTaskError,
+        onTaskEvent: onTaskEvent,
       );
       _taskEngines[this] = engine;
     } else {
@@ -47,13 +51,14 @@ mixin LevitTasksMixin on LevitController {
         maxConcurrent: maxConcurrentTasks,
         cacheProvider: taskCacheProvider,
         onTaskError: onTaskError,
+        onTaskEvent: onTaskEvent,
       );
     }
   }
 
   @override
   void onClose() {
-    tasksEngine.cancelAll();
+    _taskEngines[this]?.cancelAll();
     super.onClose();
   }
 }
@@ -95,6 +100,9 @@ mixin LevitReactiveTasksMixin on LevitController {
   void Function(Object error, StackTrace? stackTrace)? get onTaskError =>
       _onTaskError;
 
+  /// Optional lifecycle instrumentation callback for task engine events.
+  void Function(LevitTaskEvent event)? get onTaskEvent => null;
+
   set onTaskError(void Function(Object error, StackTrace? stackTrace)? value) {
     _onTaskError = value;
     if (_taskEngines[this] != null) {
@@ -123,6 +131,15 @@ mixin LevitReactiveTasksMixin on LevitController {
   /// Timers for auto-cleanup.
   final _cleanupTimers = <String, Timer>{};
 
+  void _updateTaskIfPresent(
+    String taskId,
+    TaskDetails Function(TaskDetails current) updater,
+  ) {
+    final current = tasks[taskId];
+    if (current == null) return;
+    tasks[taskId] = updater(current);
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -132,6 +149,7 @@ mixin LevitReactiveTasksMixin on LevitController {
         maxConcurrent: maxConcurrentTasks,
         cacheProvider: taskCacheProvider,
         onTaskError: onTaskError,
+        onTaskEvent: onTaskEvent,
       );
       _taskEngines[this] = engine;
     } else {
@@ -139,6 +157,7 @@ mixin LevitReactiveTasksMixin on LevitController {
         maxConcurrent: maxConcurrentTasks,
         cacheProvider: taskCacheProvider,
         onTaskError: onTaskError,
+        onTaskEvent: onTaskEvent,
       );
     }
 
@@ -241,30 +260,40 @@ mixin LevitReactiveTasksMixin on LevitController {
       runInIsolate: runInIsolate,
       debugName: debugName,
       onStart: () {
-        tasks[taskId] = tasks[taskId]!.copyWith(
-          started: true,
-          status: LxWaiting<dynamic>(tasks[taskId]?.status.lastValue),
-        );
+        _updateTaskIfPresent(
+            taskId,
+            (current) => current.copyWith(
+                  started: true,
+                  status: LxWaiting<dynamic>(tasks[taskId]?.status.lastValue),
+                ));
       },
       onSuccess: (result) {
-        tasks[taskId] = tasks[taskId]!.copyWith(
-          status: LxSuccess<T>(result),
-          progress: 1.0,
-        );
+        _updateTaskIfPresent(
+            taskId,
+            (current) => current.copyWith(
+                  status: LxSuccess<T>(result),
+                  progress: 1.0,
+                ));
         _scheduleCleanup(taskId);
       },
       onProgress: (p) {
-        tasks[taskId] = tasks[taskId]!.copyWith(progress: p);
+        _updateTaskIfPresent(
+            taskId, (current) => current.copyWith(progress: p));
       },
       onError: (e, s) {
-        tasks[taskId] = tasks[taskId]!.copyWith(
-          status: LxError<Object>(e, s, tasks[taskId]?.status.lastValue),
-        );
+        _updateTaskIfPresent(
+            taskId,
+            (current) => current.copyWith(
+                  status:
+                      LxError<Object>(e, s, tasks[taskId]?.status.lastValue),
+                ));
         final handler = onError ?? onTaskError;
         handler?.call(e, s);
         _scheduleCleanup(taskId);
       },
       onCancel: () {
+        _cleanupTimers[taskId]?.cancel();
+        _cleanupTimers.remove(taskId);
         tasks.remove(taskId);
       },
     );
@@ -287,8 +316,10 @@ mixin LevitReactiveTasksMixin on LevitController {
   /// *   [value]: The progress value (0.0 to 1.0).
   void updateTaskProgress(String id, double value) {
     if (tasks.containsKey(id)) {
-      tasks[id] = tasks[id]!.copyWith(progress: value.clamp(0.0, 1.0));
-      tasksEngine.updateProgress(id, value);
+      final normalized =
+          value.isFinite ? value.clamp(0.0, 1.0).toDouble() : 0.0;
+      tasks[id] = tasks[id]!.copyWith(progress: normalized);
+      tasksEngine.updateProgress(id, normalized);
     }
   }
 
@@ -321,7 +352,7 @@ mixin LevitReactiveTasksMixin on LevitController {
 
   @override
   void onClose() {
-    tasksEngine.cancelAll();
+    _taskEngines[this]?.cancelAll();
     for (final timer in _cleanupTimers.values) {
       timer.cancel();
     }

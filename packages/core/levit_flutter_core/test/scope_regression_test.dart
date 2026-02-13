@@ -16,14 +16,12 @@ class _TestController extends LevitController {
 }
 
 void main() {
-  testWidgets('LScope rebinds to new parent scope on reparent',
-      (tester) async {
+  testWidgets('LScope rebinds to new parent scope on reparent', (tester) async {
     Widget buildStage(String label) {
       return MaterialApp(
         home: LScope(
           name: 'parent_$label',
-          dependencyFactory: (scope) =>
-              scope.put(() => _TestController(label)),
+          dependencyFactory: (scope) => scope.put(() => _TestController(label)),
           child: LScope(
             name: 'child',
             child: Builder(
@@ -80,29 +78,30 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Scope Initialization Error'),
-        findsOneWidget);
+    expect(find.textContaining('Scope Initialization Error'), findsOneWidget);
     expect(closed, 1);
   });
 
-  testWidgets('LAsyncScopedView autoWatch:false bridges scope for Levit.find',
+  testWidgets(
+      'LAsyncScope + LView autoWatch:false bridges scope for Levit.find',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
-      home: LAsyncScopedView<_TestController>(
+      home: LAsyncScope(
         dependencyFactory: (scope) async {
           scope.put(() => _TestController('local'));
         },
-        resolver: (context) => context.levit.find<_TestController>(),
-        autoWatch: false,
-        builder: (context, controller) {
-          final fromGlobal = Levit.find<_TestController>();
-          return Text(fromGlobal.label);
-        },
+        child: LView<_TestController>(
+          resolver: (context) => context.levit.find<_TestController>(),
+          autoWatch: false,
+          builder: (context, controller) {
+            final fromGlobal = Levit.find<_TestController>();
+            return Text(fromGlobal.label);
+          },
+        ),
       ),
     ));
 
     await tester.pumpAndSettle();
-
     expect(find.text('local'), findsOneWidget);
   });
 
@@ -112,8 +111,7 @@ void main() {
       return MaterialApp(
         home: LScope(
           name: 'parent_$label',
-          dependencyFactory: (scope) =>
-              scope.put(() => _TestController(label)),
+          dependencyFactory: (scope) => scope.put(() => _TestController(label)),
           child: LAsyncScope(
             dependencyFactory: (_) async {},
             child: Builder(

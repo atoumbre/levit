@@ -59,14 +59,13 @@ void main() {
         return 'resolved';
       });
 
-      final result = await asyncState.findAsync();
-      expect(await result, 'resolved');
+      expect(await asyncState.find(), 'resolved');
     });
 
     test('find state by key in Levit.find', () {
       final state = LevitStore((ref) => 'hello');
 
-      expect(Levit.find<String>(key: state), 'hello');
+      expect(state.find(), 'hello');
     });
   });
 }

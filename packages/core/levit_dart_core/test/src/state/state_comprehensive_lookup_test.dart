@@ -33,33 +33,36 @@ void main() {
         return await ref.findAsync<String>(tag: 'ad');
       });
 
-      expect(await await asyncState.findAsync(), 'async_dep');
-      expect(asyncState.toString(), contains('LevitStore'));
+      expect(await asyncState.findAsync(), 'async_dep');
+      expect(asyncState.toString(), contains('LevitAsyncStore'));
     });
 
     test('Levit core find methods coverage', () async {
-      final state = LevitStore<String>((ref) => 'val');
-
       // findOrNull
-      expect(Levit.findOrNull<String>(key: state), 'val');
-      expect(Levit.findOrNull<String>(key: 'invalid'), isNull);
+      Levit.put(() => 'val', tag: 'val_tag');
+      expect(Levit.findOrNull<String>(tag: 'val_tag'), 'val');
+      expect(Levit.findOrNull<String>(tag: 'missing'), isNull);
 
       // findAsync
-      expect(await Levit.findAsync<String>(key: state), 'val');
+      Levit.lazyPutAsync(() async => 'aval', tag: 'aval_tag');
+      expect(await Levit.findAsync<String>(tag: 'aval_tag'), 'aval');
 
       // findOrNullAsync
-      expect(await Levit.findOrNullAsync<String>(key: state), 'val');
-      expect(await Levit.findOrNullAsync<String>(key: 'invalid'), isNull);
+      expect(await Levit.findOrNullAsync<String>(tag: 'aval_tag'), 'aval');
+      expect(await Levit.findOrNullAsync<String>(tag: 'missing_async'), isNull);
 
       // isRegistered and isInstantiated for LevitStore
       // Hit lines 172 and 181
+      final state = LevitStore<String>((ref) => 'val');
+      state.find();
       state.find(tag: 'provider_test');
-      expect(Levit.isRegistered(key: state, tag: 'provider_test'), true);
-      expect(Levit.isInstantiated(key: state, tag: 'provider_test'), true);
+      expect(state.isRegisteredIn(Ls.currentScope, tag: 'provider_test'), true);
+      expect(
+          state.isInstantiatedIn(Ls.currentScope, tag: 'provider_test'), true);
 
       // delete
-      expect(Levit.delete(key: state), true);
-      expect(Levit.delete(key: state), false); // Already deleted
+      expect(state.delete(), true);
+      expect(state.delete(), false); // Already deleted
     });
 
     test('Auto-linking and adoption coverage', () {

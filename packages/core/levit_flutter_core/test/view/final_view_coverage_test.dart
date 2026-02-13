@@ -79,15 +79,19 @@ void main() {
       expect(find.text('scoped_val'), findsOneWidget);
     });
 
-    testWidgets('LAsyncScopedView.store coverage', (tester) async {
+    testWidgets('LAsyncScope + LView.store coverage', (tester) async {
       final state = LevitStore((ref) => 'async_scoped_val');
 
       await tester.pumpWidget(
         MaterialApp(
-            home: LAsyncScopedView.store(
-          state,
-          builder: (context, value) => Text(value),
-        )),
+          home: LAsyncScope(
+            dependencyFactory: (_) async {},
+            child: LView.store(
+              state,
+              builder: (context, value) => Text(value),
+            ),
+          ),
+        ),
       );
 
       await tester.pumpAndSettle();

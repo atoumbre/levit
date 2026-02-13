@@ -44,19 +44,21 @@ class CounterController extends LevitController {
   void increment() => count(count() + 1);
 }
 
-class CounterPage extends LScopedView<CounterController> {
+class CounterPage extends StatelessWidget {
   const CounterPage({super.key});
 
   @override
-  CounterController createController() => CounterController();
-
-  @override
-  Widget buildContent(BuildContext context, CounterController controller) {
-    return Scaffold(
-      body: Center(child: LWatch(() => Text('Count: ${controller.count()}'))),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.increment,
-        child: const Icon(Icons.add),
+  Widget build(BuildContext context) {
+    return LScopedView<CounterController>.put(
+      () => CounterController(),
+      builder: (context, controller) => Scaffold(
+        body: Center(
+          child: LWatch(() => Text('Count: ${controller.count()}')),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: controller.increment,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

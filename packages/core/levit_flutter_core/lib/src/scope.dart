@@ -233,7 +233,8 @@ class _LScopeState extends State<LScope> {
 /// ```dart
 /// LAsyncScope(
 ///   dependencyFactory: (scope) async {
-///     await scope.putAsync(() => DataService.init());
+///     scope.lazyPutAsync(() => DataService.init());
+///     await scope.findAsync<DataService>();
 ///   },
 ///   loading: (context) => const LoadingSpinner(),
 ///   child: const DataPage(),
@@ -402,6 +403,10 @@ class LevitProvider {
       final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
       return key.findIn(scope, tag: tag) as S;
     }
+    if (key is LevitAsyncStore) {
+      final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
+      return key.findIn(scope, tag: tag) as S;
+    }
     final scope = _ScopeProvider.of(_context);
     if (scope != null) {
       return scope.find<S>(tag: tag);
@@ -413,6 +418,10 @@ class LevitProvider {
   S? findOrNull<S>({dynamic key, String? tag}) {
     try {
       if (key is LevitStore) {
+        final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
+        return key.findIn(scope, tag: tag) as S?;
+      }
+      if (key is LevitAsyncStore) {
         final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
         return key.findIn(scope, tag: tag) as S?;
       }
@@ -434,6 +443,10 @@ class LevitProvider {
       if (result is Future) return await result as S;
       return result as S;
     }
+    if (key is LevitAsyncStore) {
+      final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
+      return await key.findAsyncIn(scope, tag: tag) as S;
+    }
     final scope = _ScopeProvider.of(_context);
     if (scope != null) {
       return await scope.findAsync<S>(tag: tag);
@@ -449,6 +462,10 @@ class LevitProvider {
         final result = await key.findAsyncIn(scope, tag: tag);
         if (result is Future) return await result as S?;
         return result as S?;
+      }
+      if (key is LevitAsyncStore) {
+        final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
+        return await key.findAsyncIn(scope, tag: tag) as S?;
       }
       final scope = _ScopeProvider.of(_context);
       if (scope != null) {
@@ -466,6 +483,10 @@ class LevitProvider {
       final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
       return key.isRegisteredIn(scope, tag: tag);
     }
+    if (key is LevitAsyncStore) {
+      final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
+      return key.isRegisteredIn(scope, tag: tag);
+    }
     final scope = _ScopeProvider.of(_context);
     if (scope != null) {
       return scope.isRegistered<S>(tag: tag);
@@ -476,6 +497,10 @@ class LevitProvider {
   /// Whether type [S] has already been instantiated.
   bool isInstantiated<S>({dynamic key, String? tag}) {
     if (key is LevitStore) {
+      final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
+      return key.isInstantiatedIn(scope, tag: tag);
+    }
+    if (key is LevitAsyncStore) {
       final scope = _ScopeProvider.of(_context) ?? Ls.currentScope;
       return key.isInstantiatedIn(scope, tag: tag);
     }

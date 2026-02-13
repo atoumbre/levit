@@ -66,18 +66,20 @@ void main() {
       expect(() => Levit.find<TestController>(), throwsA(isA<Exception>()));
     });
 
-    testWidgets('LScopedView.asyncController manages async scope registration',
+    testWidgets('LAsyncScope + LView manages async scope registration',
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: LAsyncScopedView<TestController>(
+          home: LAsyncScope(
             dependencyFactory: (s) async {
               await Future.delayed(const Duration(milliseconds: 10));
               s.put(() => TestController()..count = 789);
             },
-            builder: (context, controller) =>
-                Text('AsyncScoped: ${controller.count}'),
             loading: (_) => const Text('Loading...'),
+            child: LView<TestController>(
+              builder: (context, controller) =>
+                  Text('AsyncScoped: ${controller.count}'),
+            ),
           ),
         ),
       );

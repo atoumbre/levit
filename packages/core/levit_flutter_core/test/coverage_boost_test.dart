@@ -23,11 +23,11 @@ void main() {
       expect(find.text('Count: 42'), findsOneWidget);
     });
 
-    testWidgets('LView.find resolves existing', (tester) async {
+    testWidgets('LView constructor resolves existing', (tester) async {
       Levit.put(() => TestController()..count = 100);
       await tester.pumpWidget(
         MaterialApp(
-          home: LView<TestController>.find(
+          home: LView<TestController>(
             builder: (context, controller) =>
                 Text('Count: ${controller.count}'),
           ),
@@ -57,7 +57,8 @@ void main() {
       expect(find.text('Count: 42'), findsOneWidget);
     });
 
-    testWidgets('LAsyncView.find resolves existing async', (tester) async {
+    testWidgets('LAsyncView constructor resolves existing async',
+        (tester) async {
       Levit.lazyPutAsync(() async {
         await Future.delayed(const Duration(milliseconds: 10));
         return TestController()..count = 100;
@@ -65,7 +66,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LAsyncView<TestController>.find(
+          home: LAsyncView<TestController>(
             loading: (_) => const Text('Loading...'),
             builder: (context, controller) =>
                 Text('Count: ${controller.count}'),

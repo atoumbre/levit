@@ -58,6 +58,40 @@ void main() {
 }
 ```
 
+## Middleware Lifecycle (Token-Based)
+
+Use one token per concern so registration is idempotent and updates are replace-in-place.
+
+```dart
+import 'package:levit_reactive/levit_reactive.dart';
+
+const historyToken = #state_history;
+const analyticsToken = #state_analytics;
+
+class StateAnalyticsMiddleware extends LevitReactiveMiddleware {
+  final bool v2;
+  const StateAnalyticsMiddleware({this.v2 = false});
+}
+
+void configureStateMiddlewares() {
+  Lx.addMiddleware(LevitReactiveHistoryMiddleware(), token: historyToken);
+  Lx.addMiddleware(StateAnalyticsMiddleware(), token: analyticsToken);
+}
+
+void upgradeAnalyticsMiddleware() {
+  Lx.addMiddleware(StateAnalyticsMiddleware(v2: true), token: analyticsToken);
+}
+
+void teardownStateAnalytics() {
+  Lx.removeMiddlewareByToken(analyticsToken);
+}
+```
+
+Canonical pattern:
+- App-level state middleware: one stable token per global concern.
+- Feature-level middleware: one token per feature concern.
+- Teardown: remove by token when the concern is no longer active.
+
 ## Design Principles
 
 - Determinism: propagation is synchronous and ordered.

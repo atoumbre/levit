@@ -12,6 +12,55 @@ enum TaskPriority {
   low,
 }
 
+/// Lifecycle event types emitted by [LevitTaskEngine].
+enum LevitTaskEventType {
+  queued,
+  started,
+  retryScheduled,
+  finished,
+  failed,
+  skipped,
+}
+
+/// Reasons why a task execution was skipped.
+enum TaskSkipReason {
+  cacheHit,
+  cancelledWhileQueued,
+  cancelledBeforeStart,
+  cancelledAfterRun,
+}
+
+/// Structured lifecycle event emitted by [LevitTaskEngine].
+class LevitTaskEvent {
+  final LevitTaskEventType type;
+  final String taskId;
+  final TaskPriority priority;
+  final int attempt;
+  final int maxRetries;
+  final DateTime timestamp;
+  final Duration? retryIn;
+  final TaskSkipReason? skipReason;
+  final Object? error;
+  final StackTrace? stackTrace;
+  final bool runInIsolate;
+  final String? debugName;
+
+  LevitTaskEvent({
+    required this.type,
+    required this.taskId,
+    required this.priority,
+    this.attempt = 0,
+    this.maxRetries = 0,
+    this.retryIn,
+    this.skipReason,
+    this.error,
+    this.stackTrace,
+    this.runInIsolate = false,
+    this.debugName,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+}
+
 /// Interface for persistent task result caching.
 abstract class LevitTaskCacheProvider {
   /// Base constructor.
@@ -83,6 +132,9 @@ class LevitTaskEngine implements LevitDisposable {
   /// Optional global error handler for all tasks run by this engine.
   void Function(Object error, StackTrace stackTrace)? onTaskError;
 
+  /// Optional lifecycle instrumentation stream for task/queue transitions.
+  void Function(LevitTaskEvent event)? onTaskEvent;
+
   final Map<String, _ActiveTask> _activeTasks = {};
   final Queue<_QueuedTask> _highPriorityQueue = Queue<_QueuedTask>();
   final Queue<_QueuedTask> _normalPriorityQueue = Queue<_QueuedTask>();
@@ -93,6 +145,7 @@ class LevitTaskEngine implements LevitDisposable {
     required this.maxConcurrent,
     LevitTaskCacheProvider? cacheProvider,
     this.onTaskError,
+    this.onTaskEvent,
   }) : cacheProvider = cacheProvider ?? InMemoryTaskCacheProvider();
 
   static int _nextTaskId = 0;
@@ -101,6 +154,11 @@ class LevitTaskEngine implements LevitDisposable {
       'task_${DateTime.now().microsecondsSinceEpoch}_${_nextTaskId++}';
 
   static void _onTaskErrorUnset(Object error, StackTrace stackTrace) {}
+  static void _onTaskEventUnset(LevitTaskEvent event) {}
+
+  void _emitTaskEvent(LevitTaskEvent event) {
+    onTaskEvent?.call(event);
+  }
 
   // static final _defaultCacheProvider = InMemoryTaskCacheProvider();
 
@@ -138,6 +196,15 @@ class LevitTaskEngine implements LevitDisposable {
           try {
             final result = cachePolicy.fromJson(data);
             onSuccess?.call(result);
+            _emitTaskEvent(LevitTaskEvent(
+              type: LevitTaskEventType.skipped,
+              taskId: taskId,
+              priority: priority,
+              maxRetries: retries,
+              skipReason: TaskSkipReason.cacheHit,
+              runInIsolate: runInIsolate,
+              debugName: debugName,
+            ));
             return result;
           } catch (e) {
             // If deserialization fails, treat as cache miss and delete
@@ -155,6 +222,7 @@ class LevitTaskEngine implements LevitDisposable {
       return _execute<T>(
         id: taskId,
         task: task,
+        priority: priority,
         retries: retries,
         retryDelay: retryDelay,
         useExponentialBackoff: useExponentialBackoff,
@@ -203,6 +271,14 @@ class LevitTaskEngine implements LevitDisposable {
         _lowPriorityQueue.add(item);
         break;
     }
+    _emitTaskEvent(LevitTaskEvent(
+      type: LevitTaskEventType.queued,
+      taskId: item.id,
+      priority: item.priority,
+      maxRetries: item.retries,
+      runInIsolate: item.runInIsolate,
+      debugName: item.debugName,
+    ));
   }
 
   bool get _hasQueuedTasks =>
@@ -222,6 +298,7 @@ class LevitTaskEngine implements LevitDisposable {
   Future<T?> _execute<T>({
     required String id,
     required FutureOr<T> Function() task,
+    required TaskPriority priority,
     required int retries,
     required Duration? retryDelay,
     required bool useExponentialBackoff,
@@ -239,12 +316,31 @@ class LevitTaskEngine implements LevitDisposable {
     _activeTasks[id] = activeTaskNode;
 
     onStart?.call();
+    _emitTaskEvent(LevitTaskEvent(
+      type: LevitTaskEventType.started,
+      taskId: id,
+      priority: priority,
+      attempt: 1,
+      maxRetries: retries,
+      runInIsolate: runInIsolate,
+      debugName: debugName,
+    ));
 
     int attempts = 0;
     while (true) {
       if (activeTaskNode.isCancelled) {
         _finalize(id);
         onCancel?.call();
+        _emitTaskEvent(LevitTaskEvent(
+          type: LevitTaskEventType.skipped,
+          taskId: id,
+          priority: priority,
+          attempt: attempts,
+          maxRetries: retries,
+          skipReason: TaskSkipReason.cancelledBeforeStart,
+          runInIsolate: runInIsolate,
+          debugName: debugName,
+        ));
         return null;
       }
 
@@ -255,6 +351,16 @@ class LevitTaskEngine implements LevitDisposable {
         if (activeTaskNode.isCancelled) {
           _finalize(id);
           onCancel?.call();
+          _emitTaskEvent(LevitTaskEvent(
+            type: LevitTaskEventType.skipped,
+            taskId: id,
+            priority: priority,
+            attempt: attempts + 1,
+            maxRetries: retries,
+            skipReason: TaskSkipReason.cancelledAfterRun,
+            runInIsolate: runInIsolate,
+            debugName: debugName,
+          ));
           return null;
         }
 
@@ -269,6 +375,15 @@ class LevitTaskEngine implements LevitDisposable {
 
         _finalize(id);
         onSuccess?.call(result);
+        _emitTaskEvent(LevitTaskEvent(
+          type: LevitTaskEventType.finished,
+          taskId: id,
+          priority: priority,
+          attempt: attempts + 1,
+          maxRetries: retries,
+          runInIsolate: runInIsolate,
+          debugName: debugName,
+        ));
         return result;
       } catch (e, s) {
         if (attempts < retries && !activeTaskNode.isCancelled) {
@@ -277,6 +392,18 @@ class LevitTaskEngine implements LevitDisposable {
           final delay = useExponentialBackoff
               ? baseDelay * math.pow(2, attempts - 1)
               : baseDelay;
+          _emitTaskEvent(LevitTaskEvent(
+            type: LevitTaskEventType.retryScheduled,
+            taskId: id,
+            priority: priority,
+            attempt: attempts + 1,
+            maxRetries: retries,
+            retryIn: delay,
+            error: e,
+            stackTrace: s,
+            runInIsolate: runInIsolate,
+            debugName: debugName,
+          ));
 
           await Future.delayed(delay);
           continue; // Retry loop
@@ -286,9 +413,32 @@ class LevitTaskEngine implements LevitDisposable {
         _finalize(id);
         if (activeTaskNode.isCancelled) {
           onCancel?.call();
+          _emitTaskEvent(LevitTaskEvent(
+            type: LevitTaskEventType.skipped,
+            taskId: id,
+            priority: priority,
+            attempt: attempts + 1,
+            maxRetries: retries,
+            skipReason: TaskSkipReason.cancelledAfterRun,
+            error: e,
+            stackTrace: s,
+            runInIsolate: runInIsolate,
+            debugName: debugName,
+          ));
         } else {
           final handler = onError ?? onTaskError;
           handler?.call(e, s);
+          _emitTaskEvent(LevitTaskEvent(
+            type: LevitTaskEventType.failed,
+            taskId: id,
+            priority: priority,
+            attempt: attempts + 1,
+            maxRetries: retries,
+            error: e,
+            stackTrace: s,
+            runInIsolate: runInIsolate,
+            debugName: debugName,
+          ));
           rethrow;
         }
       }
@@ -314,6 +464,7 @@ class LevitTaskEngine implements LevitDisposable {
       final result = await _execute(
         id: item.id,
         task: item.task,
+        priority: item.priority,
         retries: item.retries,
         retryDelay: item.retryDelay,
         useExponentialBackoff: item.useExponentialBackoff,
@@ -347,6 +498,7 @@ class LevitTaskEngine implements LevitDisposable {
     LevitTaskCacheProvider? cacheProvider,
     void Function(Object error, StackTrace stackTrace)? onTaskError =
         _onTaskErrorUnset,
+    void Function(LevitTaskEvent event)? onTaskEvent = _onTaskEventUnset,
   }) {
     if (maxConcurrent != null) {
       this.maxConcurrent = maxConcurrent;
@@ -356,10 +508,22 @@ class LevitTaskEngine implements LevitDisposable {
     if (!identical(onTaskError, _onTaskErrorUnset)) {
       this.onTaskError = onTaskError;
     }
+    if (!identical(onTaskEvent, _onTaskEventUnset)) {
+      this.onTaskEvent = onTaskEvent;
+    }
   }
 
   void _cancelQueuedTask(_QueuedTask item) {
     item.onCancel?.call();
+    _emitTaskEvent(LevitTaskEvent(
+      type: LevitTaskEventType.skipped,
+      taskId: item.id,
+      priority: item.priority,
+      maxRetries: item.retries,
+      skipReason: TaskSkipReason.cancelledWhileQueued,
+      runInIsolate: item.runInIsolate,
+      debugName: item.debugName,
+    ));
     if (!item.completer.isCompleted) {
       item.completer.complete(null);
     }

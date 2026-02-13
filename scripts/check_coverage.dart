@@ -6,6 +6,7 @@ Future<void> main(List<String> args) async {
   final rootDir = Directory.current;
   final generateReportFile = args.contains('--generate-report');
   final changedOnly = args.contains('--changed');
+  final includeExamples = args.contains('--include-examples');
   final onlyPackages = _parseCsvArg(args, '--only');
   final maxPackages = _parseIntArg(args, '--max-packages');
   final timeoutSeconds = _parseIntArg(args, '--timeout');
@@ -21,6 +22,9 @@ Future<void> main(List<String> args) async {
   }
   if (changedOnly) {
     print('🧩 Filtering to changed packages only.');
+  }
+  if (!includeExamples) {
+    print('🙈 Excluding example projects (use --include-examples to include).');
   }
   if (onlyPackages != null && onlyPackages.isNotEmpty) {
     print('🎯 Filtering to packages: ${onlyPackages.join(', ')}');
@@ -40,18 +44,27 @@ Future<void> main(List<String> args) async {
       continue;
     }
 
+    bool isExampleDir(String path) {
+      if (includeExamples) return false;
+      // specific check for path components to avoid accidental partial matches
+      final parts = path.split(Platform.pathSeparator);
+      return parts.contains('example') || parts.contains('examples');
+    }
+
     // Find all directories in the target path (including itself) that have a pubspec.yaml
     // but exclude .dart_tool and similar internal folders.
     final List<Directory> found = [];
     if (!dir.path.contains('.dart_tool') &&
-        File('${dir.path}/pubspec.yaml').existsSync()) {
+        File('${dir.path}/pubspec.yaml').existsSync() &&
+        !isExampleDir(dir.path)) {
       found.add(dir);
     }
 
     found.addAll(dir.listSync(recursive: true).whereType<Directory>().where(
         (d) =>
             !d.path.contains('.dart_tool') &&
-            File('${d.path}/pubspec.yaml').existsSync()));
+            File('${d.path}/pubspec.yaml').existsSync() &&
+            !isExampleDir(d.path)));
 
     packages.addAll(found);
   }
@@ -117,15 +130,62 @@ Future<void> main(List<String> args) async {
       continue;
     }
 
-    // Run tests with coverage
-    // We suppress output to keep the terminal clean, unless there's an error
-    final result = await _runProcess(
-      ['flutter', 'test', '--coverage'],
-      workingDirectory: package.path,
-      timeout: timeoutSeconds == null
-          ? null
-          : Duration(seconds: timeoutSeconds),
-    );
+    final timeout =
+        timeoutSeconds == null ? null : Duration(seconds: timeoutSeconds);
+
+    // Pure Dart packages should use `dart test` for speed and correctness.
+    // Additionally, some tests may import `dart:mirrors`, which is not supported
+    // by `flutter test` and can lead to hangs/errors.
+    final usesDartMirrors = _usesDartMirrors(testDir);
+    final isFlutterPackage = _isFlutterPackage(package);
+    final useDartTest = !isFlutterPackage || usesDartMirrors;
+
+    final _ProcessOutcome result;
+    if (useDartTest) {
+      if (usesDartMirrors) {
+        print(
+            '🪞 [$packageName] Detected dart:mirrors in tests; using dart test.');
+      } else {
+        print('🧪 [$packageName] Pure Dart package; using dart test.');
+      }
+      result = await _runProcess(
+        ['dart', 'test', '--coverage=coverage'],
+        workingDirectory: package.path,
+        timeout: timeout,
+      );
+      if (!result.timedOut && result.exitCode == 0) {
+        final formatResult = await _runProcess(
+          [
+            'dart',
+            'run',
+            'coverage:format_coverage',
+            '--lcov',
+            '--in=coverage',
+            '--out=coverage/lcov.info',
+            '--packages=.dart_tool/package_config.json',
+            '--report-on=lib',
+          ],
+          workingDirectory: package.path,
+          timeout: timeout,
+        );
+        if (formatResult.timedOut || formatResult.exitCode != 0) {
+          print('❌ [$packageName] Coverage formatting failed!');
+          print(formatResult.stdout);
+          print(formatResult.stderr);
+          hasFailures = true;
+          continue;
+        }
+      }
+    } else {
+      // Run tests with coverage (Flutter runner). We suppress output to keep the
+      // terminal clean, unless there's an error.
+      result = await _runProcess(
+        ['flutter', 'test', '--coverage'],
+        workingDirectory: package.path,
+        timeout: timeout,
+      );
+    }
+
     if (result.timedOut) {
       print(
         '⏱️  [$packageName] Timed out after ${timeoutSeconds}s. Skipping.',
@@ -149,6 +209,11 @@ Future<void> main(List<String> args) async {
       continue;
     }
 
+    // Fix paths in lcov.info to be relative to repo root for Codecov
+    // This allows uploading individual package reports with correct flags.
+    // Do this before parsing so report details use normalized paths too.
+    _fixLcovPaths(lcovFile, package.path, rootDir.path);
+
     final packageStats = _parseLcov(lcovFile, packageName);
     stats[packageName] = packageStats;
     globalStats.merge(packageStats);
@@ -156,10 +221,6 @@ Future<void> main(List<String> args) async {
     print(
       '✅ [$packageName] Done. (${packageStats.coveragePercent.toStringAsFixed(1)}%)',
     );
-
-    // Fix paths in lcov.info to be relative to repo root for Codecov
-    // This allows uploading individual package reports with correct flags
-    _fixLcovPaths(lcovFile, package.path, rootDir.path);
   }
 
   // --- REPORT ---
@@ -338,7 +399,11 @@ List<String>? _parseCsvArg(List<String> args, String key) {
     if (arg.startsWith(prefix)) {
       final value = arg.substring(prefix.length).trim();
       if (value.isEmpty) return null;
-      return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      return value
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
     }
   }
   return null;
@@ -451,11 +516,20 @@ void _fixLcovPaths(File lcovFile, String packagePath, String rootPath) {
     relativePkgPath = relativePkgPath.substring(1);
   }
 
-  // Replace SF:lib/ with SF:relative/path/to/pkg/lib/
-  // This ensures Codecov maps it correctly to the repo root
-  if (content.contains('SF:lib/')) {
-    final fixedContent =
-        content.replaceAll('SF:lib/', 'SF:$relativePkgPath/lib/');
+  // Normalize SF paths so Codecov maps them relative to repo root.
+  var fixedContent = content;
+
+  // Flutter runner typically emits SF:lib/...
+  fixedContent = fixedContent.replaceAll('SF:lib/', 'SF:$relativePkgPath/lib/');
+
+  // Dart runner (coverage:format_coverage) often emits absolute paths.
+  final normalizedPkgPath = packagePath.replaceAll('\\', '/');
+  fixedContent = fixedContent.replaceAll(
+    'SF:$normalizedPkgPath/lib/',
+    'SF:$relativePkgPath/lib/',
+  );
+
+  if (fixedContent != content) {
     lcovFile.writeAsStringSync(fixedContent);
   }
 }
@@ -509,4 +583,35 @@ Future<_ProcessOutcome> _runProcess(
     stderr: stderr,
     timedOut: timedOut,
   );
+}
+
+bool _usesDartMirrors(Directory testDir) {
+  try {
+    for (final entity
+        in testDir.listSync(recursive: true, followLinks: false)) {
+      if (entity is! File) continue;
+      if (!entity.path.endsWith('.dart')) continue;
+      final content = entity.readAsStringSync();
+      if (content.contains("import 'dart:mirrors'") ||
+          content.contains('import "dart:mirrors"')) {
+        return true;
+      }
+    }
+  } catch (_) {
+    // Best-effort detection. If anything goes wrong, default to flutter runner.
+  }
+  return false;
+}
+
+bool _isFlutterPackage(Directory packageDir) {
+  final pubspec = File('${packageDir.path}/pubspec.yaml');
+  if (!pubspec.existsSync()) return true;
+  try {
+    final content = pubspec.readAsStringSync();
+    return RegExp(r'^\s*sdk:\s*flutter\s*$', multiLine: true)
+            .hasMatch(content) ||
+        RegExp(r'^\s*flutter:\s*$', multiLine: true).hasMatch(content);
+  } catch (_) {
+    return true;
+  }
 }

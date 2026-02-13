@@ -70,6 +70,18 @@ void main() {
       await state.find();
     });
 
+    test('findStoreAsync delegates to store lookup in same scope', () async {
+      final base = LevitStore((_) => 123);
+
+      final outer = LevitStore<Future<int>>((ref) {
+        return ref.findStoreAsync<int>(base);
+      });
+
+      final future = outer.find();
+      expect(future, isA<Future<int>>());
+      expect(await future, 123);
+    });
+
     test('onDispose error logging', () {
       final state = LevitStore((ref) {
         ref.onDispose(() => throw Exception('dispose error'));
