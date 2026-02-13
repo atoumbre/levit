@@ -92,7 +92,7 @@ class _FakeSink implements WebSocketSink {
   _FakeSink(this._controller);
 
   @override
-  void add(data) => _controller.add(data);
+  void add(dynamic data) => _controller.add(data);
 
   @override
   void addError(Object error, [StackTrace? stackTrace]) =>

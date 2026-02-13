@@ -73,7 +73,7 @@ class AsyncInitController extends LevitController {
 
 class ErrorInitController extends LevitController {
   @override
-  onInit() {
+  void onInit() {
     super.onInit();
     throw Exception('Init error');
   }
