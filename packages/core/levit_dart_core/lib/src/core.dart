@@ -39,6 +39,10 @@ class Levit {
   ///   lastName.value = 'Doe';
   /// });
   /// ```
+  ///
+  /// Returns the value returned by [callback].
+  ///
+  /// Throws any exception thrown by [callback].
   static R batch<R>(R Function() callback) {
     return Lx.batch(callback);
   }
@@ -46,11 +50,17 @@ class Levit {
   /// Executes an asynchronous [callback] in a batch.
   ///
   /// The batching context is maintained across await points.
+  ///
+  /// Returns the value returned by [callback].
+  ///
+  /// Throws any exception thrown by [callback].
   static Future<R> batchAsync<R>(Future<R> Function() callback) {
     return Lx.batchAsync(callback);
   }
 
   /// Bypasses all state middlewares for the duration of [action].
+  ///
+  /// Throws any exception thrown by [action].
   static void runWithoutStateMiddleware(void Function() action) {
     Lx.runWithoutMiddleware(action);
   }
@@ -68,6 +78,10 @@ class Levit {
   /// Executes [fn] within a specific listener context.
   ///
   /// Used internally to attribute subscriptions to specific widgets or controllers.
+  ///
+  /// Returns the value returned by [fn].
+  ///
+  /// Throws any exception thrown by [fn].
   static T runWithContext<T>(LxListenerContext context, T Function() fn) {
     return Lx.runWithContext(context, fn);
   }
@@ -175,6 +189,14 @@ class Levit {
   ///
   /// This helper is useful in tests and short-lived workflows where manual
   /// `createScope`/`dispose` plumbing adds noise.
+  ///
+  /// Uses [name] for scope diagnostics and middleware metadata.
+  /// If [parentScope] is provided, the child scope is created under that scope;
+  /// otherwise it is created under the current scope.
+  ///
+  /// Returns the value returned by [callback].
+  ///
+  /// Throws any exception thrown by [callback] after disposing the child scope.
   static FutureOr<R> runInScope<R>(
     FutureOr<R> Function() callback, {
     String name = 'scoped_run',

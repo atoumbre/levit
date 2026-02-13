@@ -1,11 +1,12 @@
-/// Type-safe, hierarchical dependency injection for Dart.
+/// Type-safe hierarchical dependency injection and lifecycle runtime for Dart.
 ///
-/// This package provides the core dependency injection mechanism of the Levit framework:
-/// *   [LevitScope]: A scoped container for managing dependency lifecycles.
-/// *   [LevitScopeDisposable]: An interface for objects that require explicit initialization or disposal.
+/// This package provides Levit's DI container model:
+/// * [LevitScope] for scoped registration, resolution, and deterministic teardown.
+/// * [LevitScopeDisposable] for dependencies with explicit init/close callbacks.
+/// * [LevitScopeMiddleware] for interception of DI lifecycle events.
 ///
-/// `levit_scope` focuses on deterministic resource management and explicit scoping
-/// without reliance on code generation or reflection.
+/// `levit_scope` is reflection-free and relies on explicit types, tags, and
+/// scope boundaries.
 library;
 
 import 'dart:async';

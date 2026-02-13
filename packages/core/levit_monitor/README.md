@@ -7,50 +7,53 @@
 
 ## Purpose & Scope
 
-`levit_monitor` is the monitoring and diagnostics layer for the Levit ecosystem.
+`levit_monitor` is the diagnostics and event export layer for Levit runtimes.
 
-It is responsible for:
-- Capturing structured events from dependency injection and reactive state systems.
-- Filtering and obfuscating event payloads before export.
-- Dispatching events to one or more transports.
+This package is responsible for:
 
-It intentionally does not provide:
-- UI tooling (it emits data; you decide how to visualize or store it).
+- Capturing structured runtime events from DI and reactive layers.
+- Filtering and obfuscating payloads before export.
+- Dispatching events through pluggable transports.
+- Maintaining optional in-memory shadow state for debugging workflows.
+
+This package does not include:
+
+- Visualization UI or dashboards.
+- Business logic instrumentation outside the Levit runtime event model.
 
 ## Conceptual Overview
 
 Monitoring is opt-in.
-Attaching `LevitMonitor` installs middleware that observes Levit activity and forwards events through a transport pipeline:
+Calling `LevitMonitor.attach()` installs middleware into the runtime.
+Event flow:
 
-1. Events are produced by the Levit runtime.
-2. An optional filter decides whether an event is exported.
-3. An obfuscator can hide sensitive values.
-4. Transports deliver the events (console, file, WebSocket, or custom).
+1. Runtime emits DI/reactive events.
+2. Filter decides whether to forward the event.
+3. Obfuscator redacts sensitive values.
+4. Transport(s) deliver encoded events.
 
 ## Getting Started
-
-Install:
 
 ```yaml
 dependencies:
   levit_monitor: ^latest
 ```
 
-Minimal usage:
-
 ```dart
 import 'package:levit_monitor/levit_monitor.dart';
 
 void main() {
-  LevitMonitor.attach();
-
-  // Optional: reduce noise or exclude sensitive sources.
-  LevitMonitor.setFilter((event) => true);
+  LevitMonitor.attach(
+    transport: ConsoleTransport(),
+    filter: (event) => true,
+  );
 }
 ```
 
 ## Design Principles
 
-- Opt-in observability: monitoring is disabled until attached.
-- Privacy by default: sensitive values can be obfuscated consistently.
-- Transport-agnostic: export is defined by the `LevitTransport` interface.
+- Opt-in instrumentation with explicit attach/detach lifecycle.
+- Transport-agnostic event delivery.
+- Privacy-aware output through obfuscation hooks.
+- Low-friction integration with existing Levit middleware semantics.
+

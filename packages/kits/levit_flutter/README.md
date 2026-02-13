@@ -3,37 +3,33 @@
 [![Pub Version](https://img.shields.io/pub/v/levit_flutter)](https://pub.dev/packages/levit_flutter)
 [![Platforms](https://img.shields.io/badge/platforms-flutter-blue)](https://pub.dev/packages/levit_flutter)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-[![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flags=levit_flutter)](https://codecov.io/github/atoumbre/levit)
 
 ## Purpose & Scope
 
-`levit_flutter` is the recommended entry point for using the Levit ecosystem in Flutter applications.
+`levit_flutter` is the recommended single import for Flutter applications using Levit.
 
-It is responsible for:
-- Providing Flutter widget bindings for reactive state and scopes.
-- Providing controller-centric view patterns for UI composition.
-- Including pure Dart controller utilities (`levit_dart`) and app-specific Flutter helpers.
+This kit composes:
 
-It intentionally does not provide:
-- Non-Flutter platform integrations (use `levit` for pure Dart).
+- `levit_flutter_core` widget bindings.
+- `levit_dart` controller utility layer.
+- Flutter-specific mixins/widgets in this package.
+
+This package is responsible for ergonomic adoption, not replacing core behavior.
 
 ## Conceptual Overview
 
-`levit_flutter` composes:
-- `levit_flutter_core` for widget bindings (`LScope`, `LWatch`, and view widgets).
-- `levit_dart` for controller utilities (tasks, loops).
-- Additional Flutter-specific mixins and widgets that tie controller lifecycles to the Flutter runtime.
+`levit_flutter` keeps runtime semantics in core packages and adds practical Flutter integrations:
+
+- Lifecycle-aware controller mixins that react to app lifecycle.
+- Utility widgets for subtree lifecycle monitoring and keep-alive behavior.
+- Unified import surface for common Flutter usage.
 
 ## Getting Started
-
-Install:
 
 ```yaml
 dependencies:
   levit_flutter: ^latest
 ```
-
-Minimal usage:
 
 ```dart
 import 'package:flutter/material.dart';
@@ -63,12 +59,11 @@ class CounterPage extends StatelessWidget {
     );
   }
 }
-
-void main() => runApp(const MaterialApp(home: CounterPage()));
 ```
 
 ## Design Principles
 
-- Widget ownership: scopes and controller lifecycles are tied to widget lifecycles.
-- Fine-grained rebuilds: `LWatch` rebuilds only when the reactive values read during build change.
-- Composition: higher-level patterns are implemented as widgets and mixins on top of core primitives.
+- Widget-tree ownership for scopes and controller lifecycles.
+- Fine-grained rebuild behavior inherited from reactive core bindings.
+- Composition-first kit design with explicit package boundaries.
+

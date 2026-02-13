@@ -1,39 +1,47 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# nexus_studio_shared
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages). 
+Pure Dart shared domain runtime for the `nexus_studio` example.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages). 
--->
+## Purpose & Scope
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+This package centralizes environment-agnostic domain behavior used by both the Flutter app and the Dart server.
 
-## Features
+It is responsible for:
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- Domain state models and command application rules.
+- Reactive derivations that both runtimes consume consistently.
+- Shared contracts that keep client and server behavior aligned.
 
-## Getting started
+It deliberately excludes:
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+- Flutter UI concerns.
+- Server transport/session orchestration concerns.
+
+## Conceptual Overview
+
+`shared` is the canonical business-logic source for Nexus Studio.
+Both app and server import this package so state transitions and validation logic remain consistent across runtimes.
+
+## Getting Started
+
+```yaml
+dependencies:
+  nexus_studio_shared:
+    path: ../shared
+```
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
+Import shared contracts and runtime types from:
 
 ```dart
-const like = 'sample';
+import 'package:nexus_studio_shared/shared.dart';
 ```
 
-## Additional information
+Use these APIs from app/server layers instead of duplicating business logic.
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+## Design Principles
+
+- Environment-agnostic business logic.
+- Single source of truth for state transitions.
+- Deterministic behavior across client/server execution.

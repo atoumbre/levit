@@ -61,6 +61,13 @@ abstract class LevitController implements LevitScopeDisposable {
     return _cachedOwnerPath ??= '${s.id}:$r';
   }
 
+  /// Attaches this controller to an owning [scope] with an optional registration [key].
+  ///
+  /// This method is called by the DI runtime when the controller is resolved.
+  /// It updates ownership metadata for already tracked reactive resources so
+  /// diagnostics and disposal ownership remain accurate.
+  ///
+  /// Throws no exceptions intentionally; internal failures are logged.
   @override
   @mustCallSuper
   void didAttachToScope(LevitScope scope, {String? key}) {
@@ -131,6 +138,15 @@ abstract class LevitController implements LevitScopeDisposable {
   /// This is a cooperative lifecycle guard: it does not cancel the underlying
   /// operation, but it prevents stale post-await code from using a result after
   /// disposal when [cancelOnClose] is `true`.
+  ///
+  /// If [cancelOnClose] is `true` and the controller is already closed, this
+  /// method returns `null` without invoking [action].
+  ///
+  /// If [onError] is provided, it is called before rethrowing any error from [action].
+  ///
+  /// Returns the computed value when still valid for this lifecycle, otherwise `null`.
+  ///
+  /// Throws any error thrown by [action].
   Future<T?> runGuardedAsync<T>(
     FutureOr<T> Function() action, {
     bool cancelOnClose = true,

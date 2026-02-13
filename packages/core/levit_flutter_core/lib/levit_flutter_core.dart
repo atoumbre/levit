@@ -1,9 +1,9 @@
-/// Flutter integration layer for the Levit framework.
+/// Low-level Flutter bindings for the Levit runtime.
 ///
-/// This package provides the binding between Levit's core composition and
-/// reactive layers and Flutter's widget tree.
+/// This package maps Levit scope and reactive semantics to Flutter widget
+/// lifecycle boundaries and rebuild mechanics.
 ///
-/// ### Core Widgets
+/// ### Core widgets
 /// * [LScope]: Provides widget-tree-scoped dependency injection with
 ///     deterministic cleanup.
 /// * [LView]: A specialized widget family for reactive views.

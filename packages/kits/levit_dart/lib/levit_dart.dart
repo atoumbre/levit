@@ -1,7 +1,7 @@
-/// High-level utility mixins and tools for Levit Dart controllers.
+/// Pure Dart utility kit for Levit controllers and runtime workflows.
 ///
-/// This kit provides abstractions for common domain patterns like task
-/// management, time-based operations, and selection logic.
+/// This package layers task orchestration, loop execution, and focused mixins
+/// on top of `levit_dart_core`.
 library levit_dart;
 
 import 'dart:async';

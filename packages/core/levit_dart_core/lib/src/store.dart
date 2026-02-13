@@ -8,36 +8,66 @@ abstract class LevitRef {
   /// The [LevitScope] that owns this store instance.
   LevitScope get scope;
 
-  /// Finds an instance of type [S] in the current scope.
+  /// Finds an instance of type [S] in the current [scope].
+  ///
+  /// Uses optional [tag] to disambiguate registrations of the same type.
+  ///
+  /// Throws if no matching registration is available.
   S find<S>({String? tag});
 
-  /// Asynchronously finds an instance of type [S].
+  /// Asynchronously finds an instance of type [S] in the current [scope].
+  ///
+  /// Uses optional [tag] to disambiguate registrations of the same type.
+  ///
+  /// Throws if no matching registration is available.
   Future<S> findAsync<S>({String? tag});
 
-  /// Finds the value of a [store] within the current scope.
+  /// Finds the value of [store] within the current [scope].
+  ///
+  /// Uses optional [tag] to select a store instance variant.
+  ///
+  /// Throws if the store cannot be created or resolved.
   R findStore<R>(LevitStore<R> store, {String? tag});
 
-  /// Asynchronously finds the value of a [store] within the current scope.
+  /// Asynchronously finds the value of [store] within the current [scope].
+  ///
+  /// Uses optional [tag] to select a store instance variant.
+  ///
+  /// Throws if the store cannot be created or resolved.
   Future<R> findStoreAsync<R>(LevitStore<R> store, {String? tag});
 
-  /// Asynchronously finds and resolves the value of an async [store] within the current scope.
+  /// Asynchronously finds and resolves the value of async [store] within the current [scope].
+  ///
+  /// Uses optional [tag] to select a store instance variant.
+  ///
+  /// Throws if the store cannot be created or resolved.
   Future<R> findAsyncStore<R>(LevitAsyncStore<R> store, {String? tag});
 
-  /// Registers a dependency in the current scope.
+  /// Registers a dependency in the current [scope].
+  ///
+  /// Creates the instance immediately with [builder].
+  /// If [permanent] is `true`, deletion requires force semantics at scope level.
   S put<S>(S Function() builder, {String? tag, bool permanent = false});
 
-  /// Lazily registers a dependency.
+  /// Lazily registers a dependency using [builder].
+  ///
+  /// If [isFactory] is `true`, [builder] runs on each resolution.
+  /// If [permanent] is `true`, registration survives regular scope resets.
   void lazyPut<S>(S Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false});
 
-  /// Lazily registers an asynchronous dependency.
+  /// Lazily registers an asynchronous dependency using [builder].
+  ///
+  /// Returns a trigger function that starts resolution when invoked.
+  /// If [isFactory] is `true`, [builder] runs on each resolution.
+  /// If [permanent] is `true`, registration survives regular scope resets.
   Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false});
 
-  /// Registers a callback to run when the store is disposed.
+  /// Registers [callback] to run when the store instance is disposed.
   void onDispose(void Function() callback);
 
-  /// Registers [object] for automatic cleanup.
+  /// Registers [object] for automatic cleanup when the store closes.
   ///
   /// Returns [object].
   T autoDispose<T>(T object);
@@ -63,16 +93,25 @@ abstract class LevitRef {
 class LevitStore<T> {
   final T Function(LevitRef ref) _builder;
 
+  /// Creates a scoped store definition from [builder].
+  ///
+  /// [builder] runs once per scope/tag instance when the store is first resolved.
   LevitStore(this._builder);
 
   late final String _defaultKey = 'ls_store_${_getStoreTag(this, null)}';
 
-  /// Creates an asynchronous [LevitStore] definition.
+  /// Creates an asynchronous store definition from [builder].
+  ///
+  /// Returns a [LevitAsyncStore] that resolves to `T` instead of `Future<T>`.
   static LevitAsyncStore<T> async<T>(Future<T> Function(LevitRef ref) builder) {
     return LevitAsyncStore<T>(builder);
   }
 
-  /// Finds (or creates) the store instance within [scope].
+  /// Finds or creates the store instance within [scope].
+  ///
+  /// Uses optional [tag] to isolate independent instances of the same store definition.
+  ///
+  /// Throws if [builder] throws while creating the store value.
   T findIn(LevitScope scope, {String? tag}) {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
@@ -87,7 +126,11 @@ class LevitStore<T> {
     return instance.value;
   }
 
-  /// Asynchronously finds (or creates) the store instance within [scope].
+  /// Asynchronously finds or creates the store instance within [scope].
+  ///
+  /// Uses optional [tag] to isolate independent instances of the same store definition.
+  ///
+  /// Throws if [builder] throws while creating the store value.
   Future<T> findAsyncIn(LevitScope scope, {String? tag}) async {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
@@ -105,20 +148,28 @@ class LevitStore<T> {
   }
 
   /// Deletes the store instance from [scope].
+  ///
+  /// If [force] is `true`, removes even permanent registrations.
+  ///
+  /// Returns `true` when an instance registration was removed.
   bool deleteIn(LevitScope scope, {String? tag, bool force = false}) {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
     return scope.delete<_LevitStoreInstance<T>>(tag: instanceKey, force: force);
   }
 
-  /// Checks if the store is registered in [scope].
+  /// Checks whether this store is registered in [scope].
+  ///
+  /// Returns `true` when registration metadata exists, even if not instantiated.
   bool isRegisteredIn(LevitScope scope, {String? tag}) {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
     return scope.isRegistered<_LevitStoreInstance<T>>(tag: instanceKey);
   }
 
-  /// Checks if the store is instantiated in [scope].
+  /// Checks whether this store is instantiated in [scope].
+  ///
+  /// Returns `true` when the store value has already been built.
   bool isInstantiatedIn(LevitScope scope, {String? tag}) {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
@@ -126,12 +177,24 @@ class LevitStore<T> {
   }
 
   /// Finds the value of this store in the active scope.
+  ///
+  /// Uses optional [tag] to select an instance variant.
+  ///
+  /// Throws if no active scope is available or value creation fails.
   T find({String? tag}) => findIn(Ls.currentScope, tag: tag);
 
   /// Asynchronously finds the value of this store in the active scope.
+  ///
+  /// Uses optional [tag] to select an instance variant.
+  ///
+  /// Throws if no active scope is available or value creation fails.
   Future<T> findAsync({String? tag}) => findAsyncIn(Ls.currentScope, tag: tag);
 
   /// Removes this store from the active scope.
+  ///
+  /// If [force] is `true`, removes even permanent registrations.
+  ///
+  /// Returns `true` when a registration was removed.
   bool delete({String? tag, bool force = false}) =>
       deleteIn(Ls.currentScope, tag: tag, force: force);
 
@@ -146,24 +209,39 @@ class LevitStore<T> {
 class LevitAsyncStore<T> {
   final LevitStore<Future<T>> _inner;
 
+  /// Creates an asynchronous store definition from [builder].
+  ///
+  /// [builder] is evaluated lazily per scope/tag instance.
   LevitAsyncStore(Future<T> Function(LevitRef ref) builder)
       : _inner = LevitStore<Future<T>>(builder);
 
-  /// Finds (or creates) and resolves the store value within [scope].
+  /// Finds or creates and resolves the store value within [scope].
+  ///
+  /// Uses optional [tag] to isolate independent instances.
+  ///
+  /// Throws if initialization fails.
   Future<T> findIn(LevitScope scope, {String? tag}) {
     return _inner.findIn(scope, tag: tag);
   }
 
-  /// Asynchronously finds (or creates) and resolves the store value within [scope].
+  /// Asynchronously finds or creates and resolves the store value within [scope].
+  ///
+  /// Uses optional [tag] to isolate independent instances.
+  ///
+  /// Throws if initialization fails.
   Future<T> findAsyncIn(LevitScope scope, {String? tag}) async {
     final future = await _inner.findAsyncIn(scope, tag: tag);
     return await future;
   }
 
   /// Finds and resolves the store value in the active scope.
+  ///
+  /// Throws if no active scope is available or initialization fails.
   Future<T> find({String? tag}) => findIn(Ls.currentScope, tag: tag);
 
   /// Asynchronously finds and resolves the store value in the active scope.
+  ///
+  /// Throws if no active scope is available or initialization fails.
   Future<T> findAsync({String? tag}) => findAsyncIn(Ls.currentScope, tag: tag);
 
   /// Deletes the store instance from [scope].

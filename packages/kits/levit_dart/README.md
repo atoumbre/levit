@@ -3,104 +3,54 @@
 [![Pub Version](https://img.shields.io/pub/v/levit_dart)](https://pub.dev/packages/levit_dart)
 [![Platforms](https://img.shields.io/badge/platforms-dart-blue)](https://pub.dev/packages/levit_dart)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
-[![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg&flags=levit_dart)](https://codecov.io/github/atoumbre/levit)
 
 ## Purpose & Scope
 
-`levit_dart` is the pure Dart utilities layer for Levit controllers and application logic.
+`levit_dart` adds higher-level pure Dart utilities on top of `levit_dart_core`.
 
-It is responsible for:
-- Providing task execution and tracking utilities for controllers.
-- Providing loop/execution helpers for periodic or continuous work.
-- Providing small controller-focused helpers (time and selection utilities).
+This package is responsible for:
 
-It intentionally does not provide:
-- Flutter widget bindings (see `levit_flutter_core` / `levit_flutter`).
+- Controller task execution helpers and lifecycle-aware task orchestration.
+- Loop execution helpers for periodic/continuous workloads.
+- Focused utility mixins (selection/time helpers) for controller state.
+
+This package does not include:
+
+- Flutter widget bindings (`levit_flutter_core`, `levit_flutter`).
 
 ## Conceptual Overview
 
-`levit_dart` builds on `levit_dart_core`.
-Controllers remain responsible for business logic and lifecycle; this package adds reusable engines and mixins that standardize common patterns such as:
-- Running cancellable tasks with retry/priority policies.
-- Tracking task state reactively when needed (for UIs or other observers).
-- Managing periodic execution loops tied to controller lifecycles.
+The package keeps controller ownership explicit while reducing boilerplate for common operational patterns:
+
+- Queueing and retrying tasks with structured lifecycle events.
+- Tracking execution status reactively.
+- Running managed loops tied to controller disposal.
 
 ## Getting Started
-
-Install:
 
 ```yaml
 dependencies:
   levit_dart: ^latest
 ```
 
-Minimal usage:
-
 ```dart
 import 'package:levit_dart/levit_dart.dart';
 
-class RefreshController extends LevitController with LevitReactiveTasksMixin {
-  Future<void> refresh() async {
+class SyncController extends LevitController with LevitTasksMixin {
+  Future<void> sync() async {
     await runTask(
       () async {
-        // Do work here.
+        // perform sync work
       },
-      id: 'refresh',
+      id: 'sync',
     );
   }
 }
 ```
 
-## Task Lifecycle Instrumentation
-
-`LevitTaskEngine` now exposes structured task lifecycle events via `onTaskEvent`.
-
-Event coverage includes:
-- `queued`
-- `started`
-- `retryScheduled`
-- `finished`
-- `failed`
-- `skipped` (with reasons such as `cacheHit` and cancellation paths)
-
-Engine-level example:
-
-```dart
-import 'package:levit_dart/levit_dart.dart';
-
-void main() {
-  final engine = LevitTaskEngine(
-    maxConcurrent: 2,
-    onTaskEvent: (event) {
-      print('[${event.type}] id=${event.taskId} attempt=${event.attempt}');
-      if (event.type == LevitTaskEventType.retryScheduled) {
-        print('retry in ${event.retryIn}');
-      }
-      if (event.type == LevitTaskEventType.skipped) {
-        print('skip reason: ${event.skipReason}');
-      }
-    },
-  );
-
-  engine.schedule(() async => 'ok', id: 'demo');
-}
-```
-
-Controller mixin example:
-
-```dart
-import 'package:levit_dart/levit_dart.dart';
-
-class SyncController extends LevitController with LevitTasksMixin {
-  @override
-  void Function(LevitTaskEvent event)? get onTaskEvent => (event) {
-        print('task event: ${event.type} (${event.taskId})');
-      };
-}
-```
-
 ## Design Principles
 
-- Controller-first: utilities are designed to be owned and disposed by `LevitController`.
-- Explicit concurrency: tasks and loops are configured intentionally rather than hidden behind implicit behavior.
-- Pure Dart: usable outside Flutter; `levit_flutter` integrates these utilities with widgets.
+- Controller-first ownership and cleanup.
+- Explicit concurrency semantics.
+- Reusable utilities without hiding underlying lifecycle mechanics.
+

@@ -1,17 +1,15 @@
-/// Pure Dart reactive state management primitives.
+/// Pure Dart reactive runtime for state propagation and derivation.
 ///
-/// This package provides the low-level reactive engine of the Levit framework.
-/// It is dependency-free and focuses on high-performance, fine-grained state
-/// tracking using a proxy-based mechanism.
+/// This package provides Levit's low-level reactive engine.
+/// It is dependency-free and focuses on deterministic, fine-grained updates.
 ///
-/// ### Core Abstractions
-/// *   [LxReactive]: The base interface for all reactive objects.
-/// *   [Lx]: The primary entry point for creating reactive variables and managing
-///     the global reactive state (proxies, batches, middlewares).
-/// *   [LxComputed]: Derived reactive state that automatically tracks dependencies.
+/// ### Core abstractions
+/// * [LxReactive]: base interface for reactive sources.
+/// * [Lx]: static runtime gateway for creation, batching, and middleware.
+/// * [LxComputed]: derived state with automatic dependency tracking.
 ///
-/// `levit_reactive` is designed to be the foundational layer for any Dart
-/// application requiring deterministic state derivation.
+/// `levit_reactive` is the foundation used by higher Levit layers and can be
+/// used directly in any Dart runtime.
 library;
 
 import 'dart:async';

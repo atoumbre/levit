@@ -7,36 +7,37 @@
 
 ## Purpose & Scope
 
-`levit_scope` is the pure Dart dependency injection and lifecycle container used across the Levit ecosystem.
+`levit_scope` is Levit's pure Dart dependency injection and lifecycle runtime.
 
-It is responsible for:
-- Registering dependencies (eager, lazy, and async).
-- Resolving dependencies through a parent/child scope hierarchy.
-- Disposing dependencies deterministically when a scope is closed.
+This package is responsible for:
 
-It intentionally does not provide:
-- Reactive state primitives (see `levit_reactive`).
-- Flutter widget bindings (see `levit_flutter_core` / `levit_flutter`).
+- Dependency registration (`put`, `lazyPut`, `lazyPutAsync`).
+- Hierarchical resolution across parent/child scopes.
+- Deterministic cleanup through explicit scope disposal.
+- DI middleware interception for cross-cutting concerns.
+
+This package does not include:
+
+- Reactive state primitives (`levit_reactive`).
+- Flutter tree integration (`levit_flutter_core`, `levit_flutter`).
 
 ## Conceptual Overview
 
-A `LevitScope` is a container with a local registry and an optional parent scope.
-Lookups start in the local registry and may fall back to parent scopes.
+A `LevitScope` contains registrations plus optional parent linkage.
+Resolution starts local and delegates to parent scopes when needed.
+Child scopes can override parent registrations without mutating parent state.
 
-`levit_scope` supports two complementary access patterns:
-- Explicit scoping by passing a `LevitScope` instance and calling methods on it.
-- Implicit scoping through `Ls.currentScope` using a `Zone` context.
+Two access styles are available:
+
+- Explicit: hold a `LevitScope` reference and call methods directly.
+- Contextual: use `Ls.currentScope` within a scope-run execution context.
 
 ## Getting Started
-
-Install:
 
 ```yaml
 dependencies:
   levit_scope: ^latest
 ```
-
-Minimal usage:
 
 ```dart
 import 'package:levit_scope/levit_scope.dart';
@@ -44,60 +45,49 @@ import 'package:levit_scope/levit_scope.dart';
 class ApiClient {}
 
 void main() {
-  final scope = LevitScope.root('root').createScope('feature');
+  final appScope = LevitScope.root('app');
+  final featureScope = appScope.createScope('feature');
 
-  scope.put(() => ApiClient());
-  final client = scope.find<ApiClient>();
+  featureScope.put(() => ApiClient());
 
-  // Optional: make `scope` the implicit `Ls.currentScope` for a call chain.
-  scope.run(() {
-    final sameClient = Ls.find<ApiClient>();
-    assert(identical(client, sameClient));
+  featureScope.run(() {
+    final client = Ls.find<ApiClient>();
+    assert(client is ApiClient);
   });
+
+  featureScope.dispose();
+  appScope.dispose();
 }
 ```
 
 ## Middleware Lifecycle (Token-Based)
 
-Use one token per concern so registration is idempotent and teardown is explicit.
+Use one token per concern so updates are idempotent and teardown is explicit:
 
 ```dart
 import 'package:levit_scope/levit_scope.dart';
 
-const appTelemetryToken = #di_app_telemetry;
-const featureAuditToken = #di_feature_audit;
+const auditToken = #di_audit;
 
-class AppTelemetryMiddleware extends LevitScopeMiddleware {}
+class AuditMiddleware extends LevitScopeMiddleware {}
 
-class FeatureAuditMiddleware extends LevitScopeMiddleware {
-  final bool v2;
-  const FeatureAuditMiddleware({this.v2 = false});
+void configure() {
+  LevitScope.addMiddleware(AuditMiddleware(), token: auditToken);
 }
 
-void configureDiMiddlewares() {
-  LevitScope.addMiddleware(AppTelemetryMiddleware(), token: appTelemetryToken);
-  LevitScope.addMiddleware(FeatureAuditMiddleware(), token: featureAuditToken);
+void reconfigure() {
+  LevitScope.addMiddleware(AuditMiddleware(), token: auditToken);
 }
 
-void reconfigureFeatureMiddleware() {
-  LevitScope.addMiddleware(
-    FeatureAuditMiddleware(v2: true),
-    token: featureAuditToken,
-  ); // replaces previous middleware for that token
-}
-
-void teardownFeatureMiddleware() {
-  LevitScope.removeMiddlewareByToken(featureAuditToken);
+void teardown() {
+  LevitScope.removeMiddlewareByToken(auditToken);
 }
 ```
 
-Canonical pattern:
-- App-level middleware: one stable token for app lifetime concerns.
-- Feature/module middleware: one token per module concern.
-- Teardown: always remove by token during module shutdown.
-
 ## Design Principles
 
-- Explicit lifecycles: objects can participate in deterministic initialization and teardown.
-- Hierarchical isolation: child scopes can override dependencies without leaking to parents.
-- Reflection-free: registrations and lookups are type-driven and explicit.
+- Deterministic teardown: disposal order is controlled and explicit.
+- Scope isolation: child scope overrides do not leak upward.
+- Reflection-free contracts: type/tag keying is explicit and stable.
+- Middleware-first extensibility: interception hooks are part of the runtime contract.
+

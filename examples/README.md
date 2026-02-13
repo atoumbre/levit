@@ -1,15 +1,25 @@
 # Levit Examples
 
-This folder hosts showcase apps from foundational to advanced usage.
+This directory contains runnable reference applications that demonstrate package boundaries and recommended integration patterns across the Levit ecosystem.
 
-## Available examples
+## Purpose & Scope
 
-- [`task_board`](./task_board): balanced CRUD + filtering demo with reactive selectors.
-- [`async_catalog`](./async_catalog): async loading flow with `LxStatus` and retry UX.
-- [`scope_playground`](./scope_playground): nested scope isolation with independent controllers.
-- [`nexus_studio`](./nexus_studio): advanced multi-package reference app (client + server + shared core).
+Examples are responsible for:
 
-## Running an example
+- Showing practical composition of `levit_scope`, `levit_reactive`, and Flutter bindings.
+- Demonstrating production-oriented patterns at increasing complexity.
+- Providing runnable validation targets for documentation and onboarding.
+
+Examples are not API specifications. Inline DartDoc and package READMEs remain authoritative.
+
+## Available Examples
+
+- [`task_board`](./task_board): CRUD workflow with selectors, scoped controllers, and reactive list updates.
+- [`async_catalog`](./async_catalog): async status modeling with loading/error/success transitions.
+- [`scope_playground`](./scope_playground): nested scope isolation and deterministic disposal behavior.
+- [`nexus_studio`](./nexus_studio): advanced end-to-end client/server/shared architecture reference.
+
+## Running an Example
 
 ```bash
 cd examples/task_board

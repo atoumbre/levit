@@ -1,8 +1,8 @@
-/// A monitoring and diagnostics ecosystem for Levit applications.
+/// Monitoring and diagnostics runtime for Levit applications.
 ///
-/// This library provides the core infrastructure for capturing, filtering,
-/// and transporting events from both dependency injection and reactive state
-/// systems.
+/// This library captures structured events from dependency injection and
+/// reactive state systems, then forwards them through configurable transport
+/// pipelines.
 library levit_monitor;
 
 import 'dart:async';

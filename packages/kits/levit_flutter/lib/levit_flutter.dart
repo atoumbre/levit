@@ -1,7 +1,7 @@
-/// The official Flutter integration kit for the Levit ecosystem.
+/// Recommended single-import kit for Flutter applications using Levit.
 ///
-/// This kit provides the necessary widgets and hooks to connect Levit's
-/// reactive state and dependency injection with the Flutter widget tree.
+/// This library composes `levit_flutter_core`, `levit_dart`, and package-local
+/// Flutter utilities into one import surface.
 library levit_flutter_kit;
 
 import 'package:flutter/widgets.dart';
