@@ -208,9 +208,6 @@ class Levit {
       if (result is Future<R>) {
         return result.whenComplete(scope.dispose);
       }
-      if (result is Future) {
-        return result.whenComplete(scope.dispose).then((value) => value as R);
-      }
       scope.dispose();
       return result;
     } catch (_) {

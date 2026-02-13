@@ -124,5 +124,26 @@ void main() {
         returnsNormally,
       );
     });
+
+    test('private sentinel onTaskEvent unset is callable (coverage)', () {
+      final classMirror = reflectClass(LevitTaskEngine);
+      final lib = classMirror.owner as LibraryMirror;
+      final symbol = MirrorSystem.getSymbol('_onTaskEventUnset', lib);
+
+      expect(
+        () => classMirror.invoke(
+          symbol,
+          [
+            LevitTaskEvent(
+              type: LevitTaskEventType.started,
+              taskId: 'noop',
+              priority: TaskPriority.normal,
+              maxRetries: 0,
+            ),
+          ],
+        ),
+        returnsNormally,
+      );
+    });
   });
 }

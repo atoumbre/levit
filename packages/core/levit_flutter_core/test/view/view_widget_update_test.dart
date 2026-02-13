@@ -82,4 +82,52 @@ void main() {
     expect(find.text('One'), findsOneWidget);
     expect(find.text('Two'), findsNothing);
   });
+
+  testWidgets('LView re-resolves when inherited scope changes',
+      (tester) async {
+    Widget buildStage(int arg) {
+      return MaterialApp(
+        home: LScope(
+          args: [arg],
+          child: LView<int>(
+            resolver: (context) => LScope.of(context)!.id,
+            builder: (_, id) => Text('scope:$id'),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(buildStage(1));
+    final firstText = tester.widget<Text>(find.byType(Text)).data!;
+
+    await tester.pumpWidget(buildStage(2));
+    final secondText = tester.widget<Text>(find.byType(Text)).data!;
+
+    expect(secondText, isNot(equals(firstText)));
+  });
+
+  testWidgets('LAsyncView re-resolves when inherited scope changes',
+      (tester) async {
+    Widget buildStage(int arg) {
+      return MaterialApp(
+        home: LScope(
+          args: [arg],
+          child: LAsyncView<int>(
+            resolver: (context) async => LScope.of(context)!.id,
+            builder: (_, id) => Text('async-scope:$id'),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(buildStage(1));
+    await tester.pumpAndSettle();
+    final firstText = tester.widget<Text>(find.byType(Text)).data!;
+
+    await tester.pumpWidget(buildStage(2));
+    await tester.pumpAndSettle();
+    final secondText = tester.widget<Text>(find.byType(Text)).data!;
+
+    expect(secondText, isNot(equals(firstText)));
+  });
 }
