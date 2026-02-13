@@ -36,7 +36,8 @@ void main() {
     expect(find.text('Login as Editor'), findsOneWidget);
   });
 
-  testWidgets('main() runs without external sockets', (WidgetTester tester) async {
+  testWidgets('main() runs without external sockets',
+      (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -82,7 +83,8 @@ void main() {
     expect(find.text('Add Shape:'), findsOneWidget);
   });
 
-  testWidgets('Viewer login covers read-only path', (WidgetTester tester) async {
+  testWidgets('Viewer login covers read-only path',
+      (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -296,14 +298,13 @@ void main() {
 
     // Export completes quickly and updates label.
     Levit.find<ProjectController>().export();
-    await tester.runAsync(() async {
-      await Levit.find<ProjectController>().exportStatus.value!.wait;
-    });
+    await tester.pump(const Duration(milliseconds: 1));
     await tester.pump(const Duration(milliseconds: 1));
     expect(find.textContaining('DONE'), findsOneWidget);
   });
 
-  testWidgets('Session timer covers waiting branch', (WidgetTester tester) async {
+  testWidgets('Session timer covers waiting branch',
+      (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {

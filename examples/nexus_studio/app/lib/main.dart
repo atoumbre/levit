@@ -52,6 +52,7 @@ class NexusStudioApp extends StatelessWidget {
         useMaterial3: true,
         colorSchemeSeed: Colors.indigo,
         scaffoldBackgroundColor: const Color(0xFF0F172A), // Slate 900
+        splashFactory: InkRipple.splashFactory,
       ),
       home: const EditorPage(),
     );
