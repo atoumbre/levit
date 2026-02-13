@@ -23,6 +23,27 @@ void main() {
     // matching the logic at controller.dart:86-87
     expect(customReactive.ownerId, '${scope.id}:custom_ctrl');
   });
+
+  test('didAttachToScope swallows reactive refresh failures', () {
+    final controller = TestController();
+    final reactive = ThrowingReactive(throwOnRefresh: true);
+    controller.addCustomReactive(reactive);
+
+    final scope = LevitScope.root();
+    expect(
+      () => controller.didAttachToScope(scope, key: 'refresh_fail'),
+      returnsNormally,
+    );
+    expect(reactive.ownerId, '${scope.id}:refresh_fail');
+  });
+
+  test('onClose swallows disposal failures from reactive close', () {
+    final controller = TestController();
+    controller.addCustomReactive(ThrowingReactive(throwOnClose: true));
+
+    expect(() => controller.onClose(), returnsNormally);
+    expect(controller.isClosed, isTrue);
+  });
 }
 
 class TestController extends LevitController {
@@ -48,6 +69,42 @@ class CustomReactive implements LxReactive<int> {
 
   @override
   void refresh() {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class ThrowingReactive implements LxReactive<int> {
+  ThrowingReactive({this.throwOnRefresh = false, this.throwOnClose = false});
+
+  final bool throwOnRefresh;
+  final bool throwOnClose;
+
+  @override
+  String? ownerId;
+
+  @override
+  String? name;
+
+  @override
+  int get value => 0;
+
+  @override
+  set value(int _) {}
+
+  @override
+  void close() {
+    if (throwOnClose) {
+      throw StateError('close fail');
+    }
+  }
+
+  @override
+  void refresh() {
+    if (throwOnRefresh) {
+      throw StateError('refresh fail');
+    }
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -22,7 +22,7 @@ void main() {
 /// Minimal transport that uses default close() implementation
 class MinimalTransport extends LevitTransport {
   @override
-  void send(event) {
+  void send(dynamic event) {
     // Minimal implementation
   }
 

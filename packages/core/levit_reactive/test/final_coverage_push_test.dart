@@ -1,3 +1,5 @@
+import 'dart:mirrors';
+
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
 
@@ -64,6 +66,31 @@ void main() {
       expect(middleware.removeListenerCalled, isTrue);
 
       sub.close();
+    });
+
+    test('_unsubscribeFrom default branch recalculates graph depth', () {
+      final source = 0.lx;
+      final mid = (() => source.value + 1).lx;
+      final computed = (() => mid.value + 1).lx;
+      final sub = computed.listen((_) {});
+
+      // Ensure dependency graph is initialized.
+      expect(computed.value, 2);
+      final beforeDepth = computed.graphDepth;
+
+      final mirror = reflect(computed);
+      final lib = mirror.type.owner as LibraryMirror;
+      final symbol = MirrorSystem.getSymbol('_unsubscribeFrom', lib);
+
+      // Invoke with default args so recalculateDepth=true branch executes.
+      mirror.invoke(symbol, [mid]);
+
+      expect(computed.graphDepth, lessThanOrEqualTo(beforeDepth));
+
+      sub.close();
+      computed.close();
+      mid.close();
+      source.close();
     });
   });
 }

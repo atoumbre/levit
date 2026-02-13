@@ -71,4 +71,41 @@ void main() {
       expect(transport.sentEvents.any((e) => e is ReactiveErrorEvent), isTrue);
     });
   });
+
+  group('LevitMonitor transport error forwarding', () {
+    test('forwards transport.send errors to current zone', () async {
+      final errors = <Object>[];
+
+      await runZonedGuarded(() async {
+        final middleware = LevitMonitorMiddleware(
+          transport: _ThrowingTransport(),
+        );
+        middleware.enable();
+
+        final rx = 0.lx;
+        rx.value = 1; // Emits ReactiveChangeEvent and triggers transport.send
+        await Future<void>.delayed(Duration.zero);
+
+        middleware.disable();
+      }, (error, stackTrace) {
+        errors.add(error);
+      });
+
+      expect(errors, isNotEmpty);
+      expect(errors.whereType<StateError>(), isNotEmpty);
+    });
+  });
+}
+
+class _ThrowingTransport implements LevitTransport {
+  @override
+  Stream<void> get onConnect => const Stream<void>.empty();
+
+  @override
+  void send(MonitorEvent event) {
+    throw StateError('transport failed');
+  }
+
+  @override
+  Future<void> close() async {}
 }
