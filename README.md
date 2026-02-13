@@ -3,6 +3,7 @@
 Deterministic reactive architecture for Dart and Flutter.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
+[![CodeFactor](https://www.codefactor.io/repository/github/atoumbre/levit/badge)](https://www.codefactor.io/repository/github/atoumbre/levit)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg)](https://codecov.io/github/atoumbre/levit)
 
 Levit is a layered ecosystem for teams that want explicit ownership, deterministic disposal, and fine-grained reactive updates.
@@ -85,7 +86,7 @@ void main() => runApp(const MaterialApp(home: CounterPage()));
 | Package | Use when |
 | :-- | :-- |
 | [`levit_flutter`](./packages/kits/levit_flutter) | Building Flutter applications |
-| [`levit`](./packages/kits/levit) | Building pure Dart applications |
+| [`levit/levit_dart`](./packages/kits/levit) | Building pure Dart applications |
 
 ### Core packages
 
