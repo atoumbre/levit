@@ -25,6 +25,7 @@ class LScopedView<T> extends LView<T> {
     this.dependencyFactory,
     super.resolver,
     super.builder,
+    super.orElse,
     super.autoWatch = true,
     this.scopeName,
     super.args,
@@ -36,6 +37,7 @@ class LScopedView<T> extends LView<T> {
     Key? key,
     dynamic Function(LevitScope scope)? dependencyFactory,
     required Widget Function(BuildContext context, T controller) builder,
+    Widget Function(BuildContext context)? orElse,
     bool autoWatch = true,
     String? scopeName,
     List<Object?>? args,
@@ -43,8 +45,9 @@ class LScopedView<T> extends LView<T> {
     return LScopedView<T>(
       key: key,
       dependencyFactory: dependencyFactory,
-      resolver: (context) => context.levit.find<T>(key: state),
+      resolver: (context) => context.levit.findOrNull<T>(key: state),
       builder: builder,
+      orElse: orElse,
       autoWatch: autoWatch,
       scopeName: scopeName,
       args: args,
@@ -58,6 +61,7 @@ class LScopedView<T> extends LView<T> {
     String? tag,
     bool permanent = false,
     required Widget Function(BuildContext context, T controller) builder,
+    Widget Function(BuildContext context)? orElse,
     bool autoWatch = true,
     String? scopeName,
     List<Object?>? args,
@@ -68,8 +72,9 @@ class LScopedView<T> extends LView<T> {
       args: args,
       dependencyFactory: (s) =>
           s.put<T>(create, tag: tag, permanent: permanent),
-      resolver: (context) => context.levit.find<T>(tag: tag),
+      resolver: (context) => context.levit.findOrNull<T>(tag: tag),
       builder: builder,
+      orElse: orElse,
       autoWatch: autoWatch,
     );
   }
@@ -96,11 +101,17 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
       child: Builder(
         builder: (context) {
           final controller =
-              widget.resolver?.call(context) ?? context.levit.find<T>();
+              widget.resolver?.call(context) ?? context.levit.findOrNull<T>();
+          if (controller == null) {
+            final fallback = widget.orElse;
+            if (fallback != null) return fallback(context);
+            throw StateError(
+              'LScopedView<$T>: controller not found and no orElse provided.',
+            );
+          }
           if (widget.autoWatch) {
             return LWatch(() => widget.buildView(context, controller));
           }
-
           return LScope.runBridged(
               context, () => widget.buildView(context, controller));
         },

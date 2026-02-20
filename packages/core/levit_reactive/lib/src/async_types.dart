@@ -34,7 +34,7 @@ class LxStream<T> extends _LxAsyncVal<T> {
             onListen: null, onCancel: null);
 
   void _bind(Stream<T> stream, {bool isInitial = true}) {
-    final lastKnown = value.lastValue;
+    final lastKnown = _value.lastValue;
 
     if (!isInitial) {
       _setValueInternal(LxWaiting<T>(lastKnown));
@@ -47,7 +47,7 @@ class LxStream<T> extends _LxAsyncVal<T> {
               sink.add(LxSuccess<T>(data));
             },
             handleError: (error, stackTrace, sink) {
-              sink.add(LxError<T>(error, stackTrace, value.lastValue));
+              sink.add(LxError<T>(error, stackTrace, _value.lastValue));
             },
           ),
         )
@@ -173,9 +173,9 @@ class LxFuture<T> extends _LxAsyncVal<T> {
 
   void _run(Future<T> future, {bool isRefresh = false}) {
     _activeFuture = future;
-    final lastKnown = value.lastValue;
+    final lastKnown = _value.lastValue;
 
-    if (isRefresh || value is! LxSuccess<T>) {
+    if (isRefresh || _value is! LxSuccess<T>) {
       _setValueInternal(LxWaiting<T>(lastKnown));
     }
 

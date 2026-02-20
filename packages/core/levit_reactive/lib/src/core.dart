@@ -301,6 +301,11 @@ abstract class LevitReactiveObserver {
   void addReactive(LxReactive reactive) {}
 }
 
+/// Optional interface for observers that can canonicalize reactive reads.
+abstract interface class LevitReactiveReadResolver {
+  LxReactive resolveReactiveRead(LxReactive reactive);
+}
+
 /// A low-latency notifier for synchronous reactive updates.
 ///
 /// [LevitReactiveNotifier] is the high-performance core of the reactive system.
@@ -618,12 +623,28 @@ abstract class LxBase<T> extends LevitReactiveNotifier
 
     final proxy = _LevitReactiveCore.proxy;
     if (proxy != null) {
-      _reportRead(proxy);
+      LxReactive resolved = this;
+      if (proxy is LevitReactiveReadResolver) {
+        resolved =
+            (proxy as LevitReactiveReadResolver).resolveReactiveRead(this);
+      }
+      if (!identical(resolved, this) && resolved is LxReactive<T>) {
+        return resolved.value;
+      }
+      _reportRead(proxy, resolvedReactive: resolved);
     } else if (_LevitReactiveCore._asyncZoneDepth > 0) {
       final zoneTracker =
           Zone.current[_LevitReactiveCore.asyncComputedTrackerZoneKey];
       if (zoneTracker is LevitReactiveObserver) {
-        _reportRead(zoneTracker);
+        LxReactive resolved = this;
+        if (zoneTracker is LevitReactiveReadResolver) {
+          resolved = (zoneTracker as LevitReactiveReadResolver)
+              .resolveReactiveRead(this);
+        }
+        if (!identical(resolved, this) && resolved is LxReactive<T>) {
+          return resolved.value;
+        }
+        _reportRead(zoneTracker, resolvedReactive: resolved);
       }
     }
     return _value;
@@ -638,20 +659,27 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     super.notify();
   }
 
-  void _reportRead(LevitReactiveObserver observer) {
-    if (identical(this, _LevitReactiveCore._lastReportedReactive) &&
+  void _reportRead(LevitReactiveObserver observer,
+      {LxReactive? resolvedReactive}) {
+    final trackedReactive = resolvedReactive ?? this;
+    final LevitReactiveNotifier trackedNotifier =
+        trackedReactive is LevitReactiveNotifier
+            ? trackedReactive as LevitReactiveNotifier
+            : this;
+
+    if (identical(trackedReactive, _LevitReactiveCore._lastReportedReactive) &&
         identical(observer, _LevitReactiveCore._lastReportedObserver)) {
       return;
     }
 
     _LevitReactiveCore._lastReportedObserver = observer;
-    _LevitReactiveCore._lastReportedReactive = this;
+    _LevitReactiveCore._lastReportedReactive = trackedReactive;
 
-    observer.addNotifier(this);
+    observer.addNotifier(trackedNotifier);
 
     // Reactive graph reporting is opt-in to avoid overhead by default.
     if (LevitReactiveMiddleware.hasGraphChangeMiddlewares) {
-      observer.addReactive(this);
+      observer.addReactive(trackedReactive);
     }
   }
 
