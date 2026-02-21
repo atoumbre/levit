@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
@@ -90,6 +92,71 @@ void main() {
 
       expect(find.text('Count: 1'), findsOneWidget);
     });
+
+    testWidgets('dedupes duplicate LxStream emits when reading lastValue',
+        (tester) async {
+      final controller = StreamController<int>.broadcast();
+      final stream = LxStream<int>(controller.stream);
+      var buildCount = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LWatch(() {
+            buildCount++;
+            final last = stream.value.lastValue;
+            return Text('Last: ${last ?? -1}');
+          }),
+        ),
+      );
+
+      expect(buildCount, 1);
+      expect(find.text('Last: -1'), findsOneWidget);
+
+      controller.add(1);
+      await tester.pump();
+      await tester.pump();
+      expect(buildCount, 2);
+      expect(find.text('Last: 1'), findsOneWidget);
+
+      controller.add(1); // Duplicate payload should still rebuild.
+      await tester.pump();
+      await tester.pump();
+      expect(buildCount, 2);
+      expect(find.text('Last: 1'), findsOneWidget);
+
+      await controller.close();
+    });
+
+    testWidgets(
+        'stabilizes logical dependency when getter recreates named reactive',
+        (tester) async {
+      final source = _UnstableNamedStreamSource();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LWatch(() {
+            final last = source.mediaLibrary.value.lastValue;
+            return Text('Last: ${last ?? -1}');
+          }),
+        ),
+      );
+
+      expect(find.text('Last: -1'), findsOneWidget);
+
+      source.add(1);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Last: 1'), findsOneWidget);
+
+      source.add(2);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Last: 2'), findsOneWidget);
+
+      await source.close();
+    });
   });
 
   group('LWatchVar', () {
@@ -158,4 +225,22 @@ void main() {
       expect(find.text('1'), findsOneWidget);
     });
   });
+}
+
+class _UnstableNamedStreamSource {
+  static const _ownerId = 'test-owner';
+  static const _name = 'mediaLibrary';
+
+  final StreamController<int> _controller = StreamController<int>.broadcast();
+
+  LxStream<int> get mediaLibrary {
+    final reactive = LxStream<int>(_controller.stream);
+    reactive.ownerId = _ownerId;
+    reactive.name = _name;
+    return reactive;
+  }
+
+  void add(int value) => _controller.add(value);
+
+  Future<void> close() => _controller.close();
 }

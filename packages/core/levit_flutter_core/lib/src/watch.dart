@@ -25,7 +25,8 @@ class LWatch extends Widget {
   Element createElement() => _LWatchElement(this);
 }
 
-class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
+class _LWatchElement extends ComponentElement
+    implements LevitReactiveObserver, LevitReactiveReadResolver {
   _LWatchElement(LWatch super.widget);
 
   @override
@@ -61,6 +62,53 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
   @override
   void addReactive(LxReactive reactive) {
     // Graph-only tracking is not required for widget rebuild subscriptions.
+  }
+
+  @override
+  LxReactive resolveReactiveRead(LxReactive reactive) {
+    // Stabilize reads when a getter recreates wrapper reactives every build
+    // but they still represent the same logical source.
+    final single = _singleNotifier;
+    if (_usingSinglePath && single is LxReactive) {
+      final stable = single as LxReactive;
+      if (_isSameLogicalReactive(stable, reactive)) {
+        return stable;
+      }
+    }
+
+    final nots = _notifiers;
+    if (nots == null || nots.isEmpty) return reactive;
+
+    LxReactive? match;
+    for (final notifier in nots) {
+      if (notifier is! LxReactive) continue;
+      final candidate = notifier as LxReactive;
+      if (!_isSameLogicalReactive(candidate, reactive)) continue;
+
+      if (match != null && !identical(match, candidate)) {
+        return reactive; // Ambiguous alias, keep the original read.
+      }
+      match = candidate;
+    }
+
+    return match ?? reactive;
+  }
+
+  bool _isSameLogicalReactive(LxReactive a, LxReactive b) {
+    if (identical(a, b)) return true;
+    if (a.runtimeType != b.runtimeType) return false;
+
+    // Keep aliasing conservative to avoid cross-wiring unrelated reactives.
+    final ownerA = a.ownerId;
+    final ownerB = b.ownerId;
+    final nameA = a.name;
+    final nameB = b.name;
+
+    if (ownerA == null || ownerB == null || nameA == null || nameB == null) {
+      return false;
+    }
+
+    return ownerA == ownerB && nameA == nameB;
   }
 
   void _cleanupAll() {
@@ -99,6 +147,10 @@ class _LWatchElement extends ComponentElement implements LevitReactiveObserver {
     _newNotifiers = null;
 
     final previousProxy = Lx.proxy;
+    if (identical(previousProxy, this)) {
+      // Force-reset read dedupe cache for a fresh dependency capture cycle.
+      Lx.proxy = null;
+    }
     Lx.proxy = this;
 
     final Widget result;

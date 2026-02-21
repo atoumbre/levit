@@ -6,7 +6,7 @@ import 'package:nexus_studio_shared/shared.dart';
 void main() async {
   // Connect to LevitDevTools in debug mode
   final transport = WebSocketTransport.connect(
-    'ws://localhost:9200',
+    'ws://localhost:9200/ws',
     appId: 'nexus-server',
   );
 

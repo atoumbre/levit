@@ -23,10 +23,18 @@ part of '../levit_flutter_core.dart';
 ///     ```
 class LView<T> extends StatefulWidget {
   /// Resolves the dependency from the context.
-  final T Function(BuildContext context)? resolver;
+  ///
+  /// Returns `null` when the dependency is not registered.
+  final T? Function(BuildContext context)? resolver;
 
   /// Builds the widget tree using the resolved [controller].
   final Widget Function(BuildContext context, T controller)? builder;
+
+  /// Fallback widget when the controller cannot be resolved.
+  ///
+  /// If the resolution returns `null` and no [orElse] is provided,
+  /// a [StateError] is thrown.
+  final Widget Function(BuildContext context)? orElse;
 
   /// Whether to wrap the view in an [LWatch].
   final bool autoWatch;
@@ -39,6 +47,7 @@ class LView<T> extends StatefulWidget {
     super.key,
     this.resolver,
     this.builder,
+    this.orElse,
     this.autoWatch = true,
     this.args,
   });
@@ -48,13 +57,15 @@ class LView<T> extends StatefulWidget {
     LevitStore<T> state, {
     Key? key,
     required Widget Function(BuildContext context, T controller) builder,
+    Widget Function(BuildContext context)? orElse,
     bool autoWatch = true,
     List<Object?>? args,
   }) {
     return LView<T>(
       key: key,
-      resolver: (context) => context.levit.find<T>(key: state),
+      resolver: (context) => context.levit.findOrNull<T>(key: state),
       builder: builder,
+      orElse: orElse,
       autoWatch: autoWatch,
       args: args,
     );
@@ -67,6 +78,7 @@ class LView<T> extends StatefulWidget {
     String? tag,
     bool permanent = false,
     required Widget Function(BuildContext context, T controller) builder,
+    Widget Function(BuildContext context)? orElse,
     bool autoWatch = true,
     List<Object?>? args,
   }) {
@@ -75,6 +87,7 @@ class LView<T> extends StatefulWidget {
       resolver: (context) =>
           context.levit.put<T>(create, tag: tag, permanent: permanent),
       builder: builder,
+      orElse: orElse,
       autoWatch: autoWatch,
       args: args,
     );
@@ -102,7 +115,7 @@ class LView<T> extends StatefulWidget {
 }
 
 class _LViewState<T> extends State<LView<T>> {
-  late T controller;
+  T? controller;
   LevitScope? _boundScope;
 
   @override
@@ -136,8 +149,8 @@ class _LViewState<T> extends State<LView<T>> {
     }
   }
 
-  T _resolveController() {
-    return widget.resolver?.call(context) ?? context.levit.find<T>();
+  T? _resolveController() {
+    return widget.resolver?.call(context) ?? context.levit.findOrNull<T>();
   }
 
   bool _argsMatch(List<Object?>? a, List<Object?>? b) {
@@ -151,13 +164,18 @@ class _LViewState<T> extends State<LView<T>> {
 
   @override
   Widget build(BuildContext context) {
-    // Single dispatch path supports both builder callback and subclass override.
-    if (widget.autoWatch) {
-      return LWatch(() => widget.buildView(context, controller));
+    final c = controller;
+    if (c == null) {
+      final fallback = widget.orElse;
+      if (fallback != null) return fallback(context);
+      throw StateError(
+        'LView<$T>: controller not found and no orElse provided.',
+      );
     }
-
-    return LScope.runBridged(
-        context, () => widget.buildView(context, controller));
+    if (widget.autoWatch) {
+      return LWatch(() => widget.buildView(context, c));
+    }
+    return LScope.runBridged(context, () => widget.buildView(context, c));
   }
 }
 

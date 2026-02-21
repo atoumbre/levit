@@ -16,7 +16,7 @@ void main({
   // Connect to LevitDevTools in debug mode
   if (kDebugMode && enableDevTools) {
     final transport = WebSocketTransport.connect(
-      'ws://localhost:9200',
+      'ws://localhost:9200/ws',
       appId: 'nexus-studio',
       channelBuilder: devToolsChannelBuilder,
     );

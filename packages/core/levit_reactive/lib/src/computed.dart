@@ -390,7 +390,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
     if (_isClosed || !_isActive) return;
 
     final myExecutionId = ++_executionId;
-    final lastKnown = value.lastValue;
+    final lastKnown = _value.lastValue;
     final isInitial = !_hasProducedResult;
 
     // Dynamic async runs rebuild subscriptions; static graphs keep existing links.
@@ -499,7 +499,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
   void _applyResult(T result, {required bool isInitial}) {
     if (!isInitial && _hasValue && _equals(_lastComputedValue as T, result)) {
       // Preserve reactive update semantics when value is unchanged after waiting.
-      if (value is LxWaiting<T>) {
+      if (_value is LxWaiting<T>) {
         _setValueInternal(LxSuccess<T>(result));
       }
       return;
