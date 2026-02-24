@@ -5,7 +5,7 @@ part of '../levit_scope.dart';
 /// Implement this interface to receive callbacks for initialization and disposal.
 /// This mechanism ensures deterministic cleanup when the owning scope is disposed.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// class MyService implements LevitScopeDisposable {
 ///   @override
@@ -180,7 +180,7 @@ class LevitScope {
   /// The [builder] is called immediately. If a dependency of type [S] with the
   /// same [tag] already exists, it is replaced (disposed) before the new one is created.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// scope.put(() => AuthService());
   /// ```

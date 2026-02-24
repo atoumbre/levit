@@ -770,7 +770,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   /// This is useful for optimizing rebuilds when using large state objects.
   /// The selector receives the current value of the state.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// final state = {'count': 0, 'data': 'foo'}.lx;
   /// final count = state.select((val) => val['count']);

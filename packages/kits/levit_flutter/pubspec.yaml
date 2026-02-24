@@ -1,5 +1,5 @@
 name: levit_flutter
-description: Utility mixins and tools for Levit Flutter applications. Re-exports levit_dart_utility.
+description: Utility mixins and tools for Levit Flutter applications. Re-exports levit_dart.
 version: 0.0.6
 repository: https://github.com/softilab/levit
 topics:

@@ -5,7 +5,7 @@ part of '../levit_reactive.dart';
 /// [LxVar] ("Levit Variable") is the primary primitive for mutable state.
 /// It notifies active observers whenever its value changes.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// final count = LxVar(0);
 ///
@@ -29,7 +29,7 @@ class LxVar<T> extends LxBase<T> with _LxMutable<T> {
   /// If called with an argument, it updates the value.
   /// If called without arguments, it returns the current value.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// count(5); // Update
   /// print(count()); // Read
@@ -78,7 +78,7 @@ class LxState<T> extends LxBase<T> {
 
   /// Updates the state by applying a [reducer] function to the current value.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// state.update((s) => s.copyWith(count: s.count + 1));
   /// ```
@@ -195,7 +195,7 @@ class LxDouble extends LxVar<double> {
 extension LxExtension<T> on T {
   /// Creates an [LxVar] holding this value.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// final name = 'Levit'.lx;
   /// ```

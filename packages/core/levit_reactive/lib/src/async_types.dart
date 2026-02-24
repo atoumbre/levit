@@ -11,7 +11,7 @@ part of '../levit_reactive.dart';
 /// *   **Lazy Subscription**: Minimizes resource usage by pausing the source when unused.
 /// *   **Rx Operations**: Includes [map], [where], [expand] (etc.) that return new [LxStream]s.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// final counter = Stream.periodic(Duration(seconds: 1), (i) => i).lx;
 ///
@@ -206,7 +206,7 @@ class LxStream<T> extends _LxAsyncVal<T> {
 /// [LxFuture] tracks the execution state ([LxStatus]) of an asynchronous operation.
 /// It creates a synchronous access point for the Future's current status (idle, waiting, success, error).
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// final user = fetchUser().lx;
 ///

@@ -6,7 +6,7 @@ part of '../levit_flutter_core.dart';
 /// via [dependencyFactory], and then builds the UI using [LView].
 /// When the widget is unmounted, the scope and all its dependencies are disposed.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// LScopedView<ProfileController>.put(
 ///   () => ProfileController(),

@@ -6,7 +6,7 @@ part of '../levit_scope.dart';
 /// It uses [Zone] values to determine the current scope context, defaulting to the
 /// root scope if none is active.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// // Finds 'AuthService' in the current scope
 /// final auth = Ls.find<AuthService>();
@@ -32,7 +32,7 @@ class Ls {
   ///
   /// The [builder] is executed immediately.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// Ls.put(() => MyService());
   /// ```

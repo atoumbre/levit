@@ -34,7 +34,7 @@ class Levit {
   /// Notifications are deferred until the batch completes, ensuring that
   /// observers are only notified once even if multiple values change.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// Levit.batch(() {
   ///   firstName.value = 'Jane';
@@ -97,7 +97,7 @@ class Levit {
   /// The [builder] is executed immediately.
   /// If [permanent] is true, the instance survives [reset].
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// final service = Levit.put(() => AuthService());
   /// ```
@@ -128,7 +128,7 @@ class Levit {
 
   /// Finds a registered instance of type [S].
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// final service = Levit.find<AuthService>();
   /// ```

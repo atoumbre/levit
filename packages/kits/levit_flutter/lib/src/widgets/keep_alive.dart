@@ -5,7 +5,7 @@ part of '../../levit_flutter.dart';
 /// Wraps [AutomaticKeepAliveClientMixin] to prevent widgets from being disposed
 /// in [ListView]s or [PageView]s.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// LKeepAlive(
 ///   child: MyExpensiveWidget(),

@@ -5,7 +5,7 @@ part of '../levit_flutter_core.dart';
 /// Use [LBuilder] when you want to be explicit about the dependency, or when
 /// avoiding the overhead of proxy-tracking in [LWatch].
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// LBuilder(counter, (value) {
 ///   return Text('Count: $value');
@@ -72,7 +72,7 @@ class _LBuilderElement<T> extends ComponentElement
 /// widget subtree. The computed value is automatically disposed when the
 /// widget is unmounted.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// LSelectorBuilder(
 ///   () => user.firstName() + user.lastName(),
@@ -153,7 +153,7 @@ class _LSelectBuilderElement<T> extends ComponentElement
 /// Eliminates boilerplate when handling loading, error, and success states
 /// of an asynchronous reactive value.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// LStatusBuilder(
 ///   userStatus,

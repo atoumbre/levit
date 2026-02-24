@@ -70,7 +70,7 @@ class LxWorkerStat {
 /// Unlike [LxComputed], it does not produce a new value but performs an action
 /// (e.g., logging, navigation, saving to DB).
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// final count = 0.lx;
 ///

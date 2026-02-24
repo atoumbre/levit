@@ -7,7 +7,7 @@ part of '../../levit_flutter.dart';
 /// Note: This does not detect viewport visibility. It only reports insertion
 /// and removal from the widget tree.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// LWidgetMonitor(
 ///   onInit: () => controller.loadNextPage(),

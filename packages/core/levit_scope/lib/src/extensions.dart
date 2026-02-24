@@ -6,7 +6,7 @@ extension LevitInstanceExtension<T> on T {
   ///
   /// This is a fluent shortcut for [Ls.put].
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// final service = MyService().levitPut();
   /// ```

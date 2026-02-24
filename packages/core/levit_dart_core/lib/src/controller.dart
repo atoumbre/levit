@@ -8,7 +8,7 @@ part of '../levit_dart_core.dart';
 /// Implementers should override [onInit] for setup and [onClose] for cleanup.
 /// Use [autoDispose] to simplify resource management.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// class CounterController extends LevitController {
 ///   final count = 0.lx;
@@ -109,7 +109,7 @@ abstract class LevitController implements LevitScopeDisposable {
   ///
   /// Returns the [object] to allow inline use during initialization.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// late final sub = autoDispose(stream.listen((_) {}));
   /// ```
