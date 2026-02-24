@@ -7,8 +7,9 @@ int _batchCounter = 0;
 /// Captured by [LevitReactiveMiddleware] to support logging, debugging,
 /// and undo/redo operations.
 class LevitReactiveChange<T> {
-  /// The timestamp of the change.
-  final DateTime timestamp;
+  /// The timestamp of the change, computed lazily on first access.
+  DateTime get timestamp => _timestamp ??= DateTime.now();
+  DateTime? _timestamp;
 
   /// The runtime type of the value held.
   final Type valueType;
@@ -27,13 +28,13 @@ class LevitReactiveChange<T> {
 
   /// Creates a record of a state change.
   LevitReactiveChange({
-    required this.timestamp,
+    DateTime? timestamp,
     required this.valueType,
     required this.oldValue,
     required this.newValue,
     this.stackTrace,
     this.restore,
-  });
+  }) : _timestamp = timestamp;
 
   bool _propagationStopped = false;
 
@@ -62,13 +63,15 @@ class LevitReactiveBatch implements LevitReactiveChange<void> {
   /// A unique identifier for this batch execution.
   final int batchId;
 
+  DateTime? _timestamp;
+
   @override
-  final DateTime timestamp;
+  DateTime get timestamp => _timestamp ??= DateTime.now();
 
   /// Creates a batch container for the current execution.
-  LevitReactiveBatch(this.entries, {int? batchId})
+  LevitReactiveBatch(this.entries, {int? batchId, DateTime? timestamp})
       : batchId = batchId ?? ++_batchCounter,
-        timestamp = DateTime.now();
+        _timestamp = timestamp;
 
   /// Legacy factory for constructing a batch from a list of changes.
   factory LevitReactiveBatch.fromChanges(List<LevitReactiveChange> changes) {

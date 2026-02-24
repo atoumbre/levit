@@ -248,7 +248,7 @@ void main() {
 
       // Bind to new stream
       final controller2 = StreamController<int>.broadcast();
-      lxStream.bindStream(controller2.stream);
+      lxStream.restart(controller2.stream);
 
       expect(lxStream.isWaiting, true);
 

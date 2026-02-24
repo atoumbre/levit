@@ -155,6 +155,18 @@ class _AutoLinkMiddleware extends LevitReactiveMiddleware {
           final captureList = Zone.current[_AutoLinkScope._captureKey];
           if (captureList is List<LxReactive>) {
             captureList.add(reactive);
+          } else {
+            assert(() {
+              // ignore: avoid_print
+              print(
+                'Levit: Reactive "${reactive.name ?? reactive.runtimeType}" '
+                'created inside an active capture scope but no capture list '
+                'found in current Zone. This may indicate the reactive was '
+                'created in a different Zone (e.g., runZonedGuarded). '
+                'Use autoDispose() to manually register it.',
+              );
+              return true;
+            }());
           }
         }
 

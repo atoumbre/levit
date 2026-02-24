@@ -15,7 +15,11 @@ part of '../levit_reactive.dart';
 class LxVar<T> extends LxBase<T> with _LxMutable<T> {
   /// Creates a reactive variable with an [initial] value.
   LxVar(super.initial,
-      {super.onListen, super.onCancel, super.name, super.isSensitive});
+      {super.onListen,
+      super.onCancel,
+      super.name,
+      super.isSensitive,
+      super.equals});
 
   /// Updates the value and triggers notifications if the value changed.
   set value(T val) => _setValueInternal(val);
@@ -59,7 +63,11 @@ class LxVar<T> extends LxBase<T> with _LxMutable<T> {
 class LxState<T> extends LxBase<T> {
   /// Creates a state container with an [initial] value.
   LxState(super.initial,
-      {super.onListen, super.onCancel, super.name, super.isSensitive});
+      {super.onListen,
+      super.onCancel,
+      super.name,
+      super.isSensitive,
+      super.equals});
 
   /// Emits a new [state].
   ///
@@ -76,14 +84,6 @@ class LxState<T> extends LxBase<T> {
   /// ```
   void update(T Function(T state) reducer) {
     _setValueInternal(reducer(value));
-  }
-
-  /// LxState is immutable and cannot be bound to external streams.
-  @override
-  void bind(Stream<T> externalStream) {
-    throw StateError(
-        'LxState is immutable and cannot be bound to external streams. '
-        'Use LxVar or LxStream instead.');
   }
 
   /// Exposes this state as a read-only [LxReactive] interface.
@@ -117,64 +117,79 @@ class LxBool extends LxVar<bool> {
   bool get isFalse => !value;
 }
 
-/// A reactive number with arithmetic extensions.
-class LxNum<T extends num> extends LxVar<T> {
-  /// Creates a reactive number instance.
-  LxNum(super.initial, {super.name, super.isSensitive});
+/// A reactive integer with arithmetic extensions.
+///
+/// Unboxed for maximum performance compared to a generic number container.
+class LxInt extends LxVar<int> {
+  /// Creates a reactive integer instance.
+  LxInt(super.initial, {super.name, super.isSensitive});
 
   /// Increments the value by 1.
-  void increment() => value = (value + 1) as T;
+  void increment() => value = value + 1;
 
   /// Decrements the value by 1.
-  void decrement() => value = (value - 1) as T;
+  void decrement() => value = value - 1;
 
   /// Adds [other] to the current value.
-  void add(num other) => value = (value + other) as T;
+  void add(int other) => value = value + other;
 
   /// Subtracts [other] from the current value.
-  void subtract(num other) => value = (value - other) as T;
+  void subtract(int other) => value = value - other;
 
   /// Multiplies the current value by [other].
-  void multiply(num other) => value = (value * other) as T;
-
-  /// Divides the current value by [other].
-  void divide(num other) {
-    final result = value / other;
-
-    if (T == int) {
-      if (result % 1 != 0) {
-        throw StateError(
-          'LxInt.divide produced non-integer result ($value / $other = $result). '
-          'Use intDivide() for integer math.',
-        );
-      }
-      value = result.toInt() as T;
-      return;
-    }
-
-    value = result as T;
-  }
+  void multiply(int other) => value = value * other;
 
   /// Performs integer division by [other].
-  void intDivide(num other) => value = (value ~/ other) as T;
+  void divide(int other) {
+    if (other == 0) throw ArgumentError('Cannot divide by zero');
+    value = value ~/ other;
+  }
 
   /// Assigns the result of `value % other` to the variable.
-  void mod(num other) => value = (value % other) as T;
+  void mod(int other) => value = value % other;
 
   /// Negates the current value.
-  void negate() => value = (-value) as T;
+  void negate() => value = -value;
 
   /// Clamps the value between [min] and [max].
-  void clampValue(T min, T max) {
-    value = value.clamp(min, max) as T;
+  void clampValue(int min, int max) {
+    value = value.clamp(min, max);
   }
 }
 
-/// Type alias for a reactive integer.
-typedef LxInt = LxNum<int>;
+/// A reactive double with arithmetic extensions.
+///
+/// Unboxed for maximum performance compared to a generic number container.
+class LxDouble extends LxVar<double> {
+  /// Creates a reactive double instance.
+  LxDouble(super.initial, {super.name, super.isSensitive});
 
-/// Type alias for a reactive double.
-typedef LxDouble = LxNum<double>;
+  /// Adds [other] to the current value.
+  void add(num other) => value = value + other;
+
+  /// Subtracts [other] from the current value.
+  void subtract(num other) => value = value - other;
+
+  /// Multiplies the current value by [other].
+  void multiply(num other) => value = value * other;
+
+  /// Divides the current value by [other].
+  void divide(num other) {
+    if (other == 0) throw ArgumentError('Cannot divide by zero');
+    value = value / other;
+  }
+
+  /// Assigns the result of `value % other` to the variable.
+  void mod(num other) => value = value % other;
+
+  /// Negates the current value.
+  void negate() => value = -value;
+
+  /// Clamps the value between [min] and [max].
+  void clampValue(double min, double max) {
+    value = value.clamp(min, max);
+  }
+}
 
 /// Extensions to create reactive variables from primitive values.
 extension LxExtension<T> on T {

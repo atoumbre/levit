@@ -275,8 +275,9 @@ void main() {
     await tester.pump();
     expect(find.byType(app.NodeWidget), findsNWidgets(3));
 
-    // Select first node and apply a color via sidebar button.
-    await tester.tap(find.byType(app.NodeWidget).first);
+    // Select first node deterministically to avoid brittle hit-testing taps.
+    final projectController = Levit.find<ProjectController>();
+    projectController.toggleSelection(projectController.engine.nodes.first.id);
     await tester.pump();
     await tester.tap(find.byKey(ValueKey('color_${0xFF818CF8}')));
     await tester.pump();

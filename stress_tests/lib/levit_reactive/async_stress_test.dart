@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
@@ -51,6 +52,54 @@ void main() {
       expect(receivedCount, greaterThan(0));
 
       await controller.close();
+      lxStream.close();
+    });
+
+    test('LxStream Rapid Restart + Fan-out - 200 restarts', () async {
+      print(
+          '[Description] Tests rapid LxStream.restart calls with redundant restarts and fan-out listeners.');
+      const restartCount = 200;
+      const fanOutListeners = 4;
+
+      final controllers = List.generate(
+        restartCount + 1,
+        (_) => StreamController<int>.broadcast(),
+      );
+      final lxStream = LxStream<int>(controllers.first.stream, initial: 0);
+
+      final received = List<int>.filled(fanOutListeners, 0);
+      final subscriptions = List.generate(
+        fanOutListeners,
+        (i) => lxStream.valueStream.listen((_) => received[i]++),
+      );
+
+      final sw = Stopwatch()..start();
+      for (var i = 1; i <= restartCount; i++) {
+        final next = controllers[i].stream;
+        lxStream.restart(next);
+        // Redundant restart to exercise short-circuit path.
+        lxStream.restart(next);
+        controllers[i].add(i);
+        if (i % 20 == 0) {
+          await Future<void>.delayed(Duration.zero);
+        }
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      sw.stop();
+
+      final minReceived = received.reduce(min);
+      print(
+          'Restarted $restartCount times in ${sw.elapsedMilliseconds}ms, per-listener counts: $received');
+
+      expect(minReceived, greaterThan(0));
+      expect(lxStream.lastValue, restartCount);
+
+      for (final sub in subscriptions) {
+        await sub.cancel();
+      }
+      for (final controller in controllers) {
+        await controller.close();
+      }
       lxStream.close();
     });
 

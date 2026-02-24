@@ -19,46 +19,89 @@ part of '../levit_reactive.dart';
 /// LWatch(() => Text('${counter.value.data}'));
 /// ```
 class LxStream<T> extends _LxAsyncVal<T> {
-  Stream<T>? _boundSourceStream;
+  StreamController<T>? _valueController;
+  StreamSubscription<T>? _activeSubscription;
+  Stream<T> Function()? _streamFactory;
+  bool _hasBoundSource = false;
+  int _bindEpoch = 0;
 
   /// Creates an [LxStream] bound to the given [stream].
-  LxStream(Stream<T> stream, {T? initial})
-      : super(_LxAsyncVal.initialStatus<T>(initial),
-            onListen: null, onCancel: null) {
-    _bind(stream);
+  /// Note: If the stream is a single-subscription stream, it cannot be safely re-listened to
+  /// after losing all subscribers. Prefer using [LxStream.defer] for single-subscription streams.
+  factory LxStream(Stream<T> stream, {T? initial}) {
+    return LxStream<T>._internal(
+      _LxAsyncVal.initialStatus<T>(initial),
+      () => stream,
+    );
+  }
+
+  /// Creates an [LxStream] that lazily generates its underlying stream using [factory]
+  /// whenever it becomes active. This is strictly required for safely recreating
+  /// single-subscription operations like `.map` when an [LxStream] re-activates.
+  factory LxStream.defer(Stream<T> Function() factory, {T? initial}) {
+    return LxStream<T>._internal(
+      _LxAsyncVal.initialStatus<T>(initial),
+      factory,
+    );
   }
 
   /// Creates an [LxStream] in an [LxIdle] state.
-  LxStream.idle({T? initial})
-      : super(_LxAsyncVal.initialStatus<T>(initial, idle: true),
-            onListen: null, onCancel: null);
+  factory LxStream.idle({T? initial}) {
+    return LxStream<T>._internal(
+      _LxAsyncVal.initialStatus<T>(initial, idle: true),
+      null,
+    );
+  }
 
-  void _bind(Stream<T> stream, {bool isInitial = true}) {
-    final lastKnown = _value.lastValue;
-
-    if (!isInitial) {
-      _setValueInternal(LxWaiting<T>(lastKnown));
+  LxStream._internal(LxStatus<T> initialStatus, Stream<T> Function()? factory)
+      : super(initialStatus, onListen: () {}, onCancel: () {}) {
+    if (factory != null) {
+      _assignFactory(factory);
     }
+  }
 
-    final statusStream = stream
-        .transform<LxStatus<T>>(
-          StreamTransformer.fromHandlers(
-            handleData: (data, sink) {
-              sink.add(LxSuccess<T>(data));
-            },
-            handleError: (error, stackTrace, sink) {
-              sink.add(LxError<T>(error, stackTrace, _value.lastValue));
-            },
-          ),
-        )
-        .asBroadcastStream(
-          onCancel: (sub) => sub.cancel(),
-        );
+  @override
+  void _protectedOnActive() {
+    super._protectedOnActive();
+    _checkPendingBind();
+  }
 
-    bind(statusStream);
+  @override
+  void _protectedOnInactive() {
+    super._protectedOnInactive();
+    _cleanup();
+  }
 
-    _boundSourceStream =
-        this.stream.where((s) => s.hasValue).map((s) => s.valueOrNull as T);
+  void _assignFactory(Stream<T> Function() factory) {
+    _streamFactory = factory;
+    _hasBoundSource = true;
+  }
+
+  void _checkPendingBind() {
+    if (_streamFactory != null && _activeSubscription == null) {
+      _bind(_streamFactory!());
+    }
+  }
+
+  void _bind(Stream<T> stream) {
+    final epoch = ++_bindEpoch;
+
+    _activeSubscription?.cancel();
+    _activeSubscription = stream.listen(
+      (data) {
+        if (_bindEpoch != epoch || isDisposed) return;
+        _setValueInternal(LxSuccess<T>(data));
+        _valueController?.add(data);
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (_bindEpoch != epoch || isDisposed) return;
+        _setValueInternal(LxError<T>(error, stackTrace, _value.lastValue));
+      },
+      onDone: () {
+        if (_bindEpoch != epoch || isDisposed) return;
+        close();
+      },
+    );
   }
 
   /// Returns the current [LxStatus] of the stream.
@@ -66,30 +109,55 @@ class LxStream<T> extends _LxAsyncVal<T> {
 
   /// Returns the raw stream of values, unwrapped from [LxStatus].
   Stream<T> get valueStream {
-    if (_boundSourceStream == null) {
+    if (!_hasBoundSource) {
       throw StateError('No source stream bound or stream has been closed.');
     }
-    return _boundSourceStream!;
+    _valueController ??= StreamController<T>.broadcast(
+      onListen: () {
+        _checkActive();
+        _checkPendingBind();
+      },
+      onCancel: _checkActive,
+    );
+    _checkPendingBind();
+    return _valueController!.stream;
   }
 
   @override
-  void bind(Stream<LxStatus<T>> stream) => super.bind(stream);
+  bool get hasListener =>
+      super.hasListener || (_valueController?.hasListener ?? false);
 
-  /// Replace the current source stream with a new one.
-  void bindStream(Stream<T> stream) {
-    unbind();
-    _bind(stream, isInitial: false);
+  /// Re-executes the stream operation with a new [stream].
+  /// This binds to a static stream instance. See [restartDeferred] for single-subscription streams.
+  void restart(Stream<T> stream) {
+    restartDeferred(() => stream);
   }
 
-  @override
-  void unbind() {
-    super.unbind();
-    _boundSourceStream = null;
+  /// Re-executes the stream operation and registers a new [factory] for future re-activations.
+  void restartDeferred(Stream<T> Function() factory) {
+    _cleanup();
+    _assignFactory(factory);
+    _setValueInternal(LxWaiting<T>(_value.lastValue));
+
+    // If already active, immediately start bound stream.
+    if (hasListener) {
+      _checkPendingBind();
+    }
+  }
+
+  void _cleanup() {
+    _bindEpoch++;
+    _activeSubscription?.cancel();
+    _activeSubscription = null;
   }
 
   @override
   void close() {
-    unbind();
+    _cleanup();
+    _streamFactory = null;
+    _hasBoundSource = false;
+    _valueController?.close();
+    _valueController = null;
     super.close();
   }
 
@@ -98,38 +166,38 @@ class LxStream<T> extends _LxAsyncVal<T> {
 
   /// Transforms each data event with [convert].
   LxStream<R> map<R>(R Function(T event) convert) {
-    return LxStream<R>(valueStream.map(convert));
+    return LxStream<R>.defer(() => valueStream.map(convert));
   }
 
   /// Asynchronously transforms each data event.
   LxStream<E> asyncMap<E>(FutureOr<E> Function(T event) convert) {
-    return LxStream<E>(valueStream.asyncMap(convert));
+    return LxStream<E>.defer(() => valueStream.asyncMap(convert));
   }
 
   /// Expands each event into an iterable of events.
   LxStream<R> expand<R>(Iterable<R> Function(T element) convert) {
-    return LxStream<R>(valueStream.expand(convert));
+    return LxStream<R>.defer(() => valueStream.expand(convert));
   }
 
   /// Filters events based on [test].
   LxStream<T> where(bool Function(T event) test) {
-    return LxStream<T>(valueStream.where(test));
+    return LxStream<T>.defer(() => valueStream.where(test));
   }
 
   /// Skips duplicate events.
   LxStream<T> distinct([bool Function(T previous, T next)? equals]) {
-    return LxStream<T>(valueStream.distinct(equals));
+    return LxStream<T>.defer(() => valueStream.distinct(equals));
   }
 
   /// Reduces the stream to a single value using [combine].
   LxFuture<T> reduce(T Function(T previous, T element) combine) {
-    return LxFuture<T>(valueStream.reduce(combine));
+    return LxFuture<T>.from(() => valueStream.reduce(combine));
   }
 
   /// Folds the stream into a single [LxFuture] result.
   LxFuture<R> fold<R>(
       R initialValue, R Function(R previous, T element) combine) {
-    return LxFuture<R>(valueStream.fold(initialValue, combine));
+    return LxFuture<R>.from(() => valueStream.fold(initialValue, combine));
   }
 }
 
@@ -228,7 +296,7 @@ abstract class _LxAsyncVal<T> extends LxBase<LxStatus<T>> {
   /// Transforms the status sequence into a new [LxStream].
   LxStream<R> transform<R>(
       Stream<R> Function(Stream<LxStatus<T>> stream) transformer) {
-    return LxStream<R>(transformer(stream));
+    return LxStream<R>.defer(() => transformer(stream));
   }
 }
 

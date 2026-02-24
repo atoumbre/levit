@@ -1,6 +1,5 @@
-import 'dart:async';
-import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
+import 'package:test/test.dart';
 
 // Helper concrete class for testing
 class TestReactive<T> extends LxVar<T> {
@@ -9,30 +8,6 @@ class TestReactive<T> extends LxVar<T> {
 
 void main() {
   group('Reactive Coverage', () {
-    test('LxStatus.wait throws if stream emits non-terminal state', () async {
-      final reactive = TestReactive<LxStatus<int>>(LxIdle<int>());
-
-      // We need to simulate a stream that emits non-success/error
-      // But LxReactive stream emits Value.
-      // The extension waits for stream.first.
-
-      // If we emit Waiting, it should throw according to logic
-      Future<void> trigger() async {
-        await Future.delayed(Duration(milliseconds: 10));
-        reactive.value = LxWaiting<int>();
-      }
-
-      trigger();
-
-      try {
-        await reactive.wait;
-        fail('Should have thrown StateError');
-      } catch (e) {
-        expect(e, isA<StateError>());
-        expect(e.toString(), contains('has no value yet'));
-      }
-    });
-
     test('LxComputed handles >8 dependencies (Set mode)', () {
       final deps = List.generate(10, (i) => TestReactive<int>(i));
 

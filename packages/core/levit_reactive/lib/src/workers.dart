@@ -77,7 +77,11 @@ class LxWorkerStat {
 /// // Log every change
 /// final worker = LxWorker(count, (v) => print('Changed: $v'));
 /// ```
-class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
+class LxWorker<T> extends LxBase<LxWorkerStat> {
+  void _updateStat(LxWorkerStat Function(LxWorkerStat val) fn) {
+    _setValueInternal(fn(value));
+  }
+
   /// The reactive source being monitored.
   final LxReactive<T> source;
 
@@ -119,14 +123,14 @@ class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
 
         if (result is Future) {
           if (monitoring && (!this.value.isAsync || !this.value.isProcessing)) {
-            updateValue((s) => s.copyWith(isAsync: true, isProcessing: true));
+            _updateStat((s) => s.copyWith(isAsync: true, isProcessing: true));
           }
 
           result.then((_) {
             if (monitoring) {
               final end = DateTime.now();
               final duration = end.difference(start!);
-              updateValue((s) => s.copyWith(
+              _updateStat((s) => s.copyWith(
                     runCount: s.runCount + 1,
                     lastDuration: duration,
                     totalDuration: s.totalDuration + duration,
@@ -140,7 +144,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
             if (monitoring) {
               final end = DateTime.now();
               final duration = end.difference(start!);
-              updateValue((s) => s.copyWith(
+              _updateStat((s) => s.copyWith(
                     runCount: s.runCount + 1,
                     lastDuration: duration,
                     totalDuration: s.totalDuration + duration,
@@ -154,7 +158,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
           if (monitoring) {
             final end = DateTime.now();
             final duration = end.difference(start!);
-            updateValue((s) => s.copyWith(
+            _updateStat((s) => s.copyWith(
                   runCount: s.runCount + 1,
                   lastDuration: duration,
                   totalDuration: s.totalDuration + duration,
@@ -171,7 +175,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
         if (monitoring) {
           final end = DateTime.now();
           final duration = end.difference(start!);
-          updateValue((s) => s.copyWith(
+          _updateStat((s) => s.copyWith(
                 runCount: s.runCount + 1,
                 lastDuration: duration,
                 totalDuration: s.totalDuration + duration,
@@ -319,7 +323,17 @@ class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
       source,
       (value) {
         timer?.cancel();
-        timer = Timer(duration, () => callback(value));
+        timer = Timer(duration, () {
+          try {
+            callback(value);
+          } catch (e, st) {
+            if (onProcessingError != null) {
+              onProcessingError(e, st);
+            } else {
+              Zone.current.handleUncaughtError(e, st);
+            }
+          }
+        });
       },
       onProcessingError: onProcessingError,
       onClose: () {
@@ -343,7 +357,15 @@ class LxWorker<T> extends LxBase<LxWorkerStat> with _LxMutable<LxWorkerStat> {
       (value) {
         if (isThrottled) return;
         isThrottled = true;
-        callback(value);
+        try {
+          callback(value);
+        } catch (e, st) {
+          if (onProcessingError != null) {
+            onProcessingError(e, st);
+          } else {
+            Zone.current.handleUncaughtError(e, st);
+          }
+        }
         timer?.cancel();
         timer = Timer(duration, () {
           isThrottled = false;

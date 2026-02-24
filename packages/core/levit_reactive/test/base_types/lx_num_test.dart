@@ -21,7 +21,7 @@ void main() {
       count.multiply(4);
       expect(count.value, 12);
 
-      count.intDivide(5);
+      count.divide(5); // 12 ~/ 5 = 2
       expect(count.value, 2);
 
       count.mod(3);
@@ -39,26 +39,32 @@ void main() {
 
       price.divide(4);
       expect(price.value, 2.5);
+
+      price.add(1.5);
+      expect(price.value, 4.0);
+
+      price.subtract(1.0);
+      expect(price.value, 3.0);
+
+      price.multiply(2.5);
+      expect(price.value, 7.5);
+
+      price.mod(2.0);
+      expect(price.value, 1.5);
+
+      price.negate();
+      expect(price.value, -1.5);
+
+      price.clampValue(0.0, 10.0);
+      expect(price.value, 0.0);
     });
 
-    test('LxInt divide throws on non-integer result', () {
+    test('LxInt divide throws on division by zero', () {
       final count = 1.lx;
       expect(
-        () => count.divide(2),
-        throwsA(
-          isA<StateError>().having(
-            (e) => e.message,
-            'message',
-            contains('Use intDivide()'),
-          ),
-        ),
+        () => count.divide(0),
+        throwsA(isA<ArgumentError>()),
       );
-    });
-
-    test('LxInt divide allows exact integer result', () {
-      final count = 8.lx;
-      count.divide(2);
-      expect(count.value, 4);
     });
   });
 }

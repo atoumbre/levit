@@ -761,6 +761,22 @@ class LevitScope {
   ///
   /// [name] is used for debugging.
   LevitScope createScope(String name) {
+    assert(() {
+      LevitScope? current = this;
+      while (current != null) {
+        if (current.name == name) {
+          // ignore: avoid_print
+          print(
+            'LevitScope: Child scope "$name" has the same name as ancestor '
+            'scope "${current.name}" (id: ${current.id}). '
+            'Consider unique names for debugging clarity.',
+          );
+          break;
+        }
+        current = current._parentScope;
+      }
+      return true;
+    }());
     return LevitScope._(name, parentScope: this);
   }
 
