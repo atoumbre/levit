@@ -8,6 +8,8 @@ void main() async {
   final transport = WebSocketTransport.connect(
     'ws://localhost:9200/ws',
     appId: 'nexus-server',
+    onError: (e) =>
+        print('⚠️ DevTool Server not available. Running without monitoring.'),
   );
 
   LevitMonitor.attach(transport: transport);

@@ -19,6 +19,8 @@ void main({
       'ws://localhost:9200/ws',
       appId: 'nexus-studio',
       channelBuilder: devToolsChannelBuilder,
+      onError: (e) => debugPrint(
+          '⚠️ DevTool Server not available. Running without monitoring.'),
     );
 
     LevitMonitor.attach(transport: transport);

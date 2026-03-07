@@ -12,6 +12,8 @@ class WebSocketTransport implements LevitTransport {
   final String? _url;
   final String? _appId;
   final WebSocketChannel Function(Uri uri)? _channelBuilder;
+  final void Function(WebSocketTransport)? _onReady;
+  final void Function(Object)? _onError;
 
   // Reconnect backoff state.
   Timer? _reconnectTimer;
@@ -26,12 +28,20 @@ class WebSocketTransport implements LevitTransport {
   WebSocketTransport(WebSocketChannel channel)
       : _url = null,
         _appId = null,
-        _channelBuilder = null {
+        _channelBuilder = null,
+        _onReady = null,
+        _onError = null {
     _channel = channel;
     _listenToChannel(channel);
   }
 
-  WebSocketTransport._(this._url, this._appId, this._channelBuilder) {
+  WebSocketTransport._(
+    this._url,
+    this._appId,
+    this._channelBuilder,
+    this._onReady,
+    this._onError,
+  ) {
     _connect();
   }
 
@@ -40,8 +50,16 @@ class WebSocketTransport implements LevitTransport {
     String serverUrl, {
     String? appId,
     WebSocketChannel Function(Uri uri)? channelBuilder,
+    void Function(WebSocketTransport)? onReady,
+    void Function(Object)? onError,
   }) {
-    return WebSocketTransport._(serverUrl, appId, channelBuilder);
+    return WebSocketTransport._(
+      serverUrl,
+      appId,
+      channelBuilder,
+      onReady,
+      onError,
+    );
   }
 
   void _connect() {
@@ -56,8 +74,14 @@ class WebSocketTransport implements LevitTransport {
       uri = uri.replace(queryParameters: queryParams);
 
       _channel = _channelBuilder?.call(uri) ?? WebSocketChannel.connect(uri);
+      _channel!.ready.then((_) {
+        _onReady?.call(this);
+      }).catchError((e) {
+        _onError?.call(e);
+      });
       _listenToChannel(_channel!);
-    } catch (_) {
+    } catch (e) {
+      _onError?.call(e);
       _scheduleReconnect();
     }
   }
