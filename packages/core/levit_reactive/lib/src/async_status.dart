@@ -193,12 +193,13 @@ extension LxStatusReactiveExtensions<T> on LxReactive<LxStatus<T>> {
     if (s is LxSuccess<T>) return Future.value(s.value);
     if (s is LxError<T>) return Future.error(s.error, s.stackTrace);
 
-    var first = await stream.first;
+    final terminalStatus = await stream.firstWhere(
+        (status) => status is LxSuccess<T> || status is LxError<T>,
+        orElse: () =>
+            throw StateError('Async operation stream closed unexpectedly.'));
 
-    if (first is LxSuccess<T>) return first.value;
-    if (first is LxError<T>) throw first.error;
-
-    throw StateError('Async operation has no value yet (status: $first)');
+    if (terminalStatus is LxSuccess<T>) return terminalStatus.value;
+    throw (terminalStatus as LxError<T>).error;
   }
 
   /// Specialized listen for async status that allows handling individual states.

@@ -86,7 +86,7 @@ void main() => runApp(const MaterialApp(home: CounterPage()));
 | Package | Use when |
 | :-- | :-- |
 | [`levit_flutter`](./packages/kits/levit_flutter) | Building Flutter applications |
-| [`levit/levit_dart`](./packages/kits/levit) | Building pure Dart applications |
+| [`levit`](./packages/kits/levit) | Building pure Dart applications |
 
 ### Core packages
 

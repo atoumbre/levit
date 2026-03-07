@@ -78,9 +78,13 @@ void main() {
       // reactive.emit(2); // specific checking that this method doesn't exist on interface is static
     });
 
-    test('bind throws to preserve immutability', () {
+    test('bind is not available on LxState', () {
       final state = LxState(0);
-      expect(() => state.bind(Stream.value(1)), throwsStateError);
+      final dynamic dyn = state;
+      expect(
+        () => dyn.bind(Stream.value(1)),
+        throwsA(isA<NoSuchMethodError>()),
+      );
     });
 
     test('mutate/updateValue are not available', () {

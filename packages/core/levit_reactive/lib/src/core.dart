@@ -331,6 +331,8 @@ class LevitReactiveNotifier {
   bool _isPendingPropagate = false;
   // Reused snapshot of listeners for stable notify loops.
   List<void Function()>? _notifySnapshot;
+  int _snapshotGeneration = 0;
+  int _setGeneration = 0;
 
   /// The distance of this notifier from the primary state sources.
   /// Used to ensure correct notification order.
@@ -358,7 +360,7 @@ class LevitReactiveNotifier {
 
     if (_setListeners != null) {
       if (_setListeners!.add(listener)) {
-        _notifySnapshot = null;
+        _setGeneration++;
       }
       return;
     }
@@ -367,7 +369,7 @@ class LevitReactiveNotifier {
       if (_singleListener == listener) return;
       _setListeners = {_singleListener!, listener};
       _singleListener = null;
-      _notifySnapshot = null;
+      _setGeneration++;
     }
   }
 
@@ -390,12 +392,11 @@ class LevitReactiveNotifier {
 
     if (_setListeners != null) {
       if (_setListeners!.remove(listener)) {
-        _notifySnapshot = null;
+        _setGeneration++;
       }
       if (_setListeners!.isEmpty) {
         _setListeners = null;
-        _notifySnapshot = null;
-        // Keep set-mode to avoid representation thrashing on churn listeners.
+        _notifySnapshot = null; // Hard clear when empty
       }
     }
   }
@@ -492,11 +493,12 @@ class LevitReactiveNotifier {
 
     // Snapshot avoids concurrent modification while listeners mutate subscriptions.
     var snapshot = _notifySnapshot;
-    if (snapshot == null) {
+    if (snapshot == null || _snapshotGeneration != _setGeneration) {
       final listeners = _setListeners;
       if (listeners == null || listeners.isEmpty) return;
       snapshot = listeners.toList(growable: false);
       _notifySnapshot = snapshot;
+      _snapshotGeneration = _setGeneration;
     }
 
     final length = snapshot.length;
@@ -559,9 +561,16 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   @override
   String? name;
 
+  /// Custom equality function. When null, uses `==`.
+  final bool Function(T previous, T current)? equals;
+
   /// Creates a reactive wrapper around [initial].
   LxBase(T initial,
-      {this.onListen, this.onCancel, this.name, bool isSensitive = false})
+      {this.onListen,
+      this.onCancel,
+      this.name,
+      bool isSensitive = false,
+      this.equals})
       : _value = initial,
         _isSensitive = isSensitive {
     if (LevitReactiveMiddleware.hasInitMiddlewares) {
@@ -569,12 +578,11 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     }
   }
 
+  /// Compares two values using the custom [equals] function or `==`.
+  bool _isEqual(T a, T b) => equals != null ? equals!(a, b) : a == b;
+
   T _value;
   StreamController<T>? _controller;
-
-  Stream<T>? _boundStream;
-  int _externalListeners = 0;
-  StreamSubscription<T>? _activeBoundSubscription;
 
   /// Called when the stream is listened to.
   final void Function()? onListen;
@@ -688,7 +696,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     // Fast path bypasses middleware interception.
     if (LevitReactiveMiddleware.bypassMiddleware ||
         !LevitReactiveMiddleware.hasSetMiddlewares) {
-      if (_value == val) return;
+      if (_isEqual(_value, val)) return;
       _value = val;
       _controller?.add(_value);
       if (notifyListeners) {
@@ -698,12 +706,11 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     }
 
     // Slow path builds change payload for middleware and time-travel hooks.
-    if (_value == val) return;
+    if (_isEqual(_value, val)) return;
 
     final oldValue = _value;
 
     final change = LevitReactiveChange<T>(
-      timestamp: DateTime.now(),
       valueType: T,
       oldValue: oldValue,
       newValue: val,
@@ -738,7 +745,6 @@ abstract class LxBase<T> extends LevitReactiveNotifier
 
   @override
   Stream<T> get stream {
-    if (_boundStream != null) return _boundStream!;
     _controller ??= StreamController<T>.broadcast(
         onListen: () => _checkActive(), onCancel: () => _checkActive());
     return _controller!.stream;
@@ -747,73 +753,24 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   /// Whether there are active listeners.
   @override
   bool get hasListener {
-    // Internal bound-stream subscription should not count as external demand.
-    int effectiveExternal = _externalListeners;
-    if (_activeBoundSubscription != null) effectiveExternal--;
-
-    return (_controller?.hasListener ?? false) ||
-        super.hasListener ||
-        effectiveExternal > 0;
+    return (_controller?.hasListener ?? false) || super.hasListener;
   }
 
   /// Whether there are active stream listeners.
   bool get _hasStreamListener {
-    // Internal bound-stream subscription should not count as external demand.
-    int effectiveExternal = _externalListeners;
-    if (_activeBoundSubscription != null) effectiveExternal--;
-
-    return (_controller?.hasListener ?? false) || effectiveExternal > 0;
+    return _controller?.hasListener ?? false;
   }
 
-  /// Binds an external stream to this reactive variable.
-  void bind(Stream<T> externalStream) {
-    if (_boundStream != null && _boundStream == externalStream) return;
-
-    unbind();
-
-    _boundStream = externalStream.map((event) {
-      // Route stream writes through middleware-aware setter.
-      _setValueInternal(event);
-      return event;
-    }).transform(
-      StreamTransformer<T, T>.fromHandlers(
-        handleError: (error, st, sink) {
-          _controller?.addError(error, st);
-          sink.addError(error, st);
-        },
-      ),
-    ).asBroadcastStream(
-      onListen: (sub) {
-        _externalListeners++;
-        _checkActive();
-      },
-      onCancel: (subscription) {
-        _externalListeners--;
-        _checkActive();
-        subscription.cancel();
-      },
-    );
-
-    if (hasListener) {
-      _activeBoundSubscription = _boundStream!.listen((_) {});
-    }
-  }
-
-  /// Unbinds any external stream.
-  void unbind() {
-    _activeBoundSubscription?.cancel();
-    _activeBoundSubscription = null;
-    _boundStream = null;
-    _externalListeners = 0;
-    _checkActive();
-  }
+  /// Hook for subclasses to clean up binding resources during [close].
+  /// Overridden by [_LxBindable].
+  void _cleanupBinding() {}
 
   /// Creates a specific selection of the state that only updates when the selected value changes.
   ///
   /// This is useful for optimizing rebuilds when using large state objects.
   /// The selector receives the current value of the state.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// final state = {'count': 0, 'data': 'foo'}.lx;
   /// final count = state.select((val) => val['count']);
@@ -831,13 +788,13 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   void close() {
     if (LevitReactiveMiddleware.bypassMiddleware ||
         !LevitReactiveMiddleware.hasDisposeMiddlewares) {
-      unbind();
+      _cleanupBinding();
       _controller?.close();
       super.dispose();
       _checkActive();
     } else {
       final wrapped = LevitReactiveMiddlewareChain.applyOnDispose(() {
-        unbind();
+        _cleanupBinding();
         _controller?.close();
         super.dispose();
         _checkActive();
@@ -865,7 +822,6 @@ abstract class LxBase<T> extends LevitReactiveNotifier
 
     // Refresh middleware path emits a synthetic change event.
     final change = LevitReactiveChange<T>(
-      timestamp: DateTime.now(),
       valueType: T,
       oldValue: _value,
       newValue: _value,
@@ -900,21 +856,12 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   void addListener(void Function() listener) {
     super.addListener(listener);
     _checkActive();
-
-    if (_isActive && _boundStream != null && _activeBoundSubscription == null) {
-      _activeBoundSubscription = _boundStream!.listen((_) {});
-    }
   }
 
   @override
   void removeListener(void Function() listener) {
     super.removeListener(listener);
     _checkActive();
-
-    if (!hasListener) {
-      _activeBoundSubscription?.cancel();
-      _activeBoundSubscription = null;
-    }
   }
 
   @override
@@ -925,7 +872,15 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   bool get isDisposed => super.isDisposed;
 }
 
-/// Mixin for reactive types that allow mutable updates.
+/// Internal state object for stream binding.
+/// Allocated lazily to save memory since most reactive variables are never bound.
+class _BindingState<T> {
+  Stream<T>? boundStream;
+  int externalListeners = 0;
+  StreamSubscription<T>? activeBoundSubscription;
+}
+
+/// Mixin for reactive types that allow mutable updates and stream-binding.
 ///
 /// Kept off [LxBase] so immutable containers (like [LxState]) don't inherit
 /// mutation helpers.
@@ -939,6 +894,99 @@ mixin _LxMutable<T> on LxBase<T> {
   /// Updates the value using a transformation function.
   void updateValue(T Function(T val) fn) {
     _setValueInternal(fn(_value));
+  }
+
+  // --- Stream Binding Capabilities ---
+  _BindingState<T>? _binding;
+
+  _BindingState<T> get _bindingState => _binding ??= _BindingState<T>();
+
+  /// Binds an external stream to this reactive variable.
+  void bind(Stream<T> externalStream) {
+    if (_binding?.boundStream != null &&
+        _binding?.boundStream == externalStream) {
+      return;
+    }
+
+    unbind();
+
+    _bindingState.boundStream = externalStream.map((event) {
+      // Route stream writes through middleware-aware setter.
+      _setValueInternal(event);
+      return event;
+    }).transform(
+      StreamTransformer<T, T>.fromHandlers(
+        handleError: (error, st, sink) {
+          _controller?.addError(error, st);
+          sink.addError(error, st);
+        },
+      ),
+    ).asBroadcastStream(
+      onListen: (sub) {
+        _bindingState.externalListeners++;
+        _checkActive();
+      },
+      onCancel: (subscription) {
+        if (_binding != null) {
+          _binding!.externalListeners--;
+        }
+        _checkActive();
+        subscription.cancel();
+      },
+    );
+
+    if (hasListener) {
+      _bindingState.activeBoundSubscription =
+          _binding!.boundStream!.listen((_) {});
+    }
+  }
+
+  /// Unbinds any external stream.
+  void unbind() {
+    _binding?.activeBoundSubscription?.cancel();
+    _binding = null;
+    _checkActive();
+  }
+
+  @override
+  void _cleanupBinding() => unbind();
+
+  @override
+  Stream<T> get stream {
+    if (_binding?.boundStream != null) return _binding!.boundStream!;
+    return super.stream;
+  }
+
+  @override
+  bool get hasListener {
+    // Internal bound-stream subscription should not count as external demand.
+    int effectiveExternal = _binding?.externalListeners ?? 0;
+    if (_binding?.activeBoundSubscription != null) effectiveExternal--;
+
+    return super.hasListener || effectiveExternal > 0;
+  }
+
+  @override
+  void addListener(void Function() listener) {
+    super.addListener(listener);
+
+    if (_binding?.boundStream != null &&
+        _binding?.activeBoundSubscription == null &&
+        hasListener) {
+      _binding!.activeBoundSubscription = _binding!.boundStream!.listen((_) {});
+    }
+  }
+
+  @override
+  void removeListener(void Function() listener) {
+    super.removeListener(listener);
+
+    if (!hasListener) {
+      _binding?.activeBoundSubscription?.cancel();
+      if (_binding != null) {
+        _binding!.activeBoundSubscription = null;
+      }
+    }
   }
 }
 

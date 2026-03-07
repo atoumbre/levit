@@ -93,6 +93,11 @@ class _MockChannel implements WebSocketChannel {
   }
 }
 
+class _MockChannelWithReadyError extends _MockChannel {
+  @override
+  Future<void> get ready => Future.error('Intentional ready error');
+}
+
 void main() {
   group('WebSocketTransport Fault Handling', () {
     test('Handles invalid URL connection failure by scheduling reconnect',
@@ -109,6 +114,37 @@ void main() {
 
       await Future.delayed(Duration(milliseconds: 1100));
       expect(channelBuilderCalls, greaterThanOrEqualTo(2));
+      await transport.close();
+    });
+
+    test('Triggers onReady callback when ready future completes', () async {
+      int onReadyCalls = 0;
+      final transport = WebSocketTransport.connect(
+        'ws://localhost',
+        channelBuilder: (uri) => _MockChannel(),
+        onReady: (t) {
+          onReadyCalls++;
+        },
+      );
+
+      await Future.delayed(Duration(milliseconds: 100));
+      expect(onReadyCalls, 1);
+      await transport.close();
+    });
+
+    test('Handles ready future error and triggers onError callback', () async {
+      int onErrorCalls = 0;
+      final transport = WebSocketTransport.connect(
+        'ws://localhost',
+        channelBuilder: (uri) => _MockChannelWithReadyError(),
+        onError: (e) {
+          onErrorCalls++;
+          expect(e, equals('Intentional ready error'));
+        },
+      );
+
+      await Future.delayed(Duration(milliseconds: 100));
+      expect(onErrorCalls, 1);
       await transport.close();
     });
 

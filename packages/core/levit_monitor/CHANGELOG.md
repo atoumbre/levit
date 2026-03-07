@@ -1,4 +1,9 @@
 
+## 0.0.7
+
+### Fixes
+- **FIX**: Safely surfaced websocket connection errors via `onReady` and `onError` callbacks in `WebSocketTransport`.
+
 ## 0.0.6
 
 ### Breaking Changes

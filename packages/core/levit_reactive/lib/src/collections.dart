@@ -5,7 +5,7 @@ part of '../levit_reactive.dart';
 /// [LxList] implements [List] and intercepts all mutating operations
 /// (add, remove, sort, etc.) to trigger reactive updates.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// final items = <String>[].lx;
 ///
@@ -301,7 +301,7 @@ class LxList<E> extends LxVar<List<E>> implements List<E> {
 /// [LxMap] implements [Map] and intercepts all mutating operations
 /// (operator []=, remove, clear, etc.) to trigger reactive updates.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// final settings = {'theme': 'dark'}.lx;
 ///

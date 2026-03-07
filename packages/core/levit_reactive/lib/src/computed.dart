@@ -5,7 +5,7 @@ part of '../levit_reactive.dart';
 /// [LxComputed] automatically tracks its dependencies and re-evaluates
 /// when they change. Calculations are lazy and memoized.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// final firstName = 'John'.lx;
 /// final lastName = 'Doe'.lx;
@@ -329,7 +329,7 @@ class LxComputed<T> extends _ComputedBase<T> {
 /// [LxAsyncComputed] derives state from async operations, automatically tracking
 /// dependencies. It exposes the current status (Success, Error, Waiting) of the calculation.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// final userId = 1.lx;
 ///

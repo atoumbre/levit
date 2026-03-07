@@ -5,7 +5,7 @@ part of '../levit_scope.dart';
 /// Implement this interface to receive callbacks for initialization and disposal.
 /// This mechanism ensures deterministic cleanup when the owning scope is disposed.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// class MyService implements LevitScopeDisposable {
 ///   @override
@@ -180,7 +180,7 @@ class LevitScope {
   /// The [builder] is called immediately. If a dependency of type [S] with the
   /// same [tag] already exists, it is replaced (disposed) before the new one is created.
   ///
-  /// Example:
+  /// // Example usage:
   /// ```dart
   /// scope.put(() => AuthService());
   /// ```
@@ -761,6 +761,22 @@ class LevitScope {
   ///
   /// [name] is used for debugging.
   LevitScope createScope(String name) {
+    assert(() {
+      LevitScope? current = this;
+      while (current != null) {
+        if (current.name == name) {
+          // ignore: avoid_print
+          print(
+            'LevitScope: Child scope "$name" has the same name as ancestor '
+            'scope "${current.name}" (id: ${current.id}). '
+            'Consider unique names for debugging clarity.',
+          );
+          break;
+        }
+        current = current._parentScope;
+      }
+      return true;
+    }());
     return LevitScope._(name, parentScope: this);
   }
 

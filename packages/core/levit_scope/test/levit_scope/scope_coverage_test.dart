@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:levit_scope/levit_scope.dart';
 import 'package:test/test.dart';
 
@@ -52,6 +53,29 @@ void main() {
       // Internally, cache should have cleared around index 502
 
       root.dispose();
+    });
+
+    test('createScope prints warning if child shares ancestor name', () {
+      final parent = LevitScope.root().createScope('SharedName');
+      final logs = <String>[];
+
+      runZoned(
+        () {
+          parent.createScope('SharedName');
+        },
+        zoneSpecification: ZoneSpecification(
+          print: (self, parentZone, zone, line) {
+            logs.add(line);
+          },
+        ),
+      );
+
+      expect(
+        logs.any(
+            (l) => l.contains('Child scope "SharedName" has the same name')),
+        isTrue,
+        reason: 'Should warn about duplicate scope names in hierarchy.',
+      );
     });
   });
 }

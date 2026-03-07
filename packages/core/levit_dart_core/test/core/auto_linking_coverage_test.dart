@@ -141,7 +141,7 @@ class InterceptController extends LevitController {
 }
 
 class TestController extends LevitController {
-  late final LxNum<int> count;
+  late final LxInt count;
   late final LxComputed<int> doubled;
 
   @override
@@ -153,7 +153,7 @@ class TestController extends LevitController {
 }
 
 class ParentController extends LevitController {
-  late final LxNum<int> parentValue;
+  late final LxInt parentValue;
 
   @override
   void onInit() {
@@ -163,7 +163,7 @@ class ParentController extends LevitController {
 }
 
 class ChildController extends LevitController {
-  late final LxNum<int> childValue;
+  late final LxInt childValue;
 
   @override
   void onInit() {
@@ -173,7 +173,7 @@ class ChildController extends LevitController {
 }
 
 class MultiReactiveController extends LevitController {
-  late final List<LxNum<int>> values;
+  late final List<LxInt> values;
 
   @override
   void onInit() {
@@ -183,7 +183,7 @@ class MultiReactiveController extends LevitController {
 }
 
 class IndexTestController extends LevitController {
-  late final List<LxNum<int>> values;
+  late final List<LxInt> values;
 
   @override
   void onInit() {

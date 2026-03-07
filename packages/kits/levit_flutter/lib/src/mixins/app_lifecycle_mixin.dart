@@ -5,7 +5,7 @@ part of '../../levit_flutter.dart';
 /// Automatically registers a [WidgetsBindingObserver] when the controller is
 /// initialized and removes it when closed.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// class MyController extends LevitController with LevitAppLifecycleMixin {
 ///   @override

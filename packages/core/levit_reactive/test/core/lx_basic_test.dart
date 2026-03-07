@@ -213,10 +213,15 @@ void main() {
 
       expect(future, isA<LxFuture<int>>());
 
+      // Trigger lazy Future evaluation BEFORE events happen to capture them
+      future.addListener(() {});
+
       controller.add(1);
       controller.add(2);
       controller.add(3);
       await controller.close();
+
+      await future.wait; // Let microtask loop process Stream.fold result
 
       // LxFuture.value returns LxStatus<T>
       expect(future.value.valueOrNull, equals(6));

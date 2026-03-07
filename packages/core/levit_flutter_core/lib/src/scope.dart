@@ -25,7 +25,7 @@ class _ScopeProvider extends InheritedWidget {
 /// Use [LScope] to provide dependencies for a specific subtree.
 /// The scope is automatically closed when the widget is unmounted.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// LScope(
 ///   dependencyFactory: (scope) => scope.put(() => MyController()),
@@ -229,7 +229,7 @@ class _LScopeState extends State<LScope> {
 /// Initializes the scope using an asynchronous [dependencyFactory] and
 /// only renders [child] when initialization completes.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// LAsyncScope(
 ///   dependencyFactory: (scope) async {

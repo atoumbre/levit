@@ -5,7 +5,7 @@ part of '../levit_flutter_core.dart';
 /// [LWatch] tracks which [LxReactive] values are accessed within its [builder]
 /// and automatically triggers a rebuild when any of them change.
 ///
-/// Example:
+/// // Example usage:
 /// ```dart
 /// LWatch(() {
 ///   return Text('Count: ${controller.count()}');
