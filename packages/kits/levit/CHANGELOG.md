@@ -1,3 +1,6 @@
+## 0.0.7
+- Bumped version to 0.0.7
+
 ## 0.0.6
 
 - **BREAKING**: Updated transitive dependencies to include breaking changes from `levit_core`.

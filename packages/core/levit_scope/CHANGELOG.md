@@ -1,4 +1,7 @@
 
+## 0.0.7
+- Bumped version to 0.0.7
+
 ## 0.0.6
 
 ### New Features
