@@ -76,7 +76,7 @@ In Flutter, that shows up through widgets such as:
 - `LStatusBuilder` for status-oriented async rendering
 
 This is not just about performance metrics.
-It is also about keeping rebuild boundaries intentional and inspectable.
+It is also about keeping rebuild boundaries intentional and easy to inspect.
 
 ### 3. One architecture across Dart and Flutter
 
