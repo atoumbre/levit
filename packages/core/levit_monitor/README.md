@@ -32,6 +32,16 @@ Event flow:
 3. Obfuscator redacts sensitive values.
 4. Transport(s) deliver encoded events.
 
+## When to Add This Package
+
+Add `levit_monitor` when you need:
+
+- Structured runtime telemetry for debugging, QA, or production diagnostics.
+- Event export to a console, socket, file, or custom transport.
+- Redaction and shadow-state support before events leave the process.
+
+You do not need it for normal application logic, and it is intentionally not bundled by `levit` or `levit_flutter`.
+
 ## Getting Started
 
 ```yaml
@@ -56,4 +66,3 @@ void main() {
 - Transport-agnostic event delivery.
 - Privacy-aware output through obfuscation hooks.
 - Low-friction integration with existing Levit middleware semantics.
-

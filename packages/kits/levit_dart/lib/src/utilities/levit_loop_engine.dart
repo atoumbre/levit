@@ -262,6 +262,8 @@ class _IsolateLoopService implements StoppableService {
   Isolate? _isolate;
   ReceivePort? _receivePort;
   StreamSubscription<dynamic>? _receiveSubscription;
+  String? _pendingCommand;
+  bool _desiredPaused = false;
 
   _IsolateLoopService(this._body, {Duration? delay, String? debugName})
       : _delay = delay,
@@ -286,6 +288,11 @@ class _IsolateLoopService implements StoppableService {
         (message) {
           if (message is SendPort) {
             _commandPort = message;
+            final pendingCommand = _pendingCommand;
+            if (pendingCommand != null) {
+              message.send(pendingCommand);
+              _pendingCommand = null;
+            }
           } else if (message is LxStatus<dynamic>) {
             _status.value = message;
           }
@@ -294,7 +301,8 @@ class _IsolateLoopService implements StoppableService {
 
       final isolate = await _spawnIsolate(
         _isolateEntry,
-        _IsolateConfig(_body, _receivePort!.sendPort, _delay),
+        _IsolateConfig(_body, _receivePort!.sendPort, _delay,
+            startPaused: _desiredPaused),
         debugName: _debugName,
       );
 
@@ -310,20 +318,33 @@ class _IsolateLoopService implements StoppableService {
     }
   }
 
+  void _dispatchCommand(String command) {
+    final port = _commandPort;
+    if (port == null) {
+      _pendingCommand = command;
+      return;
+    }
+    port.send(command);
+  }
+
   @override
   void pause() {
-    _commandPort?.send('pause');
+    _desiredPaused = true;
+    _dispatchCommand('pause');
     _status.value = LxWaiting();
   }
 
   @override
   void resume() {
-    _commandPort?.send('resume');
+    _desiredPaused = false;
+    _dispatchCommand('resume');
     _status.value = LxWaiting();
   }
 
   @override
   void stop() {
+    _desiredPaused = false;
+    _pendingCommand = null;
     _commandPort?.send('stop');
     _isolate?.kill(priority: Isolate.beforeNextEvent);
     _commandPort = null;
@@ -364,6 +385,9 @@ class _IsolateLoopService implements StoppableService {
     });
 
     // Isolate loop starts only after command port handshake is established.
+    if (config.startPaused) {
+      executor.pause();
+    }
     executor.start();
   }
 }
@@ -372,6 +396,8 @@ class _IsolateConfig {
   final FutureOr<void> Function() body;
   final SendPort mainSendPort;
   final Duration? delay;
+  final bool startPaused;
 
-  _IsolateConfig(this.body, this.mainSendPort, this.delay);
+  _IsolateConfig(this.body, this.mainSendPort, this.delay,
+      {this.startPaused = false});
 }

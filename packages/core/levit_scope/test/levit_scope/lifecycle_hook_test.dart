@@ -24,6 +24,23 @@ class LifecycleService implements LevitScopeDisposable {
 
 class AsyncLifecycleService extends LifecycleService {}
 
+class OrderedLifecycleService implements LevitScopeDisposable {
+  final List<String> events = [];
+
+  @override
+  void onInit() {
+    events.add('init');
+  }
+
+  @override
+  void didAttachToScope(LevitScope scope, {String? key}) {
+    events.add('attach');
+  }
+
+  @override
+  void onClose() {}
+}
+
 void main() {
   late LevitScope levit;
 
@@ -31,6 +48,15 @@ void main() {
   tearDown(() => levit.reset(force: true));
 
   group('LevitScopeDisposable.didAttachToScope', () {
+    test('calls onInit before didAttachToScope', () {
+      final scope = levit.createScope('test');
+      final service = OrderedLifecycleService();
+
+      scope.put(() => service);
+
+      expect(service.events, equals(['init', 'attach']));
+    });
+
     test('called on synchronous put', () {
       final scope = levit.createScope('test');
       final service = LifecycleService();

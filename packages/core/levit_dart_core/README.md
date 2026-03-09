@@ -23,6 +23,8 @@ This package does not include:
 - Flutter widgets and widget-tree bindings (use `levit_flutter_core` or `levit_flutter`).
 - Higher-level utility mixins for tasks/loops (use `levit_dart`).
 
+`levit_flutter_core` re-exports this package for convenience in Flutter, but the Dart-side composition APIs and lifecycle semantics remain owned and documented here.
+
 ## Conceptual Overview
 
 `levit_dart_core` formalizes ownership semantics between state and lifecycle:
@@ -73,4 +75,3 @@ void main() {
 - Deterministic lifecycle: setup and teardown order is predictable.
 - Composition over abstraction leakage: `Levit` exposes scope and reactive APIs directly.
 - Pure Dart portability: usable in shared logic, servers, and CLIs.
-

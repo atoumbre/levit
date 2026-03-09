@@ -71,5 +71,27 @@ void main() {
 
       controller.onClose();
     });
+
+    test('Countdown finishes on the zero tick', () async {
+      final controller = TestTimeController();
+      controller.onInit();
+      int finished = 0;
+      Duration? lastTick;
+
+      final countdown = controller.startCountdown(
+        duration: const Duration(milliseconds: 200),
+        interval: const Duration(milliseconds: 100),
+        onTick: (remaining) => lastTick = remaining,
+        onFinish: () => finished++,
+      );
+
+      await Future.delayed(const Duration(milliseconds: 220));
+
+      expect(countdown.remaining.value, Duration.zero);
+      expect(lastTick, Duration.zero);
+      expect(finished, 1);
+
+      controller.onClose();
+    });
   });
 }

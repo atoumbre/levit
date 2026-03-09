@@ -9,6 +9,9 @@
 
 `levit_dart` adds higher-level pure Dart utilities on top of `levit_dart_core`.
 
+Use this package when you want the utility layer directly.
+If you want the recommended app-level single import for pure Dart, use `levit`.
+
 This package is responsible for:
 
 - Controller task execution helpers and lifecycle-aware task orchestration.
@@ -24,7 +27,7 @@ This package does not include:
 The package keeps controller ownership explicit while reducing boilerplate for common operational patterns:
 
 - Queueing and retrying tasks with structured lifecycle events.
-- Tracking execution status reactively.
+- Choosing between engine-only task orchestration and reactive task state.
 - Running managed loops tied to controller disposal.
 
 ## Getting Started
@@ -37,7 +40,7 @@ dependencies:
 ```dart
 import 'package:levit_dart/levit_dart.dart';
 
-class SyncController extends LevitController with LevitTasksMixin {
+class SyncController extends LevitController with LevitReactiveTasksMixin {
   Future<void> sync() async {
     await runTask(
       () async {
@@ -49,9 +52,15 @@ class SyncController extends LevitController with LevitTasksMixin {
 }
 ```
 
+## Choosing a Task Mixin
+
+| Mixin | Use when | Primary API |
+| :-- | :-- | :-- |
+| `LevitTasksMixin` | You need scheduling, retries, caching, or cancellation without UI-facing reactive task state. | `tasksEngine.schedule(...)` |
+| `LevitReactiveTasksMixin` | You want reactive task details, busy state, and progress that can be observed by other runtime code or UI. | `runTask(...)`, `tasks`, `isBusy`, `totalProgress` |
+
 ## Design Principles
 
 - Controller-first ownership and cleanup.
 - Explicit concurrency semantics.
 - Reusable utilities without hiding underlying lifecycle mechanics.
-

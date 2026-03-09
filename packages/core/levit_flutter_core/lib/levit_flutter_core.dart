@@ -1,17 +1,23 @@
-/// Low-level Flutter bindings for the Levit runtime.
+/// Flutter bindings for the Levit runtime.
 ///
 /// This package maps Levit scope and reactive semantics to Flutter widget
 /// lifecycle boundaries and rebuild mechanics.
 ///
+/// It owns the Flutter binding layer and re-exports
+/// `package:levit_dart_core/levit_dart_core.dart` for convenience. The
+/// Dart-side composition APIs still belong to `levit_dart_core`.
+///
 /// ### Core widgets
-/// * [LScope]: Provides widget-tree-scoped dependency injection with
-///     deterministic cleanup.
-/// * [LView]: A specialized widget family for reactive views.
-/// * [LScopedView]: A specialized widget family for reactive views with
-///     widget-tree-scoped dependency injection.
-/// * [LWatch]: The primary building block for reactive UIs. It automatically
-///     tracks reactive dependencies accessed during build.
-/// * [LBuilder]: A specialized widget family for reactive status management.
+/// * [LScope] / [LAsyncScope]: Create widget-owned scopes with deterministic
+///     cleanup.
+/// * [LView] / [LAsyncView]: Consume dependencies from an existing scope.
+/// * [LScopedView] / [LScopedAsyncView]: Create a child scope and resolve a
+///     dependency in one widget.
+/// * [LWatch]: The primary proxy-tracked reactive rebuild boundary.
+/// * [LBuilder]: Explicitly rebuild from a single [LxReactive].
+/// * [LSelectorBuilder]: Build from a local derived value for a small subtree.
+/// * [LStatusBuilder]: Render waiting, error, and success states for
+///     [LxStatus].
 library;
 
 export 'package:levit_dart_core/levit_dart_core.dart';

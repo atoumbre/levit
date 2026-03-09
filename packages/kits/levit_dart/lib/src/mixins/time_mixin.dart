@@ -131,9 +131,10 @@ class LxCountdown {
       if (_isPaused) return;
 
       final newRemaining = remaining.value - interval;
-      if (newRemaining.isNegative) {
+      if (newRemaining <= Duration.zero) {
         remaining.value = Duration.zero;
         timer.cancel();
+        onTick?.call(Duration.zero);
         onFinish?.call();
       } else {
         remaining.value = newRemaining;

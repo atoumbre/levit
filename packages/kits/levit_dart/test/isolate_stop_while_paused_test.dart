@@ -3,11 +3,34 @@ import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
 void _noopLoopBody() {}
+void _fastLoopBody() {}
 
 class TestLoopController extends LevitController with LevitLoopExecutionMixin {}
 
 void main() {
   group('LevitLoopExecutionMixin Isolate Coverage', () {
+    test('pause requested immediately keeps isolate loop waiting', () async {
+      final controller = TestLoopController();
+      controller.onInit();
+
+      controller.loopEngine.startIsolateLoop(
+        'paused_before_ready',
+        _fastLoopBody,
+        delay: const Duration(milliseconds: 10),
+      );
+      controller.loopEngine.pauseService('paused_before_ready');
+
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      expect(
+        controller.loopEngine.getServiceStatus('paused_before_ready')?.value,
+        isA<LxWaiting<dynamic>>(),
+      );
+
+      controller.loopEngine.stopService('paused_before_ready');
+      controller.onClose();
+    });
+
     test('stop an isolate loop while it is paused', () async {
       final controller = TestLoopController();
       controller.onInit();

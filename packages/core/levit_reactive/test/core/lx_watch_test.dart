@@ -123,5 +123,32 @@ void main() {
       await Future.delayed(Duration.zero);
       expect(watcher.value.runCount, 1); // Should not increment
     });
+
+    test('close ignores in-flight async completions after stream teardown',
+        () async {
+      final count = 0.lx;
+      final completer = Completer<void>();
+      final watcher = LxWorker(count, (_) async {
+        await completer.future;
+      });
+
+      final sub = watcher.stream.listen((_) {});
+      addTearDown(() async {
+        await sub.cancel();
+      });
+
+      count.value++;
+      await Future.delayed(Duration.zero);
+      expect(watcher.value.isProcessing, isTrue);
+
+      watcher.close();
+      completer.complete();
+      await Future.delayed(Duration.zero);
+      await Future.delayed(Duration.zero);
+
+      expect(watcher.isDisposed, isTrue);
+      expect(watcher.value.runCount, 0);
+      expect(watcher.value.isProcessing, isTrue);
+    });
   });
 }

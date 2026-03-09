@@ -8,6 +8,8 @@ Deterministic reactive architecture for Dart and Flutter.
 
 Levit is a layered ecosystem for teams that want explicit ownership, deterministic disposal, and fine-grained reactive updates.
 
+Start with [`WHY_LEVIT.md`](./WHY_LEVIT.md) if you want the architectural rationale before the package-level onboarding.
+
 ## Installation
 
 ### Flutter applications
@@ -21,6 +23,17 @@ flutter pub add levit_flutter
 ```bash
 dart pub add levit
 ```
+
+## Which Package Should I Import?
+
+| Goal | Package | Notes |
+| :-- | :-- | :-- |
+| Flutter application | [`levit_flutter`](./packages/kits/levit_flutter) | Recommended single import for app code. |
+| Pure Dart application | [`levit`](./packages/kits/levit) | Recommended single import for CLI, server, and shared domain code. |
+| Flutter bindings without the higher-level Flutter kit | [`levit_flutter_core`](./packages/core/levit_flutter_core) | Owns Flutter widgets and scope bridging; re-exports `levit_dart_core` for convenience. |
+| Core composition APIs only | [`levit_dart_core`](./packages/core/levit_dart_core) | Owns `Levit`, controllers, stores, and the Dart-side lifecycle contract. |
+| Task/loop/time utilities on top of Dart core | [`levit_dart`](./packages/kits/levit_dart) | Adds controller utilities without Flutter widgets. |
+| Runtime telemetry and diagnostics | [`levit_monitor`](./packages/core/levit_monitor) | Add separately alongside any runtime package when you need structured events. |
 
 ## Quick Start
 
@@ -79,38 +92,23 @@ class CounterPage extends StatelessWidget {
 void main() => runApp(const MaterialApp(home: CounterPage()));
 ```
 
-## Ecosystem Overview
-
-### Recommended entry points (kits)
-
-| Package | Use when |
-| :-- | :-- |
-| [`levit_flutter`](./packages/kits/levit_flutter) | Building Flutter applications |
-| [`levit`](./packages/kits/levit) | Building pure Dart applications |
-
-### Core packages
-
-| Package | Responsibility |
-| :-- | :-- |
-| [`levit_reactive`](./packages/core/levit_reactive) | Reactive primitives, computed values, workers, batching |
-| [`levit_scope`](./packages/core/levit_scope) | Hierarchical dependency injection and deterministic lifecycles |
-| [`levit_dart_core`](./packages/core/levit_dart_core) | Composition layer (`Levit`, `LevitController`, `LevitStore`) |
-| [`levit_flutter_core`](./packages/core/levit_flutter_core) | Flutter bindings (`LScope`, `LWatch`, `LView`, builders) |
-| [`levit_monitor`](./packages/core/levit_monitor) | Structured monitoring and transport pipeline |
-
 ## Architecture Model
 
 ```mermaid
 flowchart LR
-  subgraph Kits
+  subgraph Recommended kits
     K1[levit]
     K2[levit_flutter]
+  end
+
+  subgraph Utility layer
+    U1[levit_dart]
   end
 
   subgraph Composition
     C1[levit_dart_core]
     C2[levit_flutter_core]
-    C3[levit_monitor]
+    C3["levit_monitor (opt-in)"]
   end
 
   subgraph Foundations
@@ -118,8 +116,10 @@ flowchart LR
     F2[levit_reactive]
   end
 
-  K1 --> C1
+  K1 --> U1
   K2 --> C2
+  K2 --> U1
+  U1 --> C1
   C2 --> C1
   C1 --> F1
   C1 --> F2
@@ -127,13 +127,34 @@ flowchart LR
   C3 -.observes.-> F2
 ```
 
-## Package Boundaries
+`levit_monitor` is intentionally separate from `levit` and `levit_flutter`; add it only when you need runtime telemetry.
 
-- `levit_scope` owns dependency registration, resolution, and disposal rules.
-- `levit_reactive` owns change propagation, dependency tracking, and reactive middleware.
-- `levit_dart_core` composes both layers and defines controller/store ownership semantics.
-- `levit_flutter_core` maps Levit lifecycle and dependency context to Flutter widget lifecycles.
-- `levit_dart` and `levit_flutter` add convenience APIs on top of the core layers.
+## Ecosystem Overview
+
+### Recommended entry points (kits)
+These aggregate exports without redefining runtime semantics.
+
+| Package | Use when |
+| :-- | :-- |
+| [`levit_flutter`](./packages/kits/levit_flutter) | Building Flutter applications |
+| [`levit`](./packages/kits/levit) | Building pure Dart applications |
+
+### Focused utility package
+
+| Package | Responsibility |
+| :-- | :-- |
+| [`levit_dart`](./packages/kits/levit_dart) | Task orchestration, loop helpers, and focused controller utility mixins. Builds on top of `levit_dart_core`. |
+
+### Core packages
+
+| Package | Responsibility |
+| :-- | :-- |
+| [`levit_reactive`](./packages/core/levit_reactive) | Reactive primitives, computed values, workers, batching. Owns change propagation and dependency tracking. |
+| [`levit_scope`](./packages/core/levit_scope) | Hierarchical dependency injection and deterministic lifecycles. |
+| [`levit_dart_core`](./packages/core/levit_dart_core) | Composition layer (`Levit`, `LevitController`, `LevitStore`). Owns controller ownership semantics. |
+| [`levit_flutter_core`](./packages/core/levit_flutter_core) | Flutter bindings (`LScope`, `LWatch`, `LView`, builders); re-exports `levit_dart_core` for convenience. |
+| [`levit_monitor`](./packages/core/levit_monitor) | Opt-in monitoring, redaction, shadow state, and transport pipeline. Not bundled by default. |
+
 
 ## Middleware Lifecycle
 

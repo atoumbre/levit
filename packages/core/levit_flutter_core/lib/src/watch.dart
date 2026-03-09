@@ -46,6 +46,7 @@ class _LWatchElement extends ComponentElement
 
   // Multi-dependency path keeps a stable subscription set.
   Set<LevitReactiveNotifier>? _notifiers;
+  Map<(Type, String, String), LxReactive?>? _logicalReactiveIndex;
 
   // Builder capture uses list semantics; duplicates are deduped later.
   List<LevitReactiveNotifier>? _newNotifiers;
@@ -79,19 +80,10 @@ class _LWatchElement extends ComponentElement
     final nots = _notifiers;
     if (nots == null || nots.isEmpty) return reactive;
 
-    LxReactive? match;
-    for (final notifier in nots) {
-      if (notifier is! LxReactive) continue;
-      final candidate = notifier as LxReactive;
-      if (!_isSameLogicalReactive(candidate, reactive)) continue;
+    final key = _logicalKeyOf(reactive);
+    if (key == null) return reactive;
 
-      if (match != null && !identical(match, candidate)) {
-        return reactive; // Ambiguous alias, keep the original read.
-      }
-      match = candidate;
-    }
-
-    return match ?? reactive;
+    return _logicalReactiveIndex?[key] ?? reactive;
   }
 
   bool _isSameLogicalReactive(LxReactive a, LxReactive b) {
@@ -111,6 +103,34 @@ class _LWatchElement extends ComponentElement
     return ownerA == ownerB && nameA == nameB;
   }
 
+  (Type, String, String)? _logicalKeyOf(LxReactive reactive) {
+    final ownerId = reactive.ownerId;
+    final name = reactive.name;
+    if (ownerId == null || name == null) return null;
+    return (reactive.runtimeType, ownerId, name);
+  }
+
+  void _rebuildLogicalReactiveIndex(Iterable<LevitReactiveNotifier> notifiers) {
+    Map<(Type, String, String), LxReactive?>? next;
+
+    for (final notifier in notifiers) {
+      if (notifier is! LxReactive) continue;
+      final reactive = notifier as LxReactive;
+      final key = _logicalKeyOf(reactive);
+      if (key == null) continue;
+
+      next ??= <(Type, String, String), LxReactive?>{};
+      final existing = next[key];
+      if (!next.containsKey(key)) {
+        next[key] = reactive;
+      } else if (!identical(existing, notifier)) {
+        next[key] = null;
+      }
+    }
+
+    _logicalReactiveIndex = next;
+  }
+
   void _cleanupAll() {
     if (_usingSinglePath) {
       _singleNotifier?.removeListener(_triggerRebuild);
@@ -125,6 +145,7 @@ class _LWatchElement extends ComponentElement
       }
       nots.clear();
     }
+    _logicalReactiveIndex = null;
   }
 
   void _triggerRebuild() {
@@ -221,6 +242,8 @@ class _LWatchElement extends ComponentElement
         return true;
       });
     }
+
+    _rebuildLogicalReactiveIndex(targetNots);
   }
 
   void _runWithContext(void Function() fn) {

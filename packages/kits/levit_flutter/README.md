@@ -16,6 +16,7 @@ This kit composes:
 - Flutter-specific mixins/widgets in this package.
 
 This package is responsible for ergonomic adoption, not replacing core behavior.
+Add `levit_monitor` separately when you need runtime telemetry; this kit keeps observability opt-in.
 
 ## Conceptual Overview
 
@@ -67,4 +68,3 @@ class CounterPage extends StatelessWidget {
 - Widget-tree ownership for scopes and controller lifecycles.
 - Fine-grained rebuild behavior inherited from reactive core bindings.
 - Composition-first kit design with explicit package boundaries.
-

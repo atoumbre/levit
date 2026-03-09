@@ -16,6 +16,7 @@ This kit re-exports:
 - `levit_scope` and `levit_reactive` foundations (through transitive exports).
 
 Use this package when you want the complete Dart-side Levit stack without Flutter bindings.
+Add `levit_monitor` separately when you need runtime telemetry; the kit keeps observability opt-in.
 
 ## Conceptual Overview
 

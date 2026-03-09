@@ -635,8 +635,8 @@ class LevitScope {
 
   void _initializeInstance(dynamic instance, String key, LevitDependency info) {
     if (instance is LevitScopeDisposable) {
-      instance.didAttachToScope(this, key: key);
       _applyInitHooks(instance, instance.onInit, key, info);
+      instance.didAttachToScope(this, key: key);
     }
   }
 
