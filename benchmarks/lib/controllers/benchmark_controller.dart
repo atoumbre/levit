@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 
+import '../benchmark_config.dart';
+import '../benchmark_environment.dart';
 import '../benchmark_engine.dart';
 import '../benchmark_discovery.dart';
 import '../runners/benchmark_runner.dart';
@@ -20,6 +22,7 @@ class AppBenchmarkController extends LevitController {
 
   // Results
   late LxMap<String, List<BenchmarkResult>> results;
+  late LxVar<BenchmarkEnvironment?> lastEnvironment;
 
   // State
   late LxVar<bool> isRunning;
@@ -38,6 +41,7 @@ class AppBenchmarkController extends LevitController {
     selectedFrameworks = LxSet(Framework.values.toSet());
     selectedBenchmarks = LxSet(availableBenchmarks.toSet());
     results = LxMap({});
+    lastEnvironment = LxVar<BenchmarkEnvironment?>(null);
     isRunning = LxVar(false);
     currentStatus = LxVar('Ready');
     progress = LxVar(0.0);
@@ -57,14 +61,27 @@ class AppBenchmarkController extends LevitController {
     results.clear();
     progress.value = 0.0;
 
-    final frameworks = selectedFrameworks.toList();
-    // final frameworks = selectedFrameworks.toList();
     final benchmarks =
         availableBenchmarks.where(selectedBenchmarks.contains).toList();
-    final totalSteps = frameworks.length * benchmarks.length;
+    final sortedFrameworks = selectedFrameworks.toList()
+      ..sort((a, b) => a.index.compareTo(b.index));
+    lastEnvironment.value = BenchmarkEnvironment.capture(
+      executionContext: 'app',
+      benchmarkProfile: BenchmarkConfig.profileName,
+      iterations: BenchmarkRunner.defaultIterations,
+      warmupIterations: BenchmarkRunner.defaultWarmupIterations,
+      frameworks: sortedFrameworks,
+      benchmarks: benchmarks,
+      frameworkOrderRotation: true,
+    );
+    final totalSteps = selectedFrameworks.length * benchmarks.length;
     int completedSteps = 0;
 
-    for (final benchmark in benchmarks) {
+    for (int benchmarkIndex = 0;
+        benchmarkIndex < benchmarks.length;
+        benchmarkIndex++) {
+      final benchmark = benchmarks[benchmarkIndex];
+      final frameworks = _frameworkOrderForBenchmark(benchmarkIndex);
       currentStatus.value = 'Benchmark: ${benchmark.name}';
 
       for (final fw in frameworks) {
@@ -90,10 +107,23 @@ class AppBenchmarkController extends LevitController {
     progress.value = 1.0;
   }
 
+  List<Framework> _frameworkOrderForBenchmark(int benchmarkIndex) {
+    final frameworks = selectedFrameworks.toList()
+      ..sort((a, b) => a.index.compareTo(b.index));
+    if (frameworks.isEmpty) return frameworks;
+
+    final offset = benchmarkIndex % frameworks.length;
+    return [
+      ...frameworks.skip(offset),
+      ...frameworks.take(offset),
+    ];
+  }
+
   Future<void> copyResults() async {
     final report = BenchmarkReporter.generateMarkdownReport(
       results: results,
       title: 'Benchmark Results',
+      environment: lastEnvironment.value,
     );
 
     await Clipboard.setData(ClipboardData(text: report));

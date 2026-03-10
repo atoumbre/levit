@@ -39,6 +39,7 @@ class FanOutBenchmark extends Benchmark {
 class LevitFanOutBenchmark extends BenchmarkImplementation {
   late LxVar<int> source;
   final List<LxComputed<int>> dependents = [];
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
@@ -52,17 +53,27 @@ class LevitFanOutBenchmark extends BenchmarkImplementation {
     for (final dep in dependents) {
       dep.addListener(() {});
     }
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     // Update source once, which should trigger 1000 updates
     source.value++;
-    // Flush microtasks to ensure all synchronous notifications complete
-    await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedSource++;
+    final lastValue = dependents.last.value;
+    if (lastValue != expectedSource + BenchmarkConfig.fanOutDependents - 1) {
+      throw StateError(
+          'Levit fan-out mismatch: expected last=${expectedSource + BenchmarkConfig.fanOutDependents - 1}, got $lastValue');
+    }
+  }
+
+  @override
+  Future<void> verify() async {
+    if (source.value != expectedSource) {
+      throw StateError(
+          'Levit fan-out source mismatch: expected $expectedSource, got ${source.value}');
+    }
   }
 
   @override
@@ -78,28 +89,41 @@ class LevitFanOutBenchmark extends BenchmarkImplementation {
 class VanillaFanOutBenchmark extends BenchmarkImplementation {
   late ValueNotifier<int> source;
   final List<VoidCallback> listeners = [];
+  final List<int> lastValues = [];
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
     source = ValueNotifier(0);
     listeners.clear();
+    lastValues
+      ..clear()
+      ..addAll(List.filled(BenchmarkConfig.fanOutDependents, 0));
     for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       void listener() {
-        final _ = source.value + i;
+        lastValues[i] = source.value + i;
       }
 
       listeners.add(listener);
       source.addListener(listener);
     }
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     source.value++;
-    await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedSource++;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (source.value != expectedSource ||
+        lastValues.last !=
+            expectedSource + BenchmarkConfig.fanOutDependents - 1) {
+      throw StateError(
+          'Vanilla fan-out mismatch: source=${source.value}, last=${lastValues.last}, expected=$expectedSource');
+    }
   }
 
   @override
@@ -112,26 +136,40 @@ class VanillaFanOutBenchmark extends BenchmarkImplementation {
 class GetXFanOutBenchmark extends BenchmarkImplementation {
   late RxInt source;
   final List<StreamSubscription> workers = [];
+  final List<int> lastValues = [];
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
     source = 0.obs;
     workers.clear();
+    lastValues
+      ..clear()
+      ..addAll(List.filled(BenchmarkConfig.fanOutDependents, 0));
     for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       // listen (isActive: true)
       workers.add(source.listen((val) {
-        final _ = val + i;
+        lastValues[i] = val + i;
       }));
     }
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     source.value++;
+    expectedSource++;
     await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (source.value != expectedSource ||
+        lastValues.last !=
+            expectedSource + BenchmarkConfig.fanOutDependents - 1) {
+      throw StateError(
+          'GetX fan-out mismatch: source=${source.value}, last=${lastValues.last}, expected=$expectedSource');
+    }
   }
 
   @override
@@ -147,6 +185,7 @@ class RiverpodFanOutBenchmark extends BenchmarkImplementation {
   late ProviderContainer container;
   final sourceProvider = StateProvider<int>((ref) => 0);
   final List<Provider<int>> dependents = [];
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
@@ -158,16 +197,25 @@ class RiverpodFanOutBenchmark extends BenchmarkImplementation {
       // Keep alive by listening
       container.listen(p, (_, __) {});
     }
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     final notifier = container.read(sourceProvider.notifier);
-    final stopwatch = Stopwatch()..start();
     notifier.state++;
-    await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedSource++;
+  }
+
+  @override
+  Future<void> verify() async {
+    final sourceValue = container.read(sourceProvider);
+    final lastValue = container.read(dependents.last);
+    if (sourceValue != expectedSource ||
+        lastValue != expectedSource + BenchmarkConfig.fanOutDependents - 1) {
+      throw StateError(
+          'Riverpod fan-out mismatch: source=$sourceValue, last=$lastValue, expected=$expectedSource');
+    }
   }
 
   @override
@@ -180,25 +228,39 @@ class RiverpodFanOutBenchmark extends BenchmarkImplementation {
 class BlocFanOutBenchmark extends BenchmarkImplementation {
   late rxdart.BehaviorSubject<int> source;
   final List<StreamSubscription> subs = [];
+  final List<int> lastValues = [];
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
     source = rxdart.BehaviorSubject.seeded(0);
     subs.clear();
+    lastValues
+      ..clear()
+      ..addAll(List.filled(BenchmarkConfig.fanOutDependents, 0));
     for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       subs.add(source.listen((val) {
-        final _ = val + i;
+        lastValues[i] = val + i;
       }));
     }
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     source.add(source.value + 1);
+    expectedSource++;
     await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (source.value != expectedSource ||
+        lastValues.last !=
+            expectedSource + BenchmarkConfig.fanOutDependents - 1) {
+      throw StateError(
+          'BLoC fan-out mismatch: source=${source.value}, last=${lastValues.last}, expected=$expectedSource');
+    }
   }
 
   @override

@@ -18,6 +18,14 @@ class ScopedDIBenchmark extends Benchmark {
   bool get isUI => false;
 
   @override
+  BenchmarkClassification get classification =>
+      BenchmarkClassification.featureDemo;
+
+  @override
+  String get comparisonNote =>
+      'DI containers are not first-class primitives in every framework.';
+
+  @override
   BenchmarkImplementation createImplementation(Framework framework) {
     switch (framework) {
       case Framework.levit:
@@ -42,20 +50,30 @@ class CounterService {
 
 // --- Levit ---
 class LevitScopedDIBenchmark extends BenchmarkImplementation {
+  int expectedValue = 0;
+
   @override
   Future<void> setup() async {
     Levit.put(() => CounterService());
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = Levit.find<CounterService>();
       service.increment();
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.scopedDiIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final service = Levit.find<CounterService>();
+    if (service.value != expectedValue) {
+      throw StateError(
+          'Levit DI mismatch: expected $expectedValue, got ${service.value}');
+    }
   }
 
   @override
@@ -83,21 +101,30 @@ class _ServiceLocator {
 
 class VanillaScopedDIBenchmark extends BenchmarkImplementation {
   final _locator = _ServiceLocator();
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     _locator.register(CounterService());
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = _locator.find<CounterService>();
       service.increment();
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.scopedDiIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final service = _locator.find<CounterService>();
+    if (service.value != expectedValue) {
+      throw StateError(
+          'Vanilla DI mismatch: expected $expectedValue, got ${service.value}');
+    }
   }
 
   @override
@@ -108,20 +135,30 @@ class VanillaScopedDIBenchmark extends BenchmarkImplementation {
 
 // --- GetX ---
 class GetXScopedDIBenchmark extends BenchmarkImplementation {
+  int expectedValue = 0;
+
   @override
   Future<void> setup() async {
     Get.put(CounterService());
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = Get.find<CounterService>();
       service.increment();
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.scopedDiIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final service = Get.find<CounterService>();
+    if (service.value != expectedValue) {
+      throw StateError(
+          'GetX DI mismatch: expected $expectedValue, got ${service.value}');
+    }
   }
 
   @override
@@ -135,21 +172,30 @@ final _counterProvider = Provider<CounterService>((ref) => CounterService());
 
 class RiverpodScopedDIBenchmark extends BenchmarkImplementation {
   late ProviderContainer container;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     container = ProviderContainer();
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = container.read(_counterProvider);
       service.increment();
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.scopedDiIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final service = container.read(_counterProvider);
+    if (service.value != expectedValue) {
+      throw StateError(
+          'Riverpod DI mismatch: expected $expectedValue, got ${service.value}');
+    }
   }
 
   @override
@@ -177,21 +223,30 @@ class _BlocServiceLocator {
 
 class BlocScopedDIBenchmark extends BenchmarkImplementation {
   final _locator = _BlocServiceLocator();
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     _locator.register(CounterService());
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.scopedDiIterations; i++) {
       final service = _locator.get<CounterService>();
       service.increment();
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.scopedDiIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final service = _locator.get<CounterService>();
+    if (service.value != expectedValue) {
+      throw StateError(
+          'BLoC DI mismatch: expected $expectedValue, got ${service.value}');
+    }
   }
 
   @override

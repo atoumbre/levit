@@ -6,16 +6,20 @@ import 'package:flutter/scheduler.dart';
 import '../benchmark_engine.dart';
 
 class BenchmarkRunner {
+  static const int defaultIterations = 50;
+  static const int defaultWarmupIterations = 5;
+
   /// Runs a specific benchmark for a specific framework.
-  /// Returns the raw duration in microseconds.
+  /// Measures each iteration in the runner to keep timing consistent.
   Future<BenchmarkResult> runBenchmark(
     Benchmark benchmark,
     Framework framework, {
-    int iterations = 50,
+    int iterations = defaultIterations,
+    int warmupIterations = defaultWarmupIterations,
     Future<void> Function(WidgetBuilder builder)? mountWidget,
   }) async {
     final impl = benchmark.createImplementation(framework);
-    int totalDuration = 0;
+    final samples = <int>[];
     bool success = true;
     String? error;
 
@@ -35,9 +39,11 @@ class BenchmarkRunner {
         // Allow layout/paint to settle
         await Future.delayed(const Duration(milliseconds: 200));
 
-        // Warmup
-        await impl.run();
-        await _waitForFrame();
+        for (int i = 0; i < warmupIterations; i++) {
+          await impl.run();
+          await _waitForFrame();
+          await impl.verify();
+        }
 
         for (int i = 0; i < iterations; i++) {
           // Ensure we are stable
@@ -49,18 +55,24 @@ class BenchmarkRunner {
           await _waitForFrame(); // Wait for rasterization/build
           stopwatch.stop();
 
-          totalDuration += stopwatch.elapsedMicroseconds;
+          await impl.verify();
+          samples.add(stopwatch.elapsedMicroseconds);
         }
 
         // Unmount
         await mountWidget((context) => const SizedBox.shrink());
       } else {
-        // Headless execution
-        await impl.run(); // Warmup
+        for (int i = 0; i < warmupIterations; i++) {
+          await impl.run();
+          await impl.verify();
+        }
 
         for (int i = 0; i < iterations; i++) {
-          final duration = await impl.run();
-          totalDuration += duration;
+          final stopwatch = Stopwatch()..start();
+          await impl.run();
+          stopwatch.stop();
+          await impl.verify();
+          samples.add(stopwatch.elapsedMicroseconds);
           await Future.delayed(const Duration(milliseconds: 10));
         }
       }
@@ -76,13 +88,13 @@ class BenchmarkRunner {
       }
     }
 
-    // Average duration
-    final avgDuration = success ? (totalDuration ~/ iterations) : 0;
-
     return BenchmarkResult(
       framework: framework,
       benchmarkName: benchmark.name,
-      durationMicros: avgDuration,
+      classification: benchmark.classification,
+      comparisonNote: benchmark.comparisonNote,
+      samplesMicros: success ? samples : const [],
+      warmupIterations: warmupIterations,
       success: success,
       error: error,
     );
@@ -98,7 +110,14 @@ class BenchmarkRunner {
 
   /// Runs all frameworks for a given benchmark.
   Stream<BenchmarkResult> runAllFrameworks(Benchmark benchmark) async* {
-    for (final fw in Framework.values) {
+    final frameworks = [...Framework.values];
+    final offset = benchmark.name.length % frameworks.length;
+    final rotated = [
+      ...frameworks.skip(offset),
+      ...frameworks.take(offset),
+    ];
+
+    for (final fw in rotated) {
       if (benchmark.isUI && fw == Framework.riverpod) {
         // Example: if a framework isn't supported for a benchmark, handle it.
         // For now assuming all supported.

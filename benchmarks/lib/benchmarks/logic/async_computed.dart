@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 import 'package:rxdart/rxdart.dart' as rxdart;
 
+import '../../benchmark_config.dart';
 import '../../benchmark_engine.dart';
 
 /// Benchmark for async computed values.
@@ -16,10 +17,18 @@ class AsyncComputedBenchmark extends Benchmark {
 
   @override
   String get description =>
-      'Async computed that re-fetches on 100 source changes. Tests async tracking.';
+      'Async computed that re-fetches on ${BenchmarkConfig.asyncComputedIterations} source changes. Tests async tracking.';
 
   @override
   bool get isUI => false;
+
+  @override
+  BenchmarkClassification get classification =>
+      BenchmarkClassification.approximate;
+
+  @override
+  String get comparisonNote =>
+      'Measures sequential async recomputation using each framework\'s closest async primitive.';
 
   @override
   BenchmarkImplementation createImplementation(Framework framework) {
@@ -43,31 +52,38 @@ class LevitAsyncComputedBenchmark extends BenchmarkImplementation {
   late LxVar<int> source;
   late LxAsyncComputed<String> asyncComputed;
   late VoidCallback listener;
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
     source = LxVar(0);
     asyncComputed = LxComputed.async(() async {
       final val = source.value;
-      // Simulate async operation
-      await Future.delayed(const Duration(microseconds: 1));
+      await Future<void>.delayed(Duration.zero);
       return 'Result: $val';
     }, staticDeps: true);
 
     listener = () {};
     asyncComputed.addListener(listener);
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100; i++) {
+  Future<void> run() async {
+    for (int i = 0; i < BenchmarkConfig.asyncComputedIterations; i++) {
       source.value++;
-      // Wait for async to complete
-      await Future.delayed(const Duration(microseconds: 10));
+      expectedSource++;
+      await _waitForLevitResult(asyncComputed, 'Result: $expectedSource');
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+  }
+
+  @override
+  Future<void> verify() async {
+    final value = asyncComputed.valueOrNull;
+    if (value != 'Result: $expectedSource') {
+      throw StateError(
+          'Levit async mismatch: expected Result: $expectedSource, got $value');
+    }
   }
 
   @override
@@ -83,6 +99,7 @@ class VanillaAsyncComputedBenchmark extends BenchmarkImplementation {
   late ValueNotifier<int> source;
   late ValueNotifier<String> result;
   bool _isProcessing = false;
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
@@ -94,21 +111,28 @@ class VanillaAsyncComputedBenchmark extends BenchmarkImplementation {
       if (_isProcessing) return;
       _isProcessing = true;
       final val = source.value;
-      await Future.delayed(const Duration(microseconds: 1));
+      await Future<void>.delayed(Duration.zero);
       result.value = 'Result: $val';
       _isProcessing = false;
     });
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100; i++) {
+  Future<void> run() async {
+    for (int i = 0; i < BenchmarkConfig.asyncComputedIterations; i++) {
       source.value++;
-      await Future.delayed(const Duration(microseconds: 10));
+      expectedSource++;
+      await _waitForNotifierValue(result, 'Result: $expectedSource');
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (result.value != 'Result: $expectedSource') {
+      throw StateError(
+          'Vanilla async mismatch: expected Result: $expectedSource, got ${result.value}');
+    }
   }
 
   @override
@@ -123,30 +147,35 @@ class GetXAsyncComputedBenchmark extends BenchmarkImplementation {
   late RxInt source;
   late Rx<String> result;
   late StreamSubscription sub;
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
     source = 0.obs;
     result = 'Result: 0'.obs;
 
-    // Use stream transformation for async computed
-    sub = source.stream.asyncMap((val) async {
-      await Future.delayed(const Duration(microseconds: 1));
-      return 'Result: $val';
-    }).listen((value) {
-      result.value = value;
+    sub = source.listen((val) async {
+      await Future<void>.delayed(Duration.zero);
+      result.value = 'Result: $val';
     });
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100; i++) {
+  Future<void> run() async {
+    for (int i = 0; i < BenchmarkConfig.asyncComputedIterations; i++) {
       source.value++;
-      await Future.delayed(const Duration(microseconds: 10));
+      expectedSource++;
+      await _waitForRxValue(result, 'Result: $expectedSource');
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (result.value != 'Result: $expectedSource') {
+      throw StateError(
+          'GetX async mismatch: expected Result: $expectedSource, got ${result.value}');
+    }
   }
 
   @override
@@ -162,28 +191,41 @@ class RiverpodAsyncComputedBenchmark extends BenchmarkImplementation {
   late ProviderContainer container;
   final sourceProvider = StateProvider<int>((ref) => 0);
   late FutureProvider<String> asyncProvider;
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
     container = ProviderContainer();
     asyncProvider = FutureProvider<String>((ref) async {
       final val = ref.watch(sourceProvider);
-      await Future.delayed(const Duration(microseconds: 1));
+      await Future<void>.delayed(Duration.zero);
       return 'Result: $val';
     });
     container.listen(asyncProvider, (_, __) {});
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     final notifier = container.read(sourceProvider.notifier);
-    final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < BenchmarkConfig.asyncComputedIterations; i++) {
       notifier.state++;
-      await Future.delayed(const Duration(microseconds: 10));
+      expectedSource++;
+      final value = await container.read(asyncProvider.future);
+      if (value != 'Result: $expectedSource') {
+        throw StateError(
+            'Riverpod async mismatch: expected Result: $expectedSource, got $value');
+      }
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+  }
+
+  @override
+  Future<void> verify() async {
+    final value = await container.read(asyncProvider.future);
+    if (value != 'Result: $expectedSource') {
+      throw StateError(
+          'Riverpod async verification failed: expected Result: $expectedSource, got $value');
+    }
   }
 
   @override
@@ -195,31 +237,40 @@ class RiverpodAsyncComputedBenchmark extends BenchmarkImplementation {
 // --- BLoC (RxDart with async transformation) ---
 class BlocAsyncComputedBenchmark extends BenchmarkImplementation {
   late rxdart.BehaviorSubject<int> source;
-  late Stream<String> result;
   late StreamSubscription sub;
+  String latestResult = 'Result: 0';
+  int expectedSource = 0;
 
   @override
   Future<void> setup() async {
     source = rxdart.BehaviorSubject.seeded(0);
-
-    // Async transformation using asyncMap
-    result = source.asyncMap((val) async {
-      await Future.delayed(const Duration(microseconds: 1));
-      return 'Result: $val';
+    sub = source.listen((val) async {
+      await Future<void>.delayed(Duration.zero);
+      latestResult = 'Result: $val';
     });
-
-    sub = result.listen((_) {});
+    latestResult = 'Result: 0';
+    expectedSource = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
-    for (int i = 0; i < 100; i++) {
+  Future<void> run() async {
+    for (int i = 0; i < BenchmarkConfig.asyncComputedIterations; i++) {
       source.add(source.value + 1);
-      await Future.delayed(const Duration(microseconds: 10));
+      expectedSource++;
+      await _waitForStringValue(
+        current: () => latestResult,
+        expected: 'Result: $expectedSource',
+        label: 'BLoC async',
+      );
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (latestResult != 'Result: $expectedSource') {
+      throw StateError(
+          'BLoC async mismatch: expected Result: $expectedSource, got $latestResult');
+    }
   }
 
   @override
@@ -227,4 +278,56 @@ class BlocAsyncComputedBenchmark extends BenchmarkImplementation {
     await sub.cancel();
     await source.close();
   }
+}
+
+Future<void> _waitForLevitResult(
+  LxAsyncComputed<String> computed,
+  String expected,
+) async {
+  if (computed.valueOrNull == expected) return;
+  final status = await computed.stream.firstWhere(
+    (status) => status.valueOrNull == expected || status is LxError<String>,
+  );
+  if (status is LxError<String>) {
+    throw status.error;
+  }
+}
+
+Future<void> _waitForNotifierValue(
+  ValueNotifier<String> notifier,
+  String expected,
+) async {
+  if (notifier.value == expected) return;
+  final completer = Completer<void>();
+
+  void listener() {
+    if (notifier.value == expected && !completer.isCompleted) {
+      notifier.removeListener(listener);
+      completer.complete();
+    }
+  }
+
+  notifier.addListener(listener);
+  await completer.future;
+}
+
+Future<void> _waitForRxValue(Rx<String> value, String expected) async {
+  if (value.value == expected) return;
+  await _waitForStringValue(
+    current: () => value.value,
+    expected: expected,
+    label: 'GetX async',
+  );
+}
+
+Future<void> _waitForStringValue({
+  required String Function() current,
+  required String expected,
+  required String label,
+}) async {
+  for (int attempts = 0; attempts < 1000; attempts++) {
+    if (current() == expected) return;
+    await Future<void>.delayed(Duration.zero);
+  }
+  throw StateError('$label did not settle to $expected (got ${current()})');
 }

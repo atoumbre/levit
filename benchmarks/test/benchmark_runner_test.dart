@@ -3,6 +3,8 @@
 library;
 
 import 'package:benchmarks/benchmark_discovery.dart';
+import 'package:benchmarks/benchmark_config.dart';
+import 'package:benchmarks/benchmark_environment.dart';
 import 'package:benchmarks/benchmark_engine.dart';
 import 'package:benchmarks/runners/benchmark_reporter.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,8 +12,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'headless_benchmark_runner.dart';
 
 void main() {
-  final runner =
-      HeadlessBenchmarkRunner(iterations: 20); // Fewer iterations for tests
+  BenchmarkConfig.useTestProfile();
+  final runner = HeadlessBenchmarkRunner(
+    iterations: 8,
+    warmupIterations: 2,
+  );
+  final environment = BenchmarkEnvironment.capture(
+    executionContext: 'flutter_test',
+    benchmarkProfile: BenchmarkConfig.profileName,
+    iterations: runner.iterations,
+    warmupIterations: runner.warmupIterations,
+    frameworks: Framework.values,
+    benchmarks: BenchmarkDiscovery.allBenchmarks,
+  );
 
   final results = <String, List<BenchmarkResult>>{};
 
@@ -41,9 +54,11 @@ void main() {
     }
 
     tearDownAll(() {
+      BenchmarkConfig.useProductionProfile();
       print(BenchmarkReporter.generateConsoleReport(
         results: results,
         title: 'Benchmark Consolidated Report',
+        environment: environment,
       ));
     });
   });

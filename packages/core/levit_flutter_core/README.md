@@ -13,7 +13,7 @@ Use this package directly when you want Flutter bindings without the higher-leve
 
 This package is responsible for:
 
-- `LScope` / `LAsyncScope`: widget-tree-scoped dependency injection.
+- `LScope` / `LAsyncScope` / `LRouteScope` / `LAsyncRouteScope`: scope boundaries for subtree, async, and route-owned lifetimes.
 - `LWatch`: reactive rebuild boundaries based on accessed values.
 - `LView`, `LAsyncView`, `LScopedView`: controller/view orchestration widgets.
 - Builder widgets (`LBuilder`, selector/status builders) for focused reactive rendering.
@@ -47,6 +47,7 @@ The package ensures widget lifecycle events and DI lifecycle events stay synchro
 | `LScopedView` | One widget should create a child scope, register a dependency, and render it. | The scope already exists; prefer `LView`. |
 | `LScopedAsyncView` | One widget should create a child scope and resolve the dependency asynchronously. | You only need an async scope boundary without the view abstraction; prefer `LAsyncScope`. |
 | `LScope` / `LAsyncScope` | You need a scope boundary for a subtree, independent of a specific controller/view widget. | A single controller-view pair is enough; prefer `LScopedView` or `LScopedAsyncView`. |
+| `LRouteScope` / `LAsyncRouteScope` | Route identity and route coverage are the ownership boundary, and you want current/covered route visibility exposed reactively. | The scope is only subtree-local and does not care about route semantics; prefer `LScope` or `LAsyncScope`. |
 
 ## Getting Started
 
@@ -87,6 +88,49 @@ void main() {
     ),
   );
 }
+```
+
+## Route-aware Scoping
+
+Use `LRouteScope` when a screen route is the meaningful lifetime boundary.
+Use `LAsyncRouteScope` when the same route-owned boundary also needs async initialization.
+Both wrap the existing scope primitives, reset the local scope when the bound route changes, and expose a reactive `LRouteVisibility` signal to descendants.
+
+```dart
+Navigator(
+  pages: [
+    MaterialPage(
+      key: const ValueKey('profile-route'),
+      child: LRouteScope.put(
+        () => ProfileController(),
+        child: Builder(
+          builder: (context) {
+            final visibility = LRouteScope.visibilityOf(context)!;
+            return LBuilder<LRouteVisibility>(
+              visibility,
+              (state) => Text('Route is ${state.name}'),
+            );
+          },
+        ),
+      ),
+    ),
+  ],
+  onPopPage: (route, result) => route.didPop(result),
+);
+```
+
+## Capturing Scope for Dialogs and Overlays
+
+Use `LScope.capture(...)` when a dialog or overlay should keep access to a page-local scope even though it is rendered under a different route subtree.
+
+```dart
+showDialog(
+  context: context,
+  builder: (_) => LScope.capture(
+    context,
+    child: const Dialog(child: Text('Still inside the page scope')),
+  ),
+);
 ```
 
 ## Design Principles

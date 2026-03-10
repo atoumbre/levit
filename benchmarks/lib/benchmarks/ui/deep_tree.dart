@@ -47,16 +47,26 @@ Widget buildDeepTree(int depth, Widget leaf) {
 // --- Levit ---
 class LevitDeepTree extends BenchmarkImplementation {
   late LxVar<int> counter;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     counter = LxVar(0);
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     counter.value++;
-    return 0;
+    expectedValue++;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (counter.value != expectedValue) {
+      throw StateError(
+          'Levit deep tree mismatch: expected $expectedValue, got ${counter.value}');
+    }
   }
 
   @override
@@ -76,16 +86,26 @@ class LevitDeepTree extends BenchmarkImplementation {
 // --- Vanilla ---
 class VanillaDeepTree extends BenchmarkImplementation {
   late ValueNotifier<int> counter;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     counter = ValueNotifier(0);
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     counter.value++;
-    return 0;
+    expectedValue++;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (counter.value != expectedValue) {
+      throw StateError(
+          'Vanilla deep tree mismatch: expected $expectedValue, got ${counter.value}');
+    }
   }
 
   @override
@@ -109,16 +129,26 @@ class VanillaDeepTree extends BenchmarkImplementation {
 // --- GetX ---
 class GetXDeepTree extends BenchmarkImplementation {
   late RxInt counter;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     counter = 0.obs;
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     counter.value++;
-    return 0;
+    expectedValue++;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (counter.value != expectedValue) {
+      throw StateError(
+          'GetX deep tree mismatch: expected $expectedValue, got ${counter.value}');
+    }
   }
 
   @override
@@ -142,16 +172,26 @@ class DeepCounterCubit extends Cubit<int> {
 
 class BlocDeepTree extends BenchmarkImplementation {
   late DeepCounterCubit cubit;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     cubit = DeepCounterCubit();
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     cubit.increment();
-    return 0;
+    expectedValue++;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (cubit.state != expectedValue) {
+      throw StateError(
+          'BLoC deep tree mismatch: expected $expectedValue, got ${cubit.state}');
+    }
   }
 
   @override
@@ -177,16 +217,27 @@ final deepProvider = StateProvider<int>((ref) => 0);
 
 class RiverpodDeepTree extends BenchmarkImplementation {
   late ProviderContainer container;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     container = ProviderContainer();
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     container.read(deepProvider.notifier).state++;
-    return 0;
+    expectedValue++;
+  }
+
+  @override
+  Future<void> verify() async {
+    final value = container.read(deepProvider);
+    if (value != expectedValue) {
+      throw StateError(
+          'Riverpod deep tree mismatch: expected $expectedValue, got $value');
+    }
   }
 
   @override

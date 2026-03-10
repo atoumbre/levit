@@ -20,6 +20,24 @@ class _ScopeProvider extends InheritedWidget {
   bool updateShouldNotify(_ScopeProvider oldWidget) => scope != oldWidget.scope;
 }
 
+class _CapturedScope extends StatelessWidget {
+  final LevitScope scope;
+  final Widget child;
+
+  const _CapturedScope({
+    required this.scope,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _ScopeProvider(
+      scope: scope,
+      child: child,
+    );
+  }
+}
+
 /// A widget that creates a [LevitScope] tied to the widget tree.
 ///
 /// Use [LScope] to provide dependencies for a specific subtree.
@@ -130,6 +148,25 @@ class LScope extends StatefulWidget {
       return scope.run(builder);
     }
     return builder();
+  }
+
+  /// Captures the nearest [LevitScope] from [context] and re-provides it to
+  /// another subtree.
+  ///
+  /// This is useful for dialogs, overlays, and other route subtrees that are
+  /// no longer descendants of the original [LScope] widget tree.
+  ///
+  /// If no local scope is found, [child] is returned unchanged.
+  static Widget capture(
+    BuildContext context, {
+    required Widget child,
+  }) {
+    final scope = _ScopeProvider.of(context);
+    if (scope == null) return child;
+    return _CapturedScope(
+      scope: scope,
+      child: child,
+    );
   }
 
   @override

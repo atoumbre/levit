@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,230 +34,227 @@ class DynamicGridBenchmark extends Benchmark {
   }
 }
 
-// --- Common UI ---
 class _GridItem extends StatelessWidget {
   final int value;
+
   const _GridItem(this.value);
 
   @override
   Widget build(BuildContext context) {
-    // Simple widget to test mount cost
     return Container(
       color: Colors.primaries[value % Colors.primaries.length],
-      child:
-          Center(child: Text('$value', style: const TextStyle(fontSize: 10))),
+      child: Center(
+        child: Text('$value', style: const TextStyle(fontSize: 10)),
+      ),
     );
   }
 }
 
-// --- Levit ---
-class LevitDynamicGrid extends BenchmarkImplementation {
-  final LxList<int> items = <int>[].lx;
-  int _counter = 0;
+abstract class _DynamicGridBase extends BenchmarkImplementation {
+  final List<int> items = <int>[];
+  int nextItem = 0;
+  int updateVersion = 0;
 
   @override
   Future<void> setup() async {
-    _counter = 0;
     items.clear();
+    nextItem = 0;
+    updateVersion = 0;
   }
 
   @override
-  Future<int> run() async {
-    // Churn: Add 50, Remove 20 oldest
+  Future<void> run() async {
     for (int i = 0; i < 50; i++) {
-      items.add(_counter++);
+      items.add(nextItem++);
     }
     if (items.length > 200) {
       items.removeRange(0, 50);
     }
-    return 0;
+    updateVersion++;
+    notifyUpdate();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return LWatch(() {
-      return GridView.builder(
-        gridDelegate:
-            const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
-        itemCount: items.length,
-        itemBuilder: (ctx, i) => _GridItem(items[i]),
-      );
-    });
+  Future<void> verify() async {
+    final expectedLength = nextItem <= 200 ? nextItem : 200;
+    if (items.length != expectedLength) {
+      throw StateError(
+          'Dynamic grid length mismatch: expected $expectedLength, got ${items.length}');
+    }
+    if (currentVersion != updateVersion) {
+      throw StateError(
+          'Dynamic grid version mismatch: expected $updateVersion, got $currentVersion');
+    }
   }
 
   @override
   Future<void> teardown() async {
     items.clear();
-    items.close();
+  }
+
+  void notifyUpdate();
+
+  int get currentVersion;
+
+  Widget buildGrid() {
+    return GridView.builder(
+      gridDelegate:
+          const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
+      itemCount: items.length,
+      itemBuilder: (ctx, i) => _GridItem(items[i]),
+    );
   }
 }
 
-// --- Vanilla ---
-class VanillaDynamicGrid extends BenchmarkImplementation {
-  final ValueNotifier<List<int>> items = ValueNotifier([]);
-  int _counter = 0;
+class LevitDynamicGrid extends _DynamicGridBase {
+  late LxVar<int> version;
 
   @override
   Future<void> setup() async {
-    _counter = 0;
-    items.value = [];
+    await super.setup();
+    version = LxVar(0);
   }
 
   @override
-  Future<int> run() async {
-    final list = List<int>.from(items.value);
-    for (int i = 0; i < 50; i++) {
-      list.add(_counter++);
-    }
-    if (list.length > 200) {
-      list.removeRange(0, 50);
-    }
-    items.value = list;
-    return 0;
+  void notifyUpdate() {
+    version.value = updateVersion;
   }
+
+  @override
+  int get currentVersion => version.value;
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<int>>(
-      valueListenable: items,
-      builder: (ctx, list, _) {
-        return GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 10),
-          itemCount: list.length,
-          itemBuilder: (ctx, i) => _GridItem(list[i]),
-        );
-      },
+    return LBuilder(version, (_) => buildGrid());
+  }
+
+  @override
+  Future<void> teardown() async {
+    await super.teardown();
+    version.close();
+  }
+}
+
+class VanillaDynamicGrid extends _DynamicGridBase {
+  late ValueNotifier<int> version;
+
+  @override
+  Future<void> setup() async {
+    await super.setup();
+    version = ValueNotifier(0);
+  }
+
+  @override
+  void notifyUpdate() {
+    version.value = updateVersion;
+  }
+
+  @override
+  int get currentVersion => version.value;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: version,
+      builder: (ctx, _, __) => buildGrid(),
     );
   }
 
   @override
   Future<void> teardown() async {
-    items.dispose();
+    await super.teardown();
+    version.dispose();
   }
 }
 
-// --- GetX ---
-class GetXDynamicGrid extends BenchmarkImplementation {
-  final RxList<int> items = <int>[].obs;
-  int _counter = 0;
+class GetXDynamicGrid extends _DynamicGridBase {
+  late RxInt version;
 
   @override
   Future<void> setup() async {
-    _counter = 0;
-    items.clear();
+    await super.setup();
+    version = 0.obs;
   }
 
   @override
-  Future<int> run() async {
-    for (int i = 0; i < 50; i++) {
-      items.add(_counter++);
-    }
-    if (items.length > 200) {
-      items.removeRange(0, 50);
-    }
-    return 0;
+  void notifyUpdate() {
+    version.value = updateVersion;
   }
+
+  @override
+  int get currentVersion => version.value;
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      return GridView.builder(
-        gridDelegate:
-            const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
-        itemCount: items.length,
-        itemBuilder: (ctx, i) => _GridItem(items[i]),
-      );
+      version.value;
+      return buildGrid();
     });
   }
 
   @override
   Future<void> teardown() async {
-    items.close();
+    await super.teardown();
+    version.close();
   }
 }
 
-// --- BLoC ---
-class _GridCubit extends Cubit<List<int>> {
-  _GridCubit() : super([]);
-  int _counter = 0;
+class _GridVersionCubit extends Cubit<int> {
+  _GridVersionCubit() : super(0);
 
-  void churn() {
-    final list = List<int>.from(state);
-    for (int i = 0; i < 50; i++) {
-      list.add(_counter++);
-    }
-    if (list.length > 200) {
-      list.removeRange(0, 50);
-    }
-    emit(list);
-  }
+  void publish(int version) => emit(version);
 }
 
-class BlocDynamicGrid extends BenchmarkImplementation {
-  // ignore: library_private_types_in_public_api
-  late _GridCubit cubit;
+class BlocDynamicGrid extends _DynamicGridBase {
+  late _GridVersionCubit cubit;
 
   @override
   Future<void> setup() async {
-    cubit = _GridCubit();
+    await super.setup();
+    cubit = _GridVersionCubit();
   }
 
   @override
-  Future<int> run() async {
-    cubit.churn();
-    return 0;
+  void notifyUpdate() {
+    cubit.publish(updateVersion);
   }
+
+  @override
+  int get currentVersion => cubit.state;
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<_GridCubit, List<int>>(
+    return BlocBuilder<_GridVersionCubit, int>(
       bloc: cubit,
-      builder: (ctx, list) {
-        return GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 10),
-          itemCount: list.length,
-          itemBuilder: (ctx, i) => _GridItem(list[i]),
-        );
-      },
+      builder: (ctx, _) => buildGrid(),
     );
   }
 
   @override
   Future<void> teardown() async {
+    await super.teardown();
     await cubit.close();
   }
 }
 
-// --- Riverpod ---
-final gridProvider = StateProvider<List<int>>((ref) => []);
-int _riverpodCounter = 0;
+final gridVersionProvider = StateProvider<int>((ref) => 0);
 
-class RiverpodDynamicGrid extends BenchmarkImplementation {
+class RiverpodDynamicGrid extends _DynamicGridBase {
   late ProviderContainer container;
 
   @override
   Future<void> setup() async {
+    await super.setup();
     container = ProviderContainer();
-    _riverpodCounter = 0;
-    // Reset state
-    container.read(gridProvider.notifier).state = [];
   }
 
   @override
-  Future<int> run() async {
-    final notifier = container.read(gridProvider.notifier);
-    final list = List<int>.from(notifier.state);
-    for (int i = 0; i < 50; i++) {
-      list.add(_riverpodCounter++);
-    }
-    if (list.length > 200) {
-      list.removeRange(0, 50);
-    }
-    notifier.state = list;
-    return 0;
+  void notifyUpdate() {
+    container.read(gridVersionProvider.notifier).state = updateVersion;
   }
+
+  @override
+  int get currentVersion => container.read(gridVersionProvider);
 
   @override
   Widget build(BuildContext context) {
@@ -267,13 +262,8 @@ class RiverpodDynamicGrid extends BenchmarkImplementation {
       container: container,
       child: Consumer(
         builder: (ctx, ref, _) {
-          final list = ref.watch(gridProvider);
-          return GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 10),
-            itemCount: list.length,
-            itemBuilder: (ctx, i) => _GridItem(list[i]),
-          );
+          ref.watch(gridVersionProvider);
+          return buildGrid();
         },
       ),
     );
@@ -281,6 +271,7 @@ class RiverpodDynamicGrid extends BenchmarkImplementation {
 
   @override
   Future<void> teardown() async {
+    await super.teardown();
     container.dispose();
   }
 }

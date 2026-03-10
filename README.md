@@ -182,6 +182,7 @@ Example applications live in [`examples/`](./examples):
 
 - [`examples/task_board`](./examples/task_board)
 - [`examples/async_catalog`](./examples/async_catalog)
+- [`examples/route_scopes`](./examples/route_scopes)
 - [`examples/scope_playground`](./examples/scope_playground)
 - [`examples/nexus_studio`](./examples/nexus_studio)
 

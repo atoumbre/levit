@@ -19,6 +19,14 @@ class ComplexGraphBenchmark extends Benchmark {
   bool get isUI => false;
 
   @override
+  BenchmarkClassification get classification =>
+      BenchmarkClassification.approximate;
+
+  @override
+  String get comparisonNote =>
+      'Uses each framework\'s closest graph/computed primitive.';
+
+  @override
   BenchmarkImplementation createImplementation(Framework framework) {
     switch (framework) {
       case Framework.levit:
@@ -42,6 +50,7 @@ class LevitGraphBenchmark extends BenchmarkImplementation {
   late LxComputed<int> c;
   late LxComputed<int> d;
   late VoidCallback listener;
+  int expectedA = 0;
 
   @override
   Future<void> setup() async {
@@ -54,17 +63,28 @@ class LevitGraphBenchmark extends BenchmarkImplementation {
 
     listener = () {};
     d.addListener(listener);
+    expectedA = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.value++;
-      final _ = d.value;
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedA += BenchmarkConfig.complexGraphIterations;
+    final value = d.value;
+    if (value != _expectedOutput(expectedA)) {
+      throw StateError(
+          'Levit graph mismatch: expected ${_expectedOutput(expectedA)}, got $value');
+    }
+  }
+
+  @override
+  Future<void> verify() async {
+    if (a.value != expectedA || d.value != _expectedOutput(expectedA)) {
+      throw StateError(
+          'Levit graph verification failed: a=${a.value}, d=${d.value}, expectedA=$expectedA');
+    }
   }
 
   @override
@@ -86,6 +106,7 @@ class VanillaGraphBenchmark extends BenchmarkImplementation {
   late VoidCallback updateB;
   late VoidCallback updateC;
   late VoidCallback updateD;
+  int expectedA = 0;
 
   @override
   Future<void> setup() async {
@@ -108,17 +129,27 @@ class VanillaGraphBenchmark extends BenchmarkImplementation {
     a.addListener(updateC);
     b.addListener(updateD);
     c.addListener(updateD);
+    expectedA = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.value++;
-      final _ = d.value; // Read to ensure computation like Levit
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedA += BenchmarkConfig.complexGraphIterations;
+    if (d.value != _expectedOutput(expectedA)) {
+      throw StateError(
+          'Vanilla graph mismatch: expected ${_expectedOutput(expectedA)}, got ${d.value}');
+    }
+  }
+
+  @override
+  Future<void> verify() async {
+    if (a.value != expectedA || d.value != _expectedOutput(expectedA)) {
+      throw StateError(
+          'Vanilla graph verification failed: a=${a.value}, d=${d.value}, expectedA=$expectedA');
+    }
   }
 
   @override
@@ -144,6 +175,7 @@ class GetXGraphBenchmark extends BenchmarkImplementation {
   late StreamSubscription subA2;
   late StreamSubscription subB;
   late StreamSubscription subC;
+  int expectedA = 0;
 
   @override
   Future<void> setup() async {
@@ -174,17 +206,29 @@ class GetXGraphBenchmark extends BenchmarkImplementation {
 
     subB = bVal.listen((val) => updateD());
     subC = cVal.listen((val) => updateD());
+    expectedA = 0;
+    dVal.value = _expectedOutput(expectedA);
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.value++;
-      final _ = dVal.value; // Read to ensure computation like Levit
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedA += BenchmarkConfig.complexGraphIterations;
+    await _waitForValue(
+      current: () => dVal.value,
+      expected: _expectedOutput(expectedA),
+      label: 'GetX graph',
+    );
+  }
+
+  @override
+  Future<void> verify() async {
+    if (a.value != expectedA || dVal.value != _expectedOutput(expectedA)) {
+      throw StateError(
+          'GetX graph verification failed: a=${a.value}, d=${dVal.value}, expectedA=$expectedA');
+    }
   }
 
   @override
@@ -204,6 +248,7 @@ class RiverpodGraphBenchmark extends BenchmarkImplementation {
   late Provider<int> bProvider;
   late Provider<int> cProvider;
   late Provider<int> dProvider;
+  int expectedA = 0;
 
   @override
   Future<void> setup() async {
@@ -213,18 +258,31 @@ class RiverpodGraphBenchmark extends BenchmarkImplementation {
     dProvider = Provider((ref) => ref.watch(bProvider) + ref.watch(cProvider));
 
     container.listen(dProvider, (p, n) {});
+    expectedA = 0;
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     final notifier = container.read(aProvider.notifier);
-    final stopwatch = Stopwatch()..start();
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       notifier.state++;
-      container.read(dProvider);
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedA += BenchmarkConfig.complexGraphIterations;
+    final value = container.read(dProvider);
+    if (value != _expectedOutput(expectedA)) {
+      throw StateError(
+          'Riverpod graph mismatch: expected ${_expectedOutput(expectedA)}, got $value');
+    }
+  }
+
+  @override
+  Future<void> verify() async {
+    final value = container.read(dProvider);
+    if (container.read(aProvider) != expectedA ||
+        value != _expectedOutput(expectedA)) {
+      throw StateError(
+          'Riverpod graph verification failed: a=${container.read(aProvider)}, d=$value, expectedA=$expectedA');
+    }
   }
 
   @override
@@ -238,32 +296,46 @@ class BlocGraphBenchmark extends BenchmarkImplementation {
   late rxdart.BehaviorSubject<int> a;
   late rxdart.BehaviorSubject<int> dSubject;
   late StreamSubscription sub;
+  int expectedA = 0;
 
   @override
   Future<void> setup() async {
-    a = rxdart.BehaviorSubject.seeded(0);
+    a = rxdart.BehaviorSubject.seeded(0, sync: true);
     final b = a.map((val) => val + 1);
     final c = a.map((val) => val * 2);
 
     // Use BehaviorSubject for D to enable synchronous .value reads
     dSubject = rxdart.BehaviorSubject.seeded(
-        a.value + 1 + a.value * 2); // Initial: b + c = 1 + 0 = 1
+      a.value + 1 + a.value * 2,
+      sync: true,
+    ); // Initial: b + c = 1 + 0 = 1
 
     final dStream = rxdart.Rx.combineLatest2(b, c, (valB, valC) => valB + valC);
     sub = dStream.listen((val) {
       dSubject.add(val);
     });
+    expectedA = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
-      a.add(i);
-      final _ = dSubject.value; // Read to ensure computation like Levit
+      a.add(a.value + 1);
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedA += BenchmarkConfig.complexGraphIterations;
+    await _waitForValue(
+      current: () => dSubject.value,
+      expected: _expectedOutput(expectedA),
+      label: 'BLoC graph',
+    );
+  }
+
+  @override
+  Future<void> verify() async {
+    if (a.value != expectedA || dSubject.value != _expectedOutput(expectedA)) {
+      throw StateError(
+          'BLoC graph verification failed: a=${a.value}, d=${dSubject.value}, expectedA=$expectedA');
+    }
   }
 
   @override
@@ -272,4 +344,18 @@ class BlocGraphBenchmark extends BenchmarkImplementation {
     await dSubject.close();
     await a.close();
   }
+}
+
+int _expectedOutput(int aValue) => aValue + 1 + (aValue * 2);
+
+Future<void> _waitForValue({
+  required int Function() current,
+  required int expected,
+  required String label,
+}) async {
+  for (int attempts = 0; attempts < 20000; attempts++) {
+    if (current() == expected) return;
+    await Future<void>.delayed(Duration.zero);
+  }
+  throw StateError('$label did not settle to $expected (got ${current()})');
 }
