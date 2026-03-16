@@ -352,7 +352,7 @@ typedef LxOnDispose = void Function() Function(
 );
 
 /// Internal utility for applying the middleware chain.
-abstract class LevitReactiveMiddlewareChain {
+abstract class _LevitReactiveMiddlewareChain {
   /// Applies the [LevitReactiveMiddleware.onSet] chain to a value mutation.
   static void Function(T) applyOnSet<T>(
     void Function(T) next,

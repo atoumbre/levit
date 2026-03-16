@@ -748,7 +748,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       _cachedReactivesList = reactives.toList(growable: false);
     }
 
-    LevitReactiveMiddlewareChain.applyGraphChange(this, _cachedReactivesList!);
+    _LevitReactiveMiddlewareChain.applyGraphChange(this, _cachedReactivesList!);
   }
 
   // ---------------------------------------------------------------------------

@@ -10,8 +10,8 @@ By participating in this project, you are expected to uphold our Code of Conduct
 
 ### Reporting Bugs
 
--   **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/atoumbre/levit/issues).
--   If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/atoumbre/levit/issues/new). Be sure to include a **title and clear description**, as well as as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
+-   **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/softilab/levit/issues).
+-   If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/softilab/levit/issues/new). Be sure to include a **title and clear description**, as well as as much relevant information as possible, and a **code sample** or an **executable test case** demonstrating the expected behavior that is not occurring.
 
 ### Suggesting Enhancements
 
@@ -22,9 +22,8 @@ By participating in this project, you are expected to uphold our Code of Conduct
 
 1.  Fork the repo and create your branch from `main`.
 2.  If you've added code that should be tested, add tests.
-3.  If you've changed APIs, update the documentation.
-4.  Ensure the test suite passes.
-5.  Make sure your code lints.
+3.  If you've changed APIs, update the relevant documentation (`README.md`, package READMEs, and inline DartDoc as needed).
+4.  Ensure formatting, analysis, and tests pass before opening the PR.
 
 ## Development Setup
 
@@ -32,7 +31,7 @@ Levit is a monorepo managed by **Melos**.
 
 ### Prerequisites
 
--   Dark SDK
+-   Dart SDK
 -   Flutter SDK
 -   Melos (`dart pub global activate melos`)
 
@@ -44,13 +43,16 @@ To link all local packages and install dependencies:
 melos bootstrap
 ```
 
-### Running Tests
+### Running Checks
 
-To run tests across all packages:
+Use the workspace scripts from the repository root:
 
 ```bash
+dart format .
+melos run analyze
 melos run test
 melos run test:flutter
+melos run coverage
 ```
 
 ## Style Guide

@@ -1,0 +1,2 @@
+import 'package:flutter/material.dart'; import 'package:flutter_test/flutter_test.dart'; import 'package:levit_flutter_core/levit_flutter_core.dart';
+void main() { testWidgets('LAsyncView.store coverage', (tester) async { final state = LevitAsyncStore((ref) async => 'hello'); await tester.pumpWidget(MaterialApp(home: LAsyncView.store(state, builder: (context, value) => Text(value)))); await tester.pumpAndSettle(); expect(find.text('hello'), findsOneWidget); }); }

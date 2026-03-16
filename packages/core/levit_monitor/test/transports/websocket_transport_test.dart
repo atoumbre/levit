@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
+import 'package:logger/logger.dart' hide LogEvent;
 import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -109,6 +110,24 @@ void main() {
       expect(data['category'], 'state');
       expect(data['type'], 'reactive_init');
       expect(data['name'], 'counter');
+    });
+
+    test('send (LogEvent) sends correct JSON with category "log"', () async {
+      final event = LogEvent(
+        sessionId: 's1',
+        level: Level.info,
+        data: 'a web socket log',
+      );
+
+      final future = mockChannel.outgoing.stream.first;
+      transport.send(event);
+      final sentJson = await future;
+
+      final data = jsonDecode(sentJson as String);
+
+      expect(data['category'], 'log');
+      expect(data['type'], 'log');
+      expect(data['data'], 'a web socket log');
     });
 
     test('close closes the connection', () async {
