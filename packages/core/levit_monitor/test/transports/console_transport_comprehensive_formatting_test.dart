@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
@@ -23,15 +22,46 @@ void main() {
       ReactiveGraphChangeEvent(sessionId: sid, reactive: rx, dependencies: []),
       ReactiveListenerAddedEvent(sessionId: sid, reactive: rx, context: null),
       ReactiveListenerRemovedEvent(sessionId: sid, reactive: rx, context: null),
-      ReactiveErrorEvent(sessionId: sid, reactive: rx, error: 'err', stack: null),
-      ScopeCreateEvent(sessionId: sid, scopeId: 1, scopeName: 's', parentScopeId: null),
+      ReactiveErrorEvent(
+          sessionId: sid, reactive: rx, error: 'err', stack: null),
+      ScopeCreateEvent(
+          sessionId: sid, scopeId: 1, scopeName: 's', parentScopeId: null),
       ScopeDisposeEvent(sessionId: sid, scopeId: 1, scopeName: 's'),
       SnapshotEvent(sessionId: sid, state: {}),
-      DependencyRegisterEvent(sessionId: sid, scopeId: 1, scopeName: 's', key: 'k', info: LevitDependency(), source: 'src'),
-      DependencyResolveEvent(sessionId: sid, scopeId: 1, scopeName: 's', key: 'k', info: LevitDependency(), source: 'src'),
-      DependencyDeleteEvent(sessionId: sid, scopeId: 1, scopeName: 's', key: 'k', info: LevitDependency(), source: 'src'),
-      DependencyInstanceCreateEvent(sessionId: sid, scopeId: 1, scopeName: 's', key: 'k', info: LevitDependency()),
-      DependencyInstanceReadyEvent(sessionId: sid, scopeId: 1, scopeName: 's', key: 'k', info: LevitDependency(), instance: 'ready'),
+      DependencyRegisterEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's',
+          key: 'k',
+          info: LevitDependency(),
+          source: 'src'),
+      DependencyResolveEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's',
+          key: 'k',
+          info: LevitDependency(),
+          source: 'src'),
+      DependencyDeleteEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's',
+          key: 'k',
+          info: LevitDependency(),
+          source: 'src'),
+      DependencyInstanceCreateEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's',
+          key: 'k',
+          info: LevitDependency()),
+      DependencyInstanceReadyEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's',
+          key: 'k',
+          info: LevitDependency(),
+          instance: 'ready'),
     ];
 
     for (final event in events) {

@@ -455,14 +455,15 @@ class LogEvent extends MonitorEvent {
         'level': level.name,
         'data': _serializeData(data),
         if (error != null) 'error': MonitorEvent._stringify(error),
-        if (stackTrace != null) 'stackTrace': MonitorEvent._stringify(stackTrace),
+        if (stackTrace != null)
+          'stackTrace': MonitorEvent._stringify(stackTrace),
       };
 
   static dynamic _serializeData(Object? data) {
     if (data == null) return null;
     if (data is num || data is String || data is bool) return data;
     try {
-      // Attempt to encode to check serializability or if it has `toJson()`
+      // Attempt to encode to check if serializable or if it has `toJson()`
       jsonEncode(data);
       return data;
     } catch (_) {

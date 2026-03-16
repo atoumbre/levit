@@ -25,7 +25,7 @@ class BatchVsUnBatchedBenchmark extends Benchmark {
 
   @override
   String get comparisonNote =>
-      'Levit uses a native batching primitive; others measure unbatched closest equivalents.';
+      'Levit uses a native batching primitive; others measure un-batched closest equivalents.';
 
   @override
   BenchmarkImplementation createImplementation(Framework framework) {

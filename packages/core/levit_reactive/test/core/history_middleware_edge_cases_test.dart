@@ -1,15 +1,21 @@
-import 'dart:async';
-import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
+import 'package:test/test.dart';
 
 class TestRejectMiddleware extends LevitReactiveMiddleware {
-  @override LxOnSet? get onSet => (next, reactive, change) => (value) {};
-  @override LxOnBatch? get onBatch => (next, change) => () => throw StateError('Batch rejected');
+  @override
+  LxOnSet? get onSet => (next, reactive, change) => (value) {};
+  @override
+  LxOnBatch? get onBatch =>
+      (next, change) => () => throw StateError('Batch rejected');
 }
 
 class TestSimpleMiddleware extends LevitReactiveMiddleware {
   final List<LevitReactiveChange> changes = [];
-  @override LxOnSet? get onSet => (next, reactive, change) => (value) { next(value); changes.add(change); };
+  @override
+  LxOnSet? get onSet => (next, reactive, change) => (value) {
+        next(value);
+        changes.add(change);
+      };
 }
 
 void main() {
@@ -17,7 +23,8 @@ void main() {
     test('handles missing name/callback gracefully', () {
       final history = LevitReactiveHistoryMiddleware();
       final rx = 0.lx;
-      final brokenChange = LevitReactiveChange<int>(timestamp: DateTime.now(), valueType: int, oldValue: 0, newValue: 1);
+      final brokenChange = LevitReactiveChange<int>(
+          timestamp: DateTime.now(), valueType: int, oldValue: 0, newValue: 1);
 
       bool nextCalled = false;
       void next(dynamic v) => nextCalled = true;
