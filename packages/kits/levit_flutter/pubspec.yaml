@@ -1,6 +1,6 @@
 name: levit_flutter
 description: Utility mixins and tools for Levit Flutter applications. Re-exports levit_dart.
-version: 0.0.7
+version: 0.0.8
 repository: https://github.com/softilab/levit
 topics:
   - flutter
@@ -14,11 +14,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  levit_dart: ^0.0.6
-  levit_flutter_core: ^0.0.6
+  levit_dart: ^0.0.8
+  levit_flutter_core: ^0.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   lints: ^6.1.0
-
