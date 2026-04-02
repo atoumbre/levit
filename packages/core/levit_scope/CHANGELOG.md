@@ -1,4 +1,8 @@
 
+## Unreleased
+- Hardened middleware token registration and removal edge cases.
+- Routed duplicate-scope-name diagnostics through structured debug logging.
+
 ## 0.0.8
 - Coordinated release version bump.
 

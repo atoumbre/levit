@@ -1,4 +1,8 @@
 
+## Unreleased
+- Hardened `LScope` and `LAsyncScope` parent-scope rebinding when widgets move between parents.
+- Tightened scope configuration callback typing and split scope/provider internals into smaller library parts without changing the public API.
+
 ## 0.0.8
 - Coordinated release version bump.
 - Updated internal package constraints to `^0.0.8`.
