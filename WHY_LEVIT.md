@@ -1,59 +1,85 @@
 # Why Levit
 
-Levit exists for teams that want more than a state container.
-
-Levit is a deterministic reactive architecture built to solve the lifecycle, dependency, and rebuild issues that plague scaling Dart and Flutter applications.
+Levit is for teams whose hardest state problems are really ownership, teardown, and update-traceability problems.
 
 It combines:
 
-- Explicit ownership through scopes and controllers
-- Fine-grained reactive updates
-- Predictable teardown and disposal
-- A shared mental model across pure Dart and Flutter
+- Scoped dependency ownership
+- Deterministic cleanup
+- Fine-grained reactive propagation
+- Flutter rebuild boundaries
+- One runtime model across pure Dart and Flutter
 - Opt-in runtime observability
 
-If that sounds heavier than a typical state-management package, that is intentional.
-Levit is designed for applications where lifecycle mistakes, unclear dependency ownership, and broad rebuild behavior become recurring sources of bugs and performance cost.
+If that sounds heavier than a minimal state package, that is intentional.
+Levit is designed for applications where lifecycle mistakes, unclear dependency ownership, and broad rebuild behavior are already creating bugs, cost, or hesitation.
 
-## The Core Thesis
+## The Problem Behind "State Management"
 
-Most application stacks split lifecycle, dependency management, and reactive state across separate tools.
-That often works at first, but over time it creates friction:
+Many application stacks split these concerns across separate tools:
 
-- State exists, but ownership is unclear
-- Dependencies are available, but disposal is inconsistent
-- Rebuilds happen, but the reason is hard to trace
-- Shared Dart logic and Flutter UI end up with different architectural rules
+- State and derivation
+- Dependency resolution
+- Lifecycle and disposal
+- Widget rebuild boundaries
+- Diagnostics
+
+That often works early on.
+As the codebase grows, the seams start to matter:
+
+- state survives longer than the feature that created it
+- dependencies can be resolved, but no one is sure who owns them
+- widgets rebuild, but the triggering read is hard to trace
+- shared Dart logic and Flutter UI follow different architectural rules
 
 Levit takes a different position:
 
-> Scope ownership, reactive propagation, and cleanup should be part of the same runtime model.
+> Scope ownership, cleanup, and reactive propagation should belong to the same runtime model.
 
-That is the reason the ecosystem is layered the way it is:
+That is why the ecosystem is layered the way it is:
 
 - [`levit_scope`](./packages/core/levit_scope) defines ownership and deterministic disposal
 - [`levit_reactive`](./packages/core/levit_reactive) defines change propagation and dependency tracking
 - [`levit_dart_core`](./packages/core/levit_dart_core) composes both into controllers, stores, and the `Levit` facade
 - [`levit_flutter_core`](./packages/core/levit_flutter_core) maps that model onto Flutter widget lifecycles
-- [`levit_monitor`](./packages/core/levit_monitor) adds opt-in runtime diagnostics when needed
+- [`levit_monitor`](./packages/core/levit_monitor) adds runtime diagnostics when needed, without forcing them into the default runtime
 
-## What Problem Levit Solves
+## The Promise
 
-Levit is built for applications where these questions matter:
+Levit helps teams answer a small set of high-value questions with confidence:
 
-- Who owns this object?
-- When is it disposed?
+- What owns this object?
+- When does it get disposed?
 - What scope can resolve it?
-- Which reactive read caused this rebuild?
-- Can the same architecture work in Flutter, CLI tools, server code, and shared domain logic?
+- What caused this recomputation or rebuild?
+- Can the same rules apply in Flutter, shared domain packages, services, and CLI tools?
 
 The framework is opinionated about those questions:
 
 - Scopes own registrations
 - Controllers own cleanup
 - Reactive values propagate changes deterministically
-- Flutter widgets opt into precise rebuild boundaries
-- Monitoring is available, but not forced into the default runtime
+- Flutter widgets opt into focused rebuild boundaries
+- Monitoring stays optional
+
+## What Makes Levit Different
+
+Levit is not mainly trying to win on the fewest concepts.
+It is trying to make several concerns coherent together:
+
+- Dependency scope
+- Lifecycle ownership
+- Reactive propagation
+- Widget rebuild boundaries
+- Runtime diagnostics
+
+Flutter developers will reasonably compare this with Riverpod, Bloc, or Provider.
+Those tools are often centered on modeling and delivering application state inside Flutter.
+Levit is aimed at a broader problem: making ownership, teardown, reactive propagation, and Flutter bindings part of one runtime model that still works outside the widget tree.
+
+That is the core value proposition:
+
+> Levit gives Dart and Flutter teams deterministic ownership and reactive precision when lifecycle bugs and unclear boundaries are becoming expensive.
 
 ## What Levit Optimizes For
 
@@ -63,11 +89,11 @@ Levit is strongest when object lifetime should be obvious from structure.
 
 A child scope can override parent dependencies without mutating parent state.
 When the child scope goes away, its registrations go away with it.
-That reduces the class of bugs where state outlives the feature or subtree that created it.
+That reduces bugs where state outlives the feature, route, or subtree that created it.
 
 ### 2. Fine-grained reactive updates
 
-The reactive model is designed to track exactly what was read, then rebuild or recompute only where needed.
+The reactive model tracks what was actually read, then recomputes or rebuilds only where needed.
 
 In Flutter, that shows up through widgets such as:
 
@@ -75,13 +101,12 @@ In Flutter, that shows up through widgets such as:
 - `LBuilder` for explicit single-reactive rebuilds
 - `LStatusBuilder` for status-oriented async rendering
 
-This is not just about performance metrics.
-It is also about keeping rebuild boundaries intentional and easy to inspect.
+This is not only about micro-benchmarks.
+It is also about keeping rebuild boundaries intentional and easier to inspect.
 
 ### 3. One architecture across Dart and Flutter
 
 Levit is not Flutter-only.
-
 The same model applies to:
 
 - Pure Dart services
@@ -93,28 +118,9 @@ That matters when the UI should not be the only place where lifecycle discipline
 
 ### 4. Operational visibility
 
-With [`levit_monitor`](./packages/core/levit_monitor), observability becomes part of the architecture instead of a patch added later.
+With [`levit_monitor`](./packages/core/levit_monitor), observability becomes part of the architecture instead of an afterthought.
 
-You can attach diagnostics, redact sensitive values, and export runtime events without changing the underlying ownership model.
-
-## What Makes It Different
-
-Levit is not primarily trying to win on the fewest concepts.
-
-Its value is in making several concerns coherent together:
-
-- Dependency scope
-- Lifecycle ownership
-- Reactive propagation
-- Widget rebuild boundaries
-- Runtime diagnostics
-
-Many libraries are strong in one or two of those areas.
-Levit's proposition is that the combination is more valuable than any single piece on its own.
-
-Flutter developers will reasonably compare this with Riverpod, Bloc, or Provider.
-Those tools are often centered on modeling and delivering application state inside Flutter.
-Levit is trying to solve a slightly broader problem: make scope ownership, lifecycle cleanup, reactive propagation, and Flutter bindings part of one runtime model that also remains usable in pure Dart code.
+You can attach diagnostics, redact sensitive values, and export runtime events without changing the ownership model underneath.
 
 ## Where Levit Fits Best
 
@@ -148,20 +154,18 @@ The tradeoff is straightforward:
 - Levit gives you stronger ownership and lifecycle guarantees
 - In return, it asks you to work with a more explicit model
 
-That trade can be very good in larger systems and unnecessary in smaller ones.
+That trade can be worth it in larger systems and unnecessary in smaller ones.
 
-## What Levit Is Not
+## Evidence
 
-Levit is not:
+The pitch is backed by concrete material in this repo:
 
-- Just a widget toolkit
-- Just a DI package
-- Just a signal/reactive primitive library
-- Just an async status wrapper
-- A framework that hides lifecycle under convenience APIs
+- Benchmark methodology: [`benchmarks/README.md`](./benchmarks/README.md)
+- Comparative results: [`reports/bench_mark_report.md`](./reports/bench_mark_report.md)
+- Stress results for reactive, DI, and Flutter bindings: [`reports/stress_test_report.md`](./reports/stress_test_report.md)
+- Worked examples: [`examples/`](./examples), [`packages/kits/levit_flutter/example/README.md`](./packages/kits/levit_flutter/example/README.md)
 
-It can feel simple in use, but its goal is not to erase structure.
-Its goal is to make structure explicit and reliable.
+These are not a substitute for trying the framework in your own workload, but they do show that the claims are meant to be testable.
 
 ## A Practical Mental Model
 
@@ -175,7 +179,7 @@ If you only remember one thing, remember this:
 That is the center of the framework.
 Most of the package surface exists to make those four rules practical in different contexts.
 
-In practice, that can stay small. A child scope can own a controller, and a reactive read can drive a precise rebuild boundary in just a few lines:
+In practice, that can stay small:
 
 ```dart
 return LScopedView<CounterController>.put(
@@ -197,19 +201,19 @@ If you are evaluating Levit, start with the entry point that matches the job you
 
 From there:
 
-- Use the root [`README.md`](./README.md) for ecosystem structure.
-- Use package READMEs for package boundaries and onboarding.
+- Use the root [`README.md`](./README.md) for ecosystem structure and quick onboarding.
+- Use package READMEs for package boundaries and package-specific guidance.
 - Use DartDoc for the public API contract.
 
 ## The Short Version
 
 Levit is valuable when your application needs lifecycle rigor, clear ownership, and reactive precision more than it needs the smallest possible conceptual surface.
 
-It is a framework for teams that want to answer these questions with confidence:
+If your team keeps asking:
 
 - What owns this?
 - When does it go away?
 - What caused this update?
 - Can the same model survive outside the widget tree?
 
-If those questions matter in your codebase, Levit has a clear reason to exist.
+then Levit has a clear reason to exist.

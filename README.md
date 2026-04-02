@@ -1,14 +1,31 @@
 # Levit
 
-Deterministic reactive architecture for Dart and Flutter.
+Deterministic ownership and fine-grained reactivity for Dart and Flutter.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![CodeFactor](https://www.codefactor.io/repository/github/atoumbre/levit/badge)](https://www.codefactor.io/repository/github/atoumbre/levit)
 [![codecov](https://codecov.io/gh/atoumbre/levit/graph/badge.svg?token=AESOtS4YPg)](https://codecov.io/github/atoumbre/levit)
 
-Levit is a layered ecosystem for teams that want explicit ownership, deterministic disposal, and fine-grained reactive updates.
+Levit is for teams whose hardest state problems are really ownership and lifecycle problems.
+It gives Dart and Flutter applications one runtime model for dependency scope, cleanup, and reactive updates, so it is easier to answer:
 
-Start with [`WHY_LEVIT.md`](./WHY_LEVIT.md) if you want the architectural rationale before the package-level onboarding.
+- What owns this dependency or controller?
+- When does it get disposed?
+- What caused this recomputation or rebuild?
+- Can the same architecture work in Flutter and pure Dart code?
+
+If you want the full architectural rationale, tradeoffs, and fit guidance, start with [`WHY_LEVIT.md`](./WHY_LEVIT.md).
+
+## Why Teams Choose Levit
+
+- Scoped ownership: feature, route, and subtree boundaries can own their own registrations and controllers.
+- Deterministic teardown: child scopes dispose what they created when the boundary goes away.
+- Fine-grained updates: reactive reads drive focused recomputation and rebuilds instead of broad invalidation.
+- One model across Dart and Flutter: shared domain logic, services, CLI tools, and Flutter UI can follow the same rules.
+- Optional observability: add runtime telemetry only when you need diagnostics or event export.
+
+Levit is most valuable once lifecycle bugs, unclear dependency boundaries, or overly broad rebuild behavior are already costing real time.
+If your app is still small enough that ownership is obvious everywhere, it may be more framework than you need.
 
 ## Installation
 
@@ -23,17 +40,6 @@ flutter pub add levit_flutter
 ```bash
 dart pub add levit
 ```
-
-## Which Package Should I Import?
-
-| Goal | Package | Notes |
-| :-- | :-- | :-- |
-| Flutter application | [`levit_flutter`](./packages/kits/levit_flutter) | Recommended single import for app code. |
-| Pure Dart application | [`levit`](./packages/kits/levit) | Recommended single import for CLI, server, and shared domain code. |
-| Flutter bindings without the higher-level Flutter kit | [`levit_flutter_core`](./packages/core/levit_flutter_core) | Owns Flutter widgets and scope bridging; re-exports `levit_dart_core` for convenience. |
-| Core composition APIs only | [`levit_dart_core`](./packages/core/levit_dart_core) | Owns `Levit`, controllers, stores, and the Dart-side lifecycle contract. |
-| Task/loop/time utilities on top of Dart core | [`levit_dart`](./packages/kits/levit_dart) | Adds controller utilities without Flutter widgets. |
-| Runtime telemetry and diagnostics | [`levit_monitor`](./packages/core/levit_monitor) | Add separately alongside any runtime package when you need structured events. |
 
 ## Quick Start
 
@@ -92,6 +98,37 @@ class CounterPage extends StatelessWidget {
 void main() => runApp(const MaterialApp(home: CounterPage()));
 ```
 
+## What Makes Levit Different
+
+Most stacks solve state, dependency injection, and widget rebuilds with separate tools.
+That can work well for a while, but the seams show up when a codebase grows:
+
+- state survives longer than the feature that created it
+- dependencies can be resolved, but ownership is unclear
+- rebuilds happen, but the triggering read is hard to trace
+- pure Dart code and Flutter UI follow different lifecycle rules
+
+Levit takes a different position: scope ownership, cleanup, and reactive propagation should belong to the same runtime model.
+
+## Evidence
+
+The proposition is not just conceptual. This repo includes:
+
+- Cross-framework benchmarks under a shared harness: [`benchmarks/README.md`](./benchmarks/README.md), [`reports/bench_mark_report.md`](./reports/bench_mark_report.md)
+- Stress tests for reactive, DI, and Flutter lifecycle behavior: [`stress_tests/README.md`](./stress_tests/README.md), [`reports/stress_test_report.md`](./reports/stress_test_report.md)
+- Examples that show feature scopes, async patterns, and route ownership in practice: [`examples/`](./examples)
+
+## Which Package Should I Import?
+
+| Goal | Package | Notes |
+| :-- | :-- | :-- |
+| Flutter application | [`levit_flutter`](./packages/kits/levit_flutter) | Recommended single import for app code. |
+| Pure Dart application | [`levit`](./packages/kits/levit) | Recommended single import for CLI, server, and shared domain code. |
+| Flutter bindings without the higher-level Flutter kit | [`levit_flutter_core`](./packages/core/levit_flutter_core) | Owns Flutter widgets and scope bridging; re-exports `levit_dart_core` for convenience. |
+| Core composition APIs only | [`levit_dart_core`](./packages/core/levit_dart_core) | Owns `Levit`, controllers, stores, and the Dart-side lifecycle contract. |
+| Task/loop/time utilities on top of Dart core | [`levit_dart`](./packages/kits/levit_dart) | Adds controller utilities without Flutter widgets. |
+| Runtime telemetry and diagnostics | [`levit_monitor`](./packages/core/levit_monitor) | Add separately alongside any runtime package when you need structured events. |
+
 ## Architecture Model
 
 ```mermaid
@@ -132,6 +169,7 @@ flowchart LR
 ## Ecosystem Overview
 
 ### Recommended entry points (kits)
+
 These aggregate exports without redefining runtime semantics.
 
 | Package | Use when |
@@ -154,7 +192,6 @@ These aggregate exports without redefining runtime semantics.
 | [`levit_dart_core`](./packages/core/levit_dart_core) | Composition layer (`Levit`, `LevitController`, `LevitStore`). Owns controller ownership semantics. |
 | [`levit_flutter_core`](./packages/core/levit_flutter_core) | Flutter bindings (`LScope`, `LWatch`, `LView`, builders); re-exports `levit_dart_core` for convenience. |
 | [`levit_monitor`](./packages/core/levit_monitor) | Opt-in monitoring, redaction, shadow state, and transport pipeline. Not bundled by default. |
-
 
 ## Middleware Lifecycle
 
