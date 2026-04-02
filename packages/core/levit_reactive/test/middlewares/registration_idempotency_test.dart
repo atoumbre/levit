@@ -53,6 +53,33 @@ void main() {
 
       expect(calls, ['same']);
     });
+
+    test('re-adding the same tokenized middleware is a no-op', () {
+      final calls = <String>[];
+      final middleware = _RecordingMiddleware('same-token', calls);
+
+      expect(
+        identical(
+          LevitReactiveMiddleware.add(middleware, token: 'history'),
+          middleware,
+        ),
+        isTrue,
+      );
+      expect(
+        identical(
+          LevitReactiveMiddleware.add(middleware, token: 'history'),
+          middleware,
+        ),
+        isTrue,
+      );
+
+      final state = 0.lx;
+      state.value = 1;
+
+      expect(calls, ['same-token']);
+      expect(Lx.containsMiddleware(middleware), isTrue);
+      expect(Lx.containsMiddlewareToken('history'), isTrue);
+    });
   });
 }
 

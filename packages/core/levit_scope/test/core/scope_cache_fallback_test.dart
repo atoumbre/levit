@@ -21,6 +21,23 @@ void main() {
       _setResolutionCache(child, LevitScopeKey.of<String>(tag: 't'), child);
       expect(child.findOrNull<String>(tag: 't'), 'root');
     });
+
+    test('findAsync(tag) falls back when cached scope recurses', () async {
+      final root = LevitScope.root('root_async');
+      root.put<String>(() => 'root', tag: 't');
+      final child = root.createScope('child_async');
+      _setResolutionCache(child, LevitScopeKey.of<String>(tag: 't'), child);
+      expect(await child.findAsync<String>(tag: 't'), 'root');
+    });
+
+    test('findOrNullAsync(tag) falls back when cached scope recurses',
+        () async {
+      final root = LevitScope.root('root_or_null_async');
+      root.put<String>(() => 'root', tag: 't');
+      final child = root.createScope('child_or_null_async');
+      _setResolutionCache(child, LevitScopeKey.of<String>(tag: 't'), child);
+      expect(await child.findOrNullAsync<String>(tag: 't'), 'root');
+    });
   });
 }
 

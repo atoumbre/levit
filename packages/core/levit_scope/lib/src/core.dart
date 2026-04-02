@@ -386,7 +386,7 @@ class LevitScope {
     }
 
     // Reuse cached ancestor that previously resolved this key.
-    final cachedScope = _resolutionCache[key];
+    final cachedScope = _readCachedScope(key);
     if (cachedScope != null) {
       try {
         return cachedScope.find<S>(tag: tag);
@@ -430,7 +430,7 @@ class LevitScope {
       }
     }
 
-    final cachedScope = _resolutionCache[key];
+    final cachedScope = _readCachedScope(key);
     if (cachedScope != null) {
       try {
         return cachedScope.findOrNull<S>(tag: tag);
@@ -466,7 +466,7 @@ class LevitScope {
           info as LevitDependency<S>, key, keyString, tag);
     }
 
-    final cachedScope = _resolutionCache[key];
+    final cachedScope = _readCachedScope(key);
     if (cachedScope != null) {
       try {
         return await cachedScope.findAsync<S>(tag: tag);
@@ -501,7 +501,7 @@ class LevitScope {
           info as LevitDependency<S>, key, keyString, tag);
     }
 
-    final cachedScope = _resolutionCache[key];
+    final cachedScope = _readCachedScope(key);
     if (cachedScope != null) {
       try {
         return await cachedScope.findOrNullAsync<S>(tag: tag);
@@ -519,6 +519,30 @@ class LevitScope {
     }
 
     return null;
+  }
+
+  LevitScope? _readCachedScope(LevitScopeKey key) {
+    final cachedScope = _resolutionCache[key];
+    if (cachedScope == null) return null;
+
+    // Tagged lookup caches are only valid when they point to an ancestor.
+    if (!_isAncestorScope(cachedScope)) {
+      _resolutionCache.remove(key);
+      return null;
+    }
+
+    return cachedScope;
+  }
+
+  bool _isAncestorScope(LevitScope candidate) {
+    LevitScope? current = _parentScope;
+    while (current != null) {
+      if (identical(current, candidate)) {
+        return true;
+      }
+      current = current._parentScope;
+    }
+    return false;
   }
 
   void _cacheScope(LevitScopeKey key, LevitScope scope) {
@@ -789,8 +813,9 @@ class LevitScope {
       _registry.keys.map((k) => k.debugString).toList();
 
   @override
-  String toString() =>
-      'LevitScope($name, ${_registry.length} local registrations)';
+  String toString() {
+    return 'LevitScope($name, ${_registry.length} local registrations)';
+  }
 
   // Global scope middleware registry.
   static final List<LevitScopeMiddleware> _middlewares = [];

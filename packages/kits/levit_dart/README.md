@@ -59,7 +59,7 @@ class SyncController extends LevitController with LevitReactiveTasksMixin {
 | `LevitTasksMixin` | You need scheduling, retries, caching, or cancellation without UI-facing reactive task state. | `tasksEngine.schedule(...)` |
 | `LevitReactiveTasksMixin` | You want reactive task details, busy state, and progress that can be observed by other runtime code or UI. | `runTask(...)`, `tasks`, `isBusy`, `totalProgress` |
 
-For the next-step design direction for task groups, inherited deadlines, and cancellation trees, see [`docs/structured_concurrency.md`](../../../docs/structured_concurrency.md).
+For the next-step design direction for task groups, inherited deadlines, and cancellation trees, see [`proposals/structured_concurrency.md`](../../../proposals/structured_concurrency.md).
 
 ## Design Principles
 
