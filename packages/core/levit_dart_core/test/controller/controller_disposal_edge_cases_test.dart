@@ -31,6 +31,24 @@ void main() {
       expect(sc.isClosed, true);
     });
 
+    test('autoDispose handles StreamSubscription', () async {
+      final controller = TestController();
+      var cancelCalled = false;
+      final streamController = StreamController<int>.broadcast(
+        onCancel: () {
+          cancelCalled = true;
+        },
+      );
+      final subscription = streamController.stream.listen((_) {});
+      controller.autoDispose(subscription);
+
+      controller.onClose();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(cancelCalled, isTrue);
+      await streamController.close();
+    });
+
     test('autoDispose handles exceptions during cleanup', () {
       final controller = TestController();
 

@@ -153,6 +153,7 @@ void main() {
         onTaskEvent: events.add,
       );
       final blocker = Completer<void>();
+      var cancelled = false;
 
       final active = engine.schedule<String>(
         () async {
@@ -160,6 +161,7 @@ void main() {
           return 'done';
         },
         id: 'cancelled_active_task',
+        onCancel: () => cancelled = true,
       );
 
       await Future<void>.delayed(Duration.zero);
@@ -167,6 +169,7 @@ void main() {
       blocker.complete();
 
       expect(await active, isNull);
+      expect(cancelled, isTrue);
       expect(
         events.any((event) =>
             event.taskId == 'cancelled_active_task' &&

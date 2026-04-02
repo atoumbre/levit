@@ -26,6 +26,9 @@ class TestLifecycleController extends LevitController
   void onAppHidden() => hiddenCount++;
 }
 
+class DefaultLifecycleController extends LevitController
+    with LevitAppLifecycleMixin {}
+
 void main() {
   group('LevitAppLifecycleMixin', () {
     testWidgets('calls lifecycle methods correctly', (tester) async {
@@ -67,6 +70,21 @@ void main() {
       expect(controller.hiddenCount, 1);
 
       controller.onClose();
+    });
+
+    test('default lifecycle callbacks are no-ops', () {
+      final controller = DefaultLifecycleController();
+
+      expect(
+        () {
+          controller.onAppResumed();
+          controller.onAppPaused();
+          controller.onAppInactive();
+          controller.onAppDetached();
+          controller.onAppHidden();
+        },
+        returnsNormally,
+      );
     });
   });
 }

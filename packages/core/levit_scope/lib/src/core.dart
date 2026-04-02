@@ -765,8 +765,7 @@ class LevitScope {
       LevitScope? current = this;
       while (current != null) {
         if (current.name == name) {
-          // ignore: avoid_print
-          print(
+          _emitScopeDebugWarning(
             'LevitScope: Child scope "$name" has the same name as ancestor '
             'scope "${current.name}" (id: ${current.id}). '
             'Consider unique names for debugging clarity.',
@@ -802,48 +801,53 @@ class LevitScope {
   /// Registration is idempotent by instance identity.
   /// If [token] is provided, registration is unique per token:
   /// adding another middleware with the same token replaces the previous one.
-  static void addMiddleware(
-    LevitScopeMiddleware middleware, {
-    Object? token,
-  }) {
-    if (token != null) {
-      final existingByToken = _middlewaresByToken[token];
-      if (existingByToken != null) {
-        if (identical(existingByToken, middleware)) {
-          return;
-        }
+  static void addMiddleware(LevitScopeMiddleware middleware, {Object? token}) {
+    if (token != null) return _addMiddlewareWithToken(token, middleware);
+    if (_middlewares.contains(middleware)) return;
+    _middlewares.add(middleware);
+  }
 
-        final index = _middlewares.indexOf(existingByToken);
-        if (index >= 0) {
-          _middlewares[index] = middleware;
-        } else {
-          _middlewares.add(middleware);
-        }
-        _middlewaresByToken[token] = middleware;
-        return;
-      }
+  static void _addMiddlewareWithToken(
+      Object token, LevitScopeMiddleware middleware) {
+    final existingByToken = _middlewaresByToken[token];
+    if (existingByToken != null && !identical(existingByToken, middleware)) {
+      return _replaceMiddlewareToken(existingByToken, token, middleware);
+    }
+    if (existingByToken == null) _attachMiddlewareToken(token, middleware);
+  }
 
-      if (_middlewares.contains(middleware)) {
-        _middlewaresByToken[token] = middleware;
-        return;
-      }
-
-      _middlewares.add(middleware);
+  static void _attachMiddlewareToken(
+      Object token, LevitScopeMiddleware middleware) {
+    if (_middlewares.contains(middleware)) {
       _middlewaresByToken[token] = middleware;
       return;
     }
-
-    if (_middlewares.contains(middleware)) {
-      return;
-    }
-
     _middlewares.add(middleware);
+    _middlewaresByToken[token] = middleware;
+  }
+
+  static void _replaceMiddlewareToken(
+    LevitScopeMiddleware existingByToken,
+    Object token,
+    LevitScopeMiddleware middleware,
+  ) {
+    _replaceOrAppendMiddleware(existingByToken, middleware);
+    _middlewaresByToken[token] = middleware;
+  }
+
+  static void _replaceOrAppendMiddleware(
+      LevitScopeMiddleware existing, LevitScopeMiddleware replacement) {
+    final index = _middlewares.indexOf(existing);
+    if (index >= 0) {
+      _middlewares[index] = replacement;
+    } else {
+      _middlewares.add(replacement);
+    }
   }
 
   /// Removes a previously added middleware.
   static void removeMiddleware(LevitScopeMiddleware middleware) {
-    final removed = _middlewares.remove(middleware);
-    if (removed) {
+    if (_middlewares.remove(middleware)) {
       _middlewaresByToken
           .removeWhere((_, registered) => identical(registered, middleware));
     }
@@ -852,21 +856,13 @@ class LevitScope {
   /// Removes a middleware by [token].
   static bool removeMiddlewareByToken(Object token) {
     final middleware = _middlewaresByToken.remove(token);
-    if (middleware == null) return false;
-    return _middlewares.remove(middleware);
+    return middleware != null && _middlewares.remove(middleware);
   }
 
-  /// Returns `true` if [middleware] is currently registered.
-  static bool containsMiddleware(LevitScopeMiddleware middleware) {
-    return _middlewares.contains(middleware);
-  }
-
-  /// Returns `true` if [token] is currently registered.
-  static bool containsMiddlewareToken(Object token) {
-    return _middlewaresByToken.containsKey(token);
-  }
-
-  /// Whether any middlewares are registered.
+  static bool containsMiddleware(LevitScopeMiddleware middleware) =>
+      _middlewares.contains(middleware);
+  static bool containsMiddlewareToken(Object token) =>
+      _middlewaresByToken.containsKey(token);
   static bool get hasMiddlewares => _middlewares.isNotEmpty;
 
   void _notifyRegister(String key, LevitDependency info, String source) {
@@ -911,6 +907,11 @@ class LevitScope {
   void _notifyScopeDispose() {
     _LevitScopeMiddlewareChain.applyOnScopeDispose(id, name);
   }
+}
+
+void _emitScopeDebugWarning(String message) {
+  dev.log(message, name: 'levit_scope');
+  Zone.current.print(message);
 }
 
 /// Internal helper to apply observer hooks in a single place.

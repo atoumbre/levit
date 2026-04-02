@@ -457,6 +457,7 @@ PackageStats _parseLcov(File file, String packageName) {
   final lines = file.readAsLinesSync();
   // FilePath -> Map<LineNumber, Hits>
   final fileHits = <String, Map<int, int>>{};
+  final sourceLinesCache = <String, List<String>?>{};
   String? currentFile;
 
   for (final line in lines) {
@@ -493,6 +494,9 @@ PackageStats _parseLcov(File file, String packageName) {
     for (final lineEntry in lineMap.entries) {
       final lineNum = lineEntry.key;
       final hits = lineEntry.value;
+      if (_isStructuralCoverageArtifact(filePath, lineNum, sourceLinesCache)) {
+        continue;
+      }
 
       stats.totalLines++;
       if (hits > 0) {
@@ -504,6 +508,88 @@ PackageStats _parseLcov(File file, String packageName) {
   }
 
   return stats;
+}
+
+bool _isStructuralCoverageArtifact(
+  String filePath,
+  int lineNum,
+  Map<String, List<String>?> sourceLinesCache,
+) {
+  final sourceLines = sourceLinesCache.putIfAbsent(filePath, () {
+    final sourceFile = File(filePath);
+    if (!sourceFile.existsSync()) return null;
+    return sourceFile.readAsLinesSync();
+  });
+  if (sourceLines == null || lineNum <= 0 || lineNum > sourceLines.length) {
+    return false;
+  }
+
+  final trimmed = sourceLines[lineNum - 1].trim();
+  if (trimmed.isEmpty) return true;
+  if (trimmed.startsWith('//') ||
+      trimmed.startsWith('/*') ||
+      trimmed.startsWith('*') ||
+      trimmed == '*/') {
+    return true;
+  }
+  if (trimmed == '{' ||
+      trimmed == '}' ||
+      trimmed == '};' ||
+      trimmed == '),' ||
+      trimmed == ');') {
+    return true;
+  }
+
+  if (_isSignatureContinuationLine(sourceLines, lineNum - 1, trimmed)) {
+    return true;
+  }
+
+  if (trimmed.endsWith(') {') && !_startsWithControlFlow(trimmed)) {
+    return true;
+  }
+
+  return false;
+}
+
+bool _isSignatureContinuationLine(
+  List<String> sourceLines,
+  int lineIndex,
+  String trimmed,
+) {
+  if (_startsWithControlFlow(trimmed)) return false;
+  if (!(trimmed.endsWith(',') || trimmed.endsWith(') {'))) return false;
+
+  for (int i = lineIndex - 1; i >= 0; i--) {
+    final previous = sourceLines[i].trim();
+    if (previous.isEmpty) continue;
+    if (_startsWithControlFlow(previous)) return false;
+    if (previous.endsWith('(')) return true;
+    if (previous.endsWith(',') || previous.endsWith(') {')) continue;
+    return false;
+  }
+
+  return false;
+}
+
+bool _startsWithControlFlow(String line) {
+  const keywords = [
+    'if ',
+    'if(',
+    'for ',
+    'for(',
+    'while ',
+    'while(',
+    'switch ',
+    'switch(',
+    'catch ',
+    'catch(',
+    'else',
+    'do ',
+    'try',
+    'assert ',
+    'assert(',
+  ];
+  return keywords.any(line.startsWith);
 }
 
 void _fixLcovPaths(File lcovFile, String packagePath, String rootPath) {

@@ -29,7 +29,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: LScope(
-          dependencyFactory: (scope) => scope.put(() => 'seed'),
+          dependencyFactory: (scope) => scope.put<String>(() => 'seed'),
           child: Builder(
             builder: (context) {
               isRegisteredBefore = context.levit.isRegistered(key: asyncStore);

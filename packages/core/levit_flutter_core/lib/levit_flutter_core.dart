@@ -24,12 +24,17 @@
 ///     [LxStatus].
 library;
 
+import 'dart:async';
+
 export 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
 
 part 'src/scope.dart';
+part 'src/l_scope.dart';
+part 'src/l_async_scope.dart';
+part 'src/levit_provider.dart';
 part 'src/route_scope.dart';
 part 'src/view.dart';
 part 'src/watch.dart';

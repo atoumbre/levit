@@ -27,7 +27,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put(() => 'A', tag: 'A'),
+            dependencyFactory: (s) => s.put<String>(() => 'A', tag: 'A'),
             child: const Text('A'),
           ),
         ),
@@ -37,7 +37,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put(() => 'A', tag: 'B'),
+            dependencyFactory: (s) => s.put<String>(() => 'A', tag: 'B'),
             child: const Text('A'),
           ),
         ),

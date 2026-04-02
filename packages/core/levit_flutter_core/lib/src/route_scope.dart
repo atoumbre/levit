@@ -159,7 +159,7 @@ class _RouteBindingState extends State<_RouteBinding> {
 /// meaningful ownership boundary.
 class LRouteScope extends StatelessWidget {
   /// An optional factory to register dependencies in this scope.
-  final dynamic Function(LevitScope scope)? dependencyFactory;
+  final LScopeDependencyFactory? dependencyFactory;
 
   /// The widget subtree that will have access to this scope.
   final Widget child;
@@ -197,8 +197,9 @@ class LRouteScope extends StatelessWidget {
       key: key,
       name: name,
       args: args,
-      dependencyFactory: (s) =>
-          s.put<S>(builder, tag: tag, permanent: permanent),
+      dependencyFactory: (s) {
+        s.put<S>(builder, tag: tag, permanent: permanent);
+      },
       child: child,
     );
   }
@@ -219,8 +220,14 @@ class LRouteScope extends StatelessWidget {
       key: key,
       name: name,
       args: args,
-      dependencyFactory: (s) => s.lazyPut<S>(builder,
-          tag: tag, permanent: permanent, isFactory: isFactory),
+      dependencyFactory: (s) {
+        s.lazyPut<S>(
+          builder,
+          tag: tag,
+          permanent: permanent,
+          isFactory: isFactory,
+        );
+      },
       child: child,
     );
   }
@@ -241,8 +248,14 @@ class LRouteScope extends StatelessWidget {
       key: key,
       name: name,
       args: args,
-      dependencyFactory: (s) => s.lazyPutAsync<S>(builder,
-          tag: tag, permanent: permanent, isFactory: isFactory),
+      dependencyFactory: (s) {
+        s.lazyPutAsync<S>(
+          builder,
+          tag: tag,
+          permanent: permanent,
+          isFactory: isFactory,
+        );
+      },
       child: child,
     );
   }
@@ -287,7 +300,7 @@ class LRouteScope extends StatelessWidget {
 /// Descendants can observe the current route visibility through [visibilityOf].
 class LAsyncRouteScope extends StatelessWidget {
   /// An async factory to register dependencies.
-  final Future<dynamic> Function(LevitScope scope) dependencyFactory;
+  final LAsyncScopeDependencyFactory dependencyFactory;
 
   /// The widget subtree to render after initialization.
   final Widget child;

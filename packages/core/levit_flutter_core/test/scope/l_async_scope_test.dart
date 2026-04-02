@@ -48,7 +48,6 @@ void main() {
             dependencyFactory: (s) async {
               createCount++;
               s.put<String>(() => 'Result $argsValue');
-              return 'ok';
             },
             child: Builder(builder: (context) {
               final val = context.levit.findOrNull<String>() ?? 'none';
@@ -83,7 +82,6 @@ void main() {
               dependencyFactory: (s) async {
                 s.put<DisposeController>(
                     () => DisposeController(() => disposed = true));
-                return 'ok';
               },
               child: const Text('ok'),
             ),

@@ -150,42 +150,52 @@ class _AutoLinkMiddleware extends LevitReactiveMiddleware {
           return;
         }
 
-        // Capture reactives for controller-owned auto-dispose.
-        if (_AutoLinkScope._activeCaptureScopes > 0) {
-          final captureList = Zone.current[_AutoLinkScope._captureKey];
-          if (captureList is List<LxReactive>) {
-            captureList.add(reactive);
-          } else {
-            assert(() {
-              // ignore: avoid_print
-              print(
-                'Levit: Reactive "${reactive.name ?? reactive.runtimeType}" '
-                'created inside an active capture scope but no capture list '
-                'found in current Zone. This may indicate the reactive was '
-                'created in a different Zone (e.g., runZonedGuarded). '
-                'Use autoDispose() to manually register it.',
-              );
-              return true;
-            }());
-          }
-        }
-
-        // Preserve explicit ownership and only fill missing ownerId.
-        if (reactive.ownerId == null) {
-          // Zone owner is the authoritative source inside capture scopes.
-          final zonedOwnerId =
-              Zone.current[_AutoLinkScope._ownerIdKey] as String?;
-          if (zonedOwnerId != null) {
-            reactive.ownerId = zonedOwnerId;
-          } else if (hasOwnerContext) {
-            // Fallback for explicit `Lx.runWithOwner` contexts.
-            final data = context.data;
-            if (data is Map<String, dynamic>) {
-              reactive.ownerId = data['ownerId'] as String?;
-            }
-          }
-        }
+        _captureReactiveIfNeeded(reactive);
+        _assignReactiveOwnerIfNeeded(reactive, context, hasOwnerContext);
       };
+}
+
+String _missingCaptureListWarning(LxReactive reactive) =>
+    'Levit: Reactive "${reactive.name ?? reactive.runtimeType}" created inside an active capture scope but no capture list found in current Zone. This may indicate the reactive was created in a different Zone (e.g., runZonedGuarded). Use autoDispose() to manually register it.';
+
+void _emitAutoLinkDebugWarning(String message) {
+  assert(() {
+    dev.log(message, name: 'levit_dart');
+    Zone.current.print(message);
+    return true;
+  }());
+}
+
+void _captureReactiveIfNeeded(LxReactive reactive) {
+  if (_AutoLinkScope._activeCaptureScopes <= 0) return;
+
+  final captureList = Zone.current[_AutoLinkScope._captureKey];
+  if (captureList is List<LxReactive>) {
+    captureList.add(reactive);
+  } else {
+    _emitAutoLinkDebugWarning(_missingCaptureListWarning(reactive));
+  }
+}
+
+void _assignReactiveOwnerIfNeeded(
+  LxReactive reactive,
+  dynamic context,
+  bool hasOwnerContext,
+) {
+  if (reactive.ownerId != null) return;
+
+  final zonedOwnerId = Zone.current[_AutoLinkScope._ownerIdKey] as String?;
+  if (zonedOwnerId != null) {
+    reactive.ownerId = zonedOwnerId;
+    return;
+  }
+
+  if (!hasOwnerContext) return;
+
+  final data = context.data;
+  if (data is Map<String, dynamic>) {
+    reactive.ownerId = data['ownerId'] as String?;
+  }
 }
 
 class _AutoDisposeMiddleware extends LevitScopeMiddleware {

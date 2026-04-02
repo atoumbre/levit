@@ -67,7 +67,6 @@ void main() {
             dependencyFactory: (s) {
               initCount++;
               s.put<int>(() => argsValue);
-              return 'ok';
             },
             builder: (context, val) {
               return Text('Val: $val');

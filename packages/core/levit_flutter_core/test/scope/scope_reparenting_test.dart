@@ -15,6 +15,35 @@ class _TestController extends LevitController {
   }
 }
 
+Widget _buildMovedChildScope({
+  required bool moved,
+  required GlobalKey key,
+  required Widget Function(Key key) buildChild,
+}) {
+  return MaterialApp(
+    home: Row(
+      children: [
+        Expanded(
+          child: LScope(
+            name: 'left_parent',
+            dependencyFactory: (scope) =>
+                scope.put<_TestController>(() => _TestController('left')),
+            child: moved ? const SizedBox.shrink() : buildChild(key),
+          ),
+        ),
+        Expanded(
+          child: LScope(
+            name: 'right_parent',
+            dependencyFactory: (scope) =>
+                scope.put<_TestController>(() => _TestController('right')),
+            child: moved ? buildChild(key) : const SizedBox.shrink(),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 void main() {
   testWidgets('LScope rebinds to new parent scope on re-parent',
       (tester) async {
@@ -22,7 +51,8 @@ void main() {
       return MaterialApp(
         home: LScope(
           name: 'parent_$label',
-          dependencyFactory: (scope) => scope.put(() => _TestController(label)),
+          dependencyFactory: (scope) =>
+              scope.put<_TestController>(() => _TestController(label)),
           child: LScope(
             name: 'child',
             child: Builder(
@@ -112,7 +142,8 @@ void main() {
       return MaterialApp(
         home: LScope(
           name: 'parent_$label',
-          dependencyFactory: (scope) => scope.put(() => _TestController(label)),
+          dependencyFactory: (scope) =>
+              scope.put<_TestController>(() => _TestController(label)),
           child: LAsyncScope(
             dependencyFactory: (_) async {},
             child: Builder(
@@ -133,5 +164,80 @@ void main() {
     await tester.pumpWidget(buildStage('B'));
     await tester.pumpAndSettle();
     expect(find.text('B'), findsOneWidget);
+  });
+
+  testWidgets('LScope rebinds when keyed child scope moves across parents',
+      (tester) async {
+    final childKey = GlobalKey();
+
+    Widget buildChild(Key key) {
+      return LScope(
+        key: key,
+        name: 'moved_child',
+        child: Builder(
+          builder: (context) {
+            final controller = context.levit.find<_TestController>();
+            return Text(controller.label);
+          },
+        ),
+      );
+    }
+
+    await tester.pumpWidget(
+      _buildMovedChildScope(
+        moved: false,
+        key: childKey,
+        buildChild: buildChild,
+      ),
+    );
+    expect(find.text('left'), findsOneWidget);
+
+    await tester.pumpWidget(
+      _buildMovedChildScope(
+        moved: true,
+        key: childKey,
+        buildChild: buildChild,
+      ),
+    );
+    await tester.pump();
+    expect(find.text('right'), findsOneWidget);
+  });
+
+  testWidgets('LAsyncScope rebinds when keyed child scope moves across parents',
+      (tester) async {
+    final childKey = GlobalKey();
+
+    Widget buildChild(Key key) {
+      return LAsyncScope(
+        key: key,
+        dependencyFactory: (_) async {},
+        child: Builder(
+          builder: (context) {
+            final controller = context.levit.find<_TestController>();
+            return Text(controller.label);
+          },
+        ),
+      );
+    }
+
+    await tester.pumpWidget(
+      _buildMovedChildScope(
+        moved: false,
+        key: childKey,
+        buildChild: buildChild,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('left'), findsOneWidget);
+
+    await tester.pumpWidget(
+      _buildMovedChildScope(
+        moved: true,
+        key: childKey,
+        buildChild: buildChild,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('right'), findsOneWidget);
   });
 }

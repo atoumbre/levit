@@ -15,7 +15,7 @@ part of '../levit_flutter_core.dart';
 /// ```
 class LScopedView<T> extends LView<T> {
   /// Optional factory to register dependencies in the internal scope.
-  final dynamic Function(LevitScope scope)? dependencyFactory;
+  final LScopeDependencyFactory? dependencyFactory;
 
   /// A descriptive name for the internal scope.
   final String? scopeName;
@@ -35,7 +35,7 @@ class LScopedView<T> extends LView<T> {
   factory LScopedView.store(
     LevitStore<T> state, {
     Key? key,
-    dynamic Function(LevitScope scope)? dependencyFactory,
+    LScopeDependencyFactory? dependencyFactory,
     required Widget Function(BuildContext context, T controller) builder,
     Widget Function(BuildContext context)? orElse,
     bool autoWatch = true,
@@ -70,8 +70,9 @@ class LScopedView<T> extends LView<T> {
       key: key,
       scopeName: scopeName,
       args: args,
-      dependencyFactory: (s) =>
-          s.put<T>(create, tag: tag, permanent: permanent),
+      dependencyFactory: (s) {
+        s.put<T>(create, tag: tag, permanent: permanent);
+      },
       resolver: (context) => context.levit.findOrNull<T>(tag: tag),
       builder: builder,
       orElse: orElse,
@@ -83,8 +84,8 @@ class LScopedView<T> extends LView<T> {
   ///
   /// Subclasses can override this to register dependencies.
   @protected
-  dynamic onConfigScope(LevitScope scope) {
-    return dependencyFactory?.call(scope);
+  void onConfigScope(LevitScope scope) {
+    dependencyFactory?.call(scope);
   }
 
   @override
@@ -130,7 +131,7 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
 /// - **Async controller resolution**
 class LScopedAsyncView<T> extends LAsyncView<T> {
   /// Optional factory to register dependencies in the internal scope.
-  final dynamic Function(LevitScope scope)? dependencyFactory;
+  final LScopeDependencyFactory? dependencyFactory;
 
   /// A descriptive name for the internal scope.
   final String? scopeName;
@@ -151,7 +152,7 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
   factory LScopedAsyncView.store(
     LevitAsyncStore<T> store, {
     Key? key,
-    dynamic Function(LevitScope scope)? dependencyFactory,
+    LScopeDependencyFactory? dependencyFactory,
     required Widget Function(BuildContext context, T controller) builder,
     bool autoWatch = true,
     Widget Function(BuildContext context)? loading,
@@ -190,8 +191,14 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
       key: key,
       scopeName: scopeName,
       args: args,
-      dependencyFactory: (s) => s.lazyPutAsync<T>(create,
-          tag: tag, permanent: permanent, isFactory: isFactory),
+      dependencyFactory: (s) {
+        s.lazyPutAsync<T>(
+          create,
+          tag: tag,
+          permanent: permanent,
+          isFactory: isFactory,
+        );
+      },
       resolver: (context) => context.levit.findAsync<T>(tag: tag),
       builder: builder,
       autoWatch: autoWatch,
@@ -202,8 +209,8 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
 
   /// Called when the internal scope is being configured.
   @protected
-  dynamic onConfigScope(LevitScope scope) {
-    return dependencyFactory?.call(scope);
+  void onConfigScope(LevitScope scope) {
+    dependencyFactory?.call(scope);
   }
 
   @override
