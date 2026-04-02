@@ -1,5 +1,5 @@
 name: levit_monitor
-description: A monitoring package for Levit applications. Uses Scope and Reactive State middlewares to stream events to customizable transports.
+description: Optional runtime telemetry, redaction, and transport pipeline for Levit applications.
 repository: https://github.com/softilab/levit
 version: 0.0.8
 topics:

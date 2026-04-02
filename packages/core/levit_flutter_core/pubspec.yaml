@@ -1,5 +1,5 @@
 name: levit_flutter_core
-description: Flutter widgets for the Levit framework - bridges reactive state and DI to the Flutter widget tree.
+description: Flutter bindings for Levit scopes, rebuild boundaries, and widget-tree ownership.
 repository: https://github.com/softilab/levit
 version: 0.0.8
 topics:

@@ -1,5 +1,5 @@
 name: levit_flutter
-description: Utility mixins and tools for Levit Flutter applications. Re-exports levit_dart.
+description: Deterministic ownership and fine-grained reactivity for Flutter applications.
 version: 0.0.8
 repository: https://github.com/softilab/levit
 topics:

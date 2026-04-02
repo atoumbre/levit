@@ -1,5 +1,5 @@
 name: levit_scope
-description: Pure Dart dependency injection and service locator. Part of the Levit framework.
+description: Hierarchical dependency scopes with deterministic ownership and teardown.
 repository: https://github.com/softilab/levit
 version: 0.0.8
 topics:
