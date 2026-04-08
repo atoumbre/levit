@@ -32,7 +32,8 @@ void main() {
       expect(buildCount, 2);
     });
 
-    testWidgets('LWatch handles multiple dependencies (Fast Path -> Slow Path)', (tester) async {
+    testWidgets('LWatch handles multiple dependencies (Fast Path -> Slow Path)',
+        (tester) async {
       final rx1 = TestReactive<int>(0);
       final rx2 = TestReactive<int>(10);
       int buildCount = 0;

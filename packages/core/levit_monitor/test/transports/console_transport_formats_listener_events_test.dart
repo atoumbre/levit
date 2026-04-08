@@ -28,8 +28,10 @@ void main() {
       final transport = ConsoleTransport();
       final reactive = LxVar(0);
 
-      transport.send(ReactiveListenerAddedEvent(sessionId: 's', reactive: reactive));
-      transport.send(ReactiveListenerRemovedEvent(sessionId: 's', reactive: reactive));
+      transport
+          .send(ReactiveListenerAddedEvent(sessionId: 's', reactive: reactive));
+      transport.send(
+          ReactiveListenerRemovedEvent(sessionId: 's', reactive: reactive));
     });
   });
 }

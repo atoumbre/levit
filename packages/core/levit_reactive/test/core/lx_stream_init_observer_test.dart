@@ -3,7 +3,8 @@ import 'package:test/test.dart';
 
 class GapTestObserver extends LevitReactiveMiddleware {
   int initCount = 0;
-  @override void Function(LxReactive)? get onInit => (r) => initCount++;
+  @override
+  void Function(LxReactive)? get onInit => (r) => initCount++;
 }
 
 void main() {

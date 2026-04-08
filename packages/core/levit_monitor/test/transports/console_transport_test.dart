@@ -202,7 +202,7 @@ void main() {
         error: StateError('bad state'),
         stackTrace: StackTrace.fromString('stack frame 1'),
       );
-      
+
       // We expect output to contain Error and Stack strings
       LevitMonitor.setObfuscator(null);
       final printer = _CapturePrinter();
@@ -211,7 +211,7 @@ void main() {
         printer: printer,
       );
       t.send(event);
-      
+
       final output = printer.lines.join('\n');
       expect(output, contains('LOG: an error occurred'));
       expect(output, contains('Error: Bad state: bad state'));
@@ -220,24 +220,27 @@ void main() {
 
     test('LogEvent trace and debug levels are mapped correctly', () {
       final t = ConsoleTransport(minLevel: LevitLogLevel.all);
-      
-      final traceEvent = LogEvent(sessionId: '1', level: logger.Level.trace, data: 'trace');
-      final debugEvent = LogEvent(sessionId: '1', level: logger.Level.debug, data: 'debug');
-      
+
+      final traceEvent =
+          LogEvent(sessionId: '1', level: logger.Level.trace, data: 'trace');
+      final debugEvent =
+          LogEvent(sessionId: '1', level: logger.Level.debug, data: 'debug');
+
       expect(() => t.send(traceEvent), returnsNormally);
       expect(() => t.send(debugEvent), returnsNormally);
     });
 
-    test('LogEvent level fallback is not needed as LevitLogLevel covers all', () {
+    test('LogEvent level fallback is not needed as LevitLogLevel covers all',
+        () {
       // package:logger Level is an enum. We map all possible values
-      // in _levelFor, but we need to cover the `orElse` branch 
+      // in _levelFor, but we need to cover the `orElse` branch
       // of `LevitLogLevel.values.firstWhere`.
       // Since we can't instantiate a fake enum value, we can just prove
       // standard levels work and are covered. The `orElse` is a safety net
       // that we can't reach naturally in tests since all Level values are mapped.
       final event = LogEvent(
         sessionId: 'test',
-        level: logger.Level.info, 
+        level: logger.Level.info,
         data: 'a simple log',
       );
       expect(() => silentTransport.send(event), returnsNormally);

@@ -16,6 +16,8 @@ void main() {
 }
 
 class _MockObserver implements LevitReactiveObserver {
-  @override void addNotifier(LevitReactiveNotifier notifier) {}
-  @override void addReactive(LxReactive reactive) {}
+  @override
+  void addNotifier(LevitReactiveNotifier notifier) {}
+  @override
+  void addReactive(LxReactive reactive) {}
 }

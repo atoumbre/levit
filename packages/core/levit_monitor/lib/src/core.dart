@@ -99,7 +99,8 @@ class LevitMonitor {
       log(data, level: Level.info, error: error, stackTrace: stackTrace);
 
   /// Helper method for emitting a log at [Level.warning].
-  static void logWarning(Object? data, {Object? error, StackTrace? stackTrace}) =>
+  static void logWarning(Object? data,
+          {Object? error, StackTrace? stackTrace}) =>
       log(data, level: Level.warning, error: error, stackTrace: stackTrace);
 
   /// Helper method for emitting a log at [Level.error].

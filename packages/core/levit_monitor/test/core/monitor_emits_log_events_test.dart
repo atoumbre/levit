@@ -70,7 +70,8 @@ void main() {
       expect(event.data, 'info message');
     });
 
-    test('Helper method logWarning emits LogEvent with Level.warning', () async {
+    test('Helper method logWarning emits LogEvent with Level.warning',
+        () async {
       LevitMonitor.logWarning('warning message');
       await Future.delayed(Duration.zero);
 
@@ -104,7 +105,8 @@ void main() {
       expect(event.stackTrace, stack);
     });
 
-    test('Helper methods emit LogEvent with correct respective severities', () async {
+    test('Helper methods emit LogEvent with correct respective severities',
+        () async {
       LevitMonitor.logTrace('trace message');
       await Future.delayed(Duration.zero);
       expect((transport.events.last as LogEvent).level, Level.trace);
@@ -142,7 +144,8 @@ void main() {
       expect(event.stackTrace, stack);
     });
 
-    test('Includes error and stack trace when provided to helpers too', () async {
+    test('Includes error and stack trace when provided to helpers too',
+        () async {
       final error = StateError('Something went wrong');
       final stack = StackTrace.fromString('helper trace');
 
@@ -179,7 +182,9 @@ void main() {
       expect(transport.events.length, initialCount);
     });
 
-    test('LevitMonitor.setLogLevel drops messages below minimum configured level', () async {
+    test(
+        'LevitMonitor.setLogLevel drops messages below minimum configured level',
+        () async {
       final initialCount = transport.events.length;
 
       // Set level to warning

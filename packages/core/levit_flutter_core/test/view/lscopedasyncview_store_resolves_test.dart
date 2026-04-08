@@ -1,2 +1,23 @@
-import 'package:flutter/material.dart'; import 'package:flutter_test/flutter_test.dart'; import 'package:levit_flutter_core/levit_flutter_core.dart'; import '../helpers.dart';
-void main() { testWidgets('LScopedAsyncView.store resolves LevitAsyncState', (tester) async { Levit.reset(force: true); final state = LevitAsyncStore<TestController>((_) async { await Future.delayed(const Duration(milliseconds: 10)); return TestController()..count = 99; }); await tester.pumpWidget(MaterialApp(home: LScopedAsyncView<TestController>.store(state, loading: (_) => const Text('Loading...'), builder: (context, controller) => Text('Count: ${controller.count}')))); expect(find.text('Loading...'), findsOneWidget); await tester.pumpAndSettle(); expect(find.text('Count: 99'), findsOneWidget); }); }
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:levit_flutter_core/levit_flutter_core.dart';
+import '../helpers.dart';
+
+void main() {
+  testWidgets('LScopedAsyncView.store resolves LevitAsyncState',
+      (tester) async {
+    Levit.reset(force: true);
+    final state = LevitAsyncStore<TestController>((_) async {
+      await Future.delayed(const Duration(milliseconds: 10));
+      return TestController()..count = 99;
+    });
+    await tester.pumpWidget(MaterialApp(
+        home: LScopedAsyncView<TestController>.store(state,
+            loading: (_) => const Text('Loading...'),
+            builder: (context, controller) =>
+                Text('Count: ${controller.count}'))));
+    expect(find.text('Loading...'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Count: 99'), findsOneWidget);
+  });
+}

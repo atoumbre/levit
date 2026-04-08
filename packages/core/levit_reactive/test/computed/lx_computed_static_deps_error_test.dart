@@ -3,6 +3,10 @@ import 'package:test/test.dart';
 
 void main() {
   test('LxComputed staticDeps sync error', () {
-    expect(() => LxComputed(() { throw 'sync_error'; }, staticDeps: true), throwsA('sync_error'));
+    expect(
+        () => LxComputed(() {
+              throw 'sync_error';
+            }, staticDeps: true),
+        throwsA('sync_error'));
   });
 }

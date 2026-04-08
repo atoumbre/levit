@@ -2,9 +2,16 @@ import 'package:levit_scope/levit_scope.dart';
 import 'package:test/test.dart';
 
 class MockDIMiddleware extends LevitScopeMiddleware {
-  bool registerCalled = false; bool resolveCalled = false;
-  @override void onDependencyRegister(int id, String n, String k, LevitDependency i, {required String source, int? parentScopeId}) => registerCalled = true;
-  @override void onDependencyResolve(int id, String n, String k, LevitDependency i, {required String source, int? parentScopeId}) => resolveCalled = true;
+  bool registerCalled = false;
+  bool resolveCalled = false;
+  @override
+  void onDependencyRegister(int id, String n, String k, LevitDependency i,
+          {required String source, int? parentScopeId}) =>
+      registerCalled = true;
+  @override
+  void onDependencyResolve(int id, String n, String k, LevitDependency i,
+          {required String source, int? parentScopeId}) =>
+      resolveCalled = true;
 }
 
 void main() {

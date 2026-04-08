@@ -12,7 +12,9 @@ void main() {
 
   test('LxAsyncComputed staticDeps coverage (Active)', () async {
     final v = 0.lx;
-    final c = LxComputed.async(() async { return v.value + 1; }, staticDeps: true);
+    final c = LxComputed.async(() async {
+      return v.value + 1;
+    }, staticDeps: true);
     c.addListener(() {});
     expect(await c.wait, 1);
     v.value = 10;

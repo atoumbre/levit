@@ -52,7 +52,7 @@ void main() {
         level: Level.info,
         data: obj,
       );
-      
+
       final jsonOutput = event.toJson();
       expect(jsonOutput['data'], same(obj));
     });
@@ -104,7 +104,9 @@ void main() {
       expect(event.toJson()['data'], isNull);
     });
 
-    test('serializes custom object without toJson properly fallback to toString', () {
+    test(
+        'serializes custom object without toJson properly fallback to toString',
+        () {
       final obj = _CustomObjectWithoutToJson();
       final event = LogEvent(
         sessionId: 'test',
@@ -130,14 +132,16 @@ void main() {
       expect(event.toJson()['data'], 'throw-toString-value');
     });
 
-    test('serializes object whose toJson is valid but complex to jsonEncode directly', () {
+    test(
+        'serializes object whose toJson is valid but complex to jsonEncode directly',
+        () {
       final nestedObj = _CustomObjectToJsonReturnsNested();
       final event = LogEvent(
         sessionId: 'test',
         level: Level.info,
         data: nestedObj,
       );
-      
+
       final result = event.toJson()['data'];
       expect(result, same(nestedObj));
     });

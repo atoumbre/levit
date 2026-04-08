@@ -4,7 +4,11 @@ import 'package:levit_scope/levit_scope.dart';
 class TestScopeMiddleware extends LevitScopeMiddleware {
   final void Function()? onDispose;
   TestScopeMiddleware({this.onDispose});
-  @override void onScopeDispose(int scopeId, String scopeName) { onDispose?.call(); super.onScopeDispose(scopeId, scopeName); }
+  @override
+  void onScopeDispose(int scopeId, String scopeName) {
+    onDispose?.call();
+    super.onScopeDispose(scopeId, scopeName);
+  }
 }
 
 void main() {

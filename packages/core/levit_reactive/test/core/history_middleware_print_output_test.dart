@@ -13,9 +13,10 @@ void main() {
       count.value = 1;
       history.undo();
       history.printHistory();
-    }, zoneSpecification: ZoneSpecification(
-      print: (self, parent, zone, line) => logs.add(line),
-    ));
+    },
+        zoneSpecification: ZoneSpecification(
+          print: (self, parent, zone, line) => logs.add(line),
+        ));
 
     expect(logs, contains('--- Undo Stack ---'));
     expect(logs, contains('--- Redo Stack ---'));

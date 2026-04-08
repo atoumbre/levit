@@ -31,7 +31,8 @@ void main() {
       expect(buildCount, 2);
     });
 
-    testWidgets('LWatchVar updates subscription on widget update', (tester) async {
+    testWidgets('LWatchVar updates subscription on widget update',
+        (tester) async {
       final rx1 = TestReactive<int>(1);
       final rx2 = TestReactive<int>(2);
 

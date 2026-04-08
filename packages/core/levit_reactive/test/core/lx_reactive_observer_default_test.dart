@@ -2,7 +2,8 @@ import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
 
 class DefaultObserver extends LevitReactiveObserver {
-  @override void addNotifier(LevitReactiveNotifier notifier) {}
+  @override
+  void addNotifier(LevitReactiveNotifier notifier) {}
 }
 
 void main() {

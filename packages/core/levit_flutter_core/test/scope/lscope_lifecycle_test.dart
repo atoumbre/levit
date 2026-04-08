@@ -16,7 +16,8 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put<TestController>(() => TestController(42)),
+            dependencyFactory: (s) =>
+                s.put<TestController>(() => TestController(42)),
             child: Builder(
               builder: (context) {
                 initialized = true;
@@ -41,7 +42,8 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put<TestController>(() => TestController(100)),
+            dependencyFactory: (s) =>
+                s.put<TestController>(() => TestController(100)),
             child: Builder(
               builder: (context) {
                 initialized = true;

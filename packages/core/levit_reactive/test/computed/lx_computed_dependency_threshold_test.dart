@@ -14,7 +14,9 @@ void main() {
     test('LxComputed _add useSet branch coverage', () {
       final deps = List.generate(20, (i) => i.lx);
       final computed = LxComputed(() {
-        for (final d in deps) { d.value; }
+        for (final d in deps) {
+          d.value;
+        }
         return 0;
       });
       expect(computed.value, 0);
@@ -27,22 +29,33 @@ void main() {
     test('switches to Set mode when more than 8 dependencies', () {
       final sources = List.generate(10, (i) => i.lx);
       final computed = LxComputed<int>(() {
-        int sum = 0; for (final s in sources) { sum += s.value; } return sum;
+        int sum = 0;
+        for (final s in sources) {
+          sum += s.value;
+        }
+        return sum;
       });
       computed.stream.listen((_) {});
       expect(computed.value, 45);
-      sources[0].value = 100; expect(computed.value, 145);
-      sources[9].value = 100; expect(computed.value, 236);
+      sources[0].value = 100;
+      expect(computed.value, 145);
+      sources[9].value = 100;
+      expect(computed.value, 236);
     });
 
     test('adds to Set after switching mode', () {
       final sources = List.generate(12, (i) => i.lx);
       final computed = LxComputed<int>(() {
-        int sum = 0; for (final s in sources) { sum += s.value; } return sum;
+        int sum = 0;
+        for (final s in sources) {
+          sum += s.value;
+        }
+        return sum;
       });
       computed.stream.listen((_) {});
       expect(computed.value, 66);
-      sources[10].value = 100; sources[11].value = 200;
+      sources[10].value = 100;
+      sources[11].value = 200;
       expect(computed.value, 345);
     });
   });

@@ -4,9 +4,12 @@ import 'package:test/test.dart';
 class ErrorCaptureMiddleware extends LevitReactiveMiddleware {
   Object? lastError;
   LxReactive? lastContext;
-  @override void Function(Object, StackTrace?, LxReactive?)? get onReactiveError => (e, s, c) {
-    lastError = e; lastContext = c;
-  };
+  @override
+  void Function(Object, StackTrace?, LxReactive?)? get onReactiveError =>
+      (e, s, c) {
+        lastError = e;
+        lastContext = c;
+      };
 }
 
 void main() {
@@ -15,7 +18,9 @@ void main() {
     Lx.addMiddleware(middleware);
 
     final v = 0.lx;
-    v.addListener(() { throw Exception('listener error'); });
+    v.addListener(() {
+      throw Exception('listener error');
+    });
     v.value = 1;
 
     expect(middleware.lastError.toString(), contains('listener error'));

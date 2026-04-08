@@ -17,5 +17,6 @@ void main() {
 }
 
 class _TestMiddleware extends LevitReactiveMiddleware {
-  @override LxOnSet? get onSet => (next, r, c) => (v) => next(v);
+  @override
+  LxOnSet? get onSet => (next, r, c) => (v) => next(v);
 }

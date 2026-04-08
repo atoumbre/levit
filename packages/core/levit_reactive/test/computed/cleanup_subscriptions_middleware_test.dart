@@ -3,7 +3,9 @@ import 'package:test/test.dart';
 
 class _MockMiddleware extends LevitReactiveMiddleware {
   bool removeListenerCalled = false;
-  @override void Function(LxReactive, LxListenerContext?)? get stoppedListening => (r, c) => removeListenerCalled = true;
+  @override
+  void Function(LxReactive, LxListenerContext?)? get stoppedListening =>
+      (r, c) => removeListenerCalled = true;
 }
 
 void main() {

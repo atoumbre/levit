@@ -10,7 +10,9 @@ void main() {
     bool notified = false;
     computed.addListener(() => notified = true);
 
-    Lx.batch(() { dep.value = 1; });
+    Lx.batch(() {
+      dep.value = 1;
+    });
     expect(notified, isTrue);
   });
 }

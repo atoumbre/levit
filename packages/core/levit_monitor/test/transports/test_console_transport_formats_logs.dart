@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 
 class _MockLogPrinter extends logger.LogPrinter {
   final List<String> lines = [];
-  
+
   @override
   List<String> log(logger.LogEvent event) {
     lines.add(event.message.toString());
@@ -32,7 +32,7 @@ void main() {
       final printer = _MockLogPrinter();
       final transport = lm.ConsoleTransport(printer: printer);
 
-      final event = lm.LogEvent( 
+      final event = lm.LogEvent(
         sessionId: 'test-session',
         level: logger.Level.error,
         data: 'Failed operation',

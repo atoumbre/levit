@@ -16,7 +16,8 @@ class TestView extends StatelessWidget {
   Widget build(BuildContext context) {
     return LScopedView<TestReactiveController>(
       autoWatch: watch,
-      dependencyFactory: (s) => s.put<TestReactiveController>(() => TestReactiveController()),
+      dependencyFactory: (s) =>
+          s.put<TestReactiveController>(() => TestReactiveController()),
       resolver: (context) => context.levit.find<TestReactiveController>(),
       builder: (context, controller) {
         onBuild(controller);
@@ -28,7 +29,8 @@ class TestView extends StatelessWidget {
 
 void main() {
   group('LScopedView Behavior', () {
-    testWidgets('LScopedView creates controller and auto-watches', (tester) async {
+    testWidgets('LScopedView creates controller and auto-watches',
+        (tester) async {
       TestReactiveController? capturedController;
       int buildCount = 0;
 

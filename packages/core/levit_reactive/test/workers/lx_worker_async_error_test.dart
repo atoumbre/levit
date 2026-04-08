@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
 
-class TestReactive<T> extends LxVar<T> { TestReactive(super.initial); }
+class TestReactive<T> extends LxVar<T> {
+  TestReactive(super.initial);
+}
 
 void main() {
   test('LxWorker handles async callback error', () async {

@@ -5,7 +5,9 @@ void main() {
   test('runWithContext without middleware', () {
     LevitReactiveMiddleware.clear();
     bool executed = false;
-    Lx.runWithContext(const LxListenerContext(type: 'Test', id: 1), () { executed = true; });
+    Lx.runWithContext(const LxListenerContext(type: 'Test', id: 1), () {
+      executed = true;
+    });
     expect(executed, isTrue);
   });
 }
