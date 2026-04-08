@@ -28,7 +28,7 @@ They are small, visible improvements that make the framework easier to adopt.
 
 ## Goals
 
-- Remove a known `LAsyncView` / resolver identity footgun.
+- Remove a known `LAsyncView` / resolver identity issue.
 - Make view re-resolution intent explicit and readable.
 - Add `putOrFind(...)` parity across Flutter and pure Dart surfaces.
 - Expose scope ancestry metadata for debugging and diagnostics.

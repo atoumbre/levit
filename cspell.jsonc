@@ -53,6 +53,7 @@
         "typedefs",
         "unawaited",
         "unregisters",
+        "Untokened",
         "unwatch",
         "Updateable",
         "Vite",
