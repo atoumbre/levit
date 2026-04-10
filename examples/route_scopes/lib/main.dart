@@ -451,7 +451,7 @@ class _JournalPanel extends StatelessWidget {
             return ListView.separated(
               itemCount: snapshot.length,
               itemBuilder: (context, index) => Text(snapshot[index]),
-              separatorBuilder: (_, __) => const Divider(height: 12),
+              separatorBuilder: (context, index) => const Divider(height: 12),
             );
           },
         ),
