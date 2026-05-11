@@ -31,6 +31,10 @@ jobs:
     uses: ./.github/workflows/pana.yml
 
 
+  call-publish-dry-run:
+    uses: ./.github/workflows/publish_dry_run.yml
+
+
   # Call Deploy Workflow
   # call-deploy:
   #   needs: [call-ci, call-coverage, call-spelling] # WAITS for all to succeed

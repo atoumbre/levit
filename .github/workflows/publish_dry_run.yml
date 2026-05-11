@@ -1,16 +1,15 @@
-name: Checks
+name: Publish Dry Run
 
 on:
   workflow_call:
   workflow_dispatch:
 
 jobs:
-  checks:
-    name: Checks (Dart, Flutter)
+  publish-dry-run:
+    name: Publish Dry Run
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -23,8 +22,5 @@ jobs:
       - name: Bootstrap workspace
         run: dart run melos bootstrap
 
-      - name: Check Formatting
-        run: dart format . --set-exit-if-changed
-
-      - name: Run analysis and tests
-        run: dart run scripts/ci.dart
+      - name: Publish dry-run
+        run: dart run scripts/publish_dry_run.dart --quiet

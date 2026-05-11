@@ -27,18 +27,17 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
-          
-      - name: Install dependencies
-        run: |
-          flutter pub get
-        working-directory: ${{ matrix.package.path }}
+
+      - name: Install root dependencies
+        run: dart pub get
+
+      - name: Bootstrap workspace
+        run: dart run melos bootstrap
         
       - name: Run tests with coverage
-        run: |
-          dart scripts/check_coverage.dart --timeout=600 --only=${{ matrix.package.name }} packages/core packages/kits
-        working-directory: .
+        run: dart run scripts/check_coverage.dart --quiet --fail-under=100 --timeout=600 --only=${{ matrix.package.name }} packages/core packages/kits
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4

@@ -48,11 +48,17 @@ melos bootstrap
 Use the workspace scripts from the repository root:
 
 ```bash
-dart format .
-melos run analyze
-melos run test
-melos run test:flutter
-melos run coverage
+melos run ci --no-select
+melos run coverage --no-select
+melos run publish:dry-run --no-select
+```
+
+For focused local checks, use:
+
+```bash
+melos run analyze --no-select
+melos run test --no-select
+melos run test:flutter --no-select
 ```
 
 ## Style Guide
