@@ -62,13 +62,7 @@ Future<void> main() async {
               descriptions[testId] =
                   message.replaceFirst('[Description]', '').trim();
             }
-          } else if (message.contains('took') ||
-              message.contains(' in ') ||
-              (message.contains(':') &&
-                  (message.contains('ms') || message.contains('us'))) ||
-              message.contains('Completed') ||
-              message.contains('Captured') ||
-              message.contains('time:')) {
+          } else if (_isMetricMessage(message)) {
             final test = tests[testId];
             final testName = test?['name'] ?? 'Setup/Global';
             final suiteId = test?['suiteID'];
@@ -96,22 +90,21 @@ Future<void> main() async {
   process.stdin.close();
 
   // Consume stderr to prevent the process from hanging if the buffer fills up
-
-  // Consume stderr to prevent the process from hanging if the buffer fills up
   process.stderr.transform(utf8.decoder).listen((line) {
     stderr.write(line);
   });
 
   // Ensure we wait for the process to fully exit
   final exitCode = await process.exitCode;
+  watchdog?.cancel();
 
   if (exitCode != 0) {
     print(
       'Warning: Tests failed with exit code $exitCode. Report might be incomplete.',
     );
-  } else {
-    print('Tests finished successfully.');
+    exit(exitCode);
   }
+  print('Tests finished successfully.');
 
   _generateMarkdownReport(metrics);
 }
@@ -140,6 +133,10 @@ Future<void> _generateMarkdownReport(List<Map<String, String>> metrics) async {
   stressBuffer.writeln();
   stressBuffer.writeln('## Performance Summary');
   stressBuffer.writeln();
+  stressBuffer.writeln(
+    'All rows below are emitted by passing stress tests. The summary only records measured actions and omits diagnostic prints such as final status dumps.',
+  );
+  stressBuffer.writeln();
   _writeMetricsTable(stressBuffer, 'Levit Reactive (Core)', reactiveMetrics);
   stressBuffer.writeln();
   _writeMetricsTable(
@@ -164,6 +161,22 @@ Future<void> _generateMarkdownReport(List<Map<String, String>> metrics) async {
   final stressFile = File('reports/stress_test_report.md');
   await stressFile.writeAsString(stressBuffer.toString());
   print('Stress Test Report generated: ${stressFile.absolute.path}');
+}
+
+bool _isMetricMessage(String message) {
+  if (message.startsWith('Final status:')) return false;
+  if (message.startsWith('Callback invocations:')) return false;
+  if (message.startsWith('Recompute notifications:')) return false;
+  if (message.startsWith('Compute notifications:')) return false;
+  if (message.startsWith('Total onChange calls')) return false;
+
+  if (message.startsWith('Completed') || message.startsWith('Captured')) {
+    return true;
+  }
+
+  if (message.contains('time:')) return true;
+
+  return RegExp(r'\b(?:in|took) \d+(?:ms|us)\b').hasMatch(message);
 }
 
 void _writeMetricsTable(

@@ -72,6 +72,7 @@ class BenchmarkEnvironment {
     required Iterable<Framework> frameworks,
     required Iterable<Benchmark> benchmarks,
     bool frameworkOrderRotation = false,
+    bool includeHostName = true,
   }) {
     final dispatcher = _maybePlatformDispatcher();
     final view = dispatcher == null
@@ -94,7 +95,7 @@ class BenchmarkEnvironment {
       dartVersion: Platform.version.split(' ').first,
       processorCount: Platform.numberOfProcessors,
       locale: dispatcher?.locale.toLanguageTag() ?? Platform.localeName,
-      hostName: _safeHostName(),
+      hostName: includeHostName ? _safeHostName() : null,
       displayMetrics: view == null
           ? null
           : BenchmarkDisplayMetrics(

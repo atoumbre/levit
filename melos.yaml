@@ -63,6 +63,10 @@ scripts:
     run: flutter test benchmarks
     description: Run benchmarks
 
+  report:benchmarks:
+    run: dart run scripts/benchmark_report.dart
+    description: Regenerate benchmark report
+
   format:
     run: dart format .
     description: Format all Dart code

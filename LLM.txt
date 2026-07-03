@@ -1,0 +1,258 @@
+Levit LLM Guidance
+==================
+
+Use this document when building, refactoring, reviewing, or explaining Dart and
+Flutter code with Levit.
+
+Levit is an ownership-first runtime, not only a state-management package. Its
+core model is:
+
+1. A scope defines who can resolve what.
+2. A controller owns cleanup for a unit of logic.
+3. A reactive value defines what can trigger recomputation or rebuild.
+4. Flutter bindings attach those rules to widget lifecycles.
+
+
+Package Choice
+--------------
+
+Prefer the high-level kits unless there is a specific reason to use core
+packages.
+
+- Flutter app code: package:levit_flutter/levit_flutter.dart
+- Pure Dart app, CLI, server, or shared domain: package:levit/levit.dart
+- Flutter bindings only: package:levit_flutter_core/levit_flutter_core.dart
+- Dart composition APIs only: package:levit_dart_core/levit_dart_core.dart
+- Reactive primitives only: package:levit_reactive/levit_reactive.dart
+- DI/scope only: package:levit_scope/levit_scope.dart
+- Runtime telemetry: add levit_monitor separately
+
+Do not add levit_monitor unless diagnostics, event export, redaction, or
+shadow-state debugging is required.
+
+
+Dependency Model
+----------------
+
+Use the Levit facade for application-level dependency registration and lookup.
+
+Use:
+
+- Levit.put(...) for eagerly created services, controllers, repositories,
+  clients, or app dependencies.
+- Levit.lazyPut(...) for dependencies that should be created only when first
+  resolved.
+- Levit.lazyPutAsync(...) for async dependencies such as hydrated services,
+  storage, config, or remote clients.
+- Levit.find<T>() to resolve a dependency from the current scope.
+
+Register global or app-wide services in the app/root scope. Register feature,
+route, or screen dependencies in the scope that owns that lifetime.
+
+In Flutter application code, prefer Levit widgets over manual scope handling:
+
+- Use LScope, LAsyncScope, LScopedView, LScopedAsyncView, LRouteScope, or
+  LAsyncRouteScope to create scope boundaries.
+- Use context.levit.find<T>(), LView, or LScopedView to consume scoped
+  dependencies.
+- Do not manually create, pass, or dispose scopes in normal widget code.
+
+Manipulate scopes directly only for advanced boundary cases, such as:
+
+- Passing an existing scope into a new route, dialog, overlay, or nested
+  navigator.
+- Bridging a Flutter-owned scope into non-widget Dart code.
+- Creating explicit test scopes.
+- Building framework-level Levit integrations.
+
+For dialogs and overlays, prefer LScope.capture(...) when the UI must keep
+access to the current page or feature scope.
+
+
+Design Workflow
+---------------
+
+Before writing code:
+
+1. Identify the lifetime boundary: app, route, feature, subtree, request, task,
+   or test.
+2. Create or reuse the matching Levit scope.
+3. Put dependencies/controllers in the scope that owns them.
+4. Keep reactive state near the controller/store that owns the mutation rules.
+5. Use focused Flutter rebuild widgets around only the UI that reads reactive
+   values.
+6. Add cleanup explicitly for long-lived resources.
+
+
+Reactive State
+--------------
+
+Use .lx for reactive values.
+
+```dart
+final count = 0.lx;
+
+count();    // read
+count(1);   // write
+```
+
+Use computed values for derived state.
+
+```dart
+final doubled = LxComputed(() => count() * 2);
+```
+
+Use workers for side effects.
+
+```dart
+final worker = LxWorker(count, (value) {
+  print('count=$value');
+});
+```
+
+Close long-lived reactive objects, computed values, and workers when they are
+not owned by a controller or scope that handles cleanup.
+
+Use Lx.batch or Lx.batchAsync when multiple mutations should propagate as one
+update.
+
+
+Controllers
+-----------
+
+Use LevitController for feature or screen logic.
+
+```dart
+class CounterController extends LevitController {
+  final count = 0.lx;
+
+  void increment() => count(count() + 1);
+
+  @override
+  void onInit() {
+    super.onInit();
+    autoDispose(count);
+  }
+}
+```
+
+Prefer controllers when logic owns resources, subscriptions, workers, async
+tasks, or multiple reactive values.
+
+Keep widget code thin. Put mutation rules and derived state in controllers or
+stores.
+
+
+Flutter Patterns
+----------------
+
+Use LScopedView when the widget should create and own a controller scope.
+
+```dart
+return LScopedView<CounterController>.put(
+  () => CounterController(),
+  builder: (context, controller) => LWatch(
+    () => Text('Count: ${controller.count()}'),
+  ),
+);
+```
+
+Use:
+
+- LWatch when the build function reads one or more reactive values implicitly.
+- LBuilder when observing one explicit LxReactive.
+- LSelectorBuilder for small local derived values in hot UI paths.
+- LStatusBuilder for LxStatus<T> waiting/error/success rendering.
+- LView when the controller already exists in the nearest scope.
+- LScopedView when the widget should create and own the controller.
+- LScope / LAsyncScope for subtree-owned lifetimes.
+- LRouteScope / LAsyncRouteScope when route identity is the ownership boundary.
+- LScope.capture for dialogs and overlays that must keep access to a page-local
+  scope.
+
+Avoid manual scope plumbing in ordinary Flutter widgets. Prefer Levit
+scope/view widgets, and only pass scopes explicitly when crossing route,
+overlay, dialog, or integration boundaries.
+
+
+Pure Dart Patterns
+------------------
+
+Use Levit.createScope for app, request, feature, or task ownership.
+
+```dart
+final scope = Levit.createScope('app');
+
+scope.run(() {
+  final service = Levit.put(() => ApiClient());
+  final count = Levit.put(() => 0.lx, tag: 'count');
+});
+
+scope.dispose();
+```
+
+Dispose scopes explicitly. Child scopes should own feature-specific overrides
+and clean them up when the feature ends.
+
+
+Task Utilities
+--------------
+
+Use levit_dart utilities when controller-owned work needs scheduling, retries,
+cancellation, caching, progress, or reactive busy state.
+
+- LevitTasksMixin: task engine behavior without UI-facing reactive task state.
+- LevitReactiveTasksMixin: task progress, busy state, and task details that UI
+  or runtime code can observe.
+
+
+Middleware
+----------
+
+Use token-based middleware registration.
+
+```dart
+const auditToken = #di_audit;
+
+LevitScope.addMiddleware(AuditMiddleware(), token: auditToken);
+LevitScope.removeMiddlewareByToken(auditToken);
+```
+
+Use one stable token per concern. Re-registering with the same token should
+replace behavior in place.
+
+
+Anti-Patterns
+-------------
+
+Avoid:
+
+- Registering feature-owned state in a global/app scope.
+- Letting controllers or reactive values outlive their owning scope.
+- Rebuilding large Flutter subtrees for small reactive reads.
+- Putting business mutation rules directly in widgets.
+- Manually creating or passing scopes in ordinary Flutter UI code.
+- Using monitoring as normal application logic.
+- Mixing unrelated lifecycle models when Levit can own the boundary.
+- Using low-level core packages in app code when levit or levit_flutter is
+  enough.
+
+
+Validation
+----------
+
+For repo changes, run the narrowest relevant check first, then broaden if
+needed.
+
+Common commands:
+
+```bash
+dart format .
+melos run analyze --no-select
+melos run test --no-select
+melos run test:flutter --no-select
+melos run ci --no-select
+```
+
+When changing public APIs, update inline DartDoc and the relevant package
+README.
