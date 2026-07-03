@@ -78,6 +78,36 @@ void main() {
       await task;
     });
 
+    test('onTaskError setter reconfigures an existing task engine', () async {
+      final errors = <Object>[];
+
+      controller.tasksEngine;
+      controller.onTaskError = (error, _) => errors.add(error);
+
+      await expectLater(
+        controller.runTask(() => throw StateError('configured'), id: 'err'),
+        throwsA(isA<StateError>()),
+      );
+
+      controller.onTaskError = null;
+
+      expect(controller.onTaskError, isNull);
+      expect(errors.single, isA<StateError>());
+    });
+
+    test('duplicate running task id fails fast', () async {
+      final completer = Completer<void>();
+      final running = controller.runTask(() => completer.future, id: 'dup');
+
+      await expectLater(
+        controller.runTask(() async => 'duplicate', id: 'dup'),
+        throwsA(isA<StateError>()),
+      );
+
+      completer.complete();
+      await running;
+    });
+
     test('isBusy correctly reflects active and queued tasks', () async {
       final completer = Completer<void>();
 
@@ -185,6 +215,19 @@ void main() {
 
       cleanupController
           .onClose(); // This should cover the timer.cancel() loop (line 479)
+    });
+
+    test('cancelling an active task removes its task details', () async {
+      final completer = Completer<String>();
+
+      final task = controller.runTask(() => completer.future, id: 'cancel_me');
+      await Future<void>.delayed(Duration.zero);
+
+      controller.tasksEngine.cancel('cancel_me');
+      completer.complete('done');
+
+      expect(await task, isNull);
+      expect(controller.tasks.containsKey('cancel_me'), isFalse);
     });
   });
 

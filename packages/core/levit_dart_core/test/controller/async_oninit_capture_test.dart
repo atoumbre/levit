@@ -77,6 +77,15 @@ class ErrorInitController extends LevitController {
 }
 
 void main() {
+  setUp(() {
+    Levit.enableAutoLinking();
+  });
+
+  tearDown(() {
+    Levit.reset(force: true);
+    Levit.disableAutoLinking();
+  });
+
   test('Async onInit capture', () async {
     final controller = Levit.put(() => AsyncInitController());
     await Future.delayed(Duration(milliseconds: 50));

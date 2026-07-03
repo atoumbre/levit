@@ -30,6 +30,23 @@ void main() {
       expect(afterCalled, isTrue, reason: 'onAfterChange should be called');
     });
 
+    test('LxBase.refresh records middleware-backed batch entries', () {
+      final val = 0.lx;
+      final history = LevitReactiveHistoryMiddleware();
+      final mw = Lx.addMiddleware(history);
+
+      addTearDown(() {
+        Lx.removeMiddleware(mw);
+      });
+
+      Lx.batch(() {
+        val.refresh();
+      });
+
+      expect(history.length, 1);
+      expect(history.undo(), isTrue);
+    });
+
     test('LxBase.refresh restore callback is covered by HistoryMiddleware undo',
         () async {
       final val = 0.lx;

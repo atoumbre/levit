@@ -19,4 +19,21 @@ void main() {
     expect(watch.value.runCount, 1);
     expect(watch.value.error, 'Sync Error');
   });
+
+  test('LxWorker uses stream listener when onError is supplied', () async {
+    final reactive = TestReactive<int>(0);
+    final values = <int>[];
+    final watch = LxWorker(
+      reactive,
+      values.add,
+      onError: (_, __) {},
+    );
+
+    final emitted = expectLater(reactive.stream, emits(1));
+    reactive.value = 1;
+    await emitted;
+
+    expect(values, [1]);
+    watch.close();
+  });
 }

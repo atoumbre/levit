@@ -53,5 +53,30 @@ void main() {
 
       controller.onClose();
     });
+
+    test('resume an isolate loop after pausing it', () async {
+      final controller = TestLoopController();
+      controller.onInit();
+
+      controller.loopEngine.startIsolateLoop(
+        'resume_loop',
+        _noopLoopBody,
+        delay: const Duration(milliseconds: 10),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 80));
+      controller.loopEngine.pauseService('resume_loop');
+      await Future.delayed(const Duration(milliseconds: 20));
+      controller.loopEngine.resumeService('resume_loop');
+      await Future.delayed(const Duration(milliseconds: 80));
+
+      expect(
+        controller.loopEngine.getServiceStatus('resume_loop')?.value,
+        isNot(isA<LxIdle<dynamic>>()),
+      );
+
+      controller.loopEngine.stopService('resume_loop');
+      controller.onClose();
+    });
   });
 }

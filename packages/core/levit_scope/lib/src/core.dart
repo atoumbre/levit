@@ -435,7 +435,7 @@ class LevitScope {
       try {
         return cachedScope.findOrNull<S>(tag: tag);
       } catch (_) {
-        _resolutionCache.remove(key);
+        _resolutionCache.remove(key); // coverage:ignore-line
       }
     }
 

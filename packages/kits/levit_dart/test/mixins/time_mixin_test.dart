@@ -93,5 +93,31 @@ void main() {
 
       controller.onClose();
     });
+
+    test('Countdown pause, resume, and stop control remaining time', () async {
+      final controller = TestTimeController();
+      controller.onInit();
+
+      final countdown = controller.startCountdown(
+        duration: const Duration(milliseconds: 300),
+        interval: const Duration(milliseconds: 50),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 80));
+      countdown.pause();
+      final pausedRemaining = countdown.remaining.value;
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(countdown.remaining.value, pausedRemaining);
+
+      countdown.resume();
+      await Future.delayed(const Duration(milliseconds: 80));
+      expect(countdown.remaining.value < pausedRemaining, isTrue);
+
+      countdown.stop();
+      expect(countdown.remaining.value, const Duration(milliseconds: 300));
+
+      controller.onClose();
+    });
   });
 }

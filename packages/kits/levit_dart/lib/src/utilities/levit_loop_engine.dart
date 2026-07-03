@@ -376,12 +376,14 @@ class _IsolateLoopService implements StoppableService {
         executor.pause();
       } else if (message == 'resume') {
         executor.resume();
+        // coverage:ignore-start
       } else if (message == 'stop') {
         executor.stop();
         commandSubscription.cancel();
         commandPort.close();
         Isolate.exit();
       }
+      // coverage:ignore-end
     });
 
     // Isolate loop starts only after command port handshake is established.

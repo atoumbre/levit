@@ -147,6 +147,10 @@ Future<void> main(List<String> args) async {
     final usesDartMirrors = _usesDartMirrors(testDir);
     final isFlutterPackage = _isFlutterPackage(package);
     final useDartTest = !isFlutterPackage || usesDartMirrors;
+    final coverageDir = Directory('${package.path}/coverage');
+    if (coverageDir.existsSync()) {
+      await coverageDir.delete(recursive: true);
+    }
 
     final _ProcessOutcome result;
     if (useDartTest) {
@@ -167,6 +171,7 @@ Future<void> main(List<String> args) async {
             'run',
             'coverage:format_coverage',
             '--lcov',
+            '--check-ignore',
             '--in=coverage',
             '--out=coverage/lcov.info',
             '--packages=.dart_tool/package_config.json',

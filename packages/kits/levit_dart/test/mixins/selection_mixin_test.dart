@@ -43,6 +43,18 @@ void main() {
       expect(controller.selectionCount, 1);
     });
 
+    test('toggle selects missing item and isSelected reports membership', () {
+      final controller = TestSingleSelectController();
+      controller.onInit();
+
+      expect(controller.isSelected('A'), isFalse);
+
+      controller.toggle('A');
+
+      expect(controller.isSelected('A'), isTrue);
+      expect(controller.selectionCount, 1);
+    });
+
     test('selectAll works correctly', () {
       final controller = TestMultiSelectController();
       controller.onInit();

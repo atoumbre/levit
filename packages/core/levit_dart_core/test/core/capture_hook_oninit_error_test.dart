@@ -77,6 +77,15 @@ class ErrorInitController extends LevitController {
 }
 
 void main() {
+  setUp(() {
+    Levit.enableAutoLinking();
+  });
+
+  tearDown(() {
+    Levit.reset(force: true);
+    Levit.disableAutoLinking();
+  });
+
   test('Capture Hook onInit error path', () {
     expect(() => Levit.put(() => ErrorInitController()), throwsException);
   });

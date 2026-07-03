@@ -146,6 +146,34 @@ void main() {
       );
     });
 
+    test('emits skipped(cancelledBeforeStart) when onStart cancels the task',
+        () async {
+      final events = <LevitTaskEvent>[];
+      late final LevitTaskEngine engine;
+      engine = LevitTaskEngine(
+        maxConcurrent: 1,
+        onTaskEvent: events.add,
+      );
+      var cancelled = false;
+
+      final task = engine.schedule<String>(
+        () async => 'should-not-run',
+        id: 'cancelled_before_start',
+        onStart: () => engine.cancel('cancelled_before_start'),
+        onCancel: () => cancelled = true,
+      );
+
+      expect(await task, isNull);
+      expect(cancelled, isTrue);
+      expect(
+        events.any((event) =>
+            event.taskId == 'cancelled_before_start' &&
+            event.type == LevitTaskEventType.skipped &&
+            event.skipReason == TaskSkipReason.cancelledBeforeStart),
+        isTrue,
+      );
+    });
+
     test('emits skipped(cancelledAfterRun) for active cancellation', () async {
       final events = <LevitTaskEvent>[];
       final engine = LevitTaskEngine(
@@ -175,6 +203,37 @@ void main() {
             event.taskId == 'cancelled_active_task' &&
             event.type == LevitTaskEventType.skipped &&
             event.skipReason == TaskSkipReason.cancelledAfterRun),
+        isTrue,
+      );
+    });
+
+    test('emits skipped(cancelledAfterRun) when cancelled task fails',
+        () async {
+      final events = <LevitTaskEvent>[];
+      late final LevitTaskEngine engine;
+      engine = LevitTaskEngine(
+        maxConcurrent: 1,
+        onTaskEvent: events.add,
+      );
+      var cancelled = false;
+
+      final task = engine.schedule<String>(
+        () {
+          engine.cancel('cancelled_failed_task');
+          throw StateError('cancelled failure');
+        },
+        id: 'cancelled_failed_task',
+        onCancel: () => cancelled = true,
+      );
+
+      expect(await task, isNull);
+      expect(cancelled, isTrue);
+      expect(
+        events.any((event) =>
+            event.taskId == 'cancelled_failed_task' &&
+            event.type == LevitTaskEventType.skipped &&
+            event.skipReason == TaskSkipReason.cancelledAfterRun &&
+            event.error is StateError),
         isTrue,
       );
     });
