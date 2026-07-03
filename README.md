@@ -213,6 +213,13 @@ Reference docs:
 - Package READMEs document package scope, architecture role, and onboarding.
 - This root README documents ecosystem-level architecture and adoption guidance.
 
+## For AI assistants
+
+Agents and coding tools should start with [`AGENTS.md`](./AGENTS.md), then:
+
+- [`LLM-Short.txt`](./LLM-Short.txt) — default quick reference for Levit patterns
+- [`LLM.txt`](./LLM.txt) — full guidance for scopes, stores, async DI, and middleware
+
 ## Examples
 
 Example applications live in [`examples/`](./examples):
