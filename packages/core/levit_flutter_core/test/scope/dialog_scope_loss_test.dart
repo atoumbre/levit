@@ -12,6 +12,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
         home: LScope.put(
           () => TestController(),
           child: Builder(
@@ -59,6 +60,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
         home: LScope.put(
           () => TestController(),
           child: Builder(
@@ -97,6 +99,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
         home: LScope.put(
           () => TestController(),
           child: Builder(

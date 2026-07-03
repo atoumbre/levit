@@ -21,6 +21,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
             '/': (_) => LRouteScope.put(
                   () => TestController()..count = 7,
@@ -58,6 +59,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           home: LRouteScope.lazyPut<TestController>(
             () => TestController()..count = 5,
             child: Builder(
@@ -92,6 +94,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           home: LRouteScope.lazyPutAsync<TestController>(
             () async {
               await Future<void>.delayed(Duration.zero);
@@ -127,6 +130,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
             '/': (_) => const _HomeRoutePage(),
             '/details': (_) => const _DetailsRoutePage(),
@@ -155,6 +159,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
             '/': (_) => LRouteScope(
                   dependencyFactory: (scope) {
@@ -198,6 +203,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
             '/': (_) => LAsyncRouteScope(
                   dependencyFactory: (scope) async {
@@ -249,6 +255,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           home: Scaffold(
             body: Column(
               children: [
@@ -290,6 +297,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
             '/': (_) => const _AsyncHomeRoutePage(),
             '/details': (_) => const _AsyncDetailsRoutePage(),
@@ -322,6 +330,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
             '/': (_) => LAsyncRouteScope(
                   dependencyFactory: (scope) async {
