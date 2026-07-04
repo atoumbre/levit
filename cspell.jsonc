@@ -10,6 +10,7 @@
         "backgrounding",
         "bluefireteam",
         "cancelables",
+        "codegen",
         "computeds",
         "cupertino",
         "dartdoc",
@@ -27,6 +28,7 @@
         "lifecycles",
         "lscope",
         "lstate",
+        "ltrb",
         "lvalue",
         "LVIEW",
         "lwatch",
@@ -51,12 +53,12 @@
         "typedefs",
         "unawaited",
         "unregisters",
+        "Untokened",
         "unwatch",
         "Updateable",
         "Vite",
         "vitepress",
-        "writeln",
-        "ltrb"
+        "writeln"
     ],
     // flagWords - list of words to be always considered incorrect
     // This is useful for offensive words and common spelling errors.

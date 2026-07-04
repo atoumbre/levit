@@ -47,5 +47,40 @@ void main() {
         reason: 'Should have printed the missing capture list warning.',
       );
     });
+
+    test(
+        'warning path still assigns owner from listener context when capture list is missing',
+        () {
+      final printLogs = <String>[];
+      final spec = ZoneSpecification(
+        print: (Zone self, ZoneDelegate parent, Zone zone, String line) {
+          printLogs.add(line);
+        },
+      );
+
+      runZoned(() {
+        Lx.runWithOwner('context-owner', () {
+          runCapturedForTesting(() {
+            final erasedZone = Zone.current.fork(zoneValues: {
+              autoLinkCaptureKeyForTesting: null,
+            });
+
+            erasedZone.run(() {
+              final reactive = 0.lx.named('ContextOwnerVar');
+              expect(reactive.ownerId, 'context-owner');
+            });
+          });
+        });
+      }, zoneSpecification: spec);
+
+      expect(
+        printLogs.any(
+          (line) => line.contains(
+            'created inside an active capture scope but no capture list',
+          ),
+        ),
+        isTrue,
+      );
+    });
   });
 }

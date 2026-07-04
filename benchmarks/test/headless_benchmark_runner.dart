@@ -5,9 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class HeadlessBenchmarkRunner {
-  final int iterations;
+  static const int defaultIterations = 50;
+  static const int defaultWarmupIterations = 3;
 
-  HeadlessBenchmarkRunner({this.iterations = 50});
+  final int iterations;
+  final int warmupIterations;
+
+  HeadlessBenchmarkRunner({
+    this.iterations = defaultIterations,
+    this.warmupIterations = defaultWarmupIterations,
+  });
 
   /// Runs a logic benchmark without any UI.
   Future<BenchmarkResult> runLogicBenchmark(
@@ -15,19 +22,24 @@ class HeadlessBenchmarkRunner {
     Framework framework,
   ) async {
     final impl = benchmark.createImplementation(framework);
-    int totalDuration = 0;
+    final samples = <int>[];
     bool success = true;
     String? error;
 
     try {
       await impl.setup();
 
-      // Warmup
-      await impl.run();
+      for (int i = 0; i < warmupIterations; i++) {
+        await impl.run();
+        await impl.verify();
+      }
 
       for (int i = 0; i < iterations; i++) {
-        final duration = await impl.run();
-        totalDuration += duration;
+        final stopwatch = Stopwatch()..start();
+        await impl.run();
+        stopwatch.stop();
+        await impl.verify();
+        samples.add(stopwatch.elapsedMicroseconds);
         // Small yield to avoid blocking everything
         await Future.delayed(Duration.zero);
       }
@@ -43,12 +55,13 @@ class HeadlessBenchmarkRunner {
       }
     }
 
-    final avgDuration = success ? (totalDuration ~/ iterations) : 0;
-
     return BenchmarkResult(
       framework: framework,
       benchmarkName: benchmark.name,
-      durationMicros: avgDuration,
+      classification: benchmark.classification,
+      comparisonNote: benchmark.comparisonNote,
+      samplesMicros: success ? samples : const [],
+      warmupIterations: warmupIterations,
       success: success,
       error: error,
     );
@@ -61,7 +74,7 @@ class HeadlessBenchmarkRunner {
     Framework framework,
   ) async {
     final impl = benchmark.createImplementation(framework);
-    int totalDuration = 0;
+    final samples = <int>[];
     bool success = true;
     String? error;
 
@@ -78,9 +91,11 @@ class HeadlessBenchmarkRunner {
       // Allow layout/paint to settle
       await tester.pumpAndSettle();
 
-      // Warmup
-      await impl.run();
-      await tester.pump();
+      for (int i = 0; i < warmupIterations; i++) {
+        await impl.run();
+        await tester.pump();
+        await impl.verify();
+      }
 
       for (int i = 0; i < iterations; i++) {
         final stopwatch = Stopwatch()..start();
@@ -88,7 +103,8 @@ class HeadlessBenchmarkRunner {
         await tester.pump(); // Force rebuild/frame
         stopwatch.stop();
 
-        totalDuration += stopwatch.elapsedMicroseconds;
+        await impl.verify();
+        samples.add(stopwatch.elapsedMicroseconds);
       }
 
       // Unmount
@@ -105,12 +121,13 @@ class HeadlessBenchmarkRunner {
       }
     }
 
-    final avgDuration = success ? (totalDuration ~/ iterations) : 0;
-
     return BenchmarkResult(
       framework: framework,
       benchmarkName: benchmark.name,
-      durationMicros: avgDuration,
+      classification: benchmark.classification,
+      comparisonNote: benchmark.comparisonNote,
+      samplesMicros: success ? samples : const [],
+      warmupIterations: warmupIterations,
       success: success,
       error: error,
     );

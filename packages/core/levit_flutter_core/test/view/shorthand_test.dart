@@ -54,7 +54,7 @@ void main() {
         MaterialApp(
           home: LScopedView<TestController>(
             dependencyFactory: (s) =>
-                s.put(() => TestController()..count = 123),
+                s.put<TestController>(() => TestController()..count = 123),
             builder: (context, controller) =>
                 Text('Scoped: ${controller.count}'),
           ),

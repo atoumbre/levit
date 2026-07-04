@@ -29,6 +29,35 @@ void main() {
       expect(LevitScope.containsMiddlewareToken(token), isTrue);
       LevitScope.removeMiddlewareByToken(token);
     });
+
+    test('registry helpers report false when middleware and token are absent',
+        () {
+      _clearMiddlewaresViaMirrors();
+
+      final middleware = _NoopMiddleware();
+
+      expect(LevitScope.containsMiddleware(middleware), isFalse);
+      expect(LevitScope.containsMiddlewareToken('missing'), isFalse);
+      expect(LevitScope.removeMiddlewareByToken('missing'), isFalse);
+    });
+
+    test('token registration covers attach and fresh-token branches', () {
+      _clearMiddlewaresViaMirrors();
+
+      final attached = _NoopMiddleware();
+      final fresh = _NoopMiddleware();
+
+      LevitScope.addMiddleware(attached);
+      LevitScope.addMiddleware(attached, token: 'attached');
+      LevitScope.addMiddleware(fresh, token: 'fresh');
+
+      expect(LevitScope.containsMiddleware(attached), isTrue);
+      expect(LevitScope.containsMiddlewareToken('attached'), isTrue);
+      expect(LevitScope.containsMiddleware(fresh), isTrue);
+      expect(LevitScope.containsMiddlewareToken('fresh'), isTrue);
+      expect(LevitScope.removeMiddlewareByToken('attached'), isTrue);
+      expect(LevitScope.removeMiddlewareByToken('fresh'), isTrue);
+    });
   });
 }
 

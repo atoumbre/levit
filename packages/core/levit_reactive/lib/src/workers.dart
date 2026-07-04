@@ -79,6 +79,7 @@ class LxWorkerStat {
 /// ```
 class LxWorker<T> extends LxBase<LxWorkerStat> {
   void _updateStat(LxWorkerStat Function(LxWorkerStat val) fn) {
+    if (isDisposed) return;
     _setValueInternal(fn(value));
   }
 
@@ -122,37 +123,37 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
         final result = callback(value);
 
         if (result is Future) {
-          if (monitoring && (!this.value.isAsync || !this.value.isProcessing)) {
+          if (monitoring &&
+              !isDisposed &&
+              (!this.value.isAsync || !this.value.isProcessing)) {
             _updateStat((s) => s.copyWith(isAsync: true, isProcessing: true));
           }
 
           result.then((_) {
-            if (monitoring) {
-              final end = DateTime.now();
-              final duration = end.difference(start!);
-              _updateStat((s) => s.copyWith(
-                    runCount: s.runCount + 1,
-                    lastDuration: duration,
-                    totalDuration: s.totalDuration + duration,
-                    lastRun: end,
-                    isProcessing: false,
-                    error: null,
-                  ));
-            }
+            if (!monitoring || isDisposed) return;
+            final end = DateTime.now();
+            final duration = end.difference(start!);
+            _updateStat((s) => s.copyWith(
+                  runCount: s.runCount + 1,
+                  lastDuration: duration,
+                  totalDuration: s.totalDuration + duration,
+                  lastRun: end,
+                  isProcessing: false,
+                  error: null,
+                ));
           }).catchError((e, s) {
             _onProcessingError?.call(e, s);
-            if (monitoring) {
-              final end = DateTime.now();
-              final duration = end.difference(start!);
-              _updateStat((s) => s.copyWith(
-                    runCount: s.runCount + 1,
-                    lastDuration: duration,
-                    totalDuration: s.totalDuration + duration,
-                    lastRun: end,
-                    isProcessing: false,
-                    error: e,
-                  ));
-            }
+            if (!monitoring || isDisposed) return;
+            final end = DateTime.now();
+            final duration = end.difference(start!);
+            _updateStat((s) => s.copyWith(
+                  runCount: s.runCount + 1,
+                  lastDuration: duration,
+                  totalDuration: s.totalDuration + duration,
+                  lastRun: end,
+                  isProcessing: false,
+                  error: e,
+                ));
           });
         } else {
           if (monitoring) {

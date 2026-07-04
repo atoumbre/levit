@@ -7,40 +7,48 @@ Future<void> main(List<String> args) async {
   final generateReportFile = args.contains('--generate-report');
   final changedOnly = args.contains('--changed');
   final includeExamples = args.contains('--include-examples');
+  final quiet = args.contains('--quiet');
   final onlyPackages = _parseCsvArg(args, '--only');
   final maxPackages = _parseIntArg(args, '--max-packages');
   final timeoutSeconds = _parseIntArg(args, '--timeout');
+  final failUnder = _parseDoubleArg(args, '--fail-under');
   final targetPaths = args.where((arg) => !arg.startsWith('--')).toList();
+  void log(String message) {
+    if (!quiet) print(message);
+  }
 
   if (targetPaths.isEmpty) {
     targetPaths.add('packages');
   }
 
-  print('🔍 Scanning for packages in: ${targetPaths.join(', ')}...');
+  log('Scanning for packages in: ${targetPaths.join(', ')}...');
   if (generateReportFile) {
-    print('📝 Report file generation enabled.');
+    log('Report file generation enabled.');
   }
   if (changedOnly) {
-    print('🧩 Filtering to changed packages only.');
+    log('Filtering to changed packages only.');
   }
   if (!includeExamples) {
-    print('🙈 Excluding example projects (use --include-examples to include).');
+    log('Excluding example projects (use --include-examples to include).');
   }
   if (onlyPackages != null && onlyPackages.isNotEmpty) {
-    print('🎯 Filtering to packages: ${onlyPackages.join(', ')}');
+    log('Filtering to packages: ${onlyPackages.join(', ')}');
   }
   if (maxPackages != null) {
-    print('⏱️  Limiting to $maxPackages package(s).');
+    log('Limiting to $maxPackages package(s).');
   }
   if (timeoutSeconds != null) {
-    print('⏲️  Per-package timeout: ${timeoutSeconds}s');
+    log('Per-package timeout: ${timeoutSeconds}s');
+  }
+  if (failUnder != null) {
+    log('Coverage threshold: ${failUnder.toStringAsFixed(2)}%');
   }
 
   final packages = <Directory>[];
   for (final path in targetPaths) {
     final dir = Directory('${rootDir.path}/$path');
     if (!dir.existsSync()) {
-      print('⚠️ Warning: Path not found: $path. Skipping.');
+      print('Warning: Path not found: $path. Skipping.');
       continue;
     }
 
@@ -70,7 +78,7 @@ Future<void> main(List<String> args) async {
   }
 
   if (packages.isEmpty) {
-    print('No packages found in target paths.');
+    log('No packages found in target paths.');
     exit(0);
   }
 
@@ -81,7 +89,7 @@ Future<void> main(List<String> args) async {
   if (changedOnly) {
     final changedPaths = await _getChangedPaths(rootDir.path);
     if (changedPaths.isEmpty) {
-      print('⚠️ Warning: No changed files detected. Skipping.');
+      print('Warning: No changed files detected. Skipping.');
       exit(0);
     }
     packages.retainWhere(
@@ -100,7 +108,7 @@ Future<void> main(List<String> args) async {
     packages.removeRange(maxPackages, packages.length);
   }
 
-  print(
+  log(
     'Found ${packages.length} packages: ${packages.map((d) => d.path.split(Platform.pathSeparator).last).join(', ')}\n',
   );
 
@@ -110,11 +118,11 @@ Future<void> main(List<String> args) async {
 
   for (final package in packages) {
     final packageName = package.path.split(Platform.pathSeparator).last;
-    print('📦 [$packageName] Running tests and generating coverage...');
+    log('[$packageName] Running tests and generating coverage...');
 
     final testDir = Directory('${package.path}/test');
     if (!testDir.existsSync()) {
-      print('⚠️ [$packageName] No test/ directory found. Skipping.');
+      log('[$packageName] No test/ directory found. Skipping.');
       continue;
     }
 
@@ -124,8 +132,8 @@ Future<void> main(List<String> args) async {
         .any((f) => f is File && f.path.endsWith('_test.dart'));
 
     if (!hasTestFiles) {
-      print(
-        '⚠️ [$packageName] test/ directory exists but contains no _test.dart files. Skipping.',
+      log(
+        '[$packageName] test/ directory exists but contains no _test.dart files. Skipping.',
       );
       continue;
     }
@@ -139,14 +147,17 @@ Future<void> main(List<String> args) async {
     final usesDartMirrors = _usesDartMirrors(testDir);
     final isFlutterPackage = _isFlutterPackage(package);
     final useDartTest = !isFlutterPackage || usesDartMirrors;
+    final coverageDir = Directory('${package.path}/coverage');
+    if (coverageDir.existsSync()) {
+      await coverageDir.delete(recursive: true);
+    }
 
     final _ProcessOutcome result;
     if (useDartTest) {
       if (usesDartMirrors) {
-        print(
-            '🪞 [$packageName] Detected dart:mirrors in tests; using dart test.');
+        log('[$packageName] Detected dart:mirrors in tests; using dart test.');
       } else {
-        print('🧪 [$packageName] Pure Dart package; using dart test.');
+        log('[$packageName] Pure Dart package; using dart test.');
       }
       result = await _runProcess(
         ['dart', 'test', '--coverage=coverage'],
@@ -160,6 +171,7 @@ Future<void> main(List<String> args) async {
             'run',
             'coverage:format_coverage',
             '--lcov',
+            '--check-ignore',
             '--in=coverage',
             '--out=coverage/lcov.info',
             '--packages=.dart_tool/package_config.json',
@@ -169,7 +181,7 @@ Future<void> main(List<String> args) async {
           timeout: timeout,
         );
         if (formatResult.timedOut || formatResult.exitCode != 0) {
-          print('❌ [$packageName] Coverage formatting failed!');
+          print('[$packageName] Coverage formatting failed.');
           print(formatResult.stdout);
           print(formatResult.stderr);
           hasFailures = true;
@@ -188,13 +200,13 @@ Future<void> main(List<String> args) async {
 
     if (result.timedOut) {
       print(
-        '⏱️  [$packageName] Timed out after ${timeoutSeconds}s. Skipping.',
+        '[$packageName] Timed out after ${timeoutSeconds}s. Skipping.',
       );
       hasFailures = true;
       continue;
     }
     if (result.exitCode != 0) {
-      print('❌ [$packageName] Tests failed!');
+      print('[$packageName] Tests failed.');
       print(result.stdout);
       print(result.stderr);
       hasFailures = true;
@@ -203,8 +215,8 @@ Future<void> main(List<String> args) async {
 
     final lcovFile = File('${package.path}/coverage/lcov.info');
     if (!lcovFile.existsSync()) {
-      print(
-        '⚠️ [$packageName] No coverage/lcov.info file generated (Maybe no tests?).',
+      log(
+        '[$packageName] No coverage/lcov.info file generated. Skipping coverage parse.',
       );
       continue;
     }
@@ -218,16 +230,45 @@ Future<void> main(List<String> args) async {
     stats[packageName] = packageStats;
     globalStats.merge(packageStats);
 
-    print(
-      '✅ [$packageName] Done. (${packageStats.coveragePercent.toStringAsFixed(1)}%)',
+    log(
+      '[$packageName] Done. (${packageStats.coveragePercent.toStringAsFixed(1)}%)',
     );
   }
 
   // --- REPORT ---
-  await _generateReport(stats, globalStats, generateReportFile);
+  await _generateReport(stats, globalStats, generateReportFile, quiet: quiet);
+
+  if (failUnder != null) {
+    final failingPackages = stats.values
+        .where((stats) => stats.coveragePercent < failUnder)
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    if (globalStats.coveragePercent < failUnder || failingPackages.isNotEmpty) {
+      print(
+        'Coverage threshold failed: expected at least ${failUnder.toStringAsFixed(2)}%.',
+      );
+      print(
+        'Global coverage: ${globalStats.coveragePercent.toStringAsFixed(2)}%.',
+      );
+      for (final package in failingPackages) {
+        print(
+          '${package.name}: ${package.coveragePercent.toStringAsFixed(2)}%.',
+        );
+      }
+      hasFailures = true;
+    } else if (quiet) {
+      print(
+        'Coverage: ${globalStats.coveragePercent.toStringAsFixed(2)}% across ${stats.length} package(s).',
+      );
+    }
+  } else if (quiet) {
+    print(
+      'Coverage: ${globalStats.coveragePercent.toStringAsFixed(2)}% across ${stats.length} package(s).',
+    );
+  }
 
   if (hasFailures) {
-    print('\n❌ Some tests failed. Check logs above.');
+    print('\nCoverage checks failed. Check logs above.');
     exit(1);
   }
 }
@@ -235,8 +276,9 @@ Future<void> main(List<String> args) async {
 Future<void> _generateReport(
   Map<String, PackageStats> stats,
   PackageStats globalStats,
-  bool generateFile,
-) async {
+  bool generateFile, {
+  required bool quiet,
+}) async {
   final buffer = StringBuffer();
   buffer.writeln('# 📊 Levit Coverage Report');
   buffer.writeln();
@@ -303,59 +345,60 @@ Future<void> _generateReport(
     buffer.writeln('✨ **Perfect coverage across all packages!**');
   }
 
-  // Console Output (reuse existing logic but simplified)
-  print('\n${'=' * 65}');
-  print('📊 LEVIT COVERAGE REPORT');
-  print('=' * 65);
-  print('| Package              | Lines Covered | Total Lines | Coverage |');
-  print('|----------------------|---------------|-------------|----------|');
+  if (!quiet) {
+    print('\n${'=' * 65}');
+    print('LEVIT COVERAGE REPORT');
+    print('=' * 65);
+    print('| Package              | Lines Covered | Total Lines | Coverage |');
+    print('|----------------------|---------------|-------------|----------|');
 
-  for (final pkg in stats.keys.toList()..sort()) {
-    final s = stats[pkg]!;
-    print(
-      '| ${pkg.padRight(20)} | ${s.coveredLines.toString().padLeft(13)} | ${s.totalLines.toString().padLeft(11)} | ${s.coveragePercent.toStringAsFixed(2).padLeft(7)}% |',
-    );
-  }
-
-  print('-' * 65);
-  print(
-    '| ${"GLOBAL".padRight(20)} | ${globalStats.coveredLines.toString().padLeft(13)} | ${globalStats.totalLines.toString().padLeft(11)} | ${globalStats.coveragePercent.toStringAsFixed(2).padLeft(7)}% |',
-  );
-  print('=' * 65);
-
-  // Print Uncovered Lines Details to Console
-  if (!flawless) {
-    print('\n📝 Uncovered Lines Details:');
     for (final pkg in stats.keys.toList()..sort()) {
       final s = stats[pkg]!;
-      if (s.coveragePercent < 100) {
-        print('\n📦 $pkg');
-        if (s.uncoveredFiles.isEmpty) {
-          print('  _No detailed info available_');
-        } else {
-          s.uncoveredFiles.forEach((file, lines) {
-            final ranges = <String>[];
-            if (lines.isNotEmpty) {
-              lines.sort();
-              int start = lines.first;
-              int end = lines.first;
-              for (int i = 1; i < lines.length; i++) {
-                if (lines[i] == end + 1) {
-                  end = lines[i];
-                } else {
-                  ranges.add(start == end ? '$start' : '$start-$end');
-                  start = lines[i];
-                  end = lines[i];
+      print(
+        '| ${pkg.padRight(20)} | ${s.coveredLines.toString().padLeft(13)} | ${s.totalLines.toString().padLeft(11)} | ${s.coveragePercent.toStringAsFixed(2).padLeft(7)}% |',
+      );
+    }
+
+    print('-' * 65);
+    print(
+      '| ${"GLOBAL".padRight(20)} | ${globalStats.coveredLines.toString().padLeft(13)} | ${globalStats.totalLines.toString().padLeft(11)} | ${globalStats.coveragePercent.toStringAsFixed(2).padLeft(7)}% |',
+    );
+    print('=' * 65);
+
+    // Print Uncovered Lines Details to Console
+    if (!flawless) {
+      print('\nUncovered Lines Details:');
+      for (final pkg in stats.keys.toList()..sort()) {
+        final s = stats[pkg]!;
+        if (s.coveragePercent < 100) {
+          print('\n$pkg');
+          if (s.uncoveredFiles.isEmpty) {
+            print('  _No detailed info available_');
+          } else {
+            s.uncoveredFiles.forEach((file, lines) {
+              final ranges = <String>[];
+              if (lines.isNotEmpty) {
+                lines.sort();
+                int start = lines.first;
+                int end = lines.first;
+                for (int i = 1; i < lines.length; i++) {
+                  if (lines[i] == end + 1) {
+                    end = lines[i];
+                  } else {
+                    ranges.add(start == end ? '$start' : '$start-$end');
+                    start = lines[i];
+                    end = lines[i];
+                  }
                 }
+                ranges.add(start == end ? '$start' : '$start-$end');
               }
-              ranges.add(start == end ? '$start' : '$start-$end');
-            }
-            print('  • $file: ${ranges.join(', ')}');
-          });
+              print('  - $file: ${ranges.join(', ')}');
+            });
+          }
         }
       }
+      print('\n${'=' * 65}');
     }
-    print('\n${'=' * 65}');
   }
 
   // Export to file ONLY if requested
@@ -367,10 +410,9 @@ Future<void> _generateReport(
 
     final reportFile = File('reports/packages_test_coverage.md');
     await reportFile.writeAsString(buffer.toString());
-    print('\n✅ Report exported to: ${reportFile.absolute.path}');
-  } else {
-    print(
-        '\nℹ️  Skipped report file generation (use --generate-report to enable)');
+    if (!quiet) print('\nReport exported to: ${reportFile.absolute.path}');
+  } else if (!quiet) {
+    print('\nSkipped report file generation (use --generate-report to enable)');
   }
 }
 
@@ -421,6 +463,18 @@ int? _parseIntArg(List<String> args, String key) {
   return null;
 }
 
+double? _parseDoubleArg(List<String> args, String key) {
+  final prefix = '$key=';
+  for (final arg in args) {
+    if (arg.startsWith(prefix)) {
+      final value = arg.substring(prefix.length).trim();
+      if (value.isEmpty) return null;
+      return double.tryParse(value);
+    }
+  }
+  return null;
+}
+
 Future<Set<String>> _getChangedPaths(String repoRoot) async {
   final result = await Process.run(
     'git',
@@ -457,6 +511,7 @@ PackageStats _parseLcov(File file, String packageName) {
   final lines = file.readAsLinesSync();
   // FilePath -> Map<LineNumber, Hits>
   final fileHits = <String, Map<int, int>>{};
+  final sourceLinesCache = <String, List<String>?>{};
   String? currentFile;
 
   for (final line in lines) {
@@ -493,6 +548,9 @@ PackageStats _parseLcov(File file, String packageName) {
     for (final lineEntry in lineMap.entries) {
       final lineNum = lineEntry.key;
       final hits = lineEntry.value;
+      if (_isStructuralCoverageArtifact(filePath, lineNum, sourceLinesCache)) {
+        continue;
+      }
 
       stats.totalLines++;
       if (hits > 0) {
@@ -504,6 +562,88 @@ PackageStats _parseLcov(File file, String packageName) {
   }
 
   return stats;
+}
+
+bool _isStructuralCoverageArtifact(
+  String filePath,
+  int lineNum,
+  Map<String, List<String>?> sourceLinesCache,
+) {
+  final sourceLines = sourceLinesCache.putIfAbsent(filePath, () {
+    final sourceFile = File(filePath);
+    if (!sourceFile.existsSync()) return null;
+    return sourceFile.readAsLinesSync();
+  });
+  if (sourceLines == null || lineNum <= 0 || lineNum > sourceLines.length) {
+    return false;
+  }
+
+  final trimmed = sourceLines[lineNum - 1].trim();
+  if (trimmed.isEmpty) return true;
+  if (trimmed.startsWith('//') ||
+      trimmed.startsWith('/*') ||
+      trimmed.startsWith('*') ||
+      trimmed == '*/') {
+    return true;
+  }
+  if (trimmed == '{' ||
+      trimmed == '}' ||
+      trimmed == '};' ||
+      trimmed == '),' ||
+      trimmed == ');') {
+    return true;
+  }
+
+  if (_isSignatureContinuationLine(sourceLines, lineNum - 1, trimmed)) {
+    return true;
+  }
+
+  if (trimmed.endsWith(') {') && !_startsWithControlFlow(trimmed)) {
+    return true;
+  }
+
+  return false;
+}
+
+bool _isSignatureContinuationLine(
+  List<String> sourceLines,
+  int lineIndex,
+  String trimmed,
+) {
+  if (_startsWithControlFlow(trimmed)) return false;
+  if (!(trimmed.endsWith(',') || trimmed.endsWith(') {'))) return false;
+
+  for (int i = lineIndex - 1; i >= 0; i--) {
+    final previous = sourceLines[i].trim();
+    if (previous.isEmpty) continue;
+    if (_startsWithControlFlow(previous)) return false;
+    if (previous.endsWith('(')) return true;
+    if (previous.endsWith(',') || previous.endsWith(') {')) continue;
+    return false;
+  }
+
+  return false;
+}
+
+bool _startsWithControlFlow(String line) {
+  const keywords = [
+    'if ',
+    'if(',
+    'for ',
+    'for(',
+    'while ',
+    'while(',
+    'switch ',
+    'switch(',
+    'catch ',
+    'catch(',
+    'else',
+    'do ',
+    'try',
+    'assert ',
+    'assert(',
+  ];
+  return keywords.any(line.startsWith);
 }
 
 void _fixLcovPaths(File lcovFile, String packagePath, String rootPath) {

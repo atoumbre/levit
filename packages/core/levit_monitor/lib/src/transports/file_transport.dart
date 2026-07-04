@@ -22,6 +22,7 @@ class FileTransport implements LevitTransport {
         'state',
       DependencyEvent _ => 'di',
       SnapshotEvent _ => 'snapshot',
+      LogEvent _ => 'log',
     };
 
     _sink.writeln(jsonEncode({

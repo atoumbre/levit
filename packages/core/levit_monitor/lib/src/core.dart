@@ -18,6 +18,12 @@ class LevitMonitor {
   /// The active obfuscator used for sensitive data.
   static LevitObfuscator _obfuscator = (value) => '***';
 
+  /// The minimum log level to emit. Logs below this level will be dropped.
+  static Level _logLevel = Level.all;
+
+  /// Returns the current minimum log level.
+  static Level get logLevel => _logLevel;
+
   /// Returns the current event filter, if any.
   static bool Function(MonitorEvent event)? get filter => _filter;
 
@@ -43,6 +49,11 @@ class LevitMonitor {
     _obfuscator = obfuscator ?? (value) => '***';
   }
 
+  /// Sets the minimum log level for [LevitMonitor].
+  static void setLogLevel(Level level) {
+    _logLevel = level;
+  }
+
   /// Obfuscates a [value] if it is considered sensitive.
   static dynamic obfuscate(dynamic value) => _obfuscator(value);
 
@@ -51,6 +62,54 @@ class LevitMonitor {
   static bool shouldProcess(MonitorEvent event) {
     return _filter == null || _filter!(event);
   }
+
+  /// Emits a diagnostic log event to the monitoring pipeline.
+  ///
+  /// The [data] parameter can be a simple message string or a structured,
+  /// JSON-serializable object.
+  static void log(
+    Object? data, {
+    Level level = Level.info,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    if (_middleware == null) return;
+    if (level.value < _logLevel.value) return;
+
+    final event = LogEvent(
+      sessionId: _middleware!.sessionId,
+      level: level,
+      data: data,
+      error: error,
+      stackTrace: stackTrace,
+    );
+    _middleware!._addToBuffer(event);
+  }
+
+  /// Helper method for emitting a log at [Level.trace].
+  static void logTrace(Object? data, {Object? error, StackTrace? stackTrace}) =>
+      log(data, level: Level.trace, error: error, stackTrace: stackTrace);
+
+  /// Helper method for emitting a log at [Level.debug].
+  static void logDebug(Object? data, {Object? error, StackTrace? stackTrace}) =>
+      log(data, level: Level.debug, error: error, stackTrace: stackTrace);
+
+  /// Helper method for emitting a log at [Level.info].
+  static void logInfo(Object? data, {Object? error, StackTrace? stackTrace}) =>
+      log(data, level: Level.info, error: error, stackTrace: stackTrace);
+
+  /// Helper method for emitting a log at [Level.warning].
+  static void logWarning(Object? data,
+          {Object? error, StackTrace? stackTrace}) =>
+      log(data, level: Level.warning, error: error, stackTrace: stackTrace);
+
+  /// Helper method for emitting a log at [Level.error].
+  static void logError(Object? data, {Object? error, StackTrace? stackTrace}) =>
+      log(data, level: Level.error, error: error, stackTrace: stackTrace);
+
+  /// Helper method for emitting a log at [Level.fatal].
+  static void logFatal(Object? data, {Object? error, StackTrace? stackTrace}) =>
+      log(data, level: Level.fatal, error: error, stackTrace: stackTrace);
 
   /// Bootstraps the monitoring system and attaches it to the application.
   ///

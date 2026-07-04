@@ -304,84 +304,121 @@ class Levit {
   /// Internal utility that detects and executes the appropriate cleanup method for an [item].
   static void _levitDisposeItem(dynamic item) {
     if (item == null) return;
+    if (_disposeKnownItem(item)) return;
+    if (_cancelKnownItem(item)) return;
+    if (_tryDynamicCleanup(item, _CleanupOperation.cancel)) return;
+    if (_tryDynamicCleanup(item, _CleanupOperation.dispose)) return;
+    if (_closeKnownItem(item)) return;
+    if (_tryDynamicCleanup(item, _CleanupOperation.close)) return;
+    _runCleanupCallback(item);
+  }
 
-    // Prefer framework contracts before duck-typed cleanup methods.
-
+  static bool _disposeKnownItem(Object item) {
     if (item is LxReactive) {
       item.close();
-      return;
+      return true;
     }
 
     if (item is LevitScopeDisposable) {
       item.onClose();
-      return;
+      return true;
     }
 
     if (item is LevitDisposable) {
       item.dispose();
-      return;
+      return true;
     }
 
-    // Cancelables are handled before disposal/close to preserve task semantics.
+    return false;
+  }
+
+  static bool _cancelKnownItem(Object item) {
     if (item is StreamSubscription) {
       item.cancel();
-      return;
+      return true;
     }
+
     if (item is Timer) {
       item.cancel();
-      return;
+      return true;
     }
 
-    try {
-      // Fallback for cancelable types without shared interface.
-      (item as dynamic).cancel();
-      return;
-    } on NoSuchMethodError {
-      // Continue with dispose/close heuristics.
-    } on Exception catch (e) {
-      // Cleanup must remain best-effort.
-      dev.log('Levit: Error cancelling ${item.runtimeType}',
-          error: e, name: 'levit_dart');
-    }
+    return false;
+  }
 
-    // Dispose handles UI/resource holders that are not cancelable.
-    try {
-      (item as dynamic).dispose();
-      return;
-    } on NoSuchMethodError {
-      // Continue with close heuristics.
-    } on Exception catch (e) {
-      dev.log('Levit: Error disposing ${item.runtimeType}',
-          error: e, name: 'levit_dart');
-    }
-
-    // Close covers stream-like and IO-style resources.
+  static bool _closeKnownItem(Object item) {
     if (item is Sink) {
       item.close();
-      return;
+      return true;
     }
+    return false;
+  }
 
+  static bool _tryDynamicCleanup(Object item, _CleanupOperation operation) {
     try {
-      (item as dynamic).close();
-      return;
-    } on NoSuchMethodError {
-      // Continue with callback fallback.
-    } on Exception catch (e) {
-      dev.log('Levit: Error closing ${item.runtimeType}',
-          error: e, name: 'levit_dart');
-    }
-
-    // Last fallback: explicit cleanup callback.
-    if (item is void Function()) {
-      try {
-        item();
-      } catch (e) {
-        dev.log('Levit: Error executing dispose callback',
-            error: e, name: 'levit_dart');
+      switch (operation) {
+        case _CleanupOperation.cancel:
+          (item as dynamic).cancel();
+          break;
+        case _CleanupOperation.dispose:
+          (item as dynamic).dispose();
+          break;
+        case _CleanupOperation.close:
+          (item as dynamic).close();
+          break;
       }
-      return;
+      return true;
+    } on NoSuchMethodError {
+      return false;
+    } on Exception catch (e, stackTrace) {
+      _logCleanupError(
+        operation.label,
+        item,
+        e,
+        stackTrace: stackTrace,
+      );
+      return false;
     }
   }
+
+  static void _runCleanupCallback(Object item) {
+    if (item is! void Function()) return;
+
+    try {
+      item();
+    } on Exception catch (e, stackTrace) {
+      _logCleanupError(
+        'executing dispose callback',
+        item,
+        e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  static void _logCleanupError(
+    String operation,
+    Object item,
+    Exception error, {
+    StackTrace? stackTrace,
+  }) {
+    dev.log(
+      'Levit: Error $operation ${item.runtimeType}',
+      error: error,
+      stackTrace: stackTrace,
+      name: 'levit_dart',
+    );
+  }
+}
+
+enum _CleanupOperation {
+  cancel('cancelling'),
+  dispose('disposing'),
+  close('closing');
+
+  const _CleanupOperation(this.label);
+
+  final String label;
 }
 
 /// Fluent extensions for naming and configuring reactive objects.

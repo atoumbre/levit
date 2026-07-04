@@ -48,11 +48,18 @@ class LevitAnimatedBenchmark extends BenchmarkImplementation {
   }
 
   @override
-  Future<int> run() async {
-    // Just update the value - runner handles timing
+  Future<void> run() async {
     frameCount++;
     progress.value = (frameCount % 120) / 120.0;
-    return 0; // Runner measures UI rebuild time
+  }
+
+  @override
+  Future<void> verify() async {
+    final expected = (frameCount % 120) / 120.0;
+    if (progress.value != expected) {
+      throw StateError(
+          'Levit animation mismatch: expected $expected, got ${progress.value}');
+    }
   }
 
   @override
@@ -91,10 +98,18 @@ class VanillaAnimatedBenchmark extends BenchmarkImplementation {
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     frameCount++;
     progress.value = (frameCount % 120) / 120.0;
-    return 0;
+  }
+
+  @override
+  Future<void> verify() async {
+    final expected = (frameCount % 120) / 120.0;
+    if (progress.value != expected) {
+      throw StateError(
+          'Vanilla animation mismatch: expected $expected, got ${progress.value}');
+    }
   }
 
   @override
@@ -136,10 +151,18 @@ class GetXAnimatedBenchmark extends BenchmarkImplementation {
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     frameCount++;
     progress.value = (frameCount % 120) / 120.0;
-    return 0;
+  }
+
+  @override
+  Future<void> verify() async {
+    final expected = (frameCount % 120) / 120.0;
+    if (progress.value != expected) {
+      throw StateError(
+          'GetX animation mismatch: expected $expected, got ${progress.value}');
+    }
   }
 
   @override
@@ -180,11 +203,20 @@ class RiverpodAnimatedBenchmark extends BenchmarkImplementation {
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     frameCount++;
     container.read(_animProgressProvider.notifier).state =
         (frameCount % 120) / 120.0;
-    return 0;
+  }
+
+  @override
+  Future<void> verify() async {
+    final expected = (frameCount % 120) / 120.0;
+    final value = container.read(_animProgressProvider);
+    if (value != expected) {
+      throw StateError(
+          'Riverpod animation mismatch: expected $expected, got $value');
+    }
   }
 
   @override
@@ -235,10 +267,18 @@ class BlocAnimatedBenchmark extends BenchmarkImplementation {
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     frameCount++;
     cubit.updateProgress((frameCount % 120) / 120.0);
-    return 0;
+  }
+
+  @override
+  Future<void> verify() async {
+    final expected = (frameCount % 120) / 120.0;
+    if (cubit.state != expected) {
+      throw StateError(
+          'BLoC animation mismatch: expected $expected, got ${cubit.state}');
+    }
   }
 
   @override

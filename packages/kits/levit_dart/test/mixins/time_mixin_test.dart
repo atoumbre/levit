@@ -1,0 +1,123 @@
+import 'package:levit_dart/levit_dart.dart';
+import 'package:test/test.dart';
+
+class TestTimeController extends LevitController with LevitTimeMixin {}
+
+void main() {
+  group('LevitTimeMixin', () {
+    test('Debounce logic works', () async {
+      final controller = TestTimeController();
+      controller.onInit();
+      int callCount = 0;
+
+      // Call repeatedly
+      controller.debounce(
+          'test', const Duration(milliseconds: 50), () => callCount++);
+      controller.debounce(
+          'test', const Duration(milliseconds: 50), () => callCount++);
+      controller.debounce(
+          'test', const Duration(milliseconds: 50), () => callCount++);
+
+      // Should not have run yet
+      expect(callCount, 0);
+
+      // Wait
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(callCount, 1);
+
+      controller.onClose();
+    });
+
+    test('Throttle logic works', () async {
+      final controller = TestTimeController();
+      controller.onInit();
+      int callCount = 0;
+
+      // First call runs immediately
+      controller.throttle(
+          'test', const Duration(milliseconds: 100), () => callCount++);
+      expect(callCount, 1);
+
+      // Subsequent calls ignored
+      controller.throttle(
+          'test', const Duration(milliseconds: 100), () => callCount++);
+      expect(callCount, 1);
+
+      // Wait for cool down
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      // Can run again
+      controller.throttle(
+          'test', const Duration(milliseconds: 100), () => callCount++);
+      expect(callCount, 2);
+
+      controller.onClose();
+    });
+
+    test('Countdown logic works', () async {
+      final controller = TestTimeController();
+      controller.onInit();
+
+      final countdown = controller.startCountdown(
+        duration: const Duration(seconds: 3),
+        interval: const Duration(milliseconds: 100), // Fast ticks for test
+      );
+
+      expect(countdown.remaining.value.inSeconds, 3);
+
+      // Simulate a tick (wait slightly more than interval)
+      await Future.delayed(const Duration(milliseconds: 150));
+      expect(countdown.remaining.value < const Duration(seconds: 3), isTrue);
+
+      controller.onClose();
+    });
+
+    test('Countdown finishes on the zero tick', () async {
+      final controller = TestTimeController();
+      controller.onInit();
+      int finished = 0;
+      Duration? lastTick;
+
+      final countdown = controller.startCountdown(
+        duration: const Duration(milliseconds: 200),
+        interval: const Duration(milliseconds: 100),
+        onTick: (remaining) => lastTick = remaining,
+        onFinish: () => finished++,
+      );
+
+      await Future.delayed(const Duration(milliseconds: 220));
+
+      expect(countdown.remaining.value, Duration.zero);
+      expect(lastTick, Duration.zero);
+      expect(finished, 1);
+
+      controller.onClose();
+    });
+
+    test('Countdown pause, resume, and stop control remaining time', () async {
+      final controller = TestTimeController();
+      controller.onInit();
+
+      final countdown = controller.startCountdown(
+        duration: const Duration(milliseconds: 300),
+        interval: const Duration(milliseconds: 50),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 80));
+      countdown.pause();
+      final pausedRemaining = countdown.remaining.value;
+
+      await Future.delayed(const Duration(milliseconds: 100));
+      expect(countdown.remaining.value, pausedRemaining);
+
+      countdown.resume();
+      await Future.delayed(const Duration(milliseconds: 80));
+      expect(countdown.remaining.value < pausedRemaining, isTrue);
+
+      countdown.stop();
+      expect(countdown.remaining.value, const Duration(milliseconds: 300));
+
+      controller.onClose();
+    });
+  });
+}

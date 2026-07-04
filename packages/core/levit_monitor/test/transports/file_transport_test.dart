@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
+import 'package:logger/logger.dart' hide LogEvent;
 import 'package:test/test.dart';
 
 void main() {
@@ -74,6 +75,30 @@ void main() {
       expect(json['category'], 'state');
       expect(json['type'], 'state_change');
       expect(json['newValue'], '11');
+    });
+
+    test('writes LogEvent to file with correct category', () async {
+      final transport = FileTransport(filePath);
+      final event = LogEvent(
+        sessionId: 's1',
+        level: Level.info,
+        data: 'test log',
+      );
+
+      transport.send(event);
+      await Future.delayed(Duration(milliseconds: 100)); // Allow flush
+      await transport.close();
+
+      final file = File(filePath);
+      expect(file.existsSync(), isTrue);
+      final lines = await file.readAsLines();
+      expect(lines, hasLength(1));
+
+      final json = jsonDecode(lines.first);
+      expect(json['category'], 'log');
+      expect(json['type'], 'log');
+      expect(json['level'], 'info');
+      expect(json['data'], 'test log');
     });
 
     test('close releases resources', () async {

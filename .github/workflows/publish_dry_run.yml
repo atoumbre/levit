@@ -1,0 +1,26 @@
+name: Publish Dry Run
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  publish-dry-run:
+    name: Publish Dry Run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install root dependencies
+        run: dart pub get
+
+      - name: Bootstrap workspace
+        run: dart run melos bootstrap
+
+      - name: Publish dry-run
+        run: dart run scripts/publish_dry_run.dart --quiet

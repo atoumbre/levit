@@ -1,3 +1,7 @@
+## 0.0.8
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.8`.
+
 ## 0.0.7
 - Bumped version to 0.0.7
 

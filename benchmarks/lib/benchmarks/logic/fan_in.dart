@@ -40,6 +40,7 @@ class LevitFanInBenchmark extends BenchmarkImplementation {
   final List<LxVar<int>> inputs = [];
   late LxComputed<int> output;
   late VoidCallback listener;
+  int expectedOutput = BenchmarkConfig.fanInInputs;
 
   @override
   Future<void> setup() async {
@@ -60,16 +61,22 @@ class LevitFanInBenchmark extends BenchmarkImplementation {
     // Keep it active
     listener = () {};
     output.addListener(listener);
+    expectedOutput = BenchmarkConfig.fanInInputs;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     // Update one input. This should trigger re-evaluation of output.
     inputs[0].value++;
-    await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedOutput++;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (output.value != expectedOutput) {
+      throw StateError(
+          'Levit fan-in mismatch: expected $expectedOutput, got ${output.value}');
+    }
   }
 
   @override
@@ -87,6 +94,7 @@ class VanillaFanInBenchmark extends BenchmarkImplementation {
   final List<ValueNotifier<int>> inputs = [];
   late ValueNotifier<int> output;
   final List<VoidCallback> cleanup = [];
+  int expectedOutput = BenchmarkConfig.fanInInputs;
 
   @override
   Future<void> setup() async {
@@ -112,15 +120,21 @@ class VanillaFanInBenchmark extends BenchmarkImplementation {
       input.addListener(update);
       cleanup.add(() => input.removeListener(update));
     }
+    expectedOutput = BenchmarkConfig.fanInInputs;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     inputs[0].value++;
-    await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedOutput++;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (output.value != expectedOutput) {
+      throw StateError(
+          'Vanilla fan-in mismatch: expected $expectedOutput, got ${output.value}');
+    }
   }
 
   @override
@@ -138,18 +152,15 @@ class VanillaFanInBenchmark extends BenchmarkImplementation {
 // --- GetX ---
 class GetXFanInBenchmark extends BenchmarkImplementation {
   final List<RxInt> inputs = [];
-  late RxInt output;
-  StreamSubscription? worker;
   final List<StreamSubscription> subs = [];
   final RxInt sum = 0.obs;
+  int expectedOutput = BenchmarkConfig.fanInInputs;
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     inputs[0].value++;
+    expectedOutput++;
     await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
   }
 
   @override
@@ -171,6 +182,16 @@ class GetXFanInBenchmark extends BenchmarkImplementation {
     for (final i in inputs) {
       subs.add(i.listen((_) => update()));
     }
+    sum.value = BenchmarkConfig.fanInInputs;
+    expectedOutput = BenchmarkConfig.fanInInputs;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (sum.value != expectedOutput) {
+      throw StateError(
+          'GetX fan-in mismatch: expected $expectedOutput, got ${sum.value}');
+    }
   }
 
   @override
@@ -186,6 +207,7 @@ class RiverpodFanInBenchmark extends BenchmarkImplementation {
   late ProviderContainer container;
   final List<StateProvider<int>> inputProviders = [];
   late Provider<int> outputProvider;
+  int expectedOutput = BenchmarkConfig.fanInInputs;
 
   @override
   Future<void> setup() async {
@@ -205,16 +227,23 @@ class RiverpodFanInBenchmark extends BenchmarkImplementation {
 
     // Keep alive
     container.listen(outputProvider, (_, __) {});
+    expectedOutput = BenchmarkConfig.fanInInputs;
   }
 
   @override
-  Future<int> run() async {
+  Future<void> run() async {
     final notifier = container.read(inputProviders[0].notifier);
-    final stopwatch = Stopwatch()..start();
     notifier.state++;
-    await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedOutput++;
+  }
+
+  @override
+  Future<void> verify() async {
+    final output = container.read(outputProvider);
+    if (output != expectedOutput) {
+      throw StateError(
+          'Riverpod fan-in mismatch: expected $expectedOutput, got $output');
+    }
   }
 
   @override
@@ -227,6 +256,8 @@ class RiverpodFanInBenchmark extends BenchmarkImplementation {
 class BlocFanInBenchmark extends BenchmarkImplementation {
   final List<rxdart.BehaviorSubject<int>> inputs = [];
   late StreamSubscription sub;
+  int latestOutput = BenchmarkConfig.fanInInputs;
+  int expectedOutput = BenchmarkConfig.fanInInputs;
 
   @override
   Future<void> setup() async {
@@ -239,16 +270,26 @@ class BlocFanInBenchmark extends BenchmarkImplementation {
       return list.fold(0, (a, b) => a + b);
     });
 
-    sub = output.listen((_) {});
+    sub = output.listen((value) {
+      latestOutput = value;
+    });
+    expectedOutput = BenchmarkConfig.fanInInputs;
+    latestOutput = BenchmarkConfig.fanInInputs;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     inputs[0].add(inputs[0].value + 1);
+    expectedOutput++;
     await Future.microtask(() {});
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (latestOutput != expectedOutput) {
+      throw StateError(
+          'BLoC fan-in mismatch: expected $expectedOutput, got $latestOutput');
+    }
   }
 
   @override

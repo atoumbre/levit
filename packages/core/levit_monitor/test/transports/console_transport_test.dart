@@ -1,13 +1,13 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:logger/logger.dart';
+import 'package:logger/logger.dart' as logger;
 import 'package:test/test.dart';
 
-class _CapturePrinter extends LogPrinter {
+class _CapturePrinter extends logger.LogPrinter {
   final List<String> lines = <String>[];
 
   @override
-  List<String> log(LogEvent event) {
+  List<String> log(logger.LogEvent event) {
     final line = '${event.message}';
     lines.add(line);
     return [line];
@@ -191,6 +191,58 @@ void main() {
         instance: 'initialized',
       );
 
+      expect(() => silentTransport.send(event), returnsNormally);
+    });
+
+    test('formats LogEvent properly with error and stack trace', () {
+      final event = LogEvent(
+        sessionId: 'test',
+        level: logger.Level.error,
+        data: 'an error occurred',
+        error: StateError('bad state'),
+        stackTrace: StackTrace.fromString('stack frame 1'),
+      );
+
+      // We expect output to contain Error and Stack strings
+      LevitMonitor.setObfuscator(null);
+      final printer = _CapturePrinter();
+      final t = ConsoleTransport(
+        minLevel: LevitLogLevel.all,
+        printer: printer,
+      );
+      t.send(event);
+
+      final output = printer.lines.join('\n');
+      expect(output, contains('LOG: an error occurred'));
+      expect(output, contains('Error: Bad state: bad state'));
+      expect(output, contains('Stack: \nstack frame 1'));
+    });
+
+    test('LogEvent trace and debug levels are mapped correctly', () {
+      final t = ConsoleTransport(minLevel: LevitLogLevel.all);
+
+      final traceEvent =
+          LogEvent(sessionId: '1', level: logger.Level.trace, data: 'trace');
+      final debugEvent =
+          LogEvent(sessionId: '1', level: logger.Level.debug, data: 'debug');
+
+      expect(() => t.send(traceEvent), returnsNormally);
+      expect(() => t.send(debugEvent), returnsNormally);
+    });
+
+    test('LogEvent level fallback is not needed as LevitLogLevel covers all',
+        () {
+      // package:logger Level is an enum. We map all possible values
+      // in _levelFor, but we need to cover the `orElse` branch
+      // of `LevitLogLevel.values.firstWhere`.
+      // Since we can't instantiate a fake enum value, we can just prove
+      // standard levels work and are covered. The `orElse` is a safety net
+      // that we can't reach naturally in tests since all Level values are mapped.
+      final event = LogEvent(
+        sessionId: 'test',
+        level: logger.Level.info,
+        data: 'a simple log',
+      );
       expect(() => silentTransport.send(event), returnsNormally);
     });
 

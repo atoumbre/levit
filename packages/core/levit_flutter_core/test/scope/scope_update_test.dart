@@ -10,7 +10,7 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: LScope(
-          dependencyFactory: (s) => s.put(() => 'A', tag: 'tag1'),
+          dependencyFactory: (s) => s.put<String>(() => 'A', tag: 'tag1'),
           child: Builder(builder: (context) {
             buildCount++;
             return const SizedBox();
@@ -26,7 +26,7 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: LScope(
-          dependencyFactory: (s) => s.put(() => 'A', tag: 'tag2'),
+          dependencyFactory: (s) => s.put<String>(() => 'A', tag: 'tag2'),
           child: Builder(builder: (context) {
             buildCount++;
             return const SizedBox();

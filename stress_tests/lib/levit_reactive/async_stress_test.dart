@@ -114,9 +114,7 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 10));
         return source.value * 2;
       });
-
-      // Trigger initial computation
-      asyncComputed.status;
+      final subscription = asyncComputed.stream.listen((_) {});
 
       final sw = Stopwatch()..start();
       for (var i = 0; i < 500; i++) {
@@ -131,9 +129,12 @@ void main() {
           'Invalidated 500x in ${sw.elapsedMilliseconds}ms, compute called $computeCount times');
       print('Final status: $status');
 
+      expect(status, isA<LxSuccess<int>>());
+      expect(status.valueOrNull, 998);
       expect(computeCount, lessThan(500),
           reason: 'Should coalesce/debounce computations');
 
+      await subscription.cancel();
       source.close();
       asyncComputed.close();
     });
@@ -151,10 +152,9 @@ void main() {
         });
       });
 
-      // Trigger all
-      for (final c in computeds) {
-        c.status;
-      }
+      final subscriptions = [
+        for (final computed in computeds) computed.stream.listen((_) {}),
+      ];
 
       final sw = Stopwatch()..start();
       source.value = 100;
@@ -171,9 +171,12 @@ void main() {
       print(
           '$computedCount async computeds, $successCount resolved in ${sw.elapsedMilliseconds}ms');
 
-      expect(successCount, greaterThan(0));
+      expect(successCount, computedCount);
 
       source.close();
+      for (final subscription in subscriptions) {
+        await subscription.cancel();
+      }
       for (final c in computeds) {
         c.close();
       }

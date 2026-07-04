@@ -1,4 +1,4 @@
-name: CI
+name: Checks
 
 on:
   workflow_call:
@@ -14,16 +14,17 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
 
-      - name: Install Melos
-        uses: bluefireteam/melos-action@v3
+      - name: Install root dependencies
+        run: dart pub get
+
+      - name: Bootstrap workspace
+        run: dart run melos bootstrap
 
       - name: Check Formatting
-        # Fails if any file is not formatted correctly
-        run: melos exec -- "dart format . --set-exit-if-changed"
+        run: dart format . --set-exit-if-changed
 
-      - name: Static Analysis
-        # Runs 'dart analyze --fatal-infos' as defined in melos.yaml
-        run: melos run analyze
+      - name: Run analysis and tests
+        run: dart run scripts/ci.dart

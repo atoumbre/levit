@@ -224,6 +224,34 @@ void main() {
       await tester.pump();
       expect(find.text('1'), findsOneWidget);
     });
+
+    testWidgets('handles ambiguous logical keys in multi dependency mode',
+        (tester) async {
+      final left = 1.lx
+        ..ownerId = 'shared-owner'
+        ..name = 'shared-name';
+      final right = 2.lx
+        ..ownerId = 'shared-owner'
+        ..name = 'shared-name';
+
+      Widget buildStage() {
+        return Directionality(
+          textDirection: TextDirection.ltr,
+          child: LWatch(() {
+            final sum = left.value + right.value;
+            return Text('sum:$sum');
+          }),
+        );
+      }
+
+      await tester.pumpWidget(buildStage());
+      expect(find.text('sum:3'), findsOneWidget);
+
+      // Rebuild the same element so resolveReactiveRead uses the logical index
+      // built from the previous multi-dependency subscription set.
+      await tester.pumpWidget(buildStage());
+      expect(find.text('sum:3'), findsOneWidget);
+    });
   });
 }
 

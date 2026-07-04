@@ -203,8 +203,8 @@ class LxComputed<T> extends _ComputedBase<T> {
       T resultValue;
       try {
         resultValue = _compute();
-      } catch (e) {
-        throw e;
+      } catch (_) {
+        rethrow;
       } finally {
         _isComputing = false;
       }
@@ -232,8 +232,8 @@ class LxComputed<T> extends _ComputedBase<T> {
     T resultValue;
     try {
       resultValue = _compute();
-    } catch (e) {
-      throw e;
+    } catch (_) {
+      rethrow;
     } finally {
       _LevitReactiveCore.proxy = previousProxy;
       _isComputing = false;
@@ -275,8 +275,8 @@ class LxComputed<T> extends _ComputedBase<T> {
       if (!LevitReactiveMiddleware.hasGraphChangeMiddlewares) {
         try {
           return _compute();
-        } catch (e) {
-          throw e;
+        } catch (_) {
+          rethrow;
         }
       }
 
@@ -289,8 +289,8 @@ class LxComputed<T> extends _ComputedBase<T> {
 
         try {
           computationResult = _compute();
-        } catch (e) {
-          throw e;
+        } catch (_) {
+          rethrow;
         }
 
         // Publish graph changes only when dependency set was observed.
@@ -307,8 +307,8 @@ class LxComputed<T> extends _ComputedBase<T> {
     // Active observer already captures dependencies upstream.
     try {
       return _compute();
-    } catch (e) {
-      throw e;
+    } catch (_) {
+      rethrow;
     }
   }
 
@@ -748,7 +748,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       _cachedReactivesList = reactives.toList(growable: false);
     }
 
-    LevitReactiveMiddlewareChain.applyGraphChange(this, _cachedReactivesList!);
+    _LevitReactiveMiddlewareChain.applyGraphChange(this, _cachedReactivesList!);
   }
 
   // ---------------------------------------------------------------------------

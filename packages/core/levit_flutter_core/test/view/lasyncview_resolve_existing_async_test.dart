@@ -1,0 +1,22 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:levit_flutter_core/levit_flutter_core.dart';
+import '../helpers.dart';
+
+void main() {
+  testWidgets('LAsyncView constructor resolves existing async', (tester) async {
+    Levit.reset(force: true);
+    Levit.lazyPutAsync(() async {
+      await Future.delayed(const Duration(milliseconds: 10));
+      return TestController()..count = 100;
+    });
+    await tester.pumpWidget(MaterialApp(
+        home: LAsyncView<TestController>(
+            loading: (_) => const Text('Loading...'),
+            builder: (context, controller) =>
+                Text('Count: ${controller.count}'))));
+    expect(find.text('Loading...'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Count: 100'), findsOneWidget);
+  });
+}

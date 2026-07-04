@@ -18,6 +18,14 @@ class ComputedChainBenchmark extends Benchmark {
   bool get isUI => false;
 
   @override
+  BenchmarkClassification get classification =>
+      BenchmarkClassification.approximate;
+
+  @override
+  String get comparisonNote =>
+      'Approximates deep computed propagation with each framework\'s closest primitive.';
+
+  @override
   BenchmarkImplementation createImplementation(Framework framework) {
     switch (framework) {
       case Framework.levit:
@@ -44,6 +52,7 @@ class BlocComputedChain extends BenchmarkImplementation {
   late _ChainCubit leaf;
   final List<_ChainCubit> chain = [];
   final List<dynamic> subs = [];
+  int expectedRoot = 0;
 
   @override
   Future<void> setup() async {
@@ -64,19 +73,27 @@ class BlocComputedChain extends BenchmarkImplementation {
       current = next;
     }
     leaf = current;
+    expectedRoot = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.computedChainRunIterations; i++) {
       final target = root.state + 1 + BenchmarkConfig.computedChainIterations;
       root.update(root.state + 1);
       // Wait for propagation to reach the leaf
       await leaf.stream.firstWhere((val) => val >= target);
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedRoot += BenchmarkConfig.computedChainRunIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final expectedLeaf = expectedRoot + BenchmarkConfig.computedChainIterations;
+    if (root.state != expectedRoot || leaf.state != expectedLeaf) {
+      throw StateError(
+          'BLoC chain mismatch: root=${root.state}, leaf=${leaf.state}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+    }
   }
 
   @override
@@ -96,12 +113,15 @@ class LevitComputedChain extends BenchmarkImplementation {
   late LxVar<int> root;
   late LxComputed<int> leaf;
   final List<LxComputed<int>> chain = [];
+  int expectedRoot = 0;
 
   @override
   Future<void> setup() async {
     root = LxVar(0);
-    LxComputed<int> current = LxComputed(() => root.value);
-    chain.add(current);
+    LxComputed<int> current = LxComputed(() => root.value + 1);
+    chain
+      ..clear()
+      ..add(current);
 
     for (int i = 0; i < BenchmarkConfig.computedChainIterations - 1; i++) {
       final prev = current;
@@ -112,24 +132,25 @@ class LevitComputedChain extends BenchmarkImplementation {
 
     // warm up
     leaf.value;
+    expectedRoot = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.computedChainRunIterations; i++) {
       root.value++;
-      // Access leaf to force propagation (pull)
-      final val = leaf.value;
-      if (val != root.value + BenchmarkConfig.computedChainIterations - 1 + i) {
-        // +i because root increases
-        // Sanity check failed? No, root increases by 1 each loop.
-        // On loop 0: root=1. leaf = 1 + 99 = 100.
-        // On loop 1: root=2. leaf = 2 + 99 = 101.
-      }
+      leaf.value;
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedRoot += BenchmarkConfig.computedChainRunIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final expectedLeaf = expectedRoot + BenchmarkConfig.computedChainIterations;
+    if (root.value != expectedRoot || leaf.value != expectedLeaf) {
+      throw StateError(
+          'Levit chain mismatch: root=${root.value}, leaf=${leaf.value}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+    }
   }
 
   @override
@@ -147,11 +168,13 @@ class VanillaComputedChain extends BenchmarkImplementation {
   late ValueNotifier<int> root;
   late ValueNotifier<int> leaf;
   final List<ValueNotifier<int>> chain = [];
+  int expectedRoot = 0;
 
   @override
   Future<void> setup() async {
     root = ValueNotifier(0);
     ValueNotifier<int> current = root;
+    chain.clear();
 
     // We can't really do "Computed" easily with ValueNotifier without boilerplate.
     // We'll simulate it by chaining listeners.
@@ -167,18 +190,24 @@ class VanillaComputedChain extends BenchmarkImplementation {
       current = next;
     }
     leaf = current;
+    expectedRoot = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.computedChainRunIterations; i++) {
       root.value++;
-      // ValueNotifier is push-based, so updating root triggers the whole chain immediately.
-      // We assume it's sync.
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedRoot += BenchmarkConfig.computedChainRunIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final expectedLeaf = expectedRoot + BenchmarkConfig.computedChainIterations;
+    if (root.value != expectedRoot || leaf.value != expectedLeaf) {
+      throw StateError(
+          'Vanilla chain mismatch: root=${root.value}, leaf=${leaf.value}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+    }
   }
 
   @override
@@ -193,30 +222,17 @@ class VanillaComputedChain extends BenchmarkImplementation {
 // --- GetX ---
 class GetXComputedChain extends BenchmarkImplementation {
   late RxInt root;
-  late int Function() leaf; // GetX computed is just a function using values
-  // Actually GetX has 'RxInt get leaf => ...' but for chaining variables we usually use nothing?
-  // Or Obx? Or Worker?
-  // GetX doesn't have a generic "Computed" class that holds state unless we use binding?
-  // We can use a simple getter: int get b => a.value + 1.
-  // But that's not cached/memoized.
-
-  // Let's use Rx<T> and bind them? No that's push.
-  // GetX doesn't really have a "Computed Signal" like Solid/Levit.
-  // It has `rx.bindStream`?
-
-  // Actually, let's skip GetX for deep chain because standard GetX usage
-  // is usually direct controller usage or workers.
-  // We'll compromise: Use 'Obx' in a widget? No this is logic benchmark.
-  // We'll use `worker` (ever).
-
   late RxInt leafRx;
   final List<Worker> workers = [];
   final List<RxInt> chain = [];
+  int expectedRoot = 0;
 
   @override
   Future<void> setup() async {
     root = 0.obs;
     RxInt current = root;
+    chain.clear();
+    workers.clear();
 
     for (int i = 0; i < BenchmarkConfig.computedChainIterations; i++) {
       final prev = current;
@@ -229,22 +245,28 @@ class GetXComputedChain extends BenchmarkImplementation {
       current = next;
     }
     leafRx = current;
+    expectedRoot = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.computedChainRunIterations; i++) {
       final target = root.value + 1 + BenchmarkConfig.computedChainIterations;
       root.value++;
-      // Wait for push-based propagation to reach the leaf
-      // GetX workers are generally microtask-based
       while (leafRx.value < target) {
         await Future.microtask(() {});
       }
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedRoot += BenchmarkConfig.computedChainRunIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final expectedLeaf = expectedRoot + BenchmarkConfig.computedChainIterations;
+    if (root.value != expectedRoot || leafRx.value != expectedLeaf) {
+      throw StateError(
+          'GetX chain mismatch: root=${root.value}, leaf=${leafRx.value}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+    }
   }
 
   @override
@@ -260,36 +282,46 @@ class RiverpodComputedChain extends BenchmarkImplementation {
   late ProviderContainer container;
   late StateProvider<int> rootProvider;
   late Provider<int> leafProvider;
+  int expectedRoot = 0;
 
   @override
   Future<void> setup() async {
     container = ProviderContainer();
     rootProvider = StateProvider((ref) => 0);
 
-    var currentProvider = Provider<int>((ref) => ref.watch(rootProvider));
+    var currentProvider = Provider<int>((ref) => ref.watch(rootProvider) + 1);
 
     for (int i = 0; i < BenchmarkConfig.computedChainIterations - 1; i++) {
       final prev = currentProvider;
-      // Define new provider depending on prev
       currentProvider = Provider<int>((ref) => ref.watch(prev) + 1);
     }
     leafProvider = currentProvider;
 
     // Warm up
     container.read(leafProvider);
+    expectedRoot = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     final notifier = container.read(rootProvider.notifier);
 
     for (int i = 0; i < BenchmarkConfig.computedChainRunIterations; i++) {
       notifier.state++;
-      container.read(leafProvider); // Pull to force eval
+      container.read(leafProvider);
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedRoot += BenchmarkConfig.computedChainRunIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final expectedLeaf = expectedRoot + BenchmarkConfig.computedChainIterations;
+    final rootValue = container.read(rootProvider);
+    final leafValue = container.read(leafProvider);
+    if (rootValue != expectedRoot || leafValue != expectedLeaf) {
+      throw StateError(
+          'Riverpod chain mismatch: root=$rootValue, leaf=$leafValue, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+    }
   }
 
   @override

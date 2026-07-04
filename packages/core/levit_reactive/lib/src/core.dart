@@ -168,7 +168,7 @@ class _LevitReactiveCore {
 
     // Middleware may wrap execution with interception and cancellation.
     final wrapped =
-        LevitReactiveMiddlewareChain.applyOnBatch(coreExecution, batchChange);
+        _LevitReactiveMiddlewareChain.applyOnBatch(coreExecution, batchChange);
     return wrapped() as R;
   }
 
@@ -232,7 +232,7 @@ class _LevitReactiveCore {
     }
 
     final wrapped =
-        LevitReactiveMiddlewareChain.applyOnBatch(coreExecution, batchChange);
+        _LevitReactiveMiddlewareChain.applyOnBatch(coreExecution, batchChange);
     return await (wrapped() as Future<dynamic>);
   }
 }
@@ -349,7 +349,7 @@ class LevitReactiveNotifier {
 
     // Listener middleware receives context for diagnostics/monitoring.
     if (LevitReactiveMiddleware.hasListenerMiddlewares && this is LxReactive) {
-      LevitReactiveMiddlewareChain.applyOnListenerAdd(
+      _LevitReactiveMiddlewareChain.applyOnListenerAdd(
           this as LxReactive, _LevitReactiveCore.listenerContext);
     }
 
@@ -379,7 +379,7 @@ class LevitReactiveNotifier {
 
     // Listener middleware receives context for diagnostics/monitoring.
     if (LevitReactiveMiddleware.hasListenerMiddlewares && this is LxReactive) {
-      LevitReactiveMiddlewareChain.applyOnListenerRemove(
+      _LevitReactiveMiddlewareChain.applyOnListenerRemove(
           this as LxReactive, _LevitReactiveCore.listenerContext);
     }
 
@@ -413,7 +413,7 @@ class LevitReactiveNotifier {
         try {
           _singleListener!();
         } catch (e, s) {
-          LevitReactiveMiddlewareChain.applyOnReactiveError(
+          _LevitReactiveMiddlewareChain.applyOnReactiveError(
               e, s, this is LxReactive ? this as LxReactive : null);
         }
       } else {
@@ -485,7 +485,7 @@ class LevitReactiveNotifier {
       try {
         _singleListener!();
       } catch (e, s) {
-        LevitReactiveMiddlewareChain.applyOnReactiveError(
+        _LevitReactiveMiddlewareChain.applyOnReactiveError(
             e, s, this is LxReactive ? this as LxReactive : null);
       }
       return;
@@ -518,7 +518,7 @@ class LevitReactiveNotifier {
       try {
         snapshot[i]();
       } catch (e, s) {
-        LevitReactiveMiddlewareChain.applyOnReactiveError(
+        _LevitReactiveMiddlewareChain.applyOnReactiveError(
             e, s, this is LxReactive ? this as LxReactive : null);
       }
     }
@@ -574,7 +574,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       : _value = initial,
         _isSensitive = isSensitive {
     if (LevitReactiveMiddleware.hasInitMiddlewares) {
-      LevitReactiveMiddlewareChain.applyOnInit(this);
+      _LevitReactiveMiddlewareChain.applyOnInit(this);
     }
   }
 
@@ -739,7 +739,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     }
 
     final wrapped =
-        LevitReactiveMiddlewareChain.applyOnSet<T>(performSet, this, change);
+        _LevitReactiveMiddlewareChain.applyOnSet<T>(performSet, this, change);
     wrapped(val);
   }
 
@@ -793,7 +793,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       super.dispose();
       _checkActive();
     } else {
-      final wrapped = LevitReactiveMiddlewareChain.applyOnDispose(() {
+      final wrapped = _LevitReactiveMiddlewareChain.applyOnDispose(() {
         _cleanupBinding();
         _controller?.close();
         super.dispose();
@@ -843,7 +843,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       }
     }
 
-    final wrapped = LevitReactiveMiddlewareChain.applyOnSet<T>(
+    final wrapped = _LevitReactiveMiddlewareChain.applyOnSet<T>(
         performRefresh, this, change);
     wrapped(_value);
   }

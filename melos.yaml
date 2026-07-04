@@ -12,6 +12,10 @@ command:
     usePubspecOverrides: true
 
 scripts:
+  ci:
+    run: dart run scripts/ci.dart
+    description: Run analysis and test checks
+
   analyze:
     run: dart analyze --fatal-infos
     description: Run static analysis
@@ -44,8 +48,12 @@ scripts:
         - flutter_dev_tool
 
   coverage:
-    run: dart run scripts/check_coverage.dart
+    run: dart run scripts/check_coverage.dart --fail-under=100
     description: Run coverage checks
+
+  publish:dry-run:
+    run: dart run scripts/publish_dry_run.dart
+    description: Validate publishable packages without publishing
 
   stress:
     run: dart run scripts/stress_test.dart
@@ -54,6 +62,10 @@ scripts:
   benchmarks:
     run: flutter test benchmarks
     description: Run benchmarks
+
+  report:benchmarks:
+    run: dart run scripts/benchmark_report.dart
+    description: Regenerate benchmark report
 
   format:
     run: dart format .

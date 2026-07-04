@@ -1,0 +1,28 @@
+---
+description: Levit framework conventions for Dart and Flutter code in this repo
+globs: **/*.{dart,md}
+alwaysApply: true
+---
+
+# Levit agent guidance
+
+Read `LLM-Short.txt` for routine work. Read `LLM.txt` for scopes, stores,
+async DI, middleware, or unfamiliar APIs. See `AGENTS.md` for the full index.
+
+## Always
+
+1. Identify the lifetime boundary first (app / route / feature / subtree / test).
+2. Prefer `package:levit_flutter/levit_flutter.dart` or `package:levit/levit.dart`.
+3. Flutter widgets: `context.levit.find<T>()` — not `Levit.find` under `LScope`.
+4. Flutter `main()`: call `Levit.enableAutoLinking()` before `runApp`.
+5. Controllers/stores own logic; widgets stay thin; use `LWatch` for rebuilds.
+
+## Avoid
+
+- Feature state in global scope
+- Manual scope create/dispose in ordinary widget code
+- Low-level core package imports when kits are enough
+
+## Examples
+
+`examples/task_board`, `examples/route_scopes`, `examples/async_catalog`

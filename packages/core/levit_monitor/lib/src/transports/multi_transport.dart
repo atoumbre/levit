@@ -13,9 +13,14 @@ class MultiTransport implements LevitTransport {
     for (final transport in transports) {
       try {
         transport.send(event);
-      } catch (e) {
+      } catch (e, stackTrace) {
         // One failing sink must not block delivery to other sinks.
-        print('Error sending event to transport ${transport.runtimeType}: $e');
+        _logTransportFailure(
+          'send',
+          transport,
+          e,
+          stackTrace: stackTrace,
+        );
       }
     }
   }
@@ -25,8 +30,13 @@ class MultiTransport implements LevitTransport {
     for (final transport in transports) {
       try {
         await transport.close();
-      } catch (e) {
-        print('Error closing transport ${transport.runtimeType}: $e');
+      } catch (e, stackTrace) {
+        _logTransportFailure(
+          'close',
+          transport,
+          e,
+          stackTrace: stackTrace,
+        );
       }
     }
   }
@@ -59,4 +69,18 @@ class MultiTransport implements LevitTransport {
 
     return controller.stream;
   }
+}
+
+void _logTransportFailure(
+  String operation,
+  LevitTransport transport,
+  Object error, {
+  StackTrace? stackTrace,
+}) {
+  dev.log(
+    'LevitMonitor: Failed to $operation transport ${transport.runtimeType}',
+    error: error,
+    stackTrace: stackTrace,
+    name: 'levit_monitor',
+  );
 }

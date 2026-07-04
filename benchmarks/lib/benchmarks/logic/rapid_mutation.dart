@@ -37,21 +37,29 @@ class RapidMutationBenchmark extends Benchmark {
 // --- Levit ---
 class LevitRapidMutation extends BenchmarkImplementation {
   late LxVar<int> counter;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     counter = LxVar(0);
     counter.addListener(() {});
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       counter.value++;
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.rapidMutationIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (counter.value != expectedValue) {
+      throw StateError(
+          'Levit counter mismatch: expected $expectedValue, got ${counter.value}');
+    }
   }
 
   @override
@@ -63,21 +71,29 @@ class LevitRapidMutation extends BenchmarkImplementation {
 // --- Vanilla ---
 class VanillaRapidMutation extends BenchmarkImplementation {
   late ValueNotifier<int> counter;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     counter = ValueNotifier(0);
     counter.addListener(() {});
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       counter.value++;
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.rapidMutationIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (counter.value != expectedValue) {
+      throw StateError(
+          'Vanilla counter mismatch: expected $expectedValue, got ${counter.value}');
+    }
   }
 
   @override
@@ -89,21 +105,29 @@ class VanillaRapidMutation extends BenchmarkImplementation {
 // --- GetX ---
 class GetXRapidMutation extends BenchmarkImplementation {
   late RxInt counter;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     counter = 0.obs;
     counter.listen((_) {});
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       counter.value++;
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.rapidMutationIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (counter.value != expectedValue) {
+      throw StateError(
+          'GetX counter mismatch: expected $expectedValue, got ${counter.value}');
+    }
   }
 
   @override
@@ -121,21 +145,29 @@ class _CounterCubit extends Cubit<int> {
 class BlocRapidMutation extends BenchmarkImplementation {
   // ignore: library_private_types_in_public_api
   late _CounterCubit cubit;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     cubit = _CounterCubit();
     cubit.stream.listen((_) {});
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       cubit.increment();
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.rapidMutationIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    if (cubit.state != expectedValue) {
+      throw StateError(
+          'BLoC counter mismatch: expected $expectedValue, got ${cubit.state}');
+    }
   }
 
   @override
@@ -148,23 +180,32 @@ class BlocRapidMutation extends BenchmarkImplementation {
 class RiverpodRapidMutation extends BenchmarkImplementation {
   late ProviderContainer container;
   late StateProvider<int> provider;
+  int expectedValue = 0;
 
   @override
   Future<void> setup() async {
     container = ProviderContainer();
     provider = StateProvider((ref) => 0);
     container.listen(provider, (previous, next) {});
+    expectedValue = 0;
   }
 
   @override
-  Future<int> run() async {
-    final stopwatch = Stopwatch()..start();
+  Future<void> run() async {
     final notifier = container.read(provider.notifier);
     for (int i = 0; i < BenchmarkConfig.rapidMutationIterations; i++) {
       notifier.state++;
     }
-    stopwatch.stop();
-    return stopwatch.elapsedMicroseconds;
+    expectedValue += BenchmarkConfig.rapidMutationIterations;
+  }
+
+  @override
+  Future<void> verify() async {
+    final value = container.read(provider);
+    if (value != expectedValue) {
+      throw StateError(
+          'Riverpod counter mismatch: expected $expectedValue, got $value');
+    }
   }
 
   @override

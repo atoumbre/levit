@@ -73,7 +73,14 @@ class LevitReactiveBatch implements LevitReactiveChange<void> {
       : batchId = batchId ?? ++_batchCounter,
         _timestamp = timestamp;
 
-  /// Legacy factory for constructing a batch from a list of changes.
+  /// Legacy factory retained for source compatibility.
+  ///
+  /// Deprecated because batches now require `(reactive, change)` tuples and
+  /// this factory cannot preserve reactive origins.
+  @Deprecated(
+    'Use LevitReactiveBatch(entries) with (reactive, change) tuples; '
+    'fromChanges will be removed in a future release.',
+  )
   factory LevitReactiveBatch.fromChanges(List<LevitReactiveChange> changes) {
     return LevitReactiveBatch([]);
   }
@@ -207,40 +214,59 @@ abstract class LevitReactiveMiddleware {
     LevitReactiveMiddleware middleware, {
     Object? token,
   }) {
-    if (token != null) {
-      final existingByToken = _middlewaresByToken[token];
-      if (existingByToken != null) {
-        if (identical(existingByToken, middleware)) {
-          return middleware;
-        }
+    if (token == null) return _addUntokened(middleware);
 
-        final index = _middlewares.indexOf(existingByToken);
-        if (index >= 0) {
-          _middlewares[index] = middleware;
-        } else {
-          _middlewares.add(middleware);
-        }
-        _middlewaresByToken[token] = middleware;
-        _updateFlags();
-        return middleware;
-      }
+    final existingByToken = _middlewaresByToken[token];
+    if (identical(existingByToken, middleware)) return middleware;
 
-      if (_middlewares.contains(middleware)) {
-        _middlewaresByToken[token] = middleware;
-        return middleware;
-      }
-
-      _middlewares.add(middleware);
-      _middlewaresByToken[token] = middleware;
-      _updateFlags();
-      return middleware;
+    if (existingByToken != null) {
+      return _replaceTokenized(token, existingByToken, middleware);
     }
 
     if (_middlewares.contains(middleware)) {
-      return middleware;
+      return _attachToken(token, middleware);
     }
 
+    return _addTokenized(token, middleware);
+  }
+
+  static LevitReactiveMiddleware _addUntokened(
+    LevitReactiveMiddleware middleware,
+  ) {
+    if (_middlewares.contains(middleware)) return middleware;
+
     _middlewares.add(middleware);
+    _updateFlags();
+    return middleware;
+  }
+
+  static LevitReactiveMiddleware _attachToken(
+    Object token,
+    LevitReactiveMiddleware middleware,
+  ) {
+    _middlewaresByToken[token] = middleware;
+    return middleware;
+  }
+
+  static LevitReactiveMiddleware _addTokenized(
+    Object token,
+    LevitReactiveMiddleware middleware,
+  ) {
+    _middlewares.add(middleware);
+    _middlewaresByToken[token] = middleware;
+    _updateFlags();
+    return middleware;
+  }
+
+  static LevitReactiveMiddleware _replaceTokenized(
+    Object token,
+    LevitReactiveMiddleware existingByToken,
+    LevitReactiveMiddleware middleware,
+  ) {
+    final index = _middlewares.indexOf(existingByToken);
+    if (index >= 0) _middlewares[index] = middleware;
+    if (index < 0) _middlewares.add(middleware);
+    _middlewaresByToken[token] = middleware;
     _updateFlags();
     return middleware;
   }
@@ -261,6 +287,12 @@ abstract class LevitReactiveMiddleware {
     final middleware = _middlewaresByToken.remove(token);
     if (middleware == null) return false;
 
+    return _removeByTokenizedMiddleware(middleware);
+  }
+
+  static bool _removeByTokenizedMiddleware(
+    LevitReactiveMiddleware middleware,
+  ) {
     final removed = _middlewares.remove(middleware);
     if (removed) {
       _updateFlags();
@@ -352,7 +384,7 @@ typedef LxOnDispose = void Function() Function(
 );
 
 /// Internal utility for applying the middleware chain.
-abstract class LevitReactiveMiddlewareChain {
+abstract class _LevitReactiveMiddlewareChain {
   /// Applies the [LevitReactiveMiddleware.onSet] chain to a value mutation.
   static void Function(T) applyOnSet<T>(
     void Function(T) next,
@@ -510,17 +542,21 @@ class LevitReactiveHistoryMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnBatch? get onBatch => (next, change) {
-        return () {
-          if (_isRestoring) return next();
-          _batchDepth++;
-          try {
-            return next();
-          } finally {
-            _batchDepth--;
-            if (_batchDepth == 0 && change.isNotEmpty) _addChange(change);
-          }
-        };
+        return () => _runBatchChange(next, change);
       };
+
+  dynamic _runBatchChange(dynamic Function() next, LevitReactiveBatch change) {
+    if (_isRestoring) return next();
+    _batchDepth++;
+    // dart format off
+    try {
+      return next();
+    } finally {
+      // dart format on
+      _batchDepth--;
+      if (_batchDepth == 0 && change.isNotEmpty) _addChange(change);
+    }
+  }
 
   void _addChange(LevitReactiveChange change) {
     _undoStack.add(change);

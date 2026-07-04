@@ -96,7 +96,8 @@ void main() {
     testWidgets('LScopedView supports Composition', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: LScopedView<TestController>(
-          dependencyFactory: (scope) => scope.put(() => TestController()),
+          dependencyFactory: (scope) =>
+              scope.put<TestController>(() => TestController()),
           builder: (context, c) => Text('ScopedComposition: ${c.count.value}'),
         ),
       ));

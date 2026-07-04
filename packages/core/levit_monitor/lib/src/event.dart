@@ -423,6 +423,60 @@ class DependencyDeleteEvent extends DependencyEvent {
 }
 
 // ============================================================================
+// Log Events
+// ============================================================================
+
+/// Event triggered for custom application logs.
+class LogEvent extends MonitorEvent {
+  /// The severity level of the log.
+  final Level level;
+
+  /// The primary data or message being logged. Can be a string or a serializable object.
+  final Object? data;
+
+  /// An optional error associated with the log.
+  final Object? error;
+
+  /// An optional stack trace associated with the log.
+  final StackTrace? stackTrace;
+
+  LogEvent({
+    required super.sessionId,
+    required this.level,
+    this.data,
+    this.error,
+    this.stackTrace,
+  });
+
+  @override
+  Map<String, dynamic> toJson() => {
+        ...super.toJson(),
+        'type': 'log',
+        'level': level.name,
+        'data': _serializeData(data),
+        if (error != null) 'error': MonitorEvent._stringify(error),
+        if (stackTrace != null)
+          'stackTrace': MonitorEvent._stringify(stackTrace),
+      };
+
+  static dynamic _serializeData(Object? data) {
+    if (data == null) return null;
+    if (data is num || data is String || data is bool) return data;
+    try {
+      // Attempt to encode to check if serializable or if it has `toJson()`
+      jsonEncode(data);
+      return data;
+    } catch (_) {
+      try {
+        return (data as dynamic).toJson();
+      } catch (_) {
+        return MonitorEvent._stringify(data);
+      }
+    }
+  }
+}
+
+// ============================================================================
 // Snapshot Events
 // ============================================================================
 
