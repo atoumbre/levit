@@ -432,11 +432,11 @@ class LevitScope {
 
     final cachedScope = _readCachedScope(key);
     if (cachedScope != null) {
-      try {
-        return cachedScope.findOrNull<S>(tag: tag);
-      } catch (_) {
-        _resolutionCache.remove(key); // coverage:ignore-line
+      final instance = cachedScope.findOrNull<S>(tag: tag);
+      if (instance != null) {
+        return instance;
       }
+      _resolutionCache.remove(key);
     }
 
     if (_parentScope != null) {

@@ -44,6 +44,32 @@ void main() {
       expect(child.findOrNull<String>(tag: 't'), 'root');
     });
 
+    test('findOrNull(tag) returns cached parent result', () {
+      final root = LevitScope.root('root_or_null_cached');
+      root.put<String>(() => 'root', tag: 't');
+      final child = root.createScope('child_or_null_cached');
+      final key = LevitScopeKey.of<String>(tag: 't');
+
+      expect(child.findOrNull<String>(tag: 't'), 'root');
+      expect(_resolutionCache(child).containsKey(key), isTrue);
+      expect(child.findOrNull<String>(tag: 't'), 'root');
+    });
+
+    test('findOrNull(tag) evicts cached parent when value disappears', () {
+      final root = LevitScope.root('root_or_null_stale');
+      root.put<String>(() => 'root', tag: 't');
+      final child = root.createScope('child_or_null_stale');
+      final key = LevitScopeKey.of<String>(tag: 't');
+
+      expect(child.findOrNull<String>(tag: 't'), 'root');
+      expect(_resolutionCache(child).containsKey(key), isTrue);
+
+      root.delete<String>(tag: 't');
+
+      expect(child.findOrNull<String>(tag: 't'), isNull);
+      expect(_resolutionCache(child).containsKey(key), isFalse);
+    });
+
     test('findAsync(tag) falls back when cached scope recurses', () async {
       final root = LevitScope.root('root_async');
       root.put<String>(() => 'root', tag: 't');
@@ -97,10 +123,12 @@ void main() {
 
 void _setResolutionCache(
     LevitScope scope, LevitScopeKey key, LevitScope cached) {
+  _resolutionCache(scope)[key] = cached;
+}
+
+Map<LevitScopeKey, LevitScope> _resolutionCache(LevitScope scope) {
   final mirror = reflect(scope);
   final lib = mirror.type.owner as LibraryMirror;
   final symbol = MirrorSystem.getSymbol('_resolutionCache', lib);
-  final cache =
-      mirror.getField(symbol).reflectee as Map<LevitScopeKey, LevitScope>;
-  cache[key] = cached;
+  return mirror.getField(symbol).reflectee as Map<LevitScopeKey, LevitScope>;
 }

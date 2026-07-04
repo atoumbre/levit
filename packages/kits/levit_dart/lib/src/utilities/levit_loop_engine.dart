@@ -372,18 +372,13 @@ class _IsolateLoopService implements StoppableService {
 
     late final StreamSubscription<dynamic> commandSubscription;
     commandSubscription = commandPort.listen((message) {
-      if (message == 'pause') {
-        executor.pause();
-      } else if (message == 'resume') {
-        executor.resume();
-        // coverage:ignore-start
-      } else if (message == 'stop') {
-        executor.stop();
-        commandSubscription.cancel();
-        commandPort.close();
-        Isolate.exit();
-      }
-      // coverage:ignore-end
+      _handleCommand(
+        message,
+        executor,
+        commandSubscription,
+        commandPort,
+        () => Isolate.exit(),
+      );
     });
 
     // Isolate loop starts only after command port handshake is established.
@@ -391,6 +386,25 @@ class _IsolateLoopService implements StoppableService {
       executor.pause();
     }
     executor.start();
+  }
+
+  static void _handleCommand(
+    dynamic message,
+    _LoopExecutor executor,
+    StreamSubscription<dynamic> commandSubscription,
+    ReceivePort commandPort,
+    void Function() exit,
+  ) {
+    if (message == 'pause') {
+      executor.pause();
+    } else if (message == 'resume') {
+      executor.resume();
+    } else if (message == 'stop') {
+      executor.stop();
+      unawaited(commandSubscription.cancel());
+      commandPort.close();
+      exit();
+    }
   }
 }
 
