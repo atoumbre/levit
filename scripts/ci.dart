@@ -1,6 +1,6 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
+
+import 'src/process_runner.dart';
 
 Future<void> main(List<String> args) async {
   final phases = <_Phase>[
@@ -58,7 +58,7 @@ Future<void> main(List<String> args) async {
   for (final phase in phases) {
     final startedAt = DateTime.now();
     print('Running ${phase.name}...');
-    final result = await _runProcess(
+    final result = await runProcess(
       phase.command,
       workingDirectory: Directory.current.path,
       timeout: const Duration(minutes: 15),
@@ -88,7 +88,7 @@ String _formatDuration(Duration duration) {
   return '${minutes}m ${seconds}s';
 }
 
-void _printCapturedOutput(_ProcessOutcome result) {
+void _printCapturedOutput(ProcessOutcome result) {
   if (result.stdout.trim().isNotEmpty) {
     print('\nstdout:\n${result.stdout.trimRight()}');
   }
@@ -105,53 +105,4 @@ class _Phase {
     required this.name,
     required this.command,
   });
-}
-
-class _ProcessOutcome {
-  final int exitCode;
-  final String stdout;
-  final String stderr;
-  final bool timedOut;
-
-  const _ProcessOutcome({
-    required this.exitCode,
-    required this.stdout,
-    required this.stderr,
-    required this.timedOut,
-  });
-}
-
-Future<_ProcessOutcome> _runProcess(
-  List<String> command, {
-  required String workingDirectory,
-  required Duration timeout,
-}) async {
-  final process = await Process.start(
-    command.first,
-    command.sublist(1),
-    workingDirectory: workingDirectory,
-  );
-
-  final stdoutFuture = process.stdout.transform(utf8.decoder).join();
-  final stderrFuture = process.stderr.transform(utf8.decoder).join();
-
-  int exitCode;
-  var timedOut = false;
-  try {
-    exitCode = await process.exitCode.timeout(timeout);
-  } on TimeoutException {
-    timedOut = true;
-    process.kill(ProcessSignal.sigterm);
-    exitCode = -1;
-  }
-
-  final stdout = await stdoutFuture;
-  final stderr = await stderrFuture;
-
-  return _ProcessOutcome(
-    exitCode: exitCode,
-    stdout: stdout,
-    stderr: stderr,
-    timedOut: timedOut,
-  );
 }
