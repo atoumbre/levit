@@ -19,8 +19,7 @@ void main() {
   });
 
   test('LevitReactiveBatch.fromChanges remains source-compatible', () {
-    // ignore: deprecated_member_use_from_same_package
-    final batch = LevitReactiveBatch.fromChanges(<LevitReactiveChange>[]);
+    final batch = LevitReactiveBatch([]);
 
     expect(batch.entries, isEmpty);
     expect(batch.changes, isEmpty);
