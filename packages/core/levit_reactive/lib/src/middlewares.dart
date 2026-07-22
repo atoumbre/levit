@@ -73,18 +73,6 @@ class LevitReactiveBatch implements LevitReactiveChange<void> {
       : batchId = batchId ?? ++_batchCounter,
         _timestamp = timestamp;
 
-  /// Legacy factory retained for source compatibility.
-  ///
-  /// Deprecated because batches now require `(reactive, change)` tuples and
-  /// this factory cannot preserve reactive origins.
-  @Deprecated(
-    'Use LevitReactiveBatch(entries) with (reactive, change) tuples; '
-    'fromChanges will be removed in a future release.',
-  )
-  factory LevitReactiveBatch.fromChanges(List<LevitReactiveChange> changes) {
-    return LevitReactiveBatch([]);
-  }
-
   /// Returns just the list of state changes from the batch.
   List<LevitReactiveChange> get changes => entries.map((e) => e.$2).toList();
 

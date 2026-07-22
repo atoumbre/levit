@@ -60,6 +60,12 @@ class LevitDependency<S> {
   final Future<S> Function()? asyncBuilder;
 
   /// Whether the registration persists across a non-forced [LevitScope.reset].
+  ///
+  /// [LevitScope.dispose] always calls [LevitScope.reset] with `force: true`,
+  /// so permanent dependencies do not survive disposed scopes (including
+  /// unmounted [LScope] widgets and typical widget-test tear-down). Prefer
+  /// `permanent: true` on root / long-lived scopes; on short-lived page scopes
+  /// it does not extend lifetime past widget unmount.
   final bool permanent;
 
   /// Whether the instance creation is deferred until the first lookup.
@@ -185,7 +191,9 @@ class LevitScope {
   /// scope.put(() => AuthService());
   /// ```
   ///
-  /// Use [permanent] to prevent the dependency from being disposed during a [reset].
+  /// Use [permanent] to survive a *non-forced* [reset] only.
+  /// [dispose] always resets with `force: true`, so permanents do not leak
+  /// across disposed scopes. Prefer permanent on root / long-lived scopes.
   ///
   /// Returns the created instance.
   S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
@@ -215,7 +223,9 @@ class LevitScope {
   /// If [isFactory] is `true`, a new instance will be created for *every* request.
   /// Otherwise (default), the instance is cached and treated as a singleton within this scope.
   ///
-  /// Use [permanent] to prevent the registration from being cleared during a [reset].
+  /// Use [permanent] to survive a *non-forced* [reset] only.
+  /// [dispose] always resets with `force: true`. Prefer permanent on root /
+  /// long-lived scopes.
   void lazyPut<S>(S Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
     final key = _getKey<S>(tag);
@@ -249,6 +259,10 @@ class LevitScope {
   ///
   /// If [isFactory] is `true`, the builder is called for *every* request.
   /// Otherwise, the result is cached.
+  ///
+  /// Use [permanent] to survive a *non-forced* [reset] only.
+  /// [dispose] always resets with `force: true`. Prefer permanent on root /
+  /// long-lived scopes.
   ///
   /// Returns a function that allows retrieving the dependency (shortcut for `findAsync`).
   Future<S> Function() lazyPutAsync<S>(

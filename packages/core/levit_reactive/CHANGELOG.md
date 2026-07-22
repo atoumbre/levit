@@ -1,9 +1,10 @@
 
-## Unreleased
-- Preserved original stack traces when synchronous `LxComputed` evaluations fail.
-- Deprecated the legacy `LevitReactiveBatch.fromChanges` factory.
+## 0.0.9
+- Coordinated release version bump.
 
 ## 0.0.8
+- Preserved original stack traces when synchronous `LxComputed` evaluations fail.
+- Deprecated the legacy `LevitReactiveBatch.fromChanges` factory.
 - Coordinated release version bump.
 
 ## 0.0.7

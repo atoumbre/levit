@@ -1,7 +1,7 @@
 name: levit_scope
 description: Hierarchical dependency scopes with deterministic ownership and teardown.
 repository: https://github.com/softilab/levit
-version: 0.0.8
+version: 0.0.9
 topics:
   - dependency-injection
   - service-locator

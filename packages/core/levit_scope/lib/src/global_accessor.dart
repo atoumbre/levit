@@ -38,7 +38,9 @@ class Ls {
   /// ```
   ///
   /// Use [tag] to differentiate multiple instances of the same type.
-  /// Set [permanent] to `true` to persist the instance across resets.
+  /// Set [permanent] to `true` to survive a *non-forced* reset only.
+  /// Scope [LevitScope.dispose] always force-clears permanents.
+  /// Prefer permanent on root / long-lived scopes.
   ///
   /// Returns the created instance.
   static S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
@@ -50,7 +52,8 @@ class Ls {
   /// The [builder] is executed only when the dependency is first requested.
   ///
   /// Use [tag] to differentiate multiple instances of the same type.
-  /// Set [permanent] to `true` to persist the registration across resets.
+  /// Set [permanent] to `true` to survive a *non-forced* reset only.
+  /// Scope [LevitScope.dispose] always force-clears permanents.
   /// Set [isFactory] to `true` to create a new instance every time [find] is called.
   static void lazyPut<S>(S Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
@@ -63,7 +66,8 @@ class Ls {
   /// Use [Ls.findAsync] to retrieve the instance.
   ///
   /// Use [tag] to differentiate multiple instances of the same type.
-  /// Set [permanent] to `true` to persist the registration across resets.
+  /// Set [permanent] to `true` to survive a *non-forced* reset only.
+  /// Scope [LevitScope.dispose] always force-clears permanents.
   /// Set [isFactory] to `true` to re-run the builder for every [findAsync] call.
   static Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {

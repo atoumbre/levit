@@ -95,7 +95,9 @@ class Levit {
   /// Instantiates and registers a dependency.
   ///
   /// The [builder] is executed immediately.
-  /// If [permanent] is true, the instance survives [reset].
+  /// If [permanent] is true, the instance survives a *non-forced* [reset].
+  /// Scope dispose always resets with `force: true`, so permanents do not leak
+  /// across disposed scopes. Prefer permanent on root / long-lived scopes.
   ///
   /// // Example usage:
   /// ```dart
@@ -110,7 +112,8 @@ class Levit {
   /// The [builder] runs only when the dependency is first requested.
   ///
   /// *   If [isFactory] is true, [builder] runs on every request.
-  /// *   If [permanent] is true, registration survives [reset].
+  /// *   If [permanent] is true, registration survives a *non-forced* [reset].
+  ///     Scope dispose always force-clears permanents.
   static void lazyPut<S>(S Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
     Ls.lazyPut<S>(builder,
@@ -120,6 +123,8 @@ class Levit {
   /// Registers an asynchronous lazy dependency builder.
   ///
   /// Retrieve the instance using [findAsync].
+  /// If [permanent] is true, registration survives a *non-forced* [reset].
+  /// Scope dispose always force-clears permanents.
   static Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
     return Ls.lazyPutAsync<S>(builder,

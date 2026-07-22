@@ -1,9 +1,12 @@
 # Changelog
 
-## Unreleased
-- Refactored task-engine support code into smaller internal modules without changing the public API.
+## 0.0.9
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.9`.
+
 
 ## 0.0.8
+- Refactored task-engine support code into smaller internal modules without changing the public API.
 - Coordinated release version bump.
 - Updated internal package constraints to `^0.0.8`.
 

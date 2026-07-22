@@ -1,7 +1,7 @@
 name: levit_flutter_core
 description: Flutter bindings for Levit scopes, rebuild boundaries, and widget-tree ownership.
 repository: https://github.com/softilab/levit
-version: 0.0.8
+version: 0.0.9
 topics:
   - flutter
   - state-management
@@ -14,7 +14,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  levit_dart_core: ^0.0.8
+  levit_dart_core: ^0.0.9
 
 dev_dependencies:
   flutter_test:

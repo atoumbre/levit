@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 
 export 'package:levit_dart/levit_dart.dart';
 export 'package:levit_flutter_core/levit_flutter_core.dart';
+export 'src/overlays.dart';
 
 // Part files require these symbols at library scope for mixin constraints.
 import 'package:levit_dart/levit_dart.dart'

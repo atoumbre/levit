@@ -51,3 +51,13 @@ bool _scopeArgsMatch(List<Object?>? a, List<Object?>? b) {
   }
   return true;
 }
+
+/// Generates a unique diagnostic scope name when callers omit [name]/[scopeName].
+///
+/// [typeSource] is typically the widget (so subclasses like `HomePage` appear in
+/// logs), or a string label for framework fallbacks. [host] should be a stable
+/// identity such as a [State] or [Element].
+String _uniqueScopeName(Object typeSource, Object host) {
+  final label = typeSource is String ? typeSource : '${typeSource.runtimeType}';
+  return '$label@${identityHashCode(host)}';
+}

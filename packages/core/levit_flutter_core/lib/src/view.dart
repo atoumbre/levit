@@ -2,8 +2,14 @@ part of '../levit_flutter_core.dart';
 
 /// A widget that consumes a [LevitController] and builds UI.
 ///
-/// [LView] combines finding a controller and building a reactive widget key.
-/// By default, the build method acts as an [LWatch], triggering rebuilds on reactive changes.
+/// [LView] combines finding a controller and building a reactive widget tree.
+/// When [autoWatch] is `true` (the default), [buildView] / [builder] run inside
+/// an [LWatch], so reactive reads rebuild the view automatically.
+///
+/// With [autoWatch] enabled, read reactives directly in [buildView] / [builder].
+/// Do **not** wrap the entire return value in another [LWatch] — that creates a
+/// redundant outer watch. Use nested [LWatch] only for partial rebuilds, or set
+/// [autoWatch] to `false` when you manage watching yourself.
 ///
 /// Usage:
 /// 1.  **Subclass:**
@@ -36,7 +42,10 @@ class LView<T> extends StatefulWidget {
   /// a [StateError] is thrown.
   final Widget Function(BuildContext context)? orElse;
 
-  /// Whether to wrap the view in an [LWatch].
+  /// Whether to wrap [buildView] / [builder] in an [LWatch].
+  ///
+  /// Defaults to `true`. When `true`, read reactives directly in the build
+  /// method; do not wrap the whole tree in another [LWatch].
   final bool autoWatch;
 
   /// Optional dependency keys for re-resolution.

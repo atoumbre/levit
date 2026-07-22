@@ -49,9 +49,10 @@ class CounterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return LScopedView<CounterController>.put(
       () => CounterController(),
+      // autoWatch is true by default — read reactives directly; no outer LWatch.
       builder: (context, controller) => Scaffold(
         body: Center(
-          child: LWatch(() => Text('Count: ${controller.count()}')),
+          child: Text('Count: ${controller.count()}'),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: controller.increment,
@@ -62,6 +63,12 @@ class CounterPage extends StatelessWidget {
   }
 }
 ```
+
+## Overlays
+
+Use `showLevitDialog` / `showLevitModalBottomSheet` when an imperative overlay
+must resolve page- or app-local dependencies with `context.levit.find`
+(they wrap content with `LScope.capture`).
 
 ## Design Principles
 

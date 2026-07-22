@@ -3,8 +3,12 @@ part of '../levit_flutter_core.dart';
 /// A widget that manages its own dependency scope and builds a view.
 ///
 /// [LScopedView] creates a new [LevitScope] for its subtree, registers dependencies
-/// via [dependencyFactory], and then builds the UI using [LView].
+/// via [dependencyFactory] / [onConfigScope], and then builds the UI using [LView].
 /// When the widget is unmounted, the scope and all its dependencies are disposed.
+///
+/// Sub-classing with [onConfigScope] is a first-class pattern alongside
+/// [LScopedView.put]. With [autoWatch] `true` (default), read reactives directly
+/// in [buildView]; do not wrap the entire return in [LWatch].
 ///
 /// // Example usage:
 /// ```dart
@@ -18,6 +22,10 @@ class LScopedView<T> extends LView<T> {
   final LScopeDependencyFactory? dependencyFactory;
 
   /// A descriptive name for the internal scope.
+  ///
+  /// When omitted, Levit generates a unique name from this widget's runtime
+  /// type (so subclasses like `HomePage` appear in diagnostics) and state
+  /// identity. Set [scopeName] only when you want a stable label.
   final String? scopeName;
 
   const LScopedView({
@@ -96,7 +104,7 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
   @override
   Widget build(BuildContext context) {
     return LScope(
-      name: widget.scopeName,
+      name: widget.scopeName ?? _uniqueScopeName(widget, this),
       args: widget.args,
       dependencyFactory: widget.onConfigScope,
       child: Builder(
@@ -134,6 +142,10 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
   final LScopeDependencyFactory? dependencyFactory;
 
   /// A descriptive name for the internal scope.
+  ///
+  /// When omitted, Levit generates a unique name from this widget's runtime
+  /// type and state identity. Set [scopeName] only when you want a stable
+  /// label for diagnostics.
   final String? scopeName;
 
   const LScopedAsyncView({
@@ -221,7 +233,7 @@ class _LScopedAsyncViewState<T> extends State<LScopedAsyncView<T>> {
   @override
   Widget build(BuildContext context) {
     return LScope(
-      name: widget.scopeName,
+      name: widget.scopeName ?? _uniqueScopeName(widget, this),
       args: widget.args,
       dependencyFactory: widget.onConfigScope,
       child: Builder(

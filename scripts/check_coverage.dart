@@ -1,6 +1,6 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
+
+import 'src/process_runner.dart';
 
 Future<void> main(List<String> args) async {
   final rootDir = Directory.current;
@@ -152,20 +152,20 @@ Future<void> main(List<String> args) async {
       await coverageDir.delete(recursive: true);
     }
 
-    final _ProcessOutcome result;
+    final ProcessOutcome result;
     if (useDartTest) {
       if (usesDartMirrors) {
         log('[$packageName] Detected dart:mirrors in tests; using dart test.');
       } else {
         log('[$packageName] Pure Dart package; using dart test.');
       }
-      result = await _runProcess(
+      result = await runProcess(
         ['dart', 'test', '--coverage=coverage'],
         workingDirectory: package.path,
         timeout: timeout,
       );
       if (!result.timedOut && result.exitCode == 0) {
-        final formatResult = await _runProcess(
+        final formatResult = await runProcess(
           [
             'dart',
             'run',
@@ -191,7 +191,7 @@ Future<void> main(List<String> args) async {
     } else {
       // Run tests with coverage (Flutter runner). We suppress output to keep the
       // terminal clean, unless there's an error.
-      result = await _runProcess(
+      result = await runProcess(
         ['flutter', 'test', '--coverage'],
         workingDirectory: package.path,
         timeout: timeout,
@@ -672,57 +672,6 @@ void _fixLcovPaths(File lcovFile, String packagePath, String rootPath) {
   if (fixedContent != content) {
     lcovFile.writeAsStringSync(fixedContent);
   }
-}
-
-class _ProcessOutcome {
-  final int exitCode;
-  final String stdout;
-  final String stderr;
-  final bool timedOut;
-
-  _ProcessOutcome({
-    required this.exitCode,
-    required this.stdout,
-    required this.stderr,
-    required this.timedOut,
-  });
-}
-
-Future<_ProcessOutcome> _runProcess(
-  List<String> command, {
-  required String workingDirectory,
-  Duration? timeout,
-}) async {
-  final process = await Process.start(
-    command.first,
-    command.sublist(1),
-    workingDirectory: workingDirectory,
-  );
-
-  final stdoutFuture = process.stdout.transform(utf8.decoder).join();
-  final stderrFuture = process.stderr.transform(utf8.decoder).join();
-
-  int exitCode;
-  bool timedOut = false;
-  try {
-    exitCode = timeout == null
-        ? await process.exitCode
-        : await process.exitCode.timeout(timeout);
-  } on TimeoutException {
-    timedOut = true;
-    process.kill(ProcessSignal.sigterm);
-    exitCode = -1;
-  }
-
-  final stdout = await stdoutFuture;
-  final stderr = await stderrFuture;
-
-  return _ProcessOutcome(
-    exitCode: exitCode,
-    stdout: stdout,
-    stderr: stderr,
-    timedOut: timedOut,
-  );
 }
 
 bool _usesDartMirrors(Directory testDir) {

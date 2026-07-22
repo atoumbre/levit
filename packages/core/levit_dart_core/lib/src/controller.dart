@@ -20,6 +20,17 @@ part of '../levit_dart_core.dart';
 /// }
 /// ```
 ///
+/// Prefer [LxWorker] + [autoDispose] for reload / reaction side effects instead
+/// of raw `.stream.listen`:
+///
+/// ```dart
+/// autoDispose(LxWorker(contextVar, (_) async {
+///   await reload();
+/// }));
+/// ```
+///
+/// [LxWorker] is an [LxReactive], so [autoDispose] closes it with the controller.
+///
 /// Lifecycle:
 /// 1.  **Construction**: Instance created.
 /// 2.  **Attachment**: Linked to a [LevitScope].

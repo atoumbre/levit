@@ -20,6 +20,10 @@ class LScope extends StatefulWidget {
   final Widget child;
 
   /// A descriptive name for the scope (used in profiling and logs).
+  ///
+  /// When omitted, Levit generates a unique name from the widget runtime type
+  /// and state identity (for example `LScope@123456`). Set an explicit [name]
+  /// only when you want a stable label for diagnostics.
   final String? name;
 
   /// Optional dependency keys for reactive re-initialization.
@@ -174,7 +178,7 @@ class _LScopeState extends State<LScope> {
   void _initScope({LevitScope? parentScope}) {
     if (_initialized) return;
 
-    final scopeName = widget.name ?? 'LScope';
+    final scopeName = widget.name ?? _uniqueScopeName(widget, this);
     final resolvedParent = parentScope ?? _ScopeProvider.of(context);
     _parentScope = resolvedParent;
 

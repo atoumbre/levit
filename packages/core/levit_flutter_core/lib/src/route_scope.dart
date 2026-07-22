@@ -165,6 +165,9 @@ class LRouteScope extends StatelessWidget {
   final Widget child;
 
   /// A descriptive name for the scope.
+  ///
+  /// When omitted, uses [ModalRoute.settings.name] when available. Otherwise
+  /// Levit generates a unique framework fallback name.
   final String? name;
 
   /// Optional dependency keys for reactive re-initialization.
@@ -282,8 +285,11 @@ class LRouteScope extends StatelessWidget {
     return _RouteBinding(
       args: args,
       builder: (context, route, visibility, scopeArgs) {
+        final resolvedName = name ??
+            route?.settings.name ??
+            _uniqueScopeName('LRouteScope', context);
         return LScope(
-          name: name ?? route?.settings.name ?? 'LRouteScope',
+          name: resolvedName,
           args: scopeArgs,
           dependencyFactory: dependencyFactory,
           child: child,
@@ -306,6 +312,9 @@ class LAsyncRouteScope extends StatelessWidget {
   final Widget child;
 
   /// A descriptive name for the scope.
+  ///
+  /// When omitted, uses [ModalRoute.settings.name] when available. Otherwise
+  /// Levit generates a unique framework fallback name.
   final String? name;
 
   /// Optional builder for the loading state.
@@ -351,8 +360,11 @@ class LAsyncRouteScope extends StatelessWidget {
     return _RouteBinding(
       args: args,
       builder: (context, route, visibility, scopeArgs) {
+        final resolvedName = name ??
+            route?.settings.name ??
+            _uniqueScopeName('LAsyncRouteScope', context);
         return LAsyncScope(
-          name: name ?? route?.settings.name ?? 'LAsyncRouteScope',
+          name: resolvedName,
           args: scopeArgs,
           dependencyFactory: dependencyFactory,
           loading: loading,

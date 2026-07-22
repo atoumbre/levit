@@ -108,7 +108,11 @@ Registration and resolution:
 - Levit.delete<T>() / Levit.reset() — remove or clear scope contents.
 
 Use tag to disambiguate multiple registrations of the same type.
-Use permanent: true for dependencies that should survive scope reset.
+Use permanent: true for dependencies that should survive a *non-forced*
+reset. Scope dispose() always reset(force: true), so permanents do not leak
+across disposed widget scopes or widget tests that dispose the tree. Prefer
+permanent on root / long-lived scopes; on short-lived page scopes it does not
+extend lifetime past widget unmount.
 Use isFactory: true on lazyPut when each resolution should create a new instance.
 
 Register global or app-wide services in the app/root scope. Register feature,
@@ -143,6 +147,10 @@ Prefer Levit widgets over manual scope handling:
 - LScopedView, LScopedAsyncView — create a child scope and consume a dependency.
 - LRouteScope, LAsyncRouteScope — route identity as the ownership boundary.
 - LScope.capture — re-provide the nearest scope to dialogs and overlays.
+  Prefer showLevitDialog / showLevitModalBottomSheet from levit_flutter for
+  imperative overlays (capture by default).
+- Omitted name / scopeName values are auto-generated and unique; set them only
+  for stable diagnostic labels.
 
 Consume dependencies from widget code via context.levit (not bare Levit.find
 when an LScope is in the tree):
@@ -212,13 +220,28 @@ final remote = LxComputed.async(() async => await fetchCount());
 Use LxStatus<T> for async operation state (LxIdle, LxWaiting, LxSuccess,
 LxError). Render with LStatusBuilder.
 
-Use workers for side effects:
+Use workers for side effects. Prefer LxWorker + autoDispose on controllers
+over raw .stream.listen for reload / reaction glue:
 
 ```dart
-final worker = LxWorker(count, (value) {
-  print('count=$value');
-});
+class FeesController extends LevitController {
+  FeesController(this.contextVar);
+
+  final LxVar<String> contextVar;
+
+  @override
+  void onInit() {
+    super.onInit();
+    autoDispose(LxWorker(contextVar, (_) async {
+      await reload();
+    }));
+  }
+
+  Future<void> reload() async { /* ... */ }
+}
 ```
+
+LxWorker is LxReactive, so autoDispose closes it with the controller.
 
 Close long-lived reactive objects, computed values, and workers when they are
 not owned by a controller, store, or scope that handles cleanup.
@@ -271,32 +294,61 @@ runApp(
 );
 ```
 
-Screen-owned controller:
+Screen-owned controller (subclass + onConfigScope is also first-class):
 
 ```dart
 return LScopedView<CounterController>.put(
   () => CounterController(),
-  builder: (context, controller) => LWatch(
-    () => Text('Count: ${controller.count()}'),
-  ),
+  builder: (context, controller) => Text('Count: ${controller.count()}'),
 );
 ```
+
+With autoWatch true (default on LView / LScopedView), read reactives directly
+in buildView / builder. Do not wrap the entire return in LWatch. Use nested
+LWatch only for partial rebuilds, or set autoWatch: false when managing
+watches yourself.
+
+Lifetime styles (both valid):
+
+- Page-scoped: LScopedView per route/sheet; put feature controllers in
+  onConfigScope.
+- Root-permanent features: register long-lived feature controllers with
+  permanent: true on the app/root scope; consume with LView in tabs/shells.
+
+GoRouter: shell route + shell LScopedView / LView + nested page scopes is a
+supported pattern. LRouteScope / LAsyncRouteScope remain for route-tied
+ownership (see examples/route_scopes).
+
+Overlays: use LScope.capture for dialogs/sheets that must context.levit.find
+app or page deps. Prefer showLevitDialog / showLevitModalBottomSheet from
+levit_flutter (capture by default).
+
+Widget-test harness (until levit_tests ships pumpLevitApp):
+
+- Mount MaterialApp with LScope(dependencyFactory: ..., child: ...)
+- Capture the scope from dependencyFactory into a test holder
+- Prefer unique / omitted scope names (0.0.9 auto-uniques unnamed scopes)
+- After the surface is cleared, dispose the scope or call Levit.reset()
 
 Widget guide:
 
 - LWatch — build function reads one or more reactive values implicitly.
-- LBuilder — observe one explicit LxReactive.
-- LSelectorBuilder — small local derived values in hot UI paths.
-- LStatusBuilder — LxStatus<T> waiting/error/success rendering.
+- LBuilder — observe one explicit LxReactive (page UI kit).
+- LSelectorBuilder — small local derived values in hot UI paths (page UI kit).
+- LStatusBuilder — LxStatus<T> waiting/error/success rendering (page UI kit).
 - LView — dependency already exists in the nearest scope.
 - LAsyncView — async dependency resolution with loading/error builders.
-- LScopedView / LScopedAsyncView — create a child scope and own the dependency.
+- LScopedView / LScopedAsyncView — create a child scope and own the dependency
+  (subclass + onConfigScope, or .put / .store DI sugar).
 - LScope / LAsyncScope — subtree-owned lifetimes.
 - LRouteScope / LAsyncRouteScope — route identity as the ownership boundary.
 - LScope.capture — dialogs and overlays that must keep a page-local scope.
+- scopeName / name — optional stable diagnostic labels; omitted names are
+  auto-generated and unique.
 
 levit_flutter kit additions (import levit_flutter):
 
+- showLevitDialog / showLevitModalBottomSheet — overlays with LScope.capture.
 - LKeepAlive — preserve expensive subtrees in scrollable lists.
 - LListItemMonitor — subtree lifecycle monitoring.
 - LevitAppLifecycleMixin — react to app pause/resume/detach.

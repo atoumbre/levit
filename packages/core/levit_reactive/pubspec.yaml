@@ -1,7 +1,7 @@
 name: levit_reactive
 description: Fine-grained reactive primitives for deterministic updates and derived state.
 repository: https://github.com/softilab/levit
-version: 0.0.8
+version: 0.0.9
 topics:
   - state-management
   - reactive

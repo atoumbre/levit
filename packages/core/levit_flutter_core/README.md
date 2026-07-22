@@ -133,6 +133,28 @@ showDialog(
 );
 ```
 
+Prefer the kit helpers from `package:levit_flutter/levit_flutter.dart`, which
+capture by default for imperative overlays:
+
+```dart
+showLevitDialog(
+  context: context,
+  builder: (dialogContext) => Dialog(
+    child: Text(dialogContext.levit.find<PageController>().title()),
+  ),
+);
+
+showLevitModalBottomSheet(
+  context: context,
+  builder: (sheetContext) => Text(
+    sheetContext.levit.find<PageController>().title(),
+  ),
+);
+```
+
+Routed sheets (for example a `ModalBottomSheetPage`) should still wrap their
+content with `LScope.capture` when they need page-local dependencies.
+
 ## Design Principles
 
 - Tree-owned lifecycles: widget mount/unmount controls scope setup/disposal.
