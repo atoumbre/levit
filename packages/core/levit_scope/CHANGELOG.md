@@ -1,4 +1,8 @@
 
+## 0.0.9
+- Clarified `permanent` DartDoc: survives non-forced `reset` only; `dispose()` always force-clears.
+- Coordinated release version bump.
+
 ## 0.0.8
 - Hardened middleware token registration and removal edge cases.
 - Routed duplicate-scope-name diagnostics through structured debug logging.

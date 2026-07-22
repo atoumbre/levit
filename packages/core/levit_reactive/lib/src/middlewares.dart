@@ -263,7 +263,8 @@ abstract class LevitReactiveMiddleware {
   static bool remove(LevitReactiveMiddleware middleware) {
     final result = _middlewares.remove(middleware);
     if (result) {
-      _middlewaresByToken.removeWhere((_, registered) => identical(registered, middleware));
+      _middlewaresByToken
+          .removeWhere((_, registered) => identical(registered, middleware));
       _updateFlags();
     }
     return result;
@@ -335,16 +336,20 @@ abstract class LevitReactiveMiddleware {
   void Function(LxReactive reactive)? get onInit => null;
 
   /// Observes changes to the dependency graph of a computed value.
-  void Function(LxReactive computed, List<LxReactive> dependencies)? get onGraphChange => null;
+  void Function(LxReactive computed, List<LxReactive> dependencies)?
+      get onGraphChange => null;
 
   /// Observes when a new listener is added.
-  void Function(LxReactive reactive, LxListenerContext? context)? get startedListening => null;
+  void Function(LxReactive reactive, LxListenerContext? context)?
+      get startedListening => null;
 
   /// Observes when a listener is removed.
-  void Function(LxReactive reactive, LxListenerContext? context)? get stoppedListening => null;
+  void Function(LxReactive reactive, LxListenerContext? context)?
+      get stoppedListening => null;
 
   /// Observes errors caught during notification.
-  void Function(Object error, StackTrace? stack, LxReactive? context)? get onReactiveError => null;
+  void Function(Object error, StackTrace? stack, LxReactive? context)?
+      get onReactiveError => null;
 }
 
 /// Helper typedefs for middleware interception.
@@ -380,7 +385,8 @@ abstract class _LevitReactiveMiddlewareChain {
 
     for (final mw in LevitReactiveMiddleware._middlewares.reversed) {
       if (mw.onSet != null) {
-        current = mw.onSet!(current, reactive, change as LevitReactiveChange<dynamic>);
+        current = mw.onSet!(
+            current, reactive, change as LevitReactiveChange<dynamic>);
       }
     }
 
@@ -437,7 +443,8 @@ abstract class _LevitReactiveMiddlewareChain {
   }
 
   /// Notifies middlewares that a listener has been added.
-  static void applyOnListenerAdd(LxReactive reactive, LxListenerContext? context) {
+  static void applyOnListenerAdd(
+      LxReactive reactive, LxListenerContext? context) {
     if (!LevitReactiveMiddleware.hasListenerMiddlewares) {
       return;
     }
@@ -447,7 +454,8 @@ abstract class _LevitReactiveMiddlewareChain {
   }
 
   /// Notifies middlewares that a listener has been removed.
-  static void applyOnListenerRemove(LxReactive reactive, LxListenerContext? context) {
+  static void applyOnListenerRemove(
+      LxReactive reactive, LxListenerContext? context) {
     if (!LevitReactiveMiddleware.hasListenerMiddlewares) return;
     for (final mw in LevitReactiveMiddleware._middlewares) {
       mw.stoppedListening?.call(reactive, context);
@@ -455,7 +463,8 @@ abstract class _LevitReactiveMiddlewareChain {
   }
 
   /// Notifies middlewares that an error occurred.
-  static void applyOnReactiveError(Object error, StackTrace? stack, LxReactive? context) {
+  static void applyOnReactiveError(
+      Object error, StackTrace? stack, LxReactive? context) {
     if (!LevitReactiveMiddleware.hasErrorMiddlewares) return;
     for (final mw in LevitReactiveMiddleware._middlewares) {
       mw.onReactiveError?.call(error, stack, context);

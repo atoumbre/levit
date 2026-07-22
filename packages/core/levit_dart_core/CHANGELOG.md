@@ -1,4 +1,10 @@
 
+## 0.0.9
+- Clarified `permanent` on `put` / `lazyPut` / `lazyPutAsync` vs scope `dispose(force)`.
+- Documented `autoDispose(LxWorker(...))` as the preferred controller reload recipe.
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.9`.
+
 ## 0.0.8
 - Hardened controller cleanup handling for known disposable types and centralized fallback cleanup paths.
 - Improved auto-linking diagnostics for missing capture-zone state.

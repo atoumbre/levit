@@ -25,6 +25,10 @@ class LAsyncScope extends StatefulWidget {
   final Widget child;
 
   /// A descriptive name for the scope.
+  ///
+  /// When omitted, Levit generates a unique name from the widget runtime type
+  /// and state identity. Set an explicit [name] only when you want a stable
+  /// label for diagnostics.
   final String? name;
 
   /// Optional builder for the loading state.
@@ -75,7 +79,7 @@ class _LAsyncScopeState extends State<LAsyncScope> {
   void _initScope({LevitScope? parentScope}) {
     if (_initialized) return;
 
-    final scopeName = widget.name ?? 'LAsyncScope';
+    final scopeName = widget.name ?? _uniqueScopeName(widget, this);
 
     // Parent scope is resolved from inherited context, not global scope.
     final resolvedParent = parentScope ?? _ScopeProvider.of(context);

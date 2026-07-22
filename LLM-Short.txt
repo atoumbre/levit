@@ -41,13 +41,18 @@ Dependency Injection
 - Levit.lazyPutAsync(() async => ...) — async lazy; resolve with findAsync
 - Levit.find<T>() — resolve from active scope (pure Dart / no widget scope)
 - context.levit.find<T>() — resolve from nearest widget scope (Flutter)
-- tag, permanent, isFactory — disambiguation and lifetime control
+- tag, isFactory — disambiguation / per-resolve factories
+- permanent: true — survives non-forced reset only; scope dispose() always
+  force-clears (no leak across disposed widget scopes / widget tests)
 
 Register app-wide deps in root scope; feature/route deps in owning scope.
+Page-scoped LScopedView and root-permanent feature controllers are both valid.
 Use LevitStore / LevitAsyncStore for portable per-scope state recipes.
 
 Flutter scope widgets: LScope, LAsyncScope, LScope.put, LScopedView,
-LScopedAsyncView, LRouteScope, LAsyncRouteScope, LScope.capture (dialogs).
+LScopedAsyncView, LRouteScope, LAsyncRouteScope, LScope.capture,
+showLevitDialog / showLevitModalBottomSheet (kit).
+Omitted name/scopeName values are auto-unique; set them only for stable labels.
 Do not manually create/dispose scopes in normal widget code.
 
 
@@ -60,7 +65,7 @@ Reactive State
 - LxComputed(() => ...) — derived state
 - LxComputed.async(() async => ...) — async derived state
 - LxStatus<T> + LStatusBuilder — async UI states
-- LxWorker — side effects
+- LxWorker — side effects (prefer autoDispose(LxWorker(...)) for reload)
 - Levit.batch / Levit.batchAsync — coalesce multiple updates
 
 
@@ -69,19 +74,33 @@ Controllers
 
 Extend LevitController for feature/screen logic. Keep widgets thin.
 Use autoDispose for resources; field-level autoDispose for non-reactive deps.
+Reload on context changes:
+
+  autoDispose(LxWorker(contextVar, (_) async { await reload(); }));
 
 
 Flutter Widgets
 ---------------
 
-- LWatch — implicit reactive rebuild (primary)
-- LBuilder — single LxReactive
-- LSelectorBuilder — local derived value
-- LStatusBuilder — LxStatus rendering
+- LWatch — implicit reactive rebuild (partial trees / autoWatch: false)
+- LView / LScopedView autoWatch: true (default) — read reactives in buildView;
+  do not wrap the entire return in LWatch
+- LBuilder / LSelectorBuilder / LStatusBuilder — page UI kits
 - LView / LAsyncView — consume existing scope dependency
-- LScopedView.put — create scope + controller
+- LScopedView.put or subclass + onConfigScope — create scope + controller
 
-Kit extras (levit_flutter): LKeepAlive, LevitAppLifecycleMixin.
+Kit extras (levit_flutter): showLevitDialog, showLevitModalBottomSheet,
+LKeepAlive, LevitAppLifecycleMixin.
+
+GoRouter: shell + nested LScopedView/LView is supported; LRouteScope is for
+route-tied ownership (examples/route_scopes).
+
+
+Widget tests
+------------
+
+Mount LScope + dependencyFactory; capture scope in the factory; tear down with
+dispose / Levit.reset(). Stable pump helpers will ship later in levit_tests.
 
 
 Pure Dart
@@ -113,9 +132,11 @@ Anti-Patterns
 - Feature state in global scope
 - Levit.find in widgets (use context.levit.find)
 - Large subtree rebuilds for small reactive reads
+- Outer LWatch wrapping entire LView/LScopedView buildView when autoWatch is true
 - Business logic in widgets
 - Manual scope plumbing in ordinary UI
 - Low-level core imports in app code
+- Imperative sheets/dialogs without LScope.capture / showLevit*
 
 
 Validation

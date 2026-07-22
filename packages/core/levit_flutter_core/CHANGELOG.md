@@ -1,4 +1,10 @@
 
+## 0.0.9
+- Unnamed `LScope` / `LAsyncScope` / `LScopedView` / route-scope fallbacks now get unique diagnostic names, so nested unnamed scopes no longer spam duplicate-name warnings.
+- Clarified `LView` / `LScopedView` `autoWatch` docs: read reactives directly in `buildView`; do not wrap the entire tree in `LWatch`.
+- Expanded overlay capture docs; prefer kit `showLevit*` helpers for imperative dialogs/sheets.
+- Coordinated release version bump.
+
 ## 0.0.8
 - Hardened `LScope` and `LAsyncScope` parent-scope rebinding when widgets move between parents.
 - Tightened scope configuration callback typing and split scope/provider internals into smaller library parts without changing the public API.

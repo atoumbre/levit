@@ -1,4 +1,8 @@
 
+## 0.0.9
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.9`.
+
 ## 0.0.8
 - Routed multi-transport failure diagnostics through structured debug logging.
 - Coordinated release version bump.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.9
+- Added `showLevitDialog` and `showLevitModalBottomSheet` (capture page scope by default).
+- Updated README / LLM guidance for `autoWatch`, overlays, and dual lifetime styles.
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.9`.
+
+
 ## 0.0.8
 - Coordinated release version bump.
 - Updated internal package constraints to `^0.0.8`.
