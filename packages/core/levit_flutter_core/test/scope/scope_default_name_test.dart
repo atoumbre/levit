@@ -114,4 +114,98 @@ void main() {
     );
     expect(find.text('dup'), findsOneWidget);
   });
+
+  testWidgets(
+      'unnamed LRouteScope without route settings name uses unique fallback',
+      (tester) async {
+    final logs = <String>[];
+    late String capturedScopeName;
+
+    await runZoned(() async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => LRouteScope(
+                        dependencyFactory: (scope) {
+                          capturedScopeName = scope.name;
+                        },
+                        child: const Text('route-fallback'),
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    },
+        zoneSpecification: ZoneSpecification(
+          print: (self, parent, zone, line) => logs.add(line),
+        ));
+
+    expect(find.text('route-fallback'), findsOneWidget);
+    expect(capturedScopeName.startsWith('LRouteScope@'), isTrue);
+    expect(
+      logs.any((l) => l.contains('has the same name as ancestor')),
+      isFalse,
+    );
+  });
+
+  testWidgets(
+      'unnamed LAsyncRouteScope without route settings name uses unique fallback',
+      (tester) async {
+    final logs = <String>[];
+    late String capturedScopeName;
+
+    await runZoned(() async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
+          home: Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => LAsyncRouteScope(
+                        dependencyFactory: (scope) async {
+                          capturedScopeName = scope.name;
+                        },
+                        child: const Text('async-route-fallback'),
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('open'),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    },
+        zoneSpecification: ZoneSpecification(
+          print: (self, parent, zone, line) => logs.add(line),
+        ));
+
+    expect(find.text('async-route-fallback'), findsOneWidget);
+    expect(capturedScopeName.startsWith('LAsyncRouteScope@'), isTrue);
+    expect(
+      logs.any((l) => l.contains('has the same name as ancestor')),
+      isFalse,
+    );
+  });
 }
