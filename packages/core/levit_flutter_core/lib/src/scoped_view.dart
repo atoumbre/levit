@@ -6,7 +6,7 @@ part of '../levit_flutter_core.dart';
 /// via [dependencyFactory] / [onConfigScope], and then builds the UI using [LView].
 /// When the widget is unmounted, the scope and all its dependencies are disposed.
 ///
-/// Subclassing with [onConfigScope] is a first-class pattern alongside
+/// Sub-classing with [onConfigScope] is a first-class pattern alongside
 /// [LScopedView.put]. With [autoWatch] `true` (default), read reactives directly
 /// in [buildView]; do not wrap the entire return in [LWatch].
 ///
@@ -109,8 +109,7 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
       dependencyFactory: widget.onConfigScope,
       child: Builder(
         builder: (context) {
-          final controller =
-              widget.resolver?.call(context) ?? context.levit.findOrNull<T>();
+          final controller = widget.resolver?.call(context) ?? context.levit.findOrNull<T>();
           if (controller == null) {
             final fallback = widget.orElse;
             if (fallback != null) return fallback(context);
@@ -121,8 +120,7 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
           if (widget.autoWatch) {
             return LWatch(() => widget.buildView(context, controller));
           }
-          return LScope.runBridged(
-              context, () => widget.buildView(context, controller));
+          return LScope.runBridged(context, () => widget.buildView(context, controller));
         },
       ),
     );
