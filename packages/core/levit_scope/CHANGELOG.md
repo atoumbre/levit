@@ -1,4 +1,7 @@
 
+## 0.0.10
+- Coordinated release version bump.
+
 ## 0.0.9
 - Clarified `permanent` DartDoc: survives non-forced `reset` only; `dispose()` always force-clears.
 - Coordinated release version bump.

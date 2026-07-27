@@ -1,4 +1,7 @@
 
+## 0.0.10
+- Coordinated release version bump.
+
 ## 0.0.9
 - Coordinated release version bump.
 

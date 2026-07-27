@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.10
+- `LevitTasksMixin.tasksEngine` lazy-inits before `onInit` and throws a clear error after `onClose`.
+- `LevitReactiveTasksMixin` lazily initializes `isBusy` and `totalProgress`; clear error after close.
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.10`.
+
 ## 0.0.9
 - Coordinated release version bump.
 - Updated internal package constraints to `^0.0.9`.

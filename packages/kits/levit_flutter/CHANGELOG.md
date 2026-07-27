@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.10
+- `LevitAppLifecycleMixin` and `LevitLoopExecutionLifecycleMixin`: `onClose()` is safe when called without `onInit()`.
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.10`.
+
 ## 0.0.9
 - Added `showLevitDialog` and `showLevitModalBottomSheet` (capture page scope by default).
 - Updated README / LLM guidance for `autoWatch`, overlays, and dual lifetime styles.

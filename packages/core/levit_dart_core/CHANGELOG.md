@@ -1,4 +1,9 @@
 
+## 0.0.10
+- `LevitRef.scope` now throws a clear `StateError` when accessed before the store is resolved in a scope (replaces a null-check crash).
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.10`.
+
 ## 0.0.9
 - Clarified `permanent` on `put` / `lazyPut` / `lazyPutAsync` vs scope `dispose(force)`.
 - Documented `autoDispose(LxWorker(...))` as the preferred controller reload recipe.
