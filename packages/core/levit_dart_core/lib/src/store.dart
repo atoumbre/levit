@@ -258,6 +258,18 @@ class LevitAsyncStore<T> {
   String toString() => 'LevitAsyncStore<$T>(id: $hashCode)';
 }
 
+/// Returns [scope] or throws when a [LevitRef] is used before scope attachment.
+@visibleForTesting
+LevitScope requireStoreRefScope(LevitScope? scope) {
+  if (scope == null) {
+    throw StateError(
+      'Store ref has no owning scope. Resolve the store via Levit.put/find '
+      'or LevitStore.findIn before using LevitRef APIs.',
+    );
+  }
+  return scope;
+}
+
 /// The actual holder of a [LevitStore] instance within a [LevitScope].
 class _LevitStoreInstance<T> extends LevitController implements LevitRef {
   final LevitStore<T> definition;
@@ -268,7 +280,7 @@ class _LevitStoreInstance<T> extends LevitController implements LevitRef {
   _LevitStoreInstance(this.definition);
 
   @override
-  LevitScope get scope => super.scope!;
+  LevitScope get scope => requireStoreRefScope(super.scope);
 
   T get value {
     if (!_builderRun) {

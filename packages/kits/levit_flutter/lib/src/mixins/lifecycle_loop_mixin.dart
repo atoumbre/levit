@@ -8,18 +8,23 @@ part of '../../levit_flutter.dart';
 /// Requires [LevitLoopExecutionMixin].
 mixin LevitLoopExecutionLifecycleMixin
     on LevitController, LevitLoopExecutionMixin {
-  late final _LifecycleLoopObserver _lifecycleObserver;
+  _LifecycleLoopObserver? _lifecycleObserver;
 
   @override
   void onInit() {
     super.onInit();
-    _lifecycleObserver = _LifecycleLoopObserver(this);
-    WidgetsBinding.instance.addObserver(_lifecycleObserver);
+    final observer = _LifecycleLoopObserver(this);
+    _lifecycleObserver = observer;
+    WidgetsBinding.instance.addObserver(observer);
   }
 
   @override
   void onClose() {
-    WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+    final observer = _lifecycleObserver;
+    if (observer != null) {
+      WidgetsBinding.instance.removeObserver(observer);
+      _lifecycleObserver = null;
+    }
     super.onClose();
   }
 

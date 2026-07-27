@@ -30,21 +30,14 @@ jobs:
             path: packages/kits/levit_dart
           - package: levit_flutter
             path: packages/kits/levit_flutter
-    
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - name: Set up Levit
+        uses: ./.github/actions/setup-levit
         with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install Melos
-        uses: bluefireteam/melos-action@v3
-
-      - name: Bootstrap
-        run: melos bootstrap
+          pub-cache-suffix: ${{ hashFiles('**/pubspec.yaml', 'melos.yaml') }}
 
       - name: Install Pana
         run: dart pub global activate pana
@@ -56,11 +49,11 @@ jobs:
           # Print human-readable report for CI logs
           echo "Generating human-readable report..."
           dart pub global run pana .
-          
+
           # Generate JSON report for automated score check
           echo "Generating JSON report for score check..."
           dart pub global run pana --json . > pana_output.json
-          
+
       - name: Check Pana Score
         run: |
           cd ${{ matrix.path }}
@@ -68,7 +61,7 @@ jobs:
           MAX=$(jq '.scores.maxPoints' pana_output.json)
           echo "Package: ${{ matrix.package }}"
           echo "Score: $SCORE / $MAX"
-          
+
           if [ "$SCORE" -lt 160 ]; then
             echo "❌ Error: Pana score $SCORE is less than 160"
             # exit 1

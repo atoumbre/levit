@@ -10,17 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+
+      - name: Set up Levit
+        uses: ./.github/actions/setup-levit
         with:
-          channel: stable
-          cache: true
-
-      - name: Install root dependencies
-        run: dart pub get
-
-      - name: Bootstrap workspace
-        run: dart run melos bootstrap
+          pub-cache-suffix: ${{ hashFiles('**/pubspec.yaml', 'melos.yaml') }}
 
       - name: Publish dry-run
         run: dart run scripts/publish_dry_run.dart --quiet

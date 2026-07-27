@@ -2,6 +2,60 @@ part of '../../levit_dart.dart';
 
 final _taskEngines = Expando<LevitTaskEngine>();
 
+LevitTaskEngine _resolveTasksEngine(
+  LevitController controller, {
+  required int maxConcurrentTasks,
+  LevitTaskCacheProvider? cacheProvider,
+  void Function(Object error, StackTrace? stackTrace)? onTaskError,
+  void Function(LevitTaskEvent event)? onTaskEvent,
+  bool reconfigure = false,
+}) {
+  var engine = _taskEngines[controller];
+  if (engine == null) {
+    engine = LevitTaskEngine(
+      maxConcurrent: maxConcurrentTasks,
+      cacheProvider: cacheProvider,
+      onTaskError: onTaskError,
+      onTaskEvent: onTaskEvent,
+    );
+    _taskEngines[controller] = engine;
+    return engine;
+  }
+
+  if (reconfigure) {
+    engine.config(
+      maxConcurrent: maxConcurrentTasks,
+      cacheProvider: cacheProvider,
+      onTaskError: onTaskError,
+      onTaskEvent: onTaskEvent,
+    );
+  }
+
+  return engine;
+}
+
+LevitTaskEngine _tasksEngineFor(
+  LevitController controller, {
+  required int maxConcurrentTasks,
+  LevitTaskCacheProvider? cacheProvider,
+  void Function(Object error, StackTrace? stackTrace)? onTaskError,
+  void Function(LevitTaskEvent event)? onTaskEvent,
+}) {
+  if (controller.isClosed) {
+    throw StateError(
+      'tasksEngine accessed after the controller was closed.',
+    );
+  }
+
+  return _resolveTasksEngine(
+    controller,
+    maxConcurrentTasks: maxConcurrentTasks,
+    cacheProvider: cacheProvider,
+    onTaskError: onTaskError,
+    onTaskEvent: onTaskEvent,
+  );
+}
+
 /// A mixin for [LevitController] that adds advanced task management capabilities.
 ///
 /// Features include:
@@ -13,7 +67,17 @@ final _taskEngines = Expando<LevitTaskEngine>();
 /// See [LevitReactiveTasksMixin] if you need UI-specific reactive state for tasks.
 mixin LevitTasksMixin on LevitController {
   /// The task engine used by this mixin.
-  LevitTaskEngine get tasksEngine => _taskEngines[this]!;
+  ///
+  /// The engine is created on first access if [onInit] has not run yet (for
+  /// example in manual controller construction during tests). [onInit] still
+  /// reconfigures the engine with the latest mixin settings.
+  LevitTaskEngine get tasksEngine => _tasksEngineFor(
+        this,
+        maxConcurrentTasks: maxConcurrentTasks,
+        cacheProvider: taskCacheProvider,
+        onTaskError: onTaskError,
+        onTaskEvent: onTaskEvent,
+      );
 
   /// Optional default error handler for all tasks run by this service.
   ///
@@ -37,23 +101,14 @@ mixin LevitTasksMixin on LevitController {
   @override
   void onInit() {
     super.onInit();
-    var engine = _taskEngines[this];
-    if (engine == null) {
-      engine = LevitTaskEngine(
-        maxConcurrent: maxConcurrentTasks,
-        cacheProvider: taskCacheProvider,
-        onTaskError: onTaskError,
-        onTaskEvent: onTaskEvent,
-      );
-      _taskEngines[this] = engine;
-    } else {
-      engine.config(
-        maxConcurrent: maxConcurrentTasks,
-        cacheProvider: taskCacheProvider,
-        onTaskError: onTaskError,
-        onTaskEvent: onTaskEvent,
-      );
-    }
+    _resolveTasksEngine(
+      this,
+      maxConcurrentTasks: maxConcurrentTasks,
+      cacheProvider: taskCacheProvider,
+      onTaskError: onTaskError,
+      onTaskEvent: onTaskEvent,
+      reconfigure: true,
+    );
   }
 
   @override
@@ -74,7 +129,17 @@ mixin LevitTasksMixin on LevitController {
 /// *   [isBusy]: A computed value indicating if any tasks are currently active.
 mixin LevitReactiveTasksMixin on LevitController {
   /// The task engine used by this mixin.
-  LevitTaskEngine get tasksEngine => _taskEngines[this]!;
+  ///
+  /// The engine is created on first access if [onInit] has not run yet (for
+  /// example in manual controller construction during tests). [onInit] still
+  /// reconfigures the engine with the latest mixin settings.
+  LevitTaskEngine get tasksEngine => _tasksEngineFor(
+        this,
+        maxConcurrentTasks: maxConcurrentTasks,
+        cacheProvider: taskCacheProvider,
+        onTaskError: onTaskError,
+        onTaskEvent: onTaskEvent,
+      );
 
   /// The maximum number of concurrent tasks allowed.
   int get maxConcurrentTasks => 100000;
@@ -123,48 +188,44 @@ mixin LevitReactiveTasksMixin on LevitController {
   ///
   /// **Warning:** This computation iterates over all active tasks. If you have hundreds
   /// of concurrent tasks, accessing this frequently triggers an O(N) loop.
-  late final LxComputed<double> totalProgress;
+  ///
+  /// Initialized on first access if [onInit] has not run yet.
+  LxComputed<double>? _totalProgress;
 
   /// A computed value indicating if any tasks are currently active.
-  late final LxComputed<bool> isBusy;
+  ///
+  /// Initialized on first access if [onInit] has not run yet.
+  LxComputed<bool>? _isBusy;
+
+  bool _reactiveTaskStateInitialized = false;
+
+  /// Weighted average progress across active tasks.
+  LxComputed<double> get totalProgress {
+    _ensureReactiveTaskState();
+    return _totalProgress!;
+  }
+
+  /// Whether any tracked task is currently waiting or running.
+  LxComputed<bool> get isBusy {
+    _ensureReactiveTaskState();
+    return _isBusy!;
+  }
 
   /// Timers for auto-cleanup.
   final _cleanupTimers = <String, Timer>{};
 
-  void _updateTaskIfPresent(
-    String taskId,
-    TaskDetails Function(TaskDetails current) updater,
-  ) {
-    final current = tasks[taskId];
-    if (current == null) return;
-    tasks[taskId] = updater(current);
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-    var engine = _taskEngines[this];
-    if (engine == null) {
-      engine = LevitTaskEngine(
-        maxConcurrent: maxConcurrentTasks,
-        cacheProvider: taskCacheProvider,
-        onTaskError: onTaskError,
-        onTaskEvent: onTaskEvent,
-      );
-      _taskEngines[this] = engine;
-    } else {
-      engine.config(
-        maxConcurrent: maxConcurrentTasks,
-        cacheProvider: taskCacheProvider,
-        onTaskError: onTaskError,
-        onTaskEvent: onTaskEvent,
+  void _ensureReactiveTaskState() {
+    if (isClosed) {
+      throw StateError(
+        'Reactive task state accessed after the controller was closed.',
       );
     }
+    if (_reactiveTaskStateInitialized) return;
 
-    // Register reactive fields once so disposal remains controller-owned.
+    _reactiveTaskStateInitialized = true;
     autoDispose(tasks);
 
-    totalProgress = (() {
+    _totalProgress = (() {
       if (tasks.isEmpty) return 0.0;
       double sumProgress = 0;
       double sumWeight = 0;
@@ -187,12 +248,35 @@ mixin LevitReactiveTasksMixin on LevitController {
       return sumWeight == 0 ? 0.0 : sumProgress / sumWeight;
     }).lx.named('totalProgress');
 
-    isBusy = (() => tasks.values.any((d) => d.status is LxWaiting))
+    _isBusy = (() => tasks.values.any((d) => d.status is LxWaiting))
         .lx
         .named('isBusy');
 
-    autoDispose(isBusy);
-    autoDispose(totalProgress);
+    autoDispose(_isBusy!);
+    autoDispose(_totalProgress!);
+  }
+
+  void _updateTaskIfPresent(
+    String taskId,
+    TaskDetails Function(TaskDetails current) updater,
+  ) {
+    final current = tasks[taskId];
+    if (current == null) return;
+    tasks[taskId] = updater(current);
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    _resolveTasksEngine(
+      this,
+      maxConcurrentTasks: maxConcurrentTasks,
+      cacheProvider: taskCacheProvider,
+      onTaskError: onTaskError,
+      onTaskEvent: onTaskEvent,
+      reconfigure: true,
+    );
+    _ensureReactiveTaskState();
   }
 
   /// Executes a [task] and automatically tracks its status in [tasks].

@@ -23,19 +23,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+
+      - name: Set up Levit
+        uses: ./.github/actions/setup-levit
         with:
-          channel: stable
-          cache: true
+          pub-cache-suffix: ${{ hashFiles('**/pubspec.yaml', 'melos.yaml') }}
 
-      - name: Install root dependencies
-        run: dart pub get
-
-      - name: Bootstrap workspace
-        run: dart run melos bootstrap
-        
       - name: Run tests with coverage
         run: dart run scripts/check_coverage.dart --quiet --fail-under=100 --timeout=600 --only=${{ matrix.package.name }} packages/core packages/kits
 

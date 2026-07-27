@@ -179,6 +179,20 @@ void main() {
       await expectLater(store.find(), throwsStateError);
       expect(orphan.isDisposed, isTrue);
     });
+
+    test('store ref scope throws when detached', () {
+      expect(
+        () => requireStoreRefScope(null),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            'Store ref has no owning scope. Resolve the store via Levit.put/find '
+                'or LevitStore.findIn before using LevitRef APIs.',
+          ),
+        ),
+      );
+    });
   });
 }
 

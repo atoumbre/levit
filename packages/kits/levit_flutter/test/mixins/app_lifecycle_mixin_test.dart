@@ -86,5 +86,11 @@ void main() {
         returnsNormally,
       );
     });
+
+    test('onClose without onInit does not throw', () {
+      final controller = DefaultLifecycleController();
+
+      expect(controller.onClose, returnsNormally);
+    });
   });
 }

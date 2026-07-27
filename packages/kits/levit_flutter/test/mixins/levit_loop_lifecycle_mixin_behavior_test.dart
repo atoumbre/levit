@@ -14,4 +14,10 @@ void main() {
     expect(controller.pauseLifecycleServicesForce, isFalse);
     controller.onClose();
   });
+
+  test('onClose without onInit does not throw', () {
+    final controller = LifecycleLoopController();
+
+    expect(controller.onClose, returnsNormally);
+  });
 }
