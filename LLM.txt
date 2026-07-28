@@ -489,7 +489,7 @@ Optional analyzer rules
 
 Enable levit_lints (Dart 3.10+) for discarded/unowned lifecycle resources,
 preconstructed Levit.put closures, lifecycle overrides missing super calls,
-and mutable or snapshotted plain LxStatus owner fields.
+and mutable or snapshot of plain LxStatus owner fields.
 
 
 Anti-Patterns

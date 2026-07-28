@@ -78,7 +78,7 @@ final results = LxComputed.async(
 );
 ```
 
-## Rebindable Streams
+## Re-bindable Streams
 
 `LxStreamCompletionPolicy.close` remains the default. Use `retain` when a
 completed source should preserve its last status and be explicitly rebound:

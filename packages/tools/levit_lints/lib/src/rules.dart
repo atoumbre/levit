@@ -7,7 +7,7 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/error/error.dart';
 
-/// Prevents mutable or snapshotted plain `LxStatus` controller fields.
+/// Prevents mutable or snapshot of plain `LxStatus` controller fields.
 class AvoidPlainLxStatusFields extends AnalysisRule {
   static const LintCode code = LintCode(
     'avoid_plain_lx_status_fields',
@@ -18,20 +18,13 @@ class AvoidPlainLxStatusFields extends AnalysisRule {
   );
 
   AvoidPlainLxStatusFields()
-    : super(
-        name: 'avoid_plain_lx_status_fields',
-        description:
-            'Avoid stale or mutable plain LxStatus fields on resource owners.',
-      );
+    : super(name: 'avoid_plain_lx_status_fields', description: 'Avoid stale or mutable plain LxStatus fields on resource owners.');
 
   @override
   LintCode get diagnosticCode => code;
 
   @override
-  void registerNodeProcessors(
-    RuleVisitorRegistry registry,
-    RuleContext context,
-  ) {
+  void registerNodeProcessors(RuleVisitorRegistry registry, RuleContext context) {
     registry.addFieldDeclaration(this, _StatusFieldVisitor(this));
   }
 }
@@ -62,8 +55,7 @@ class AvoidPreconstructedLevitPut extends AnalysisRule {
   static const LintCode code = LintCode(
     'avoid_preconstructed_levit_put',
     'Levit.put received a closure that returns a preconstructed owner.',
-    correctionMessage:
-        'Construct the controller or resource inside the Levit.put callback.',
+    correctionMessage: 'Construct the controller or resource inside the Levit.put callback.',
   );
 
   AvoidPreconstructedLevitPut()
@@ -78,10 +70,7 @@ class AvoidPreconstructedLevitPut extends AnalysisRule {
   LintCode get diagnosticCode => code;
 
   @override
-  void registerNodeProcessors(
-    RuleVisitorRegistry registry,
-    RuleContext context,
-  ) {
+  void registerNodeProcessors(RuleVisitorRegistry registry, RuleContext context) {
     registry.addMethodInvocation(this, _PreconstructedPutVisitor(this));
   }
 }
@@ -98,16 +87,12 @@ class _PreconstructedPutVisitor extends SimpleAstVisitor<void> {
     }
     if (node.argumentList.arguments.isEmpty) return;
     final first = node.argumentList.arguments.first;
-    if (first is! FunctionExpression ||
-        first.parameters?.parameters.isNotEmpty == true) {
+    if (first is! FunctionExpression || first.parameters?.parameters.isNotEmpty == true) {
       return;
     }
 
     final returned = _singleReturnedExpression(first.body);
-    if (returned == null ||
-        returned is! SimpleIdentifier &&
-            returned is! PrefixedIdentifier &&
-            returned is! PropertyAccess) {
+    if (returned == null || returned is! SimpleIdentifier && returned is! PrefixedIdentifier && returned is! PropertyAccess) {
       return;
     }
     if (!_isResourceOwnerType(returned.staticType)) return;
@@ -120,8 +105,7 @@ class MustCallSuperLevitLifecycle extends AnalysisRule {
   static const LintCode code = LintCode(
     'must_call_super_levit_lifecycle',
     'This Levit lifecycle override does not call its super implementation.',
-    correctionMessage:
-        'Call super.onInit(), or return/await super.onClose(), as appropriate.',
+    correctionMessage: 'Call super.onInit(), or return/await super.onClose(), as appropriate.',
   );
 
   MustCallSuperLevitLifecycle()
@@ -136,10 +120,7 @@ class MustCallSuperLevitLifecycle extends AnalysisRule {
   LintCode get diagnosticCode => code;
 
   @override
-  void registerNodeProcessors(
-    RuleVisitorRegistry registry,
-    RuleContext context,
-  ) {
+  void registerNodeProcessors(RuleVisitorRegistry registry, RuleContext context) {
     registry.addMethodDeclaration(this, _LifecycleSuperVisitor(this));
   }
 }
@@ -173,8 +154,7 @@ class _SuperLifecycleCallVisitor extends RecursiveAstVisitor<void> {
 
   @override
   void visitMethodInvocation(MethodInvocation node) {
-    if (node.target is SuperExpression &&
-        node.methodName.name == lifecycleName) {
+    if (node.target is SuperExpression && node.methodName.name == lifecycleName) {
       found = true;
       return;
     }
@@ -204,10 +184,7 @@ class UnownedLevitResource extends AnalysisRule {
   LintCode get diagnosticCode => code;
 
   @override
-  void registerNodeProcessors(
-    RuleVisitorRegistry registry,
-    RuleContext context,
-  ) {
+  void registerNodeProcessors(RuleVisitorRegistry registry, RuleContext context) {
     final visitor = _UnownedResourceVisitor(this);
     registry
       ..addExpressionStatement(this, visitor)
@@ -226,24 +203,19 @@ class _UnownedResourceVisitor extends SimpleAstVisitor<void> {
     final expression = _unwrapParentheses(node.expression);
     if (_isOwnedExpression(expression)) return;
     final type = expression.staticType;
-    if (_isTypeNamed(type, 'StreamSubscription') ||
-        _isTypeNamed(type, 'Timer')) {
+    if (_isTypeNamed(type, 'StreamSubscription') || _isTypeNamed(type, 'Timer')) {
       rule.reportAtNode(expression);
     }
   }
 
   @override
   void visitFieldDeclaration(FieldDeclaration node) {
-    if (node.isStatic ||
-        node.fields.lateKeyword == null ||
-        !_isInsideResourceOwner(node)) {
+    if (node.isStatic || node.fields.lateKeyword == null || !_isInsideResourceOwner(node)) {
       return;
     }
     for (final variable in node.fields.variables) {
       final initializer = variable.initializer;
-      if (initializer == null ||
-          _isOwnedExpression(initializer) ||
-          !_isReactiveType(initializer.staticType)) {
+      if (initializer == null || _isOwnedExpression(initializer) || !_isReactiveType(initializer.staticType)) {
         continue;
       }
       rule.reportAtToken(variable.name);
@@ -261,9 +233,7 @@ Expression _unwrapParentheses(Expression expression) {
 
 bool _isOwnedExpression(Expression expression) {
   final current = _unwrapParentheses(expression);
-  return current is MethodInvocation &&
-      (current.methodName.name == 'own' ||
-          current.methodName.name == 'autoDispose');
+  return current is MethodInvocation && (current.methodName.name == 'own' || current.methodName.name == 'autoDispose');
 }
 
 bool _endsInStatusRead(Expression expression) {
@@ -278,9 +248,7 @@ bool _endsInStatusRead(Expression expression) {
 Expression? _singleReturnedExpression(FunctionBody body) {
   return switch (body) {
     ExpressionFunctionBody(:final expression) => expression,
-    BlockFunctionBody(:final block)
-        when block.statements.length == 1 &&
-            block.statements.single is ReturnStatement =>
+    BlockFunctionBody(:final block) when block.statements.length == 1 && block.statements.single is ReturnStatement =>
       (block.statements.single as ReturnStatement).expression,
     _ => null,
   };
@@ -308,12 +276,10 @@ InterfaceElement? _enclosingInterfaceElement(AstNode node) {
 }
 
 bool _isResourceOwnerType(DartType? type) {
-  return _isTypeNamed(type, 'LevitResourceOwner') ||
-      _isTypeNamed(type, 'LevitController');
+  return _isTypeNamed(type, 'LevitResourceOwner') || _isTypeNamed(type, 'LevitController');
 }
 
-bool _isReactiveType(DartType? type) =>
-    _isTypeNamed(type, 'LxReactive') || _isTypeNamed(type, 'LxBase');
+bool _isReactiveType(DartType? type) => _isTypeNamed(type, 'LxReactive') || _isTypeNamed(type, 'LxBase');
 
 bool _isTypeNamed(DartType? type, String name) {
   if (type is! InterfaceType) return false;
