@@ -35,8 +35,9 @@ void main() {
       expect(levit.find<_TestService>(tag: 'v2').value, equals('tagged'));
     });
 
-    test('replaces existing instance', () {
+    test('requires awaited deletion before replacement', () async {
       levit.put(() => _TestService('first'));
+      await levit.delete<_TestService>();
       levit.put(() => _TestService('second'));
       expect(levit.find<_TestService>().value, equals('second'));
     });
@@ -115,50 +116,50 @@ void main() {
   });
 
   group('levit.delete()', () {
-    test('removes instance', () {
+    test('removes instance', () async {
       levit.put(() => _TestService('test'));
       expect(levit.isRegistered<_TestService>(), isTrue);
 
-      levit.delete<_TestService>();
+      await levit.delete<_TestService>();
       expect(levit.isRegistered<_TestService>(), isFalse);
     });
 
-    test('calls onClose on LevitScopeDisposable', () {
+    test('calls onClose on LevitScopeDisposable', () async {
       final service = _DisposableService();
       levit.put(() => service);
 
-      levit.delete<_DisposableService>();
+      await levit.delete<_DisposableService>();
       expect(service.closeCalled, isTrue);
     });
 
-    test('returns true if deleted', () {
+    test('returns true if deleted', () async {
       levit.put(() => _TestService('test'));
-      expect(levit.delete<_TestService>(), isTrue);
+      expect(await levit.delete<_TestService>(), isTrue);
     });
 
-    test('returns false if not registered', () {
-      expect(levit.delete<_TestService>(), isFalse);
+    test('returns false if not registered', () async {
+      expect(await levit.delete<_TestService>(), isFalse);
     });
 
-    test('respects permanent flag', () {
+    test('respects permanent flag', () async {
       levit.put(() => _TestService('permanent'), permanent: true);
 
-      expect(levit.delete<_TestService>(), isFalse);
+      expect(await levit.delete<_TestService>(), isFalse);
       expect(levit.isRegistered<_TestService>(), isTrue);
     });
 
-    test('force overrides permanent flag', () {
+    test('force overrides permanent flag', () async {
       levit.put(() => _TestService('permanent'), permanent: true);
 
-      expect(levit.delete<_TestService>(force: true), isTrue);
+      expect(await levit.delete<_TestService>(force: true), isTrue);
       expect(levit.isRegistered<_TestService>(), isFalse);
     });
 
-    test('deletes correct tagged instance', () {
+    test('deletes correct tagged instance', () async {
       levit.put(() => _TestService('default'));
       levit.put(() => _TestService('tagged'), tag: 'v2');
 
-      levit.delete<_TestService>(tag: 'v2');
+      await levit.delete<_TestService>(tag: 'v2');
 
       expect(levit.isRegistered<_TestService>(), isTrue);
       expect(levit.isRegistered<_TestService>(tag: 'v2'), isFalse);
@@ -166,16 +167,16 @@ void main() {
   });
 
   group('levit.reset()', () {
-    test('clears all instances', () {
+    test('clears all instances', () async {
       levit.put(() => _TestService('one'));
       levit.put(() => _DisposableService());
 
-      levit.reset();
+      await levit.reset();
 
       expect(levit.registeredCount, equals(0));
     });
 
-    test('calls onClose on all LevitScopeDisposables', () {
+    test('calls onClose on all LevitScopeDisposables', () async {
       final services = [
         _DisposableService(),
         _DisposableService(),
@@ -185,28 +186,28 @@ void main() {
         levit.put(() => services[i], tag: 'tag$i');
       }
 
-      levit.reset();
+      await levit.reset();
 
       for (final service in services) {
         expect(service.closeCalled, isTrue);
       }
     });
 
-    test('respects permanent flag', () {
+    test('respects permanent flag', () async {
       levit.put(() => _TestService('permanent'), permanent: true);
       levit.put(() => _DisposableService());
 
-      levit.reset();
+      await levit.reset();
 
       expect(levit.isRegistered<_TestService>(), isTrue);
       expect(levit.find<_TestService>().value, 'permanent');
       expect(levit.isRegistered<_DisposableService>(), isFalse);
     });
 
-    test('force clears permanent instances', () {
+    test('force clears permanent instances', () async {
       levit.put(() => _TestService('permanent'), permanent: true);
 
-      levit.reset(force: true);
+      await levit.reset(force: true);
 
       expect(levit.isRegistered<_TestService>(), isFalse);
     });

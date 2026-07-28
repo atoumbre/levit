@@ -6,8 +6,8 @@ void main() {
   tearDown(() => Levit.reset(force: true));
 
   group('Levit.runInScope', () {
-    test('runs sync callback in isolated scope and auto-disposes it', () {
-      final result = Levit.runInScope<int>(
+    test('runs sync callback in isolated scope and auto-disposes it', () async {
+      final result = await Levit.runInScope<int>(
         () {
           Levit.put(() => 42, tag: 'scoped_value');
           expect(Levit.find<int>(tag: 'scoped_value'), 42);
@@ -35,9 +35,9 @@ void main() {
       expect(Levit.findOrNull<String>(tag: 'async_scoped_value'), isNull);
     });
 
-    test('disposes scope when callback throws', () {
-      expect(
-        () => Levit.runInScope<void>(
+    test('disposes scope when callback throws', () async {
+      await expectLater(
+        Levit.runInScope<void>(
           () {
             Levit.put(() => 1, tag: 'error_scope_value');
             throw StateError('boom');

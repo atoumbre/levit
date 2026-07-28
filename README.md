@@ -48,7 +48,7 @@ dart pub add levit
 ```dart
 import 'package:levit/levit.dart';
 
-void main() {
+Future<void> main() async {
   final scope = Levit.createScope('app');
 
   scope.run(() {
@@ -60,7 +60,7 @@ void main() {
     worker.close();
   });
 
-  scope.dispose();
+  await scope.dispose();
 }
 ```
 
@@ -95,7 +95,10 @@ class CounterPage extends StatelessWidget {
   }
 }
 
-void main() => runApp(const MaterialApp(home: CounterPage()));
+void main() {
+  Levit.enableAutoLinking();
+  runApp(const MaterialApp(home: CounterPage()));
+}
 ```
 
 ## What Makes Levit Different
@@ -128,6 +131,7 @@ The proposition is not just conceptual. This repo includes:
 | Core composition APIs only | [`levit_dart_core`](./packages/core/levit_dart_core) | Owns `Levit`, controllers, stores, and the Dart-side lifecycle contract. |
 | Task/loop/time utilities on top of Dart core | [`levit_dart`](./packages/kits/levit_dart) | Adds controller utilities without Flutter widgets. |
 | Runtime telemetry and diagnostics | [`levit_monitor`](./packages/core/levit_monitor) | Add separately alongside any runtime package when you need structured events. |
+| Lifecycle and reactive analyzer rules | [`levit_lints`](./packages/tools/levit_lints) | Optional native analyzer plugin; no runtime dependency. |
 
 ## Architecture Model
 
@@ -153,6 +157,10 @@ flowchart LR
     F2[levit_reactive]
   end
 
+  subgraph Tooling
+    T1["levit_lints (opt-in)"]
+  end
+
   K1 --> U1
   K2 --> C2
   K2 --> U1
@@ -162,6 +170,7 @@ flowchart LR
   C1 --> F2
   C3 -.observes.-> F1
   C3 -.observes.-> F2
+  T1 -.-> C1
 ```
 
 `levit_monitor` is intentionally separate from `levit` and `levit_flutter`; add it only when you need runtime telemetry.
@@ -192,6 +201,12 @@ These aggregate exports without redefining runtime semantics.
 | [`levit_dart_core`](./packages/core/levit_dart_core) | Composition layer (`Levit`, `LevitController`, `LevitStore`). Owns controller ownership semantics. |
 | [`levit_flutter_core`](./packages/core/levit_flutter_core) | Flutter bindings (`LScope`, `LWatch`, `LView`, builders); re-exports `levit_dart_core` for convenience. |
 | [`levit_monitor`](./packages/core/levit_monitor) | Opt-in monitoring, redaction, shadow state, and transport pipeline. Not bundled by default. |
+
+### Tooling
+
+| Package | Responsibility |
+| :-- | :-- |
+| [`levit_lints`](./packages/tools/levit_lints) | Native analyzer diagnostics for lifecycle delegation, resource ownership, safe registration, and reactive status fields. |
 
 ## Middleware Lifecycle
 

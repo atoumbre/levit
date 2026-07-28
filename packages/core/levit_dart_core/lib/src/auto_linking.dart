@@ -90,9 +90,9 @@ class _AutoLinkScope {
     S instance,
   ) {
     return () {
-      // Controllers use live capture so async onInit allocations are linked immediately.
+      // Resource owners use live capture so async onInit allocations are linked immediately.
       List<LxReactive> captured;
-      if (instance is LevitController) {
+      if (instance is LevitResourceOwner) {
         captured = _LiveCaptureList(instance);
       } else {
         captured = <LxReactive>[];
@@ -131,9 +131,9 @@ class _AutoLinkScope {
 
   static void _processInstance(
       dynamic instance, List<LxReactive> captured, String key) {
-    if (instance is LevitController) {
+    if (instance is LevitResourceOwner) {
       for (final reactive in captured) {
-        instance.autoDispose(reactive);
+        instance.own(reactive);
       }
     }
   }
@@ -227,9 +227,9 @@ class _AutoDisposeMiddleware extends LevitScopeMiddleware {
 
 class _LiveCaptureList extends ListBase<LxReactive> {
   final List<LxReactive> _inner = [];
-  final LevitController _controller;
+  final LevitResourceOwner _owner;
 
-  _LiveCaptureList(this._controller);
+  _LiveCaptureList(this._owner);
 
   @override
   int get length => _inner.length;
@@ -250,7 +250,7 @@ class _LiveCaptureList extends ListBase<LxReactive> {
     _inner.add(element);
 
     // Register on insert so capture order cannot race with async init logic.
-    _controller.autoDispose(element);
+    _owner.own(element);
   }
 }
 

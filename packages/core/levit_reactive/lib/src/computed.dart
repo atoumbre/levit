@@ -1,5 +1,14 @@
 part of '../levit_reactive.dart';
 
+/// Controls admission of overlapping asynchronous reactive computations.
+enum LxAsyncConcurrency {
+  /// Launch every invalidation and publish only the latest execution result.
+  latest,
+
+  /// Run at most one computation and coalesce changes into one trailing run.
+  exhaustLatest,
+}
+
 /// A value derived from other reactive objects.
 ///
 /// [LxComputed] automatically tracks its dependencies and re-evaluates
@@ -99,6 +108,7 @@ class LxComputed<T> extends _ComputedBase<T> {
     bool staticDeps = false,
     T? initial,
     String? name,
+    LxAsyncConcurrency concurrency = LxAsyncConcurrency.latest,
   }) {
     return LxAsyncComputed<T>(
       compute,
@@ -107,6 +117,7 @@ class LxComputed<T> extends _ComputedBase<T> {
       staticDeps: staticDeps,
       initial: initial,
       name: name,
+      concurrency: concurrency,
     );
   }
 
@@ -125,6 +136,7 @@ class LxComputed<T> extends _ComputedBase<T> {
     bool staticDeps = false,
     T? initial,
     String? name,
+    LxAsyncConcurrency concurrency = LxAsyncConcurrency.latest,
   }) {
     return LxAsyncComputed<T>(
       () async => compute(),
@@ -133,6 +145,7 @@ class LxComputed<T> extends _ComputedBase<T> {
       staticDeps: staticDeps,
       initial: initial,
       name: name,
+      concurrency: concurrency,
     );
   }
 
@@ -341,10 +354,15 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
   final bool Function(T previous, T current) _equals;
   final bool _showWaiting;
 
+  /// Admission policy for overlapping invalidations.
+  final LxAsyncConcurrency concurrency;
+
   T? _lastComputedValue;
   bool _hasValue = false;
   int _executionId = 0;
   bool _hasProducedResult = false;
+  bool _executionRunning = false;
+  bool _trailingExecutionRequested = false;
 
   final bool _staticDeps;
   bool _hasStaticGraph = false;
@@ -357,6 +375,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
     bool staticDeps = false,
     T? initial,
     String? name,
+    this.concurrency = LxAsyncConcurrency.latest,
   })  : _equals = equals ?? ((a, b) => a == b),
         _showWaiting = showWaiting,
         _staticDeps = staticDeps,
@@ -377,6 +396,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
   void _onInactive() {
     _isActive = false;
     _executionId++; // Cancel pending
+    _trailingExecutionRequested = false;
     _cleanupSubscriptions();
   }
 
@@ -388,6 +408,13 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
 
   void _run() {
     if (_isClosed || !_isActive) return;
+    if (concurrency == LxAsyncConcurrency.exhaustLatest && _executionRunning) {
+      _trailingExecutionRequested = true;
+      return;
+    }
+    if (concurrency == LxAsyncConcurrency.exhaustLatest) {
+      _executionRunning = true;
+    }
 
     final myExecutionId = ++_executionId;
     final lastKnown = _value.lastValue;
@@ -402,7 +429,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
       _setValueInternal(LxWaiting<T>(lastKnown));
     }
 
-    Future<T>? future;
+    late Future<T> future;
     Object? syncError;
     StackTrace? syncStack;
     bool syncFailed = false;
@@ -455,12 +482,13 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
           _hasStaticGraph = true;
         }
       }
+      _finishExecution();
       return;
     }
 
     // Async completion updates status only for the latest execution token.
-    if (future != null) {
-      future.then((result) {
+    unawaited(
+      future.then<void>((result) {
         if (myExecutionId == _executionId && !_isClosed) {
           _hasProducedResult = true;
           _applyResult(result, isInitial: isInitial);
@@ -474,7 +502,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
             _hasStaticGraph = true;
           }
         }
-      }).catchError((e, st) {
+      }, onError: (Object e, StackTrace st) {
         if (myExecutionId == _executionId && !_isClosed) {
           _hasProducedResult = true;
           _setValueInternal(LxError<T>(e, st, lastKnown));
@@ -487,8 +515,17 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>> {
             _hasStaticGraph = true;
           }
         }
-      });
-    }
+      }).whenComplete(_finishExecution),
+    );
+  }
+
+  void _finishExecution() {
+    if (concurrency != LxAsyncConcurrency.exhaustLatest) return;
+    _executionRunning = false;
+    if (!_trailingExecutionRequested || _isClosed || !_isActive) return;
+
+    _trailingExecutionRequested = false;
+    _run();
   }
 
   /// Notifies middlewares of dependency graph change.

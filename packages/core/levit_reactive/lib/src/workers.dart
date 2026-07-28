@@ -93,8 +93,14 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
   final Function(Object error, StackTrace stackTrace)? _onProcessingError;
   final bool? _enableMonitoring;
 
+  /// Admission policy for asynchronous callback executions.
+  final LxAsyncConcurrency concurrency;
+
   StreamSubscription? _subscription;
   void Function()? _removeListener;
+  bool _executionRunning = false;
+  bool _trailingExecutionRequested = false;
+  late T _trailingValue;
 
   /// Returns `true` if this watcher is capturing performance metrics.
   bool get isMonitoringEnabled => _enableMonitoring ?? Lx.enableWatchMonitoring;
@@ -107,6 +113,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
     Function(Object error, StackTrace stackTrace)? onProcessingError,
     bool? enableMonitoring,
     String? name,
+    this.concurrency = LxAsyncConcurrency.latest,
   })  : _onError = onError,
         _onProcessingError = onProcessingError,
         _enableMonitoring = enableMonitoring,
@@ -115,9 +122,34 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
   }
 
   void _init() {
-    void executeCallback(T value) {
+    late void Function(T value) executeCallback;
+
+    void finishExecution() {
+      if (concurrency != LxAsyncConcurrency.exhaustLatest) return;
+      _executionRunning = false;
+      if (!_trailingExecutionRequested || isDisposed) return;
+
+      _trailingExecutionRequested = false;
+      final value = _trailingValue;
+      executeCallback(value);
+    }
+
+    void requestExecution(T value) {
+      if (concurrency == LxAsyncConcurrency.exhaustLatest &&
+          _executionRunning) {
+        _trailingValue = value;
+        _trailingExecutionRequested = true;
+        return;
+      }
+      executeCallback(value);
+    }
+
+    executeCallback = (T value) {
       final monitoring = isMonitoringEnabled;
       final start = monitoring ? DateTime.now() : null;
+      if (concurrency == LxAsyncConcurrency.exhaustLatest) {
+        _executionRunning = true;
+      }
 
       try {
         final result = callback(value);
@@ -129,32 +161,36 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
             _updateStat((s) => s.copyWith(isAsync: true, isProcessing: true));
           }
 
-          result.then((_) {
-            if (!monitoring || isDisposed) return;
-            final end = DateTime.now();
-            final duration = end.difference(start!);
-            _updateStat((s) => s.copyWith(
-                  runCount: s.runCount + 1,
-                  lastDuration: duration,
-                  totalDuration: s.totalDuration + duration,
-                  lastRun: end,
-                  isProcessing: false,
-                  error: null,
-                ));
-          }).catchError((e, s) {
-            _onProcessingError?.call(e, s);
-            if (!monitoring || isDisposed) return;
-            final end = DateTime.now();
-            final duration = end.difference(start!);
-            _updateStat((s) => s.copyWith(
-                  runCount: s.runCount + 1,
-                  lastDuration: duration,
-                  totalDuration: s.totalDuration + duration,
-                  lastRun: end,
-                  isProcessing: false,
-                  error: e,
-                ));
-          });
+          unawaited(
+            result.then<void>((_) {
+              if (monitoring && !isDisposed) {
+                final end = DateTime.now();
+                final duration = end.difference(start!);
+                _updateStat((s) => s.copyWith(
+                      runCount: s.runCount + 1,
+                      lastDuration: duration,
+                      totalDuration: s.totalDuration + duration,
+                      lastRun: end,
+                      isProcessing: false,
+                      error: null,
+                    ));
+              }
+            }, onError: (Object e, StackTrace s) {
+              _onProcessingError?.call(e, s);
+              if (monitoring && !isDisposed) {
+                final end = DateTime.now();
+                final duration = end.difference(start!);
+                _updateStat((stat) => stat.copyWith(
+                      runCount: stat.runCount + 1,
+                      lastDuration: duration,
+                      totalDuration: stat.totalDuration + duration,
+                      lastRun: end,
+                      isProcessing: false,
+                      error: e,
+                    ));
+              }
+            }).whenComplete(finishExecution),
+          );
         } else {
           if (monitoring) {
             final end = DateTime.now();
@@ -169,6 +205,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
                   error: null,
                 ));
           }
+          finishExecution();
         }
       } catch (e, s) {
         _onProcessingError?.call(e, s);
@@ -186,17 +223,18 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
               ));
         }
 
+        finishExecution();
         if (_onProcessingError == null) rethrow;
       }
-    }
+    };
 
     if (_onError == null) {
-      void listener() => executeCallback(source.value);
+      void listener() => requestExecution(source.value);
       source.addListener(listener);
       _removeListener = () => source.removeListener(listener);
     } else {
       _subscription = source.stream.listen(
-        (val) => executeCallback(val),
+        requestExecution,
         onError: _onError,
       );
     }
@@ -204,6 +242,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
 
   @override
   void close() {
+    _trailingExecutionRequested = false;
     _removeListener?.call();
     _subscription?.cancel();
     super.close();

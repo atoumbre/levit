@@ -29,7 +29,7 @@ void main() async {
   print('Starting a task that fails once but succeeds on retry...');
   int attempts = 0;
   final result = await taskController.tasksEngine.schedule<String>(
-    () async {
+    (_) async {
       attempts++;
       if (attempts == 1) {
         print('  Attempt 1: Throwing temporary error...');

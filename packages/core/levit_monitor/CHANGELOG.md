@@ -1,4 +1,14 @@
 
+## 0.0.11
+
+- Add dependency-neutral `CustomMonitorEvent` and
+  `LevitMonitor.emitCustomEvent` for application-layer adapters.
+- Add stable namespaces/names, severity levels, safe structured serialization,
+  complete sensitive-payload redaction, and custom-event transport formatting.
+- Keep `levit_monitor` independent of higher-level kits such as `levit_dart`;
+  task events are bridged by applications that import both.
+- Updated internal package constraints to `^0.0.11`.
+
 ## 0.0.10
 - Coordinated release version bump.
 - Updated internal package constraints to `^0.0.10`.

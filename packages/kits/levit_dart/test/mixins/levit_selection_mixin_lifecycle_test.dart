@@ -5,12 +5,9 @@ class TestSelectionController extends LevitController
     with LevitSelectionMixin {}
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
-  });
-  test('LevitSelectionMixin gaps', () {
-    final controller = TestSelectionController();
-    controller.didAttachToScope(Ls.currentScope, key: 'test');
-    controller.onInit();
+  test('LevitSelectionMixin gaps', () async {
+    await Levit.runInScope<void>(() {
+      Levit.put(() => TestSelectionController());
+    }, name: 'selection_mixin_test');
   });
 }

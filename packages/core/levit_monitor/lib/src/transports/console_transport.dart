@@ -188,6 +188,7 @@ class ConsoleTransport implements LevitTransport {
     // ignore: unused_local_variable
     final category = switch (event) {
       LogEvent _ => 'LOG',
+      CustomMonitorEvent _ => 'CUSTOM',
       ReactiveBatchEvent _ => 'STATE',
       DependencyEvent _ => 'DI',
       SnapshotEvent _ => 'SNAPSHOT',
@@ -228,6 +229,16 @@ class ConsoleTransport implements LevitTransport {
       ScopeCreateEvent _ => LevitLogLevel.debug,
       ScopeDisposeEvent _ => LevitLogLevel.debug,
       SnapshotEvent _ => LevitLogLevel.debug, // Default for SnapshotEvent
+      CustomMonitorEvent e => switch (e.level) {
+          Level.off => LevitLogLevel.off,
+          Level.fatal => LevitLogLevel.fatal,
+          Level.error => LevitLogLevel.error,
+          Level.warning => LevitLogLevel.warning,
+          Level.info => LevitLogLevel.info,
+          Level.debug => LevitLogLevel.debug,
+          Level.trace => LevitLogLevel.trace,
+          _ => LevitLogLevel.all,
+        },
       LogEvent e => switch (e.level) {
           Level.off => LevitLogLevel.off,
           Level.fatal => LevitLogLevel.fatal,
@@ -273,6 +284,9 @@ class ConsoleTransport implements LevitTransport {
         'SCOPE CREATE: ${e.scopeName}#${e.scopeId} (Parent: ${e.parentScopeId})',
       ScopeDisposeEvent e => 'SCOPE DISPOSE: ${e.scopeName}#${e.scopeId}',
       SnapshotEvent e => 'Snapshot sent (${e.state.length} items)',
+      CustomMonitorEvent e =>
+        'CUSTOM ${e.namespace}:${e.name} ${safeValue(e.toJson()['attributes'])}'
+            '${e.error != null ? '\nError: ${safeValue(e.error, sensitive: e.sensitive)}' : ''}',
       LogEvent e => 'LOG: ${safeValue(e.data)}'
           '${e.error != null ? '\nError: ${safeValue(e.error)}' : ''}'
           '${e.stackTrace != null ? '\nStack: \n${e.stackTrace}' : ''}',

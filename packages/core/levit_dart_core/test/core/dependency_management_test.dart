@@ -3,31 +3,35 @@ import 'package:test/test.dart';
 
 class Service {}
 
+abstract interface class _Port {}
+
+final class _Implementation implements _Port {}
+
 void main() {
   group('Levit Dependency Management', () {
     setUp(() {
       Levit.reset(force: true);
     });
 
-    test('Levit.delete removes dependency', () {
+    test('Levit.delete removes dependency', () async {
       Levit.put(() => Service());
       expect(Levit.isRegistered<Service>(), true);
 
-      final deleted = Levit.delete<Service>();
+      final deleted = await Levit.delete<Service>();
       expect(deleted, true);
       expect(Levit.isRegistered<Service>(), false);
     });
 
-    test('Levit.delete returns false for unknown dependency', () {
-      final deleted = Levit.delete<Service>();
+    test('Levit.delete returns false for unknown dependency', () async {
+      final deleted = await Levit.delete<Service>();
       expect(deleted, false);
     });
 
-    test('Levit.reset clears all dependencies', () {
+    test('Levit.reset clears all dependencies', () async {
       Levit.put(() => Service());
       expect(Levit.isRegistered<Service>(), true);
 
-      Levit.reset(force: true);
+      await Levit.reset(force: true);
       expect(Levit.isRegistered<Service>(), false);
       expect(Levit.registeredCount, 0);
     });
@@ -58,6 +62,15 @@ void main() {
       final service = Service();
       final builder = service.toBuilder;
       expect(builder(), service);
+    });
+
+    test('Levit.bindExisting exposes one singleton through a port', () async {
+      await Levit.runInScope<void>(() {
+        final implementation = Levit.put(() => _Implementation());
+        Levit.bindExisting<_Port, _Implementation>();
+
+        expect(Levit.find<_Port>(), same(implementation));
+      }, name: 'facade_alias');
     });
   });
 }

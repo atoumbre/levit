@@ -42,7 +42,58 @@ abstract class LevitScopeDisposable {
   /// Called when the object is removed from the scope or the scope is disposed.
   ///
   /// Use this method to release resources, close streams, or cancel timers.
-  void onClose() {}
+  FutureOr<void> onClose() {}
+}
+
+/// A resource with an explicit, optionally asynchronous disposal operation.
+///
+/// Unlike [LevitScopeDisposable], this contract has no initialization hooks.
+/// A directly registered instance implementing this interface is owned by its
+/// registration scope and disposed when that registration is removed.
+abstract interface class LevitDisposable {
+  /// Releases resources held by this object.
+  FutureOr<void> dispose();
+}
+
+/// One failure captured while a scope or resource owner was being disposed.
+final class LevitDisposalFailure {
+  /// The resource whose cleanup failed.
+  final Object resource;
+
+  /// The error thrown by the resource.
+  final Object error;
+
+  /// The associated stack trace.
+  final StackTrace stackTrace;
+
+  /// Creates a disposal failure record.
+  const LevitDisposalFailure({
+    required this.resource,
+    required this.error,
+    required this.stackTrace,
+  });
+
+  @override
+  String toString() => 'LevitDisposalFailure(${resource.runtimeType}: $error)';
+}
+
+/// Aggregate error thrown after best-effort disposal has finished.
+///
+/// Cleanup always continues after an individual failure. Callers receive this
+/// exception only after every selected resource has been given a chance to
+/// close.
+final class LevitDisposalException implements Exception {
+  /// All failures in deterministic disposal order.
+  final List<LevitDisposalFailure> failures;
+
+  /// Creates an aggregate disposal error.
+  LevitDisposalException(Iterable<LevitDisposalFailure> failures)
+      : failures = List<LevitDisposalFailure>.unmodifiable(failures);
+
+  @override
+  String toString() =>
+      'LevitDisposalException(${failures.length} cleanup failure'
+      '${failures.length == 1 ? '' : 's'})';
 }
 
 /// Metadata container for a dependency registered within a [LevitScope].
@@ -167,6 +218,25 @@ class LevitScope {
   /// Fast-path cache for tag-less parent scope lookups.
   final Map<Type, LevitScope> _typeResolutionCache = {};
 
+  /// Non-owning local aliases (alias key -> canonical local key).
+  final Map<LevitScopeKey, LevitScopeKey> _aliases = {};
+
+  /// Reverse alias index used to invalidate aliases with their canonical key.
+  final Map<LevitScopeKey, Set<LevitScopeKey>> _aliasesByCanonical = {};
+
+  Future<void>? _disposeFuture;
+  bool _isClosing = false;
+  bool _isDisposed = false;
+
+  /// Whether terminal scope disposal has started.
+  bool get isClosing => _isClosing;
+
+  /// Whether terminal scope disposal has completed.
+  bool get isDisposed => _isDisposed;
+
+  /// Completes when terminal disposal completes, or immediately while active.
+  Future<void> get disposed => _disposeFuture ?? Future<void>.value();
+
   /// Creates a new [LevitScope].
   LevitScope._(this.name, {LevitScope? parentScope})
       : id = _nextId++,
@@ -197,11 +267,16 @@ class LevitScope {
   ///
   /// Returns the created instance.
   S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
+    _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
-    if (_registry.containsKey(key)) {
-      delete<S>(tag: tag, force: true);
+    if (_registry.containsKey(key) || _aliases.containsKey(key)) {
+      throw StateError(
+        'LevitScope($name): "$keyString" is already registered. '
+        'Await delete<$S>(tag: ${tag == null ? 'null' : "'$tag'"}, force: true) '
+        'before registering a replacement.',
+      );
     }
 
     final info = LevitDependency<S>(permanent: permanent);
@@ -228,9 +303,15 @@ class LevitScope {
   /// long-lived scopes.
   void lazyPut<S>(S Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false}) {
+    _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
+    if (_aliases.containsKey(key)) {
+      throw StateError(
+        'LevitScope($name): "$keyString" is already registered as an alias.',
+      );
+    }
     if (!isFactory &&
         _registry.containsKey(key) &&
         _registry[key]!.isInstantiated) {
@@ -271,9 +352,15 @@ class LevitScope {
     bool permanent = false,
     bool isFactory = false,
   }) {
+    _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
+    if (_aliases.containsKey(key)) {
+      throw StateError(
+        'LevitScope($name): "$keyString" is already registered as an alias.',
+      );
+    }
     if (!isFactory &&
         _registry.containsKey(key) &&
         _registry[key]!.isInstantiated) {
@@ -296,6 +383,53 @@ class LevitScope {
     );
 
     return () => findAsync<S>(tag: tag);
+  }
+
+  /// Binds [Alias] to an existing local singleton registration of [Concrete].
+  ///
+  /// The alias is non-owning: resolving it returns the canonical instance,
+  /// deleting it does not dispose that instance, and disposing the canonical
+  /// registration removes all of its aliases before disposing it once.
+  ///
+  /// Aliases are intentionally local and cannot target factory registrations.
+  void bindExisting<Alias, Concrete extends Alias>({
+    String? sourceTag,
+    String? tag,
+  }) {
+    _ensureUsable();
+
+    final aliasKey = _getKey<Alias>(tag);
+    final canonicalKey = _getKey<Concrete>(sourceTag);
+    final canonical = _registry[canonicalKey];
+
+    if (canonical == null) {
+      throw StateError(
+        'LevitScope($name): Cannot bind alias "${aliasKey.debugString}" '
+        'because local source "${canonicalKey.debugString}" is not registered.',
+      );
+    }
+    if (canonical.isFactory) {
+      throw StateError(
+        'LevitScope($name): Factory registration '
+        '"${canonicalKey.debugString}" cannot be aliased.',
+      );
+    }
+    if (aliasKey == canonicalKey) {
+      throw ArgumentError(
+        'Alias and canonical registration must use different keys.',
+      );
+    }
+    if (_registry.containsKey(aliasKey) || _aliases.containsKey(aliasKey)) {
+      throw StateError(
+        'LevitScope($name): Alias key "${aliasKey.debugString}" is already '
+        'registered.',
+      );
+    }
+
+    _aliases[aliasKey] = canonicalKey;
+    (_aliasesByCanonical[canonicalKey] ??= <LevitScopeKey>{}).add(aliasKey);
+    _invalidateLookupCaches(aliasKey);
+    _notifyRegister(aliasKey.debugString, canonical, 'bindExisting');
   }
 
   void _registerBinding<S>(
@@ -334,6 +468,7 @@ class LevitScope {
   ///
   /// Throws an [Exception] if [S] is not registered in this scope or any ancestor.
   S find<S>({String? tag}) {
+    _ensureUsable();
     // Tag-less singleton lookups use a direct instance cache.
     if (tag == null) {
       final cached = _instanceCache[S];
@@ -360,6 +495,17 @@ class LevitScope {
         if (!info.isFactory && info.instance != null) {
           _instanceCache[S] = info.instance;
         }
+        return result;
+      }
+
+      final aliasKey = LevitScopeKey.of<S>();
+      final canonicalKey = _aliases[aliasKey];
+      if (canonicalKey != null) {
+        final result = _findAliasLocal<S>(
+          aliasKey: aliasKey,
+          canonicalKey: canonicalKey,
+        );
+        _instanceCache[S] = result;
         return result;
       }
 
@@ -399,6 +545,14 @@ class LevitScope {
       return _findLocal<S>(info as LevitDependency<S>, keyString, tag);
     }
 
+    final canonicalKey = _aliases[key];
+    if (canonicalKey != null) {
+      return _findAliasLocal<S>(
+        aliasKey: key,
+        canonicalKey: canonicalKey,
+      );
+    }
+
     // Reuse cached ancestor that previously resolved this key.
     final cachedScope = _readCachedScope(key);
     if (cachedScope != null) {
@@ -431,6 +585,7 @@ class LevitScope {
   /// Mirrors the behavior of [find] but returns `null` instead of throwing an exception
   /// if the dependency is missing.
   S? findOrNull<S>({String? tag}) {
+    _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
@@ -439,6 +594,18 @@ class LevitScope {
     if (info != null) {
       try {
         return _findLocal<S>(info as LevitDependency<S>, keyString, tag);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final canonicalKey = _aliases[key];
+    if (canonicalKey != null) {
+      try {
+        return _findAliasLocal<S>(
+          aliasKey: key,
+          canonicalKey: canonicalKey,
+        );
       } catch (_) {
         return null;
       }
@@ -470,6 +637,7 @@ class LevitScope {
   ///
   /// Throws an [Exception] if [S] is not registered.
   Future<S> findAsync<S>({String? tag}) async {
+    _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
@@ -478,6 +646,14 @@ class LevitScope {
     if (info != null) {
       return _findLocalAsync<S>(
           info as LevitDependency<S>, key, keyString, tag);
+    }
+
+    final canonicalKey = _aliases[key];
+    if (canonicalKey != null) {
+      return _findAliasLocalAsync<S>(
+        aliasKey: key,
+        canonicalKey: canonicalKey,
+      );
     }
 
     final cachedScope = _readCachedScope(key);
@@ -505,6 +681,7 @@ class LevitScope {
 
   /// Asynchronously finds an instance of type [S], or returns `null` if not found.
   Future<S?> findOrNullAsync<S>({String? tag}) async {
+    _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
@@ -513,6 +690,18 @@ class LevitScope {
     if (info != null) {
       return _findLocalAsync<S>(
           info as LevitDependency<S>, key, keyString, tag);
+    }
+
+    final canonicalKey = _aliases[key];
+    if (canonicalKey != null) {
+      try {
+        return await _findAliasLocalAsync<S>(
+          aliasKey: key,
+          canonicalKey: canonicalKey,
+        );
+      } catch (_) {
+        return null;
+      }
     }
 
     final cachedScope = _readCachedScope(key);
@@ -609,8 +798,8 @@ class LevitScope {
           final instance = await _createInstanceAsync<S>(
               info.asyncBuilder!, keyString, info);
           if (!identical(_registry[key], info)) {
-            if (instance is LevitScopeDisposable) {
-              instance.onClose();
+            if (instance != null) {
+              await _disposeInstance(instance);
             }
             throw StateError(
               'LevitScope($name): Dependency "$keyString" was disposed while initializing.',
@@ -632,6 +821,43 @@ class LevitScope {
 
     // `findAsync` can resolve sync registrations when no async builder exists.
     return _findLocal<S>(info, keyString, tag);
+  }
+
+  S _findAliasLocal<S>({
+    required LevitScopeKey aliasKey,
+    required LevitScopeKey canonicalKey,
+  }) {
+    final info = _registry[canonicalKey]!;
+    if (info.isAsync && !info.isInstantiated) {
+      throw StateError(
+        'LevitScope($name): Alias "${aliasKey.debugString}" targets an '
+        'asynchronous registration. Use findAsync().',
+      );
+    }
+
+    final instance = _findLocal<dynamic>(
+      info,
+      canonicalKey.debugString,
+      canonicalKey.tag,
+    );
+    _notifyResolve(aliasKey.debugString, info, 'findAlias');
+    return instance as S;
+  }
+
+  Future<S> _findAliasLocalAsync<S>({
+    required LevitScopeKey aliasKey,
+    required LevitScopeKey canonicalKey,
+  }) async {
+    final info = _registry[canonicalKey]!;
+
+    final instance = await _findLocalAsync<dynamic>(
+      info,
+      canonicalKey,
+      canonicalKey.debugString,
+      canonicalKey.tag,
+    );
+    _notifyResolve(aliasKey.debugString, info, 'findAliasAsync');
+    return instance as S;
   }
 
   S _findLocal<S>(LevitDependency<S> info, String key, String? tag) {
@@ -680,7 +906,8 @@ class LevitScope {
 
   /// Returns `true` if type [S] is registered in this scope (parent scopes are ignored).
   bool isRegisteredLocally<S>({String? tag}) {
-    return _registry.containsKey(_getKey<S>(tag));
+    final key = _getKey<S>(tag);
+    return _registry.containsKey(key) || _aliases.containsKey(key);
   }
 
   /// Returns `true` if type [S] is registered in this scope or any ancestor.
@@ -694,9 +921,14 @@ class LevitScope {
   ///
   /// This checks if the lazy builder has executed or if the instance was put directly.
   bool isInstantiated<S>({String? tag}) {
-    if (isRegisteredLocally<S>(tag: tag)) {
-      final key = _getKey<S>(tag);
-      return _registry[key]!.isInstantiated;
+    final key = _getKey<S>(tag);
+    final local = _registry[key];
+    if (local != null) {
+      return local.isInstantiated;
+    }
+    final canonicalKey = _aliases[key];
+    if (canonicalKey != null) {
+      return _registry[canonicalKey]?.isInstantiated ?? false;
     }
     if (_parentScope != null) return _parentScope!.isInstantiated<S>(tag: tag);
     return false;
@@ -710,34 +942,31 @@ class LevitScope {
   /// Set [force] to `true` to delete dependencies marked as `permanent`.
   ///
   /// Returns `true` if the dependency was found and deleted.
-  bool delete<S>({String? tag, bool force = false}) {
+  Future<bool> delete<S>({String? tag, bool force = false}) async {
+    _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
 
-    if (!_registry.containsKey(key)) return false;
+    if (_aliases.containsKey(key)) {
+      final canonicalKey = _aliases[key]!;
+      final info = _registry[canonicalKey];
+      _removeAlias(key);
+      if (info != null) {
+        _notifyDelete(keyString, info, 'deleteAlias');
+      }
+      return true;
+    }
 
-    final info = _registry[key]!;
+    final info = _registry[key];
+    if (info == null) return false;
 
     if (info.permanent && !force) return false;
 
-    if (info.isInstantiated && info.instance is LevitScopeDisposable) {
-      (info.instance as LevitScopeDisposable).onClose();
-    }
-
     _notifyDelete(keyString, info, 'delete');
+    _removeCanonicalBinding(key);
 
-    _registry.remove(key);
-    _pendingInit.remove(key);
-
-    // Keep fast-path registries consistent with primary registry removals.
-    if (tag == null) {
-      _typeRegistry.remove(S);
-      _typeResolutionCache.remove(S);
-      _instanceCache.remove(S);
-    }
-
-    if (_resolutionCache.isNotEmpty) {
-      _resolutionCache.remove(key);
+    if (info.isInstantiated) {
+      await _disposeAll(<Object?>[info.instance]);
     }
     return true;
   }
@@ -745,33 +974,21 @@ class LevitScope {
   /// Disposes all dependencies registered in this scope.
   ///
   /// Dependencies marked as `permanent` are preserved unless [force] is `true`.
-  void reset({bool force = false}) {
-    final keysToRemove = <LevitScopeKey>[];
+  Future<void> reset({bool force = false}) async {
+    _ensureUsable();
+    final entriesToRemove = <MapEntry<LevitScopeKey, LevitDependency>>[];
 
-    for (final entry in _registry.entries) {
+    for (final entry in _registry.entries.toList(growable: false)) {
       final info = entry.value;
 
       if (info.permanent && !force) continue;
 
-      if (info.isInstantiated && info.instance is LevitScopeDisposable) {
-        (info.instance as LevitScopeDisposable).onClose();
-      }
-
       _notifyDelete(entry.key.debugString, info, 'reset');
-      keysToRemove.add(entry.key);
+      entriesToRemove.add(entry);
     }
 
-    for (final key in keysToRemove) {
-      _registry.remove(key);
-      _pendingInit.remove(key);
-      _resolutionCache.remove(key);
-
-      // Only untagged entries participate in type-based fast paths.
-      if (key.tag == null) {
-        _typeRegistry.remove(key.type);
-        _typeResolutionCache.remove(key.type);
-        _instanceCache.remove(key.type);
-      }
+    for (final entry in entriesToRemove) {
+      _removeCanonicalBinding(entry.key);
     }
 
     if (force) {
@@ -781,15 +998,43 @@ class LevitScope {
       _instanceCache.clear();
       _resolutionCache.clear();
     }
+
+    await _disposeAll(
+      entriesToRemove
+          .where((entry) => entry.value.isInstantiated)
+          .map((entry) => entry.value.instance)
+          .toList(growable: false)
+          .reversed,
+    );
   }
 
   /// Disposes the scope and all its dependencies.
   ///
   /// This triggers a full cleanup. All middlewares are notified, and the scope
   /// is marked as unusable.
-  void dispose() {
-    reset(force: true);
-    _notifyScopeDispose();
+  Future<void> dispose() {
+    return _disposeFuture ??= _disposeScope();
+  }
+
+  Future<void> _disposeScope() async {
+    if (_isDisposed) return;
+    _isClosing = true;
+
+    Object? failure;
+    StackTrace? failureStack;
+    try {
+      await _resetWhileClosing();
+    } catch (error, stackTrace) {
+      failure = error;
+      failureStack = stackTrace;
+    } finally {
+      _isDisposed = true;
+      _notifyScopeDispose();
+    }
+
+    if (failure != null) {
+      Error.throwWithStackTrace(failure, failureStack!);
+    }
   }
 
   /// Creates a new child scope.
@@ -799,6 +1044,7 @@ class LevitScope {
   ///
   /// [name] is used for debugging.
   LevitScope createScope(String name) {
+    _ensureUsable();
     assert(() {
       LevitScope? current = this;
       while (current != null) {
@@ -817,18 +1063,118 @@ class LevitScope {
     return LevitScope._(name, parentScope: this);
   }
 
+  Future<void> _resetWhileClosing() async {
+    final entries = _registry.entries.toList(growable: false);
+
+    for (final entry in entries) {
+      _notifyDelete(entry.key.debugString, entry.value, 'dispose');
+      _removeCanonicalBinding(entry.key);
+    }
+
+    _aliases.clear();
+    _aliasesByCanonical.clear();
+    _pendingInit.clear();
+    _typeRegistry.clear();
+    _typeResolutionCache.clear();
+    _instanceCache.clear();
+    _resolutionCache.clear();
+
+    await _disposeAll(
+      entries
+          .where((entry) => entry.value.isInstantiated)
+          .map((entry) => entry.value.instance)
+          .toList(growable: false)
+          .reversed,
+    );
+  }
+
+  Future<void> _disposeAll(Iterable<Object?> instances) async {
+    final failures = <LevitDisposalFailure>[];
+    final seen = HashSet<Object>.identity();
+
+    for (final instance in instances) {
+      if (instance == null || !seen.add(instance)) continue;
+      try {
+        await _disposeInstance(instance);
+      } catch (error, stackTrace) {
+        failures.add(LevitDisposalFailure(
+          resource: instance,
+          error: error,
+          stackTrace: stackTrace,
+        ));
+      }
+    }
+
+    if (failures.isNotEmpty) {
+      throw LevitDisposalException(failures);
+    }
+  }
+
+  Future<void> _disposeInstance(Object instance) async {
+    if (instance is LevitScopeDisposable) {
+      await instance.onClose();
+      return;
+    }
+    if (instance is LevitDisposable) {
+      await instance.dispose();
+    }
+  }
+
+  void _removeCanonicalBinding(LevitScopeKey key) {
+    _registry.remove(key);
+    _pendingInit.remove(key);
+    _invalidateLookupCaches(key);
+
+    final aliases = _aliasesByCanonical.remove(key);
+    if (aliases != null) {
+      for (final alias in aliases.toList(growable: false)) {
+        _aliases.remove(alias);
+        _invalidateLookupCaches(alias);
+      }
+    }
+  }
+
+  void _removeAlias(LevitScopeKey aliasKey) {
+    final canonicalKey = _aliases.remove(aliasKey);
+    if (canonicalKey == null) return;
+
+    final reverse = _aliasesByCanonical[canonicalKey];
+    reverse?.remove(aliasKey);
+    if (reverse != null && reverse.isEmpty) {
+      _aliasesByCanonical.remove(canonicalKey);
+    }
+    _invalidateLookupCaches(aliasKey);
+  }
+
+  void _invalidateLookupCaches(LevitScopeKey key) {
+    _resolutionCache.remove(key);
+    if (key.tag == null) {
+      _typeRegistry.remove(key.type);
+      _typeResolutionCache.remove(key.type);
+      _instanceCache.remove(key.type);
+    }
+  }
+
+  void _ensureUsable() {
+    if (_isClosing || _isDisposed) {
+      throw StateError('LevitScope($name) is closing or disposed.');
+    }
+  }
+
   LevitScopeKey _getKey<S>(String? tag) => LevitScopeKey.of<S>(tag: tag);
 
   /// The number of dependencies registered locally in this scope.
-  int get registeredCount => _registry.length;
+  int get registeredCount => _registry.length + _aliases.length;
 
   /// A list of keys for all locally registered dependencies (for debugging).
-  List<String> get registeredKeys =>
-      _registry.keys.map((k) => k.debugString).toList();
+  List<String> get registeredKeys => <LevitScopeKey>[
+        ..._registry.keys,
+        ..._aliases.keys
+      ].map((k) => k.debugString).toList();
 
   @override
   String toString() {
-    return 'LevitScope($name, ${_registry.length} local registrations)';
+    return 'LevitScope($name, $registeredCount local registrations)';
   }
 
   // Global scope middleware registry.

@@ -7,8 +7,8 @@ mixin LevitLoopExecutionMixin on LevitController {
   final LevitLoopEngine loopEngine = LevitLoopEngine();
 
   @override
-  void onClose() {
+  FutureOr<void> onClose() {
     loopEngine.dispose();
-    super.onClose();
+    return super.onClose();
   }
 }

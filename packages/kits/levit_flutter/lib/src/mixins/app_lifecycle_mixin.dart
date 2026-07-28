@@ -27,13 +27,13 @@ mixin LevitAppLifecycleMixin on LevitController {
   }
 
   @override
-  void onClose() {
+  FutureOr<void> onClose() {
     final observer = _observer;
     if (observer != null) {
       WidgetsBinding.instance.removeObserver(observer);
       _observer = null;
     }
-    super.onClose();
+    return super.onClose();
   }
 
   /// Called when the application is visible and responding to user input.

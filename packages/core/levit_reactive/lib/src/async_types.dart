@@ -1,5 +1,14 @@
 part of '../levit_reactive.dart';
 
+/// Determines what an [LxStream] does when its current source completes.
+enum LxStreamCompletionPolicy {
+  /// Permanently closes the reactive. This preserves the legacy behavior.
+  close,
+
+  /// Retains the latest state and permits an explicit future restart.
+  retain,
+}
+
 /// A reactive wrapper for a [Stream].
 ///
 /// [LxStream] tracks the latest state ([LxStatus]) of a source stream and
@@ -24,37 +33,58 @@ class LxStream<T> extends _LxAsyncVal<T> {
   Stream<T> Function()? _streamFactory;
   bool _hasBoundSource = false;
   int _bindEpoch = 0;
+  bool _sourceCompleted = false;
+
+  /// Behavior applied when the current source stream completes.
+  final LxStreamCompletionPolicy completionPolicy;
 
   /// Creates an [LxStream] bound to the given [stream].
   /// Note: If the stream is a single-subscription stream, it cannot be safely re-listened to
   /// after losing all subscribers. Prefer using [LxStream.defer] for single-subscription streams.
-  factory LxStream(Stream<T> stream, {T? initial}) {
+  factory LxStream(
+    Stream<T> stream, {
+    T? initial,
+    LxStreamCompletionPolicy completionPolicy = LxStreamCompletionPolicy.close,
+  }) {
     return LxStream<T>._internal(
       _LxAsyncVal.initialStatus<T>(initial),
       () => stream,
+      completionPolicy,
     );
   }
 
   /// Creates an [LxStream] that lazily generates its underlying stream using [factory]
   /// whenever it becomes active. This is strictly required for safely recreating
   /// single-subscription operations like `.map` when an [LxStream] re-activates.
-  factory LxStream.defer(Stream<T> Function() factory, {T? initial}) {
+  factory LxStream.defer(
+    Stream<T> Function() factory, {
+    T? initial,
+    LxStreamCompletionPolicy completionPolicy = LxStreamCompletionPolicy.close,
+  }) {
     return LxStream<T>._internal(
       _LxAsyncVal.initialStatus<T>(initial),
       factory,
+      completionPolicy,
     );
   }
 
   /// Creates an [LxStream] in an [LxIdle] state.
-  factory LxStream.idle({T? initial}) {
+  factory LxStream.idle({
+    T? initial,
+    LxStreamCompletionPolicy completionPolicy = LxStreamCompletionPolicy.close,
+  }) {
     return LxStream<T>._internal(
       _LxAsyncVal.initialStatus<T>(initial, idle: true),
       null,
+      completionPolicy,
     );
   }
 
-  LxStream._internal(LxStatus<T> initialStatus, Stream<T> Function()? factory)
-      : super(initialStatus, onListen: () {}, onCancel: () {}) {
+  LxStream._internal(
+    LxStatus<T> initialStatus,
+    Stream<T> Function()? factory,
+    this.completionPolicy,
+  ) : super(initialStatus, onListen: () {}, onCancel: () {}) {
     if (factory != null) {
       _assignFactory(factory);
     }
@@ -70,6 +100,9 @@ class LxStream<T> extends _LxAsyncVal<T> {
   void _protectedOnInactive() {
     super._protectedOnInactive();
     _cleanup();
+    // A later activation is a new demand cycle and may recreate a deferred
+    // source. Completion never loops while the current demand remains active.
+    _sourceCompleted = false;
   }
 
   void _assignFactory(Stream<T> Function() factory) {
@@ -78,13 +111,16 @@ class LxStream<T> extends _LxAsyncVal<T> {
   }
 
   void _checkPendingBind() {
-    if (_streamFactory != null && _activeSubscription == null) {
+    if (_streamFactory != null &&
+        _activeSubscription == null &&
+        !_sourceCompleted) {
       _bind(_streamFactory!());
     }
   }
 
   void _bind(Stream<T> stream) {
     final epoch = ++_bindEpoch;
+    _sourceCompleted = false;
 
     _activeSubscription?.cancel();
     _activeSubscription = stream.listen(
@@ -99,7 +135,16 @@ class LxStream<T> extends _LxAsyncVal<T> {
       },
       onDone: () {
         if (_bindEpoch != epoch || isDisposed) return;
-        close();
+        _activeSubscription = null;
+        if (completionPolicy == LxStreamCompletionPolicy.close) {
+          close();
+          return;
+        }
+
+        _sourceCompleted = true;
+        if (_value is LxWaiting<T>) {
+          _setValueInternal(LxIdle<T>(_value.lastValue));
+        }
       },
     );
   }
@@ -136,6 +181,7 @@ class LxStream<T> extends _LxAsyncVal<T> {
   /// Re-executes the stream operation and registers a new [factory] for future re-activations.
   void restartDeferred(Stream<T> Function() factory) {
     _cleanup();
+    _sourceCompleted = false;
     _assignFactory(factory);
     _setValueInternal(LxWaiting<T>(_value.lastValue));
 
@@ -154,6 +200,7 @@ class LxStream<T> extends _LxAsyncVal<T> {
   @override
   void close() {
     _cleanup();
+    _sourceCompleted = true;
     _streamFactory = null;
     _hasBoundSource = false;
     _valueController?.close();

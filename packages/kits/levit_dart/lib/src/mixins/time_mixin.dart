@@ -97,13 +97,13 @@ mixin LevitTimeMixin on LevitController {
   }
 
   @override
-  void onClose() {
+  FutureOr<void> onClose() {
     cancelAllTimers();
     for (final c in _countdowns) {
       c.dispose();
     }
     _countdowns.clear();
-    super.onClose();
+    return super.onClose();
   }
 }
 

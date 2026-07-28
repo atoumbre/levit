@@ -35,6 +35,10 @@ class InstanceCaptureMiddleware implements LevitScopeMiddleware {
   void onScopeDispose(int scopeId, String scopeName) {}
 }
 
+abstract interface class _Port {}
+
+final class _Implementation implements _Port {}
+
 void main() {
   final middleware = InstanceCaptureMiddleware();
 
@@ -42,9 +46,9 @@ void main() {
     Levit.addDependencyMiddleware(middleware);
   });
 
-  tearDown(() {
+  tearDown(() async {
     Levit.removeDependencyMiddleware(middleware);
-    Levit.reset(force: true);
+    await Levit.reset(force: true);
   });
 
   group('LevitRef Coverage', () {
@@ -82,13 +86,27 @@ void main() {
       expect(await future, 123);
     });
 
-    test('onDispose error logging', () {
+    test('bindExisting delegates to the owning store scope', () {
+      final implementation = _Implementation();
+      final state = LevitStore<_Port>((ref) {
+        ref.put<_Implementation>(() => implementation);
+        ref.bindExisting<_Port, _Implementation>();
+        return ref.find<_Port>();
+      });
+
+      expect(state.find(), same(implementation));
+    });
+
+    test('onDispose failures are aggregated', () async {
       final state = LevitStore((ref) {
         ref.onDispose(() => throw Exception('dispose error'));
         return 'ok';
       });
       state.find();
-      Levit.reset(force: true);
+      await expectLater(
+        Levit.reset(force: true),
+        throwsA(isA<LevitDisposalException>()),
+      );
     });
 
     test('LxReactive fluent API: register, sensitive, named', () {
@@ -98,12 +116,12 @@ void main() {
       expect(r.isSensitive, true);
     });
 
-    test('_levitDisposeItem handles LevitScopeDisposable', () {
+    test('_levitDisposeItem handles LevitScopeDisposable', () async {
       final mock = _MockScopeDisposable();
       // Test via Levit.delete
       Levit.put(() => mock);
       expect(mock.closed, false);
-      Levit.delete<_MockScopeDisposable>(force: true);
+      await Levit.delete<_MockScopeDisposable>(force: true);
       expect(mock.closed, true);
 
       // Directly test via autoDispose to hit L280 specifically via _levitDisposeItem
@@ -114,7 +132,7 @@ void main() {
       });
       store.find();
       expect(mock2.closed, false);
-      store.delete(force: true);
+      await store.delete(force: true);
       expect(mock2.closed, true);
     });
   });

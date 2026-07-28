@@ -23,6 +23,7 @@ part 'src/base_types.dart';
 part 'src/collections.dart';
 part 'src/computed.dart';
 part 'src/core.dart';
+part 'src/family.dart';
 part 'src/global_accessor.dart';
 part 'src/middlewares.dart';
 part 'src/workers.dart';

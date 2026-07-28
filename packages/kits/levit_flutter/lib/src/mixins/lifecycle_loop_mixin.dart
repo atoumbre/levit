@@ -19,13 +19,13 @@ mixin LevitLoopExecutionLifecycleMixin
   }
 
   @override
-  void onClose() {
+  FutureOr<void> onClose() {
     final observer = _lifecycleObserver;
     if (observer != null) {
       WidgetsBinding.instance.removeObserver(observer);
       _lifecycleObserver = null;
     }
-    super.onClose();
+    return super.onClose();
   }
 
   /// Whether to pause services marked as "permanent" during the app backgrounding.

@@ -13,7 +13,7 @@ void main() {
     controller.onInit();
 
     // Run a task
-    await controller.runTask(() async => 'success', id: 'task1');
+    await controller.runTask((_) async => 'success', id: 'task1');
 
     // Immediately after, it should exist and be success
     expect(controller.tasks.containsKey('task1'), isTrue);

@@ -18,13 +18,14 @@ void main() {
   tearDown(() => levit.reset(force: true));
 
   group('DI Error Handling & Scope Edge Cases', () {
-    test('LevitScope.put deletes existing instance if present', () {
+    test('LevitScope.put requires explicit awaited replacement', () async {
       final scope = levit.createScope('test');
       final s1 = TestService();
       scope.put(() => s1, tag: 't1');
 
       final s2 = TestService();
-      scope.put(() => s2, tag: 't1'); // Should replace and close s1
+      await scope.delete<TestService>(tag: 't1');
+      scope.put(() => s2, tag: 't1');
 
       expect(s1.closed, true);
       expect(scope.find<TestService>(tag: 't1'), s2);

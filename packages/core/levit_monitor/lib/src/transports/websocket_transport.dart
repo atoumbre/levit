@@ -142,6 +142,7 @@ class WebSocketTransport implements LevitTransport {
       DependencyEvent _ => 'di',
       SnapshotEvent _ => 'snapshot',
       LogEvent _ => 'log',
+      CustomMonitorEvent _ => 'custom',
     };
 
     _send({

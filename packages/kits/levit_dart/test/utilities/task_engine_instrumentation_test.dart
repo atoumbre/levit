@@ -14,7 +14,7 @@ void main() {
       final blocker = Completer<void>();
 
       final first = engine.schedule(
-        () async {
+        (_) async {
           await blocker.future;
           return 'first';
         },
@@ -23,7 +23,7 @@ void main() {
       );
 
       final second = engine.schedule(
-        () async => 'second',
+        (_) async => 'second',
         id: 'second',
         priority: TaskPriority.high,
       );
@@ -54,7 +54,7 @@ void main() {
       var count = 0;
 
       final result = await engine.schedule<String>(
-        () {
+        (_) {
           count++;
           if (count == 1) throw StateError('fail first');
           return 'ok';
@@ -88,13 +88,13 @@ void main() {
       );
 
       await engine.schedule<int>(
-        () => 10,
+        (_) => 10,
         id: 'cached_task',
         cachePolicy: policy,
       );
 
       final second = await engine.schedule<int>(
-        () => 999,
+        (_) => 999,
         id: 'cached_task',
         cachePolicy: policy,
       );
@@ -119,14 +119,14 @@ void main() {
       final blocker = Completer<void>();
 
       final active = engine.schedule(
-        () async {
+        (_) async {
           await blocker.future;
           return 'active';
         },
         id: 'active_task',
       );
       final queued = engine.schedule(
-        () async => 'queued',
+        (_) async => 'queued',
         id: 'queued_task',
       );
 
@@ -157,7 +157,7 @@ void main() {
       var cancelled = false;
 
       final task = engine.schedule<String>(
-        () async => 'should-not-run',
+        (_) async => 'should-not-run',
         id: 'cancelled_before_start',
         onStart: () => engine.cancel('cancelled_before_start'),
         onCancel: () => cancelled = true,
@@ -184,7 +184,7 @@ void main() {
       var cancelled = false;
 
       final active = engine.schedule<String>(
-        () async {
+        (_) async {
           await blocker.future;
           return 'done';
         },
@@ -218,7 +218,7 @@ void main() {
       var cancelled = false;
 
       final task = engine.schedule<String>(
-        () {
+        (_) {
           engine.cancel('cancelled_failed_task');
           throw StateError('cancelled failure');
         },

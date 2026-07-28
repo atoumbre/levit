@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.0.11
+
+- **Breaking:** task callbacks now receive `LevitTaskContext`; isolate work uses
+  the dedicated `scheduleIsolate`, `submitIsolate`, and `runIsolateTask` APIs.
+- Expand `LevitTaskEngine`, `LevitTasksMixin`, and
+  `LevitReactiveTasksMixin` instead of adding a parallel action abstraction.
+- Add named logical task IDs with `reject` (default), `join`, `drop`, `restart`,
+  `enqueue`, and `coalesceLatest` conflict policies.
+- Add cooperative cancellation, validated progress, execution handles, isolate
+  progress/cancellation bridging, retries, and per-execution metadata.
+- Add dependency-neutral structured task events, global
+  `LevitTaskMiddleware`, and opt-in `LevitTaskTracker`.
+- Add reactive category/blocking selectors and execution-ID protection against
+  stale completion publication.
+- Make task engines controller-owned and await their lifecycle cleanup.
+- Updated internal package constraints to `^0.0.11`.
+
 ## 0.0.10
 - `LevitTasksMixin.tasksEngine` lazy-inits before `onInit` and throws a clear error after `onClose`.
 - `LevitReactiveTasksMixin` lazily initializes `isBusy` and `totalProgress`; clear error after close.

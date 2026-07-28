@@ -49,15 +49,24 @@ void main() {
       await streamController.close();
     });
 
-    test('autoDispose handles exceptions during cleanup', () {
+    test('autoDispose aggregates exceptions after cleanup', () async {
       final controller = TestController();
 
       controller.autoDispose(ThrowingDisposable());
       controller.autoDispose(ThrowingCancelable());
       controller.autoDispose(ThrowingCloseable());
 
-      // Should not throw as it is caught in LevitController._disposeItem
-      expect(() => controller.onClose(), returnsNormally);
+      await expectLater(
+        controller.onClose(),
+        throwsA(
+          isA<LevitDisposalException>().having(
+            (error) => error.failures.length,
+            'failure count',
+            3,
+          ),
+        ),
+      );
+      expect(controller.isClosed, isTrue);
     });
 
     test('identical objects are not added twice', () {

@@ -24,6 +24,7 @@ Repo Map
 packages/core/       levit_scope, levit_reactive, levit_dart_core,
                      levit_flutter_core, levit_monitor
 packages/kits/       levit, levit_dart, levit_flutter
+packages/tools/      levit_lints
 examples/            runnable reference apps
 ```
 
@@ -79,8 +80,9 @@ void main() {
 ```
 
 Auto-linking registers reactive values created during controller construction
-or onInit with the controller lifecycle. With it enabled, field-level reactives
-on a LevitController are often cleaned up automatically.
+or initialization with the returned LevitResourceOwner lifecycle. With it
+enabled, field-level reactives on a LevitController or other owner are often
+cleaned up automatically.
 
 Still call autoDispose(...) explicitly for:
 
@@ -101,11 +103,14 @@ Registration and resolution:
 - Levit.put(() => ...) — eagerly creates and registers (builder runs immediately).
 - Levit.lazyPut(() => ...) — creates on first resolve.
 - Levit.lazyPutAsync(() async => ...) — async lazy dependency; resolve with findAsync.
+- Levit.bindExisting<Port, Implementation>() — local non-owning alias to an
+  existing singleton registration.
 - Levit.find<T>() — resolve from the current active scope.
 - Levit.findOrNull<T>() — resolve or null.
 - Levit.findAsync<T>() / Levit.findOrNullAsync<T>() — async resolution.
 - Levit.isRegistered<T>() / Levit.isInstantiated<T>() — registration probes.
-- Levit.delete<T>() / Levit.reset() — remove or clear scope contents.
+- await Levit.delete<T>() / await Levit.reset() — remove or clear scope
+  contents after awaited cleanup.
 
 Use tag to disambiguate multiple registrations of the same type.
 Use permanent: true for dependencies that should survive a *non-forced*
@@ -114,6 +119,9 @@ across disposed widget scopes or widget tests that dispose the tree. Prefer
 permanent on root / long-lived scopes; on short-lived page scopes it does not
 extend lifetime past widget unmount.
 Use isFactory: true on lazyPut when each resolution should create a new instance.
+Do not replace an instantiated synchronous registration in place. Await
+Levit.delete first. Scope cleanup is LIFO and best-effort; multiple cleanup
+failures are reported together as LevitDisposalException.
 
 Register global or app-wide services in the app/root scope. Register feature,
 route, or screen dependencies in the scope that owns that lifetime.
@@ -219,6 +227,17 @@ final remote = LxComputed.async(() async => await fetchCount());
 
 Use LxStatus<T> for async operation state (LxIdle, LxWaiting, LxSuccess,
 LxError). Render with LStatusBuilder.
+
+Async computed values and LxWorker accept LxAsyncConcurrency.latest (existing
+overlap/latest-publication behavior) or exhaustLatest (one running computation
+plus exactly one coalesced trailing run).
+
+LxStream defaults to LxStreamCompletionPolicy.close. Use retain for sources
+that complete but must preserve their status and later restart/rebind.
+
+Use LxFamily<K, R> for dynamically keyed reactive resources. Families lazily
+cache entries, support explicit invalidation/close, and optionally evict
+inactive entries. Raw keys are not exposed in diagnostic names by default.
 
 Use workers for side effects. Prefer LxWorker + autoDispose on controllers
 over raw .stream.listen for reload / reaction glue:
@@ -328,7 +347,8 @@ Widget-test harness (until levit_tests ships pumpLevitApp):
 - Mount MaterialApp with LScope(dependencyFactory: ..., child: ...)
 - Capture the scope from dependencyFactory into a test holder
 - Prefer unique / omitted scope names (0.0.9 auto-uniques unnamed scopes)
-- After the surface is cleared, dispose the scope or call Levit.reset()
+- After the surface is cleared, await scope disposal. Prefer an isolated test
+  scope over global Levit.reset().
 
 Widget guide:
 
@@ -365,7 +385,7 @@ Pure Dart Patterns
 Prefer Levit.runInScope for tests and short-lived workflows:
 
 ```dart
-final result = Levit.runInScope(() {
+final result = await Levit.runInScope(() {
   Levit.put(() => ApiClient());
   return Levit.find<ApiClient>().ping();
 });
@@ -381,11 +401,17 @@ scope.run(() {
   final count = Levit.put(() => 0.lx, tag: 'count');
 });
 
-scope.dispose();
+await scope.dispose();
 ```
 
 Dispose scopes explicitly. Child scopes should own feature-specific overrides
 and clean them up when the feature ends.
+
+Controllers, stores, and custom LevitScopeDisposable resources may implement
+LevitResourceOwner via LevitResourceOwnership. Register timers,
+subscriptions, reactives, and disposable helpers through own/autoDispose.
+Cleanup is awaited, LIFO, and idempotent. Lifecycle overrides must call
+super.onInit and await/return super.onClose.
 
 
 Task Utilities
@@ -399,7 +425,24 @@ Task mixins:
 - LevitTasksMixin — scheduling, retries, caching, cancellation without
   UI-facing reactive task state (tasksEngine.schedule(...)).
 - LevitReactiveTasksMixin — reactive task details, busy state, and progress
-  observable by UI or runtime code (runTask(...), tasks, isBusy, totalProgress).
+  observable by UI or runtime code (runTask(...), tasks, isBusy, totalProgress,
+  category/blocking selectors).
+
+Task callbacks receive LevitTaskContext for progress and cooperative
+cancellation. Reuse stable logical IDs and choose a conflict policy:
+
+- reject (default) — fail the new submission.
+- join — share the latest outstanding result.
+- drop — ignore the new submission.
+- restart — cooperatively cancel outstanding work and run the replacement.
+- enqueue — keep every same-ID submission in FIFO order.
+- coalesceLatest — retain one trailing submission and replace it with the
+  latest work.
+
+Use scheduleIsolate / submitIsolate / runIsolateTask for top-level/static
+isolate entrypoints. LevitTaskMiddleware emits dependency-neutral structured
+events. Explicitly attach LevitTaskTracker under a long-lived owner when one
+root blocking/busy view is needed.
 
 Other levit_dart mixins:
 
@@ -411,7 +454,8 @@ Other levit_dart mixins:
 Middleware
 ----------
 
-Levit has two middleware channels. Prefer the Levit facade in application code.
+Levit has DI and reactive middleware channels through its facade. The task
+utility layer adds a separate `LevitTaskMiddleware` channel.
 
 Dependency injection middleware (resolve/register/dispose events):
 
@@ -433,8 +477,19 @@ Levit.removeStateMiddlewareByToken(traceToken);
 
 Low-level equivalents: LevitScope.addMiddleware / Lx.addMiddleware.
 
+levit_monitor remains a core package and does not depend on levit_dart. Bridge
+task events to LevitMonitor.emitCustomEvent in an application adapter that
+imports both packages.
+
 Use one stable token per concern. Re-registering with the same token replaces
 behavior in place.
+
+Optional analyzer rules
+-----------------------
+
+Enable levit_lints (Dart 3.10+) for discarded/unowned lifecycle resources,
+preconstructed Levit.put closures, lifecycle overrides missing super calls,
+and mutable or snapshotted plain LxStatus owner fields.
 
 
 Anti-Patterns

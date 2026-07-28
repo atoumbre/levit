@@ -1,4 +1,10 @@
 
+## 0.0.11
+
+- Adopt the awaited lifecycle and resource-owner contracts from
+  `levit_dart_core`.
+- Updated internal package constraints to `^0.0.11`.
+
 ## 0.0.10
 - Minor DartDoc wording fix in `LScopedView`.
 - Coordinated release version bump.

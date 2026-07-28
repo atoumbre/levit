@@ -36,9 +36,9 @@ void main() {
         runningCount--;
       }
 
-      engine.schedule(() => task(c1));
-      engine.schedule(() => task(c2));
-      engine.schedule(() => task(c3));
+      engine.schedule((_) => task(c1));
+      engine.schedule((_) => task(c2));
+      engine.schedule((_) => task(c3));
 
       await Future.delayed(Duration.zero);
       expect(runningCount, 1, reason: 'Only 1 task should run initially');
@@ -62,13 +62,13 @@ void main() {
       engine.config(onTaskError: (e, s) => lastError = e);
 
       try {
-        await engine.schedule(() => throw 'error1');
+        await engine.schedule((_) => throw 'error1');
       } catch (_) {}
       expect(lastError, 'error1');
 
       engine.config(onTaskError: (e, s) => lastError = 'new_$e');
       try {
-        await engine.schedule(() => throw 'error2');
+        await engine.schedule((_) => throw 'error2');
       } catch (_) {}
       expect(lastError, 'new_error2');
     });
@@ -78,7 +78,7 @@ void main() {
       engine.config(onTaskError: (e, s) => lastError = e);
 
       try {
-        await engine.schedule(() => throw 'error_before_clear');
+        await engine.schedule((_) => throw 'error_before_clear');
       } catch (_) {}
       expect(lastError, 'error_before_clear');
 
@@ -86,7 +86,7 @@ void main() {
       engine.config(onTaskError: null);
 
       try {
-        await engine.schedule(() => throw 'error_after_clear');
+        await engine.schedule((_) => throw 'error_after_clear');
       } catch (_) {}
       expect(lastError, isNull);
     });
@@ -102,12 +102,12 @@ void main() {
       );
 
       engine.config(cacheProvider: cache1);
-      await engine.schedule(() => 42, id: 't1', cachePolicy: policy);
+      await engine.schedule((_) => 42, id: 't1', cachePolicy: policy);
       expect(cache1.storage.containsKey('t1'), isTrue);
       expect(cache2.storage.containsKey('t1'), isFalse);
 
       engine.config(cacheProvider: cache2);
-      await engine.schedule(() => 99, id: 't2', cachePolicy: policy);
+      await engine.schedule((_) => 99, id: 't2', cachePolicy: policy);
       expect(cache2.storage.containsKey('t2'), isTrue);
     });
 

@@ -4,12 +4,9 @@ import 'package:test/test.dart';
 class TestTimeController extends LevitController with LevitTimeMixin {}
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
-  });
-  test('LevitTimeMixin gaps', () {
-    final controller = TestTimeController();
-    controller.didAttachToScope(Ls.currentScope, key: 'test');
-    controller.onInit();
+  test('LevitTimeMixin gaps', () async {
+    await Levit.runInScope<void>(() {
+      Levit.put(() => TestTimeController());
+    }, name: 'time_mixin_test');
   });
 }

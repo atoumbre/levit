@@ -65,6 +65,12 @@ abstract class LevitRef {
   Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
       {String? tag, bool permanent = false, bool isFactory = false});
 
+  /// Binds [Alias] to an existing local singleton [Concrete].
+  void bindExisting<Alias, Concrete extends Alias>({
+    String? sourceTag,
+    String? tag,
+  });
+
   /// Registers [callback] to run when the store instance is disposed.
   void onDispose(void Function() callback);
 
@@ -72,6 +78,9 @@ abstract class LevitRef {
   ///
   /// Returns [object].
   T autoDispose<T>(T object);
+
+  /// Registers [object] for automatic cleanup when the store closes.
+  T own<T>(T object);
 }
 
 /// A portable container definition for managing reusable state.
@@ -130,7 +139,11 @@ class LevitStore<T> {
         await scope.findOrNullAsync<_LevitStoreInstance<T>>(tag: instanceKey);
 
     if (instance == null) {
-      scope.lazyPut(() => _LevitStoreInstance<T>(this), tag: instanceKey);
+      if (!scope.isRegisteredLocally<_LevitStoreInstance<T>>(
+        tag: instanceKey,
+      )) {
+        scope.lazyPut(() => _LevitStoreInstance<T>(this), tag: instanceKey);
+      }
       instance =
           await scope.findAsync<_LevitStoreInstance<T>>(tag: instanceKey);
     }
@@ -143,7 +156,7 @@ class LevitStore<T> {
   /// If [force] is `true`, removes even permanent registrations.
   ///
   /// Returns `true` when an instance registration was removed.
-  bool deleteIn(LevitScope scope, {String? tag, bool force = false}) {
+  Future<bool> deleteIn(LevitScope scope, {String? tag, bool force = false}) {
     final instanceKey =
         tag != null ? 'ls_store_${_getStoreTag(this, tag)}' : _defaultKey;
     return scope.delete<_LevitStoreInstance<T>>(tag: instanceKey, force: force);
@@ -186,7 +199,7 @@ class LevitStore<T> {
   /// If [force] is `true`, removes even permanent registrations.
   ///
   /// Returns `true` when a registration was removed.
-  bool delete({String? tag, bool force = false}) =>
+  Future<bool> delete({String? tag, bool force = false}) =>
       deleteIn(Ls.currentScope, tag: tag, force: force);
 
   @override
@@ -236,7 +249,7 @@ class LevitAsyncStore<T> {
   Future<T> findAsync({String? tag}) => findAsyncIn(Ls.currentScope, tag: tag);
 
   /// Deletes the store instance from [scope].
-  bool deleteIn(LevitScope scope, {String? tag, bool force = false}) {
+  Future<bool> deleteIn(LevitScope scope, {String? tag, bool force = false}) {
     return _inner.deleteIn(scope, tag: tag, force: force);
   }
 
@@ -251,7 +264,7 @@ class LevitAsyncStore<T> {
   }
 
   /// Removes this store from the active scope.
-  bool delete({String? tag, bool force = false}) =>
+  Future<bool> delete({String? tag, bool force = false}) =>
       deleteIn(Ls.currentScope, tag: tag, force: force);
 
   @override
@@ -342,6 +355,17 @@ class _LevitStoreInstance<T> extends LevitController implements LevitRef {
       {String? tag, bool permanent = false, bool isFactory = false}) {
     return scope.lazyPutAsync<S>(builder,
         tag: tag, permanent: permanent, isFactory: isFactory);
+  }
+
+  @override
+  void bindExisting<Alias, Concrete extends Alias>({
+    String? sourceTag,
+    String? tag,
+  }) {
+    scope.bindExisting<Alias, Concrete>(
+      sourceTag: sourceTag,
+      tag: tag,
+    );
   }
 
   @override

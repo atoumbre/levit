@@ -86,6 +86,34 @@ class LevitMonitor {
     _middleware!._addToBuffer(event);
   }
 
+  /// Emits a dependency-neutral structured custom event.
+  ///
+  /// Optional packages should translate their own event types at the
+  /// application boundary and call this method instead of adding dependencies
+  /// to `levit_monitor`.
+  static void emitCustomEvent({
+    required String namespace,
+    required String name,
+    Map<String, Object?> attributes = const {},
+    Level level = Level.info,
+    bool sensitive = false,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    final middleware = _middleware;
+    if (middleware == null) return;
+    middleware._addToBuffer(CustomMonitorEvent(
+      sessionId: middleware.sessionId,
+      namespace: namespace,
+      name: name,
+      attributes: attributes,
+      level: level,
+      sensitive: sensitive,
+      error: error,
+      stackTrace: stackTrace,
+    ));
+  }
+
   /// Helper method for emitting a log at [Level.trace].
   static void logTrace(Object? data, {Object? error, StackTrace? stackTrace}) =>
       log(data, level: Level.trace, error: error, stackTrace: stackTrace);
