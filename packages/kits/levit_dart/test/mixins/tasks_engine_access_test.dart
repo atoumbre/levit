@@ -78,7 +78,8 @@ void main() {
       final engine = controller.tasksEngine;
       expect(engine.ownerPath, '?');
 
-      controller.didAttachToScope(LevitScope.root('reactive_test'), key: 'test');
+      controller.didAttachToScope(LevitScope.root('reactive_test'),
+          key: 'test');
       controller.onInit();
 
       expect(controller.tasksEngine, same(engine));
