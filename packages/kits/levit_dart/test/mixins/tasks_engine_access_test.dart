@@ -20,9 +20,17 @@ void main() {
 
     test('onInit reconfigures an engine created before initialization',
         () async {
-      final controller = TestTasksController()..tasksEngine;
+      final controller = TestTasksController();
+      final engine = controller.tasksEngine;
+      expect(engine.ownerPath, '?');
+
       controller.didAttachToScope(LevitScope.root('test'), key: 'test');
       controller.onInit();
+
+      expect(controller.tasksEngine, same(engine));
+      expect(engine.ownerPath, controller.ownerPath);
+      expect(engine.maxConcurrent, controller.maxConcurrentTasks);
+
       await controller.onClose();
     });
 
@@ -60,6 +68,22 @@ void main() {
 
       expect(controller.isBusy.value, isFalse);
       expect(controller.totalProgress.value, 0.0);
+
+      await controller.onClose();
+    });
+
+    test('onInit reconfigures an engine created before initialization',
+        () async {
+      final controller = TestReactiveTasksController();
+      final engine = controller.tasksEngine;
+      expect(engine.ownerPath, '?');
+
+      controller.didAttachToScope(LevitScope.root('reactive_test'), key: 'test');
+      controller.onInit();
+
+      expect(controller.tasksEngine, same(engine));
+      expect(engine.ownerPath, controller.ownerPath);
+      expect(engine.maxConcurrent, controller.maxConcurrentTasks);
 
       await controller.onClose();
     });
