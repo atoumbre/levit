@@ -4,12 +4,9 @@ import 'package:test/test.dart';
 class TestLoopController extends LevitController with LevitLoopExecutionMixin {}
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
-  });
-  test('LevitLoopExecutionMixin coverage', () {
-    final controller = TestLoopController();
-    controller.didAttachToScope(Ls.currentScope, key: 'test');
-    controller.onInit();
+  test('LevitLoopExecutionMixin coverage', () async {
+    await Levit.runInScope<void>(() {
+      Levit.put(() => TestLoopController());
+    }, name: 'loop_mixin_test');
   });
 }

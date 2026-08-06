@@ -1,4 +1,17 @@
 
+## 0.0.11
+
+- Add `LxStreamCompletionPolicy.close` and `.retain`; `close` remains the
+  compatibility default, while `retain` permits explicit source rebinding.
+- Add `LxAsyncConcurrency.latest` and `.exhaustLatest` to async computed values
+  and workers. `exhaustLatest` runs at most one trailing recomputation.
+- Add `LxFamily<K, R>` for lazy keyed reactive resources, explicit
+  invalidation, safe diagnostic key formatting, and optional inactivity
+  eviction.
+
+## 0.0.10
+- Coordinated release version bump.
+
 ## 0.0.9
 - Coordinated release version bump.
 

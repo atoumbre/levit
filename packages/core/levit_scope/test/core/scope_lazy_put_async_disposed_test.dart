@@ -22,7 +22,7 @@ void main() {
     });
 
     final future = scope.findAsync<_Disposable>();
-    final deleted = scope.delete<_Disposable>();
+    final deleted = await scope.delete<_Disposable>();
     expect(deleted, isTrue);
 
     completer.complete();

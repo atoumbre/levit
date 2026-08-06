@@ -1,131 +1,92 @@
 part of '../../levit_dart.dart';
 
-Queue<_QueuedTask> _queueForPriority({
-  required TaskPriority priority,
-  required Queue<_QueuedTask> highPriorityQueue,
-  required Queue<_QueuedTask> normalPriorityQueue,
-  required Queue<_QueuedTask> lowPriorityQueue,
-}) {
-  switch (priority) {
-    case TaskPriority.high:
-      return highPriorityQueue;
-    case TaskPriority.normal:
-      return normalPriorityQueue;
-    case TaskPriority.low:
-      return lowPriorityQueue;
-  }
+enum _TaskExecutionState { queued, running, completed }
+
+enum _IsolateTaskMessage {
+  cancellationPort,
+  progress,
+  success,
+  error,
 }
 
-bool _hasQueuedTasksInQueues({
-  required Queue<_QueuedTask> highPriorityQueue,
-  required Queue<_QueuedTask> normalPriorityQueue,
-  required Queue<_QueuedTask> lowPriorityQueue,
-}) {
-  return highPriorityQueue.isNotEmpty ||
-      normalPriorityQueue.isNotEmpty ||
-      lowPriorityQueue.isNotEmpty;
-}
+class _TaskExecutionConfig {
+  FutureOr<dynamic> Function(LevitTaskContext context) task;
+  TaskPriority priority;
+  int retries;
+  Duration? retryDelay;
+  bool useExponentialBackoff;
+  void Function(Object, StackTrace)? onError;
+  dynamic cachePolicy;
+  void Function()? onStart;
+  void Function(dynamic result)? onSuccess;
+  void Function(double progress)? onProgress;
+  void Function()? onCancel;
+  void Function(LevitTaskEvent event)? onEvent;
+  LevitTaskMetadata metadata;
+  bool runsInIsolate;
 
-_QueuedTask? _takeNextQueuedTaskFromQueues({
-  required Queue<_QueuedTask> highPriorityQueue,
-  required Queue<_QueuedTask> normalPriorityQueue,
-  required Queue<_QueuedTask> lowPriorityQueue,
-}) {
-  if (highPriorityQueue.isNotEmpty) return highPriorityQueue.removeFirst();
-  if (normalPriorityQueue.isNotEmpty) return normalPriorityQueue.removeFirst();
-  if (lowPriorityQueue.isNotEmpty) return lowPriorityQueue.removeFirst();
-  return null;
-}
-
-void _cancelQueuedTask(
-  _QueuedTask item, {
-  required void Function(LevitTaskEvent event) emitTaskEvent,
-}) {
-  item.onCancel?.call();
-  emitTaskEvent(LevitTaskEvent(
-    type: LevitTaskEventType.skipped,
-    taskId: item.id,
-    priority: item.priority,
-    maxRetries: item.retries,
-    skipReason: TaskSkipReason.cancelledWhileQueued,
-    runInIsolate: item.runInIsolate,
-    debugName: item.debugName,
-  ));
-  if (!item.completer.isCompleted) {
-    item.completer.complete(null);
-  }
-}
-
-void _cancelQueuedByIdInQueue(
-  Queue<_QueuedTask> queue,
-  String id, {
-  required void Function(LevitTaskEvent event) emitTaskEvent,
-}) {
-  if (queue.isEmpty) return;
-
-  final retained = Queue<_QueuedTask>();
-  for (final item in queue) {
-    if (item.id == id) {
-      _cancelQueuedTask(item, emitTaskEvent: emitTaskEvent);
-    } else {
-      retained.add(item);
-    }
-  }
-  queue
-    ..clear()
-    ..addAll(retained);
-}
-
-void _cancelAllQueuedInQueue(
-  Queue<_QueuedTask> queue, {
-  required void Function(LevitTaskEvent event) emitTaskEvent,
-}) {
-  for (final item in queue) {
-    _cancelQueuedTask(item, emitTaskEvent: emitTaskEvent);
-  }
-  queue.clear();
-}
-
-class _ActiveTask {
-  final String id;
-  bool isCancelled = false;
-  final void Function(double progress)? onProgress;
-
-  _ActiveTask(this.id, {this.onProgress});
-}
-
-class _QueuedTask<T> {
-  final String id;
-  final FutureOr<T> Function() task;
-  final TaskPriority priority;
-  final int retries;
-  final Duration? retryDelay;
-  final bool useExponentialBackoff;
-  final Function(Object, StackTrace)? onError;
-  final TaskCachePolicy<T>? cachePolicy;
-  final void Function()? onStart;
-  final void Function(dynamic result)? onSuccess;
-  final void Function(double progress)? onProgress;
-  final void Function()? onCancel;
-  final bool runInIsolate;
-  final String? debugName;
-  final Completer<T?> completer;
-
-  _QueuedTask({
-    required this.id,
+  _TaskExecutionConfig({
     required this.task,
     required this.priority,
     required this.retries,
     required this.retryDelay,
+    required this.useExponentialBackoff,
     required this.onError,
-    required this.completer,
-    this.useExponentialBackoff = true,
-    this.cachePolicy,
-    this.onStart,
-    this.onSuccess,
-    this.onProgress,
-    this.onCancel,
-    this.runInIsolate = false,
-    this.debugName,
+    required this.cachePolicy,
+    required this.onStart,
+    required this.onSuccess,
+    required this.onProgress,
+    required this.onCancel,
+    required this.onEvent,
+    required this.metadata,
+    required this.runsInIsolate,
   });
+}
+
+class _TaskExecution {
+  final String taskId;
+  final String executionId;
+  final String ownerPath;
+  final DateTime queuedAt;
+  final Completer<dynamic> completer = Completer<dynamic>();
+  final _LevitTaskCancellation cancellation = _LevitTaskCancellation();
+
+  _TaskExecutionConfig config;
+  _TaskExecutionState state = _TaskExecutionState.queued;
+  DateTime? startedAt;
+  int attempt = 0;
+  double progress = 0;
+  bool detachedByRestart = false;
+  TaskSkipReason? cancellationReason;
+
+  _TaskExecution({
+    required this.taskId,
+    required this.executionId,
+    required this.ownerPath,
+    required this.queuedAt,
+    required this.config,
+  });
+}
+
+class _TaskGroup {
+  final String taskId;
+  final List<_TaskExecution> outstanding = [];
+  _TaskExecution? coalescedTail;
+
+  _TaskGroup(this.taskId);
+
+  _TaskExecution? get latest => outstanding.isEmpty ? null : outstanding.last;
+}
+
+Queue<_TaskExecution> _queueForPriority({
+  required TaskPriority priority,
+  required Queue<_TaskExecution> highPriorityQueue,
+  required Queue<_TaskExecution> normalPriorityQueue,
+  required Queue<_TaskExecution> lowPriorityQueue,
+}) {
+  return switch (priority) {
+    TaskPriority.high => highPriorityQueue,
+    TaskPriority.normal => normalPriorityQueue,
+    TaskPriority.low => lowPriorityQueue,
+  };
 }

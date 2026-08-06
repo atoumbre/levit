@@ -24,22 +24,18 @@ class TestDisposable implements LevitDisposable {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset();
-  });
-
   test('LevitStore should autoDispose LevitTaskEngine', () async {
     final tasksState = LevitStore((ref) {
       final engine = ref.autoDispose(LevitTaskEngine(maxConcurrent: 2));
       return engine;
     });
 
-    final scope = Levit.createScope('task_scope');
+    final scope = LevitScope.root('task_scope');
     final engine = tasksState.findIn(scope);
 
     // Run a task to make sure it works
     final result = await engine.schedule(
-      () async => 'success',
+      (_) async => 'success',
       id: 'task1',
       priority: TaskPriority.normal,
       retries: 0,
@@ -49,7 +45,7 @@ void main() {
     expect(result, equals('success'));
 
     // Dispose scope
-    scope.dispose();
+    await scope.dispose();
   });
 
   test('LevitStore should autoDispose LevitController', () async {
@@ -63,7 +59,7 @@ void main() {
       return controller;
     });
 
-    final scope = Levit.createScope('controller_scope');
+    final scope = LevitScope.root('controller_scope');
     final controller = controllerState.findIn(scope);
 
     expect(controller, isA<TestController>());
@@ -71,7 +67,7 @@ void main() {
     expect(controller.value.value, equals(0));
 
     // Dispose scope which disposes state which disposes controller
-    scope.dispose();
+    await scope.dispose();
 
     expect(capturedController.isClosedCalled, isTrue);
   });
@@ -86,13 +82,13 @@ void main() {
       return disposable;
     });
 
-    final scope = Levit.createScope('disposable_scope');
+    final scope = LevitScope.root('disposable_scope');
     disposableState.findIn(scope);
 
     expect(capturedDisposable.isDisposed, isFalse);
 
     // Dispose scope
-    scope.dispose();
+    await scope.dispose();
 
     expect(capturedDisposable.isDisposed, isTrue);
   });

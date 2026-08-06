@@ -37,11 +37,14 @@ void main() {
     expect(reactive.ownerId, '${scope.id}:refresh_fail');
   });
 
-  test('onClose swallows disposal failures from reactive close', () {
+  test('onClose aggregates disposal failures from reactive close', () async {
     final controller = TestController();
     controller.addCustomReactive(ThrowingReactive(throwOnClose: true));
 
-    expect(() => controller.onClose(), returnsNormally);
+    await expectLater(
+      controller.onClose(),
+      throwsA(isA<LevitDisposalException>()),
+    );
     expect(controller.isClosed, isTrue);
   });
 }

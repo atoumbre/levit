@@ -7,7 +7,7 @@ void main() {
       Ls.reset(force: true);
     });
 
-    test('Levit.delete and Levit.isInstantiated', () {
+    test('Levit.delete and Levit.isInstantiated', () async {
       Levit.lazyPut(() => 'hello', tag: 'my-tag');
 
       expect(Levit.isInstantiated<String>(tag: 'my-tag'), isFalse);
@@ -15,7 +15,7 @@ void main() {
       Levit.find<String>(tag: 'my-tag');
 
       expect(Levit.isInstantiated<String>(tag: 'my-tag'), isTrue);
-      expect(Levit.delete<String>(tag: 'my-tag'), isTrue);
+      expect(await Levit.delete<String>(tag: 'my-tag'), isTrue);
     });
   });
 }

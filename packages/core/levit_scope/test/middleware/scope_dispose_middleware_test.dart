@@ -12,13 +12,13 @@ class TestScopeMiddleware extends LevitScopeMiddleware {
 }
 
 void main() {
-  test('scope.dispose and middleware callback', () {
+  test('scope.dispose and middleware callback', () async {
     int disposeCount = 0;
     final mw = TestScopeMiddleware(onDispose: () => disposeCount++);
     Ls.addMiddleware(mw);
 
     final scope = Ls.createScope('dispose_test');
-    scope.dispose();
+    await scope.dispose();
 
     expect(disposeCount, 1);
     Ls.removeMiddleware(mw);

@@ -9,16 +9,16 @@ void main() {
     final order = <String>[];
     final blocker = Completer<void>();
 
-    final f1 = engine.schedule(() async {
+    final f1 = engine.schedule((_) async {
       await blocker.future;
       order.add('first');
     }, priority: TaskPriority.normal);
 
-    final f2 = engine.schedule(() async {
+    final f2 = engine.schedule((_) async {
       order.add('high');
     }, priority: TaskPriority.high);
 
-    final f3 = engine.schedule(() async {
+    final f3 = engine.schedule((_) async {
       order.add('low');
     }, priority: TaskPriority.low);
 
@@ -33,13 +33,13 @@ void main() {
     final engine = LevitTaskEngine(maxConcurrent: 1);
     final blocker = Completer<void>();
 
-    final activeFuture = engine.schedule(() async {
+    final activeFuture = engine.schedule((_) async {
       await blocker.future;
       return 'active';
     }, id: 'active');
 
     var cancelled = false;
-    final queuedFuture = engine.schedule(() async => 'queued',
+    final queuedFuture = engine.schedule((_) async => 'queued',
         id: 'queued', onCancel: () => cancelled = true);
 
     await Future<void>.delayed(Duration.zero);
@@ -57,18 +57,18 @@ void main() {
     final blocker = Completer<void>();
     final cancels = <String>[];
 
-    final activeFuture = engine.schedule(() async {
+    final activeFuture = engine.schedule((_) async {
       await blocker.future;
       return 'active';
     }, id: 'active');
 
     final queued1 = engine.schedule(
-      () async => 'q1',
+      (_) async => 'q1',
       id: 'q1',
       onCancel: () => cancels.add('q1'),
     );
     final queued2 = engine.schedule(
-      () async => 'q2',
+      (_) async => 'q2',
       id: 'q2',
       onCancel: () => cancels.add('q2'),
     );

@@ -1,0 +1,40 @@
+name: Setup Levit
+description: Install Flutter with SDK/pub caching and bootstrap the Melos workspace.
+
+inputs:
+  channel:
+    description: Flutter release channel
+    required: false
+    default: stable
+  bootstrap:
+    description: Run dart pub get and melos bootstrap
+    required: false
+    default: 'true'
+  pub-cache-suffix:
+    description: >
+      Cache-busting suffix for pub dependencies. Pass
+      hashFiles('**/pubspec.yaml', 'melos.yaml') from the workflow
+      (hashFiles is not available inside composite actions).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Flutter
+      uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+      with:
+        channel: ${{ inputs.channel }}
+        cache: true
+        pub-cache: true
+        # No pubspec.lock files in this monorepo; key on manifests via caller suffix.
+        pub-cache-key: levit-pub-:os:-:channel:-:version:-:arch:-${{ inputs.pub-cache-suffix }}
+
+    - name: Install root dependencies
+      if: inputs.bootstrap == 'true'
+      shell: bash
+      run: dart pub get
+
+    - name: Bootstrap workspace
+      if: inputs.bootstrap == 'true'
+      shell: bash
+      run: dart run melos bootstrap

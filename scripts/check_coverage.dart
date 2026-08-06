@@ -611,6 +611,13 @@ bool _isSignatureContinuationLine(
   String trimmed,
 ) {
   if (_startsWithControlFlow(trimmed)) return false;
+  // Empty closures in arg lists are real executable bodies (VM marks them
+  // uncovered until invoked); do not treat them as signature noise.
+  if (trimmed.contains('() {}') ||
+      trimmed.contains('()=>') ||
+      trimmed.contains('() =>')) {
+    return false;
+  }
   if (!(trimmed.endsWith(',') || trimmed.endsWith(') {'))) return false;
 
   for (int i = lineIndex - 1; i >= 0; i--) {

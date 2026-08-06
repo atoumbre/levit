@@ -54,7 +54,7 @@ void main() {
 
       expect(lastBusy, isFalse);
 
-      final task = controller.runTask(() => completer.future);
+      final task = controller.runTask((_) => completer.future);
       expect(lastBusy, isTrue,
           reason: 'Listener should be notified of busy state');
 
@@ -68,10 +68,11 @@ void main() {
 
     test('started flag reflects if task has begun execution', () async {
       final completer = Completer<void>();
-      final task = controller.runTask(() => completer.future, id: 'start_test');
+      final task =
+          controller.runTask((_) => completer.future, id: 'start_test');
 
-      // It might be LxWaiting but not yet started by the engine if maxConcurrent is hit
-      // In this test, maxConcurrent is 1, so it should start immediately.
+      // Cache lookup precedes execution, then the start event updates details.
+      await Future<void>.delayed(Duration.zero);
       expect(controller.tasks['start_test']?.started, isTrue);
 
       completer.complete();
@@ -85,7 +86,7 @@ void main() {
       controller.onTaskError = (error, _) => errors.add(error);
 
       await expectLater(
-        controller.runTask(() => throw StateError('configured'), id: 'err'),
+        controller.runTask((_) => throw StateError('configured'), id: 'err'),
         throwsA(isA<StateError>()),
       );
 
@@ -97,11 +98,11 @@ void main() {
 
     test('duplicate running task id fails fast', () async {
       final completer = Completer<void>();
-      final running = controller.runTask(() => completer.future, id: 'dup');
+      final running = controller.runTask((_) => completer.future, id: 'dup');
 
-      await expectLater(
-        controller.runTask(() async => 'duplicate', id: 'dup'),
-        throwsA(isA<StateError>()),
+      expect(
+        () => controller.runTask((_) async => 'duplicate', id: 'dup'),
+        throwsA(isA<TaskConflictException>()),
       );
 
       completer.complete();
@@ -114,7 +115,7 @@ void main() {
       expect(controller.isBusy.value, isFalse);
 
       // Start task 1 (active)
-      final task1 = controller.runTask(() async {
+      final task1 = controller.runTask((_) async {
         await completer.future;
       });
 
@@ -122,7 +123,7 @@ void main() {
           reason: 'Busy when task is active');
 
       // Start task 2 (queued)
-      final task2 = controller.runTask(() async {
+      final task2 = controller.runTask((_) async {
         return 'done';
       });
 
@@ -143,8 +144,8 @@ void main() {
 
       expect(controller.totalProgress.value, 0.0);
 
-      controller.runTask(() => c1.future, id: 't1', weight: 1.0);
-      controller.runTask(() => c2.future, id: 't2', weight: 4.0);
+      controller.runTask((_) => c1.future, id: 't1', weight: 1.0);
+      controller.runTask((_) => c2.future, id: 't2', weight: 4.0);
 
       expect(controller.totalProgress.value, 0.0);
 
@@ -172,11 +173,11 @@ void main() {
       );
 
       // 1. Success write/read
-      await controller.runTask(() async => 42,
+      await controller.runTask((_) async => 42,
           id: 'cache_test', cachePolicy: cachePolicy);
       expect(controller.tasks['cache_test']?.status is LxSuccess, isTrue);
 
-      final result = await controller.runTask(() async => 99,
+      final result = await controller.runTask((_) async => 99,
           id: 'cache_test', cachePolicy: cachePolicy);
       expect(result, 42, reason: 'Should return cached value');
 
@@ -186,7 +187,7 @@ void main() {
             DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch,
         'data': {'v': -1},
       });
-      final failResult = await controller.runTask(() async => 100,
+      final failResult = await controller.runTask((_) async => 100,
           id: 'cache_fail', cachePolicy: cachePolicy);
       expect(failResult, 100,
           reason: 'Should run task if cache deserialization fails');
@@ -198,7 +199,7 @@ void main() {
             .millisecondsSinceEpoch,
         'data': {'v': 200},
       });
-      final expireResult = await controller.runTask(() async => 300,
+      final expireResult = await controller.runTask((_) async => 300,
           id: 'cache_expire', cachePolicy: cachePolicy);
       expect(expireResult, 300, reason: 'Should run task if cache expired');
 
@@ -210,24 +211,28 @@ void main() {
       final cleanupController = CleanupController();
       cleanupController.onInit();
 
-      await cleanupController.runTask(() async => 'done', id: 'auto_clean');
+      await cleanupController.runTask((_) async => 'done', id: 'auto_clean');
       expect(cleanupController.tasks.containsKey('auto_clean'), isTrue);
 
       cleanupController
           .onClose(); // This should cover the timer.cancel() loop (line 479)
     });
 
-    test('cancelling an active task removes its task details', () async {
+    test('cancelling an active task retains a terminal summary', () async {
       final completer = Completer<String>();
 
-      final task = controller.runTask(() => completer.future, id: 'cancel_me');
+      final task = controller.runTask((_) => completer.future, id: 'cancel_me');
       await Future<void>.delayed(Duration.zero);
 
       controller.tasksEngine.cancel('cancel_me');
       completer.complete('done');
 
       expect(await task, isNull);
-      expect(controller.tasks.containsKey('cancel_me'), isFalse);
+      expect(controller.tasks['cancel_me']?.phase, LevitTaskPhase.completed);
+      expect(
+        controller.tasks['cancel_me']?.outcome,
+        LevitTaskOutcome.cancelled,
+      );
     });
   });
 
@@ -243,11 +248,11 @@ void main() {
       );
 
       final r1 = await controller.tasksEngine
-          .schedule(() async => 'hello', id: 't1', cachePolicy: cachePolicy);
+          .schedule((_) async => 'hello', id: 't1', cachePolicy: cachePolicy);
       expect(r1, 'hello');
 
       final r2 = await controller.tasksEngine
-          .schedule(() async => 'world', id: 't1', cachePolicy: cachePolicy);
+          .schedule((_) async => 'world', id: 't1', cachePolicy: cachePolicy);
       expect(r2, 'hello');
 
       controller.onClose();

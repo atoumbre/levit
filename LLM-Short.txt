@@ -39,6 +39,7 @@ Dependency Injection
 - Levit.put(() => ...) — eager register
 - Levit.lazyPut(() => ...) — lazy register
 - Levit.lazyPutAsync(() async => ...) — async lazy; resolve with findAsync
+- Levit.bindExisting<Port, Implementation>() — non-owning local singleton alias
 - Levit.find<T>() — resolve from active scope (pure Dart / no widget scope)
 - context.levit.find<T>() — resolve from nearest widget scope (Flutter)
 - tag, isFactory — disambiguation / per-resolve factories
@@ -48,6 +49,8 @@ Dependency Injection
 Register app-wide deps in root scope; feature/route deps in owning scope.
 Page-scoped LScopedView and root-permanent feature controllers are both valid.
 Use LevitStore / LevitAsyncStore for portable per-scope state recipes.
+Always await Levit.delete, Levit.reset, scope.dispose, and Levit.runInScope.
+An instantiated registration must be deleted and awaited before replacement.
 
 Flutter scope widgets: LScope, LAsyncScope, LScope.put, LScopedView,
 LScopedAsyncView, LRouteScope, LAsyncRouteScope, LScope.capture,
@@ -64,6 +67,9 @@ Reactive State
 - LxList / LxMap / LxSet or <T>[].lx — collections
 - LxComputed(() => ...) — derived state
 - LxComputed.async(() async => ...) — async derived state
+- LxAsyncConcurrency.exhaustLatest — one running + one coalesced trailing run
+- LxStream completionPolicy: retain — preserve/rebind a completed source
+- LxFamily<K, R> — lazy keyed reactive resources with explicit eviction
 - LxStatus<T> + LStatusBuilder — async UI states
 - LxWorker — side effects (prefer autoDispose(LxWorker(...)) for reload)
 - Levit.batch / Levit.batchAsync — coalesce multiple updates
@@ -73,7 +79,9 @@ Controllers
 -----------
 
 Extend LevitController for feature/screen logic. Keep widgets thin.
-Use autoDispose for resources; field-level autoDispose for non-reactive deps.
+Use own / autoDispose for resources; cleanup is awaited, LIFO, and idempotent.
+Use LevitResourceOwnership on non-controller LevitScopeDisposable resources.
+Always call super.onInit / await super.onClose in overrides.
 Reload on context changes:
 
   autoDispose(LxWorker(contextVar, (_) async { await reload(); }));
@@ -99,22 +107,27 @@ route-tied ownership (examples/route_scopes).
 Widget tests
 ------------
 
-Mount LScope + dependencyFactory; capture scope in the factory; tear down with
-dispose / Levit.reset(). Stable pump helpers will ship later in levit_tests.
+Mount LScope + dependencyFactory; capture scope in the factory and await
+scope disposal. Prefer isolated scopes over global reset.
 
 
 Pure Dart
 ---------
 
-- Levit.runInScope(() => ...) — tests and short-lived work
-- Levit.createScope + dispose — long-lived ownership
+- await Levit.runInScope(() => ...) — tests and short-lived work
+- Levit.createScope + await dispose — long-lived ownership
 
 
 Tasks (levit_dart)
 ------------------
 
-- LevitReactiveTasksMixin — runTask, isBusy, progress (UI-observable)
+- LevitReactiveTasksMixin — runTask, task selectors, blocking/progress state
 - LevitTasksMixin — engine-only scheduling/retries
+- TaskConflictPolicy — reject (default), join, drop, restart, enqueue,
+  coalesceLatest
+- LevitTaskContext — cooperative cancellation, progress, execution metadata
+- LevitTaskMiddleware / LevitTaskTracker — structured events / aggregate state
+- scheduleIsolate / submitIsolate / runIsolateTask — explicit isolate work
 - LevitTimeMixin, LevitSelectionMixin, LevitLoopExecutionMixin
 
 
@@ -123,7 +136,14 @@ Middleware
 
 - Levit.addDependencyMiddleware / removeDependencyMiddlewareByToken — DI events
 - Levit.addStateMiddleware / removeStateMiddlewareByToken — reactive mutations
+- LevitTaskMiddleware.add / removeByToken — task lifecycle events
 Use one stable token per concern.
+
+levit_monitor remains independent of levit_dart. Bridge task events through
+LevitMonitor.emitCustomEvent in the application composition layer.
+
+Enable optional levit_lints in analysis_options.yaml for lifecycle, ownership,
+registration, and reactive-status diagnostics (Dart 3.10+).
 
 
 Anti-Patterns

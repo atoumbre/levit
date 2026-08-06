@@ -9,7 +9,7 @@ class _TaskCacheHit<T> {
 Future<_TaskCacheHit<T>?> _readCachedTaskResult<T>({
   required LevitTaskCacheProvider cacheProvider,
   required String taskId,
-  required TaskCachePolicy<T>? cachePolicy,
+  required dynamic cachePolicy,
 }) async {
   if (cachePolicy == null) return null;
 
@@ -26,7 +26,7 @@ Future<_TaskCacheHit<T>?> _readCachedTaskResult<T>({
 
   try {
     final data = cachedJson['data'] as Map<String, dynamic>;
-    return _TaskCacheHit(cachePolicy.fromJson(data));
+    return _TaskCacheHit(cachePolicy.fromJson(data) as T);
   } catch (_) {
     await cacheProvider.delete(cacheKey);
     return null;
@@ -36,7 +36,7 @@ Future<_TaskCacheHit<T>?> _readCachedTaskResult<T>({
 Future<void> _writeCachedTaskResult<T>({
   required LevitTaskCacheProvider cacheProvider,
   required String taskId,
-  required TaskCachePolicy<T>? cachePolicy,
+  required dynamic cachePolicy,
   required T result,
 }) async {
   if (cachePolicy == null) return;

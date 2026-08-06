@@ -323,14 +323,13 @@ That reduces migration risk and preserves the existing queue implementation.
 
 ## Isolate Behavior
 
-`runInIsolate` does not map cleanly onto a context-bearing task closure.
+Context-bearing task closures do not map safely onto isolate messages.
 
-For the first structured version, the safest rule is:
-
-- Keep `tasksEngine.schedule(..., runInIsolate: true)` as-is.
-- Do not add `group.run(..., runInIsolate: true)` until there is a dedicated API for sendable inputs and outputs.
-
-If isolate support is added later, it should probably be a separate method with stricter typing, not a boolean flag on the context-aware API.
+Version 0.0.11 therefore uses dedicated, strictly typed isolate APIs:
+`scheduleIsolate`, `submitIsolate`, and `runIsolateTask`. A future structured
+group API should preserve that split and accept a top-level/static entrypoint
+plus a sendable input; it should not add a boolean isolate flag to
+`group.run(...)`.
 
 ## Migration Path
 

@@ -2,10 +2,6 @@ import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
-  });
-
   test('registerService replaces existing service and tracks permanence', () {
     final engine = LevitLoopEngine();
     final first = _TestService();

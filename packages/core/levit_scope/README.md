@@ -13,7 +13,7 @@ This package is responsible for:
 
 - Dependency registration (`put`, `lazyPut`, `lazyPutAsync`).
 - Hierarchical resolution across parent/child scopes.
-- Deterministic cleanup through explicit scope disposal.
+- Deterministic, awaited cleanup through explicit scope disposal.
 - DI middleware interception for cross-cutting concerns.
 
 This package does not include:
@@ -44,7 +44,7 @@ import 'package:levit_scope/levit_scope.dart';
 
 class ApiClient {}
 
-void main() {
+Future<void> main() async {
   final appScope = LevitScope.root('app');
   final featureScope = appScope.createScope('feature');
 
@@ -55,10 +55,50 @@ void main() {
     assert(client is ApiClient);
   });
 
-  featureScope.dispose();
-  appScope.dispose();
+  await featureScope.dispose();
+  await appScope.dispose();
 }
 ```
+
+## Awaited Disposal
+
+`LevitScopeDisposable.onClose()` and `LevitDisposable.dispose()` may be
+asynchronous. Always await `delete`, `reset`, and `dispose`:
+
+```dart
+final scope = LevitScope.root('app');
+scope.put(() => DatabaseConnection());
+
+await scope.delete<DatabaseConnection>();
+await scope.dispose();
+```
+
+Cleanup is LIFO and best-effort. If more than one resource fails to close,
+Levit finishes the remaining cleanup and then throws one
+`LevitDisposalException` containing every failure.
+
+An instantiated synchronous registration is never silently overwritten. Delete
+and await the old registration before putting its replacement.
+
+## Existing-Instance Aliases
+
+Use `bindExisting` when one owned singleton implements several ports:
+
+```dart
+abstract interface class Reader {}
+abstract interface class Writer {}
+final class Repository implements Reader, Writer {}
+
+scope.put(() => Repository());
+scope.bindExisting<Reader, Repository>();
+scope.bindExisting<Writer, Repository>();
+
+assert(identical(scope.find<Reader>(), scope.find<Writer>()));
+```
+
+Aliases are local, non-owning, and cannot target factory registrations.
+Deleting an alias leaves the canonical instance alive; deleting the canonical
+registration removes its aliases and disposes the instance once.
 
 ## Middleware Lifecycle (Token-Based)
 
@@ -86,8 +126,7 @@ void teardown() {
 
 ## Design Principles
 
-- Deterministic teardown: disposal order is controlled and explicit.
+- Deterministic teardown: disposal is awaited, LIFO, and failure-aggregating.
 - Scope isolation: child scope overrides do not leak upward.
 - Reflection-free contracts: type/tag keying is explicit and stable.
 - Middleware-first extensibility: interception hooks are part of the runtime contract.
-

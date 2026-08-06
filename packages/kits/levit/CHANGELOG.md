@@ -1,3 +1,13 @@
+## 0.0.11
+
+- Re-export the new lifecycle ownership, keyed reactive-family, stream
+  completion, async concurrency, and named task APIs.
+- Updated internal package constraints to `^0.0.11`.
+
+## 0.0.10
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.10`.
+
 ## 0.0.9
 - Coordinated release version bump.
 - Updated internal package constraints to `^0.0.9`.

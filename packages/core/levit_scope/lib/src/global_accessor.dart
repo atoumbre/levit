@@ -75,6 +75,17 @@ class Ls {
         tag: tag, permanent: permanent, isFactory: isFactory);
   }
 
+  /// Binds [Alias] to an existing local singleton [Concrete].
+  static void bindExisting<Alias, Concrete extends Alias>({
+    String? sourceTag,
+    String? tag,
+  }) {
+    currentScope.bindExisting<Alias, Concrete>(
+      sourceTag: sourceTag,
+      tag: tag,
+    );
+  }
+
   /// Finds a registered instance of type [S] in the active scope.
   ///
   /// Throws an [Exception] if the dependency is not found.
@@ -113,15 +124,15 @@ class Ls {
   ///
   /// If [force] is `true`, permanent dependencies are also removed.
   /// Returns `true` if the dependency was found and removed.
-  static bool delete<S>({String? tag, bool force = false}) {
+  static Future<bool> delete<S>({String? tag, bool force = false}) {
     return currentScope.delete<S>(tag: tag, force: force);
   }
 
   /// Disposes all non-permanent dependencies in the active scope.
   ///
   /// Set [force] to `true` to also dispose permanent dependencies.
-  static void reset({bool force = false}) {
-    currentScope.reset(force: force);
+  static Future<void> reset({bool force = false}) {
+    return currentScope.reset(force: force);
   }
 
   /// Creates a child scope from the active scope.

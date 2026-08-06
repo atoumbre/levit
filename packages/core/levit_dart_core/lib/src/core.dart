@@ -131,6 +131,17 @@ class Levit {
         tag: tag, permanent: permanent, isFactory: isFactory);
   }
 
+  /// Binds [Alias] to an existing local singleton [Concrete].
+  static void bindExisting<Alias, Concrete extends Alias>({
+    String? sourceTag,
+    String? tag,
+  }) {
+    Ls.bindExisting<Alias, Concrete>(
+      sourceTag: sourceTag,
+      tag: tag,
+    );
+  }
+
   /// Finds a registered instance of type [S].
   ///
   /// // Example usage:
@@ -173,15 +184,15 @@ class Levit {
   /// If the instance implements [LevitScopeDisposable], its `onClose` method is called.
   /// If [force] is true, deletes even if the dependency was marked as `permanent`.
   /// Returns `true` if a registration was found and removed.
-  static bool delete<S>({String? tag, bool force = false}) {
+  static Future<bool> delete<S>({String? tag, bool force = false}) {
     return Ls.delete<S>(tag: tag, force: force);
   }
 
   /// Disposes of all non-permanent dependencies in the current scope.
   ///
   /// If [force] is true, also disposes of permanent dependencies.
-  static void reset({bool force = false}) {
-    Ls.reset(force: force);
+  static Future<void> reset({bool force = false}) {
+    return Ls.reset(force: force);
   }
 
   /// Creates a new child scope branching from the current active scope.
@@ -204,22 +215,16 @@ class Levit {
   /// Returns the value returned by [callback].
   ///
   /// Throws any exception thrown by [callback] after disposing the child scope.
-  static FutureOr<R> runInScope<R>(
+  static Future<R> runInScope<R>(
     FutureOr<R> Function() callback, {
     String name = 'scoped_run',
     LevitScope? parentScope,
-  }) {
+  }) async {
     final scope = (parentScope ?? Ls.currentScope).createScope(name);
     try {
-      final result = scope.run(callback);
-      if (result is Future<R>) {
-        return result.whenComplete(scope.dispose);
-      }
-      scope.dispose();
-      return result;
-    } catch (_) {
-      scope.dispose();
-      rethrow;
+      return await scope.run(callback);
+    } finally {
+      await scope.dispose();
     }
   }
 
@@ -276,11 +281,11 @@ class Levit {
   static LevitReactiveMiddleware? _autoLinkMiddleware;
   static LevitScopeMiddleware? _autoDisposeMiddleware;
 
-  /// Enables automatic linking of reactive state to controller lifecycles.
+  /// Enables automatic linking of reactive state to resource-owner lifecycles.
   ///
   /// When enabled, [LxReactive] objects created while instantiating or
-  /// initializing a [LevitController] are automatically registered via
-  /// [LevitController.autoDispose] and disposed when the controller is closed.
+  /// initializing a returned [LevitResourceOwner] are automatically registered
+  /// through [LevitResourceOwner.autoDispose] and disposed with that owner.
   static void enableAutoLinking() {
     if (_autoLinkMiddleware != null) return; // Already enabled
 
@@ -307,112 +312,65 @@ class Levit {
 // -------------------------------------------------------------
 
   /// Internal utility that detects and executes the appropriate cleanup method for an [item].
-  static void _levitDisposeItem(dynamic item) {
+  static dynamic _levitDisposeItem(dynamic item) {
     if (item == null) return;
-    if (_disposeKnownItem(item)) return;
-    if (_cancelKnownItem(item)) return;
-    if (_tryDynamicCleanup(item, _CleanupOperation.cancel)) return;
-    if (_tryDynamicCleanup(item, _CleanupOperation.dispose)) return;
-    if (_closeKnownItem(item)) return;
-    if (_tryDynamicCleanup(item, _CleanupOperation.close)) return;
-    _runCleanupCallback(item);
-  }
-
-  static bool _disposeKnownItem(Object item) {
     if (item is LxReactive) {
       item.close();
-      return true;
+      return;
     }
 
     if (item is LevitScopeDisposable) {
-      item.onClose();
-      return true;
+      return item.onClose();
     }
 
     if (item is LevitDisposable) {
-      item.dispose();
-      return true;
+      return item.dispose();
     }
-
-    return false;
-  }
-
-  static bool _cancelKnownItem(Object item) {
     if (item is StreamSubscription) {
-      item.cancel();
-      return true;
+      return item.cancel();
     }
 
     if (item is Timer) {
       item.cancel();
-      return true;
+      return;
     }
-
-    return false;
-  }
-
-  static bool _closeKnownItem(Object item) {
     if (item is Sink) {
       item.close();
-      return true;
+      return;
     }
-    return false;
+
+    for (final operation in _CleanupOperation.values) {
+      final result = _tryDynamicCleanup(item, operation);
+      if (!identical(result, _cleanupNotFound)) {
+        return result is Future ? result.then<void>((_) {}) : null;
+      }
+    }
+
+    if (item is FutureOr<void> Function()) {
+      return item();
+    }
   }
 
-  static bool _tryDynamicCleanup(Object item, _CleanupOperation operation) {
+  static const Object _cleanupNotFound = Object();
+
+  static Object? _tryDynamicCleanup(Object item, _CleanupOperation operation) {
     try {
+      dynamic result;
       switch (operation) {
         case _CleanupOperation.cancel:
-          (item as dynamic).cancel();
+          result = (item as dynamic).cancel();
           break;
         case _CleanupOperation.dispose:
-          (item as dynamic).dispose();
+          result = (item as dynamic).dispose();
           break;
         case _CleanupOperation.close:
-          (item as dynamic).close();
+          result = (item as dynamic).close();
           break;
       }
-      return true;
+      return result;
     } on NoSuchMethodError {
-      return false;
-    } on Exception catch (e, stackTrace) {
-      _logCleanupError(
-        operation.label,
-        item,
-        e,
-        stackTrace: stackTrace,
-      );
-      return false;
+      return _cleanupNotFound;
     }
-  }
-
-  static void _runCleanupCallback(Object item) {
-    if (item is! void Function()) return;
-
-    try {
-      item();
-    } on Exception catch (e, stackTrace) {
-      _logCleanupError(
-        'executing dispose callback',
-        item,
-        e,
-        stackTrace: stackTrace,
-      );
-    }
-  }
-
-  static void _logCleanupError(
-    String operation,
-    Object item,
-    Exception error, {
-    StackTrace? stackTrace,
-  }) {
-    dev.log(
-      'Levit: Error $operation ${item.runtimeType}',
-      error: error,
-      stackTrace: stackTrace,
-      name: 'levit_dart',
-    );
   }
 }
 
@@ -445,13 +403,4 @@ extension LxNamingExtension<R extends LxReactive> on R {
     this.isSensitive = true;
     return this;
   }
-}
-
-/// Interface for objects that require explicit disposal logic.
-///
-/// Implement this interface for custom classes managed by [Levit] to ensure
-/// their resources (streams, connections) are released when the scope closes.
-abstract class LevitDisposable {
-  /// Releases resources held by this object.
-  void dispose();
 }

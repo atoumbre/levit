@@ -591,6 +591,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   final void Function()? onCancel;
 
   bool _isActive = false;
+  Set<void Function(bool active)>? _activityObservers;
 
   @override
   String? ownerId;
@@ -619,9 +620,30 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     if (shouldBeActive && !_isActive) {
       _isActive = true;
       _protectedOnActive();
+      _notifyActivityObservers(true);
     } else if (!shouldBeActive && _isActive) {
       _isActive = false;
       _protectedOnInactive();
+      _notifyActivityObservers(false);
+    }
+  }
+
+  void _addActivityObserver(void Function(bool active) observer) {
+    (_activityObservers ??= <void Function(bool active)>{}).add(observer);
+  }
+
+  void _removeActivityObserver(void Function(bool active) observer) {
+    _activityObservers?.remove(observer);
+    if (_activityObservers?.isEmpty ?? false) {
+      _activityObservers = null;
+    }
+  }
+
+  void _notifyActivityObservers(bool active) {
+    final observers = _activityObservers;
+    if (observers == null) return;
+    for (final observer in observers.toList(growable: false)) {
+      observer(active);
     }
   }
 

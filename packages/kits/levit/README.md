@@ -33,7 +33,7 @@ dependencies:
 ```dart
 import 'package:levit/levit.dart';
 
-void main() {
+Future<void> main() async {
   final scope = Levit.createScope('app');
 
   scope.run(() {
@@ -45,7 +45,7 @@ void main() {
     worker.close();
   });
 
-  scope.dispose();
+  await scope.dispose();
 }
 ```
 

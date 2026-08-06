@@ -112,12 +112,14 @@ void main() {
   late ServerController server;
   late NexusEngine engine;
 
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
     engine = Levit.put(() => NexusEngine(), permanent: true);
     // Auto-start false to prevent binding port
     server = Levit.put(() => ServerController(autoStart: false));
   });
+
+  tearDown(() => Levit.reset(force: true));
 
   test('seedData seeds data if empty', () {
     expect(engine.nodes.length, 0);
@@ -300,6 +302,7 @@ void main() {
   test('startServer seeding and startup', () async {
     // Re-create controller with adapter
     final adapter = FakeServerAdapter();
+    await Levit.delete<ServerController>(force: true);
     server = Levit.put(
         () => ServerController(autoStart: false, adapter: adapter),
         permanent: true);

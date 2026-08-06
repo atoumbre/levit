@@ -20,6 +20,7 @@ This package does not include:
 
 - Visualization UI or dashboards.
 - Business logic instrumentation outside the Levit runtime event model.
+- Dependencies on higher-level kits such as `levit_dart`.
 
 ## Conceptual Overview
 
@@ -66,3 +67,35 @@ void main() {
 - Transport-agnostic event delivery.
 - Privacy-aware output through obfuscation hooks.
 - Low-friction integration with existing Levit middleware semantics.
+
+## Custom Events
+
+Adapters can feed structured events into the existing filter, redaction,
+snapshot cache, and transport pipeline without adding a package dependency to
+`levit_monitor`:
+
+```dart
+LevitMonitor.emitCustomEvent(
+  namespace: 'my_app.sync',
+  name: 'finished',
+  level: Level.info,
+  attributes: {
+    'category': 'background',
+    'outcome': 'succeeded',
+    'runMs': 48,
+  },
+);
+```
+
+Use stable namespace, name, and low-cardinality attribute values. Setting
+`sensitive: true` redacts the complete attribute payload plus error details.
+The producer owns translation from its domain event; `levit_monitor` remains
+unaware of that producer's types.
+
+Custom attributes preserve JSON-safe primitive, map, list, `DateTime`,
+`Duration`, and `Uri` values. Unsupported values are safely stringified.
+Transport or adapter failures remain isolated from application work.
+
+Task/controller packages should expose their own dependency-neutral events.
+Applications that import both packages may translate those events here;
+`levit_monitor` intentionally does not depend on `levit_dart`.

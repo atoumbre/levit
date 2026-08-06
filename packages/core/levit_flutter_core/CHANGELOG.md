@@ -1,4 +1,15 @@
 
+## 0.0.11
+
+- Adopt the awaited lifecycle and resource-owner contracts from
+  `levit_dart_core`.
+- Updated internal package constraints to `^0.0.11`.
+
+## 0.0.10
+- Minor DartDoc wording fix in `LScopedView`.
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.10`.
+
 ## 0.0.9
 - Unnamed `LScope` / `LAsyncScope` / `LScopedView` / route-scope fallbacks now get unique diagnostic names, so nested unnamed scopes no longer spam duplicate-name warnings.
 - Clarified `LView` / `LScopedView` `autoWatch` docs: read reactives directly in `buildView`; do not wrap the entire tree in `LWatch`.

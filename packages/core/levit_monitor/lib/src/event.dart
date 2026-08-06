@@ -477,6 +477,103 @@ class LogEvent extends MonitorEvent {
 }
 
 // ============================================================================
+// Custom Events
+// ============================================================================
+
+/// A dependency-neutral structured event supplied by an application or adapter.
+///
+/// Custom events let optional packages bridge their own event models into the
+/// monitor without making `levit_monitor` depend on those packages.
+class CustomMonitorEvent extends MonitorEvent {
+  /// Stable namespace owned by the event producer.
+  final String namespace;
+
+  /// Stable event name within [namespace].
+  final String name;
+
+  /// Severity used by transports that support log levels.
+  final Level level;
+
+  /// Low-cardinality, structured event attributes.
+  final Map<String, Object?> attributes;
+
+  /// Whether all attributes and error details must be redacted.
+  final bool sensitive;
+
+  /// Optional error associated with the event.
+  final Object? error;
+
+  /// Optional stack trace associated with [error].
+  final StackTrace? stackTrace;
+
+  /// Creates a structured custom event.
+  CustomMonitorEvent({
+    required super.sessionId,
+    required this.namespace,
+    required this.name,
+    this.level = Level.info,
+    Map<String, Object?> attributes = const {},
+    this.sensitive = false,
+    this.error,
+    this.stackTrace,
+  }) : attributes = Map.unmodifiable(attributes) {
+    if (namespace.trim().isEmpty) {
+      throw ArgumentError.value(namespace, 'namespace', 'Must not be empty.');
+    }
+    if (name.trim().isEmpty) {
+      throw ArgumentError.value(name, 'name', 'Must not be empty.');
+    }
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+        ...super.toJson(),
+        'type': 'custom',
+        'namespace': namespace,
+        'name': name,
+        'level': level.name,
+        'isSensitive': sensitive,
+        'attributes': sensitive
+            ? LevitMonitor.obfuscate(attributes)
+            : _serializeAttributes(attributes),
+        if (error != null)
+          'error': MonitorEvent._stringify(error, isSensitive: sensitive),
+        if (stackTrace != null)
+          'stackTrace':
+              MonitorEvent._stringify(stackTrace, isSensitive: sensitive),
+      };
+
+  static Map<String, dynamic> _serializeAttributes(
+    Map<String, Object?> attributes,
+  ) {
+    return attributes.map(
+      (key, value) => MapEntry(key, _serializeValue(value)),
+    );
+  }
+
+  static dynamic _serializeValue(Object? value) {
+    if (value == null || value is num || value is bool || value is String) {
+      return value;
+    }
+    if (value is DateTime) return value.toIso8601String();
+    if (value is Duration) return value.inMicroseconds;
+    if (value is Uri) return value.toString();
+    if (value is Map) {
+      return value.map(
+        (key, nested) => MapEntry(
+          MonitorEvent._stringify(key).toString(),
+          _serializeValue(nested),
+        ),
+      );
+    }
+    if (value is Iterable) {
+      return value.map(_serializeValue).toList(growable: false);
+    }
+    return MonitorEvent._stringify(value);
+  }
+}
+
+// ============================================================================
 // Snapshot Events
 // ============================================================================
 

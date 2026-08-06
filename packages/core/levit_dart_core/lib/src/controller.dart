@@ -1,5 +1,122 @@
 part of '../levit_dart_core.dart';
 
+/// A lifecycle boundary that owns arbitrary cleanup resources.
+abstract interface class LevitResourceOwner {
+  /// Registers [resource] for deterministic cleanup and returns it.
+  T own<T>(T resource);
+
+  /// Compatibility alias for [own].
+  T autoDispose<T>(T resource);
+
+  /// Whether cleanup has completed.
+  bool get isDisposed;
+
+  /// Completes when cleanup reaches its terminal state.
+  Future<void> get disposed;
+}
+
+/// Reusable implementation of [LevitResourceOwner].
+///
+/// Apply this mixin to a [LevitScopeDisposable] when a non-controller resource
+/// needs the same ownership semantics as [LevitController].
+mixin LevitResourceOwnership on LevitScopeDisposable
+    implements LevitResourceOwner {
+  bool _resourceClosing = false;
+  bool _resourceDisposed = false;
+  final List<Object> _ownedResources = <Object>[];
+  final Completer<void> _resourceDisposedCompleter = Completer<void>();
+  Future<void>? _resourceCloseFuture;
+
+  /// A diagnostic owner path applied to otherwise unnamed reactive resources.
+  @protected
+  String get resourceOwnerPath => '?';
+
+  /// Whether owner cleanup has started.
+  bool get isClosing => _resourceClosing;
+
+  @override
+  bool get isDisposed => _resourceDisposed;
+
+  @override
+  Future<void> get disposed => _resourceDisposedCompleter.future;
+
+  /// Resources currently tracked by this owner.
+  @protected
+  Iterable<Object> get ownedResources => _ownedResources;
+
+  @override
+  T own<T>(T resource) {
+    if (_resourceClosing || _resourceDisposed) {
+      throw StateError(
+        '${runtimeType.toString()} cannot own resources after closing.',
+      );
+    }
+    if (resource == null) return resource;
+
+    final object = resource as Object;
+    final alreadyOwned =
+        _ownedResources.any((candidate) => identical(candidate, object));
+    if (!alreadyOwned) {
+      _ownedResources.add(object);
+    }
+
+    if (object is LxReactive && object.ownerId == null) {
+      object.ownerId = resourceOwnerPath;
+    }
+    return resource;
+  }
+
+  @override
+  T autoDispose<T>(T resource) => own(resource);
+
+  /// Reconciles already-owned reactive diagnostics after scope attachment.
+  @protected
+  void refreshOwnedReactivePaths() {
+    for (final resource in _ownedResources) {
+      if (resource is LxReactive && resource.ownerId != resourceOwnerPath) {
+        resource.ownerId = resourceOwnerPath;
+        resource.refresh();
+      }
+    }
+  }
+
+  @override
+  @mustCallSuper
+  FutureOr<void> onClose() {
+    return _resourceCloseFuture ??= _closeOwnedResources();
+  }
+
+  Future<void> _closeOwnedResources() async {
+    if (_resourceDisposed) return;
+    _resourceClosing = true;
+    final failures = <LevitDisposalFailure>[];
+
+    for (final resource in _ownedResources.reversed.toList(growable: false)) {
+      try {
+        final result = Levit._levitDisposeItem(resource);
+        if (result is Future) {
+          await result;
+        }
+      } catch (error, stackTrace) {
+        failures.add(LevitDisposalFailure(
+          resource: resource,
+          error: error,
+          stackTrace: stackTrace,
+        ));
+      }
+    }
+    _ownedResources.clear();
+    _resourceDisposed = true;
+    if (!_resourceDisposedCompleter.isCompleted) {
+      _resourceDisposedCompleter.complete();
+    }
+
+    if (failures.isNotEmpty) {
+      throw LevitDisposalException(failures);
+    }
+  }
+}
+
 /// A base class for business logic components.
 ///
 /// [LevitController] manages the lifecycle of application logic, providing
@@ -36,20 +153,15 @@ part of '../levit_dart_core.dart';
 /// 2.  **Attachment**: Linked to a [LevitScope].
 /// 3.  **Initialization**: [onInit] called.
 /// 4.  **Disposal**: [onClose] called when scope closes.
-abstract class LevitController implements LevitScopeDisposable {
+abstract class LevitController extends LevitScopeDisposable
+    with LevitResourceOwnership {
   bool _initialized = false;
-  bool _disposed = false;
-  bool _closed = false;
-  final List<dynamic> _disposables = [];
 
   /// Whether [onInit] has been executed.
   bool get initialized => _initialized;
 
   /// Whether the controller has been disposed and closed.
-  bool get isDisposed => _disposed;
-
-  /// Whether the controller is in the process of closing or is closed.
-  bool get isClosed => _closed;
+  bool get isClosed => isClosing || isDisposed;
 
   /// Whether the initialization phase is complete.
   bool get isInitialized => _initialized;
@@ -72,6 +184,9 @@ abstract class LevitController implements LevitScopeDisposable {
     return _cachedOwnerPath ??= '${s.id}:$r';
   }
 
+  @override
+  String get resourceOwnerPath => ownerPath;
+
   /// Attaches this controller to an owning [scope] with an optional registration [key].
   ///
   /// This method is called by the DI runtime when the controller is resolved.
@@ -88,23 +203,15 @@ abstract class LevitController implements LevitScopeDisposable {
     // Attachment may happen after reactive creation; ownership must be reconciled.
     if (key != null) {
       _cachedOwnerPath = null; // Force recalculation if key changed
-      final path = ownerPath;
-      for (final item in _disposables) {
-        if (item is LxReactive) {
-          if (item.ownerId != path) {
-            item.ownerId = path;
-            try {
-              item.refresh();
-            } catch (e, s) {
-              dev.log(
-                'LevitController: failed to refresh auto-linked reactive',
-                name: 'levit_dart',
-                error: e,
-                stackTrace: s,
-              );
-            }
-          }
-        }
+      try {
+        refreshOwnedReactivePaths();
+      } catch (e, s) {
+        dev.log(
+          'LevitController: failed to refresh auto-linked reactive',
+          name: 'levit_dart',
+          error: e,
+          stackTrace: s,
+        );
       }
     }
   }
@@ -124,24 +231,7 @@ abstract class LevitController implements LevitScopeDisposable {
   /// ```dart
   /// late final sub = autoDispose(stream.listen((_) {}));
   /// ```
-  T autoDispose<T>(T object) {
-    // Use identity to allow separate reactives with equal values.
-    final alreadyAdded =
-        _disposables.any((element) => identical(element, object));
-
-    if (!alreadyAdded) {
-      _disposables.add(object);
-    }
-
-    // Respect explicit ownership and only backfill missing ownerId.
-    if (object is LxReactive) {
-      if (object.ownerId == null) {
-        object.ownerId = ownerPath;
-      }
-    }
-
-    return object;
-  }
+  T autoDispose<T>(T object) => own(object);
 
   /// Executes [action] and suppresses its result if this controller closes first.
   ///
@@ -190,23 +280,5 @@ abstract class LevitController implements LevitScopeDisposable {
   /// Override to perform additional custom cleanup.
   @override
   @mustCallSuper
-  void onClose() {
-    if (_closed) return;
-    _closed = true;
-    _disposed = true;
-
-    for (final disposable in _disposables) {
-      try {
-        Levit._levitDisposeItem(disposable);
-      } catch (e, s) {
-        dev.log(
-          'LevitController: failed to dispose ${disposable.runtimeType}',
-          name: 'levit_dart',
-          error: e,
-          stackTrace: s,
-        );
-      }
-    }
-    _disposables.clear();
-  }
+  FutureOr<void> onClose() => super.onClose();
 }

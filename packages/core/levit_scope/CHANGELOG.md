@@ -1,4 +1,20 @@
 
+## 0.0.11
+
+- **Breaking:** `LevitScopeDisposable.onClose()` may return `FutureOr<void>`;
+  `delete`, `reset`, and `dispose` now await cleanup.
+- Dispose registrations in LIFO order, continue after individual failures, and
+  report them together as `LevitDisposalException`.
+- Own `LevitDisposable` registrations directly and make terminal disposal
+  idempotent.
+- Add local, non-owning `bindExisting<Alias, Concrete>()` aliases for singleton
+  registrations.
+- Reject replacement of an instantiated synchronous registration; callers must
+  `await delete` before registering its replacement.
+
+## 0.0.10
+- Coordinated release version bump.
+
 ## 0.0.9
 - Clarified `permanent` DartDoc: survives non-forced `reset` only; `dispose()` always force-clears.
 - Coordinated release version bump.

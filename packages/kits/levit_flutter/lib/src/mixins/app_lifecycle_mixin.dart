@@ -16,19 +16,24 @@ part of '../../levit_flutter.dart';
 /// }
 /// ```
 mixin LevitAppLifecycleMixin on LevitController {
-  late final _AppLifecycleObserver _observer;
+  _AppLifecycleObserver? _observer;
 
   @override
   void onInit() {
     super.onInit();
-    _observer = _AppLifecycleObserver(this);
-    WidgetsBinding.instance.addObserver(_observer);
+    final observer = _AppLifecycleObserver(this);
+    _observer = observer;
+    WidgetsBinding.instance.addObserver(observer);
   }
 
   @override
-  void onClose() {
-    WidgetsBinding.instance.removeObserver(_observer);
-    super.onClose();
+  FutureOr<void> onClose() {
+    final observer = _observer;
+    if (observer != null) {
+      WidgetsBinding.instance.removeObserver(observer);
+      _observer = null;
+    }
+    return super.onClose();
   }
 
   /// Called when the application is visible and responding to user input.

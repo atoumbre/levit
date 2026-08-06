@@ -185,8 +185,8 @@ void main() {
       expect(levit.findAsync<TestService>(), throwsException);
     });
 
-    test('delete returns false if not found', () {
-      expect(levit.delete<TestService>(), isFalse);
+    test('delete returns false if not found', () async {
+      expect(await levit.delete<TestService>(), isFalse);
     });
 
     test('registeredKeys returns list', () {
@@ -194,12 +194,12 @@ void main() {
       expect(levit.registeredKeys, contains(contains('TestService')));
     });
 
-    test('reset respects permanent flag', () {
+    test('reset respects permanent flag', () async {
       levit.put(() => TestService(), permanent: true);
-      levit.reset();
+      await levit.reset();
       expect(levit.isRegistered<TestService>(), isTrue);
 
-      levit.reset(force: true);
+      await levit.reset(force: true);
       expect(levit.isRegistered<TestService>(), isFalse);
     });
   });
@@ -247,13 +247,13 @@ void main() {
       expect(scope.isRegisteredLocally<TestService>(), isFalse);
     });
 
-    test('delete local only', () {
+    test('delete local only', () async {
       levit.put(() => TestService());
       final scope = levit.createScope('scope');
 
       // Trying to delete parent service from scope should return false (or not affect parent)
       // Implementation check: _delete checks _registry.containsKey.
-      expect(scope.delete<TestService>(), isFalse);
+      expect(await scope.delete<TestService>(), isFalse);
       expect(levit.isRegistered<TestService>(), isTrue);
     });
 
@@ -276,11 +276,11 @@ void main() {
       expect(s1, isNot(equals(s2)));
     });
 
-    test('reset clears local instances', () {
+    test('reset clears local instances', () async {
       final scope = levit.createScope('scope');
       scope.put(() => TestService());
 
-      scope.reset();
+      await scope.reset();
       expect(scope.isRegisteredLocally<TestService>(), isFalse);
     });
 

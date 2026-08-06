@@ -34,7 +34,7 @@ void main() {
 
       // First call - execution
       final r1 = await controller.tasksEngine.schedule(
-        controller.fetchData,
+        (_) => controller.fetchData(),
         id: 'task1',
         cachePolicy: policy,
       );
@@ -44,7 +44,7 @@ void main() {
 
       // Second call - cache hit
       final r2 = await controller.tasksEngine.schedule(
-        controller.fetchData,
+        (_) => controller.fetchData(),
         id: 'task1',
         cachePolicy: policy,
       );
@@ -66,7 +66,7 @@ void main() {
       );
 
       await controller.tasksEngine.schedule(
-        controller.fetchData,
+        (_) => controller.fetchData(),
         id: 'task_ttl',
         cachePolicy: policy,
       );
@@ -75,7 +75,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 20));
 
       await controller.tasksEngine.schedule(
-        controller.fetchData,
+        (_) => controller.fetchData(),
         id: 'task_ttl',
         cachePolicy: policy,
       );
@@ -98,7 +98,7 @@ void main() {
 
       // Fill cache
       await controller.runTask(
-        controller.fetchData,
+        (_) => controller.fetchData(),
         id: 'shared_key',
         cachePolicy: policy,
       );
@@ -112,7 +112,7 @@ void main() {
 
       // Trigger cache hit
       final result = await controller.runTask(
-        () async =>
+        (_) async =>
             999, // Different task content, but same ID/Key should hit cache
         id: 'shared_key',
         cachePolicy: policy,
@@ -143,14 +143,14 @@ void main() {
 
       // First call sets cache
       await controller.tasksEngine.schedule(
-        controller.fetchData,
+        (_) => controller.fetchData(),
         id: 'task_fail',
         cachePolicy: policy,
       );
 
       // Second call fails to deserialize
       final result = await controller.tasksEngine.schedule(
-        controller.fetchData,
+        (_) => controller.fetchData(),
         id: 'task_fail',
         cachePolicy: policy,
       );

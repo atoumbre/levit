@@ -10,6 +10,7 @@
 library;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:developer' as dev;
 
 part 'src/core.dart';

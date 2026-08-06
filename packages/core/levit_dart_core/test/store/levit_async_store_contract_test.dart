@@ -69,7 +69,7 @@ void main() {
 
       expect(buildCount, 1);
 
-      expect(store.deleteIn(scope, force: true), isTrue);
+      expect(await store.deleteIn(scope, force: true), isTrue);
 
       await expectLater(
         store.findIn(scope),
@@ -94,9 +94,9 @@ void main() {
       expect(store.isRegisteredIn(scope), isTrue);
       expect(store.isInstantiatedIn(scope), isTrue);
 
-      scope.run(() {
+      await scope.run(() async {
         // Covers LevitAsyncStore.delete() which relies on Ls.currentScope.
-        expect(store.delete(force: true), isTrue);
+        expect(await store.delete(force: true), isTrue);
       });
 
       expect(store.isRegisteredIn(scope), isFalse);

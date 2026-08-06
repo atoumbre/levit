@@ -34,7 +34,7 @@ void main() {
     });
 
     test('executes simple task', () async {
-      final result = await service.tasksEngine.schedule(() async => 'success');
+      final result = await service.tasksEngine.schedule((_) async => 'success');
       expect(result, 'success');
     });
 
@@ -49,7 +49,7 @@ void main() {
 
       Future<void> run(String id, TaskPriority priority) {
         return service.tasksEngine.schedule(
-          () async {
+          (_) async {
             executionOrder.add('start_$id');
             await completers[id]!.future;
             executionOrder.add('end_$id');
@@ -100,7 +100,7 @@ void main() {
       int attempts = 0;
       try {
         await service.tasksEngine.schedule(
-          () async {
+          (_) async {
             attempts++;
             if (attempts < 3) throw 'fail';
             return 'success';
@@ -117,7 +117,7 @@ void main() {
     test('linear backoff', () async {
       int attempts = 0;
       await service.tasksEngine.schedule(
-        () async {
+        (_) async {
           attempts++;
           if (attempts < 3) throw 'fail';
           return 'success';
@@ -133,7 +133,7 @@ void main() {
       int attempts = 0;
       try {
         await service.tasksEngine.schedule(
-          () async {
+          (_) async {
             attempts++;
             throw 'fail';
           },
@@ -154,7 +154,7 @@ void main() {
     test('cancels active task', () async {
       final completer = Completer();
       final done = Completer();
-      service.tasksEngine.schedule(() async {
+      service.tasksEngine.schedule((_) async {
         await completer.future;
         done.complete();
       }, id: 't1');
@@ -169,11 +169,11 @@ void main() {
       final b1 = Completer();
       final b2 = Completer();
       // Saturate concurrency (max=2)
-      service.tasksEngine.schedule(() => b1.future, id: 'b1');
-      service.tasksEngine.schedule(() => b2.future, id: 'b2');
+      service.tasksEngine.schedule((_) => b1.future, id: 'b1');
+      service.tasksEngine.schedule((_) => b2.future, id: 'b2');
 
       bool ran = false;
-      service.tasksEngine.schedule(() async => ran = true, id: 'queued');
+      service.tasksEngine.schedule((_) async => ran = true, id: 'queued');
 
       service.tasksEngine.cancel('queued');
       b1.complete();
@@ -189,7 +189,7 @@ void main() {
       int attempts = 0;
       bool onErrorCalled = false;
       final future = service.tasksEngine.schedule(
-        () async {
+        (_) async {
           attempts++;
           if (attempts == 1) {
             started.complete();
@@ -220,8 +220,8 @@ void main() {
     test('cancelAllTasks iterates active tasks', () async {
       final c1 = Completer();
       final c2 = Completer();
-      service.tasksEngine.schedule(() => c1.future, id: 'a1');
-      service.tasksEngine.schedule(() => c2.future, id: 'a2');
+      service.tasksEngine.schedule((_) => c1.future, id: 'a1');
+      service.tasksEngine.schedule((_) => c2.future, id: 'a2');
       service.tasksEngine.cancelAll();
       c1.complete();
       c2.complete();
@@ -231,11 +231,11 @@ void main() {
       final b1 = Completer();
       final b2 = Completer();
       // Saturate concurrency (max=2)
-      service.tasksEngine.schedule(() => b1.future);
-      service.tasksEngine.schedule(() => b2.future);
+      service.tasksEngine.schedule((_) => b1.future);
+      service.tasksEngine.schedule((_) => b2.future);
 
       final future = service.tasksEngine.schedule(
-        () => throw 'error',
+        (_) => throw 'error',
         onError: (e, s) => throw 'bubble',
       );
 
@@ -249,7 +249,7 @@ void main() {
       bool caught = false;
       service.tasksEngine.config(onTaskError: (e, s) => caught = true);
       try {
-        await service.tasksEngine.schedule(() => throw 'error');
+        await service.tasksEngine.schedule((_) => throw 'error');
       } catch (_) {}
       expect(caught, true);
     });
@@ -265,7 +265,7 @@ void main() {
 
     test('updates tasks map state', () async {
       final completer = Completer();
-      final future = controller.runTask(() async {
+      final future = controller.runTask((_) async {
         await completer.future;
         return 'done';
       }, id: 'task1');
@@ -283,8 +283,8 @@ void main() {
       final c1 = Completer();
       final c2 = Completer();
 
-      controller.runTask(() => c1.future, id: 't1', weight: 1.0);
-      controller.runTask(() => c2.future, id: 't2', weight: 1.0);
+      controller.runTask((_) => c1.future, id: 't1', weight: 1.0);
+      controller.runTask((_) => c2.future, id: 't2', weight: 1.0);
 
       expect(controller.totalProgress.value, 0.0);
 
@@ -307,7 +307,7 @@ void main() {
 
     test('clearTask removes task and cancels it', () async {
       final c = Completer();
-      controller.runTask(() => c.future, id: 't1');
+      controller.runTask((_) => c.future, id: 't1');
       expect(controller.tasks.containsKey('t1'), true);
 
       controller.clearTask('t1');
@@ -330,7 +330,7 @@ void main() {
       bool caught = false;
       controller.onTaskError = (e, s) => caught = true;
       try {
-        await controller.runTask(() => throw 'fail', id: 't1');
+        await controller.runTask((_) => throw 'fail', id: 't1');
       } catch (_) {}
       expect(controller.tasks['t1']?.status, isA<LxError>());
       expect(caught, true);
@@ -350,7 +350,7 @@ void main() {
       for (var i = 0; i < 50; i++) {
         final comp = Completer();
         completers.add(comp);
-        c.runTask(() => comp.future, id: 'task_$i');
+        c.runTask((_) => comp.future, id: 'task_$i');
       }
 
       expect(c.tasks.length, 50);
@@ -358,7 +358,7 @@ void main() {
       // Try to add one more. History is 50.
       // All current 50 are LxWaiting, so orElse: () => '' should trigger.
       final nextComp = Completer();
-      c.runTask(() => nextComp.future, id: 'task_51');
+      c.runTask((_) => nextComp.future, id: 'task_51');
 
       expect(c.tasks.length, 51); // Should grow because it can't prune active
 
@@ -367,16 +367,16 @@ void main() {
       await Future.delayed(Duration.zero);
 
       // Now add another. It should prune the completed 'task_0'.
-      c.runTask(() => Completer().future, id: 'task_52');
+      c.runTask((_) => Completer().future, id: 'task_52');
       expect(c.tasks.containsKey('task_0'), false);
       expect(c.tasks.length, 51);
     });
 
     test('supports mixing both TasksMixins without name collisions', () async {
       final mixed = MixedController()..onInit();
-      final r1 = await mixed.runTask(() async => 'basic');
+      final r1 = await mixed.runTask((_) async => 'basic');
       final r2 = await (mixed as LevitReactiveTasksMixin)
-          .runTask(() async => 'reactive', id: 'r1');
+          .runTask((_) async => 'reactive', id: 'r1');
 
       expect(r1, 'basic');
       expect(r2, 'reactive');

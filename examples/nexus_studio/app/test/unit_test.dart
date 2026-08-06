@@ -102,13 +102,15 @@ class _FakeSink implements WebSocketSink {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
     // Dependencies needed for controllers
     Levit.put(() => NexusEngine());
     Levit.put(() =>
         PresenceController()); // ProjectController finds PresenceController
   });
+
+  tearDown(() => Levit.reset(force: true));
 
   group('AuthController', () {
     test('login/logout updates session and canEdit', () {
@@ -179,10 +181,9 @@ void main() {
       expect(pc.selectedIds.isEmpty, true);
     });
 
-    test('sendPresenceUpdate handles missing PresenceController', () {
+    test('sendPresenceUpdate handles missing PresenceController', () async {
       // Don't register PresenceController
-      Levit.reset(force: true);
-      final pc = Levit.put(() => ProjectController(channel: mockChannel));
+      await Levit.delete<PresenceController>(force: true);
 
       // Should not throw
       pc.sendPresenceUpdate(const Vec2(0, 0));
@@ -232,8 +233,9 @@ void main() {
       expect(pc.selectedIds.contains('n1'), false);
     });
 
-    test('connect handles connection error', () {
+    test('connect handles connection error', () async {
       bool connectorCalled = false;
+      await Levit.delete<ProjectController>(force: true);
       Levit.put(() => ProjectController(connector: (uri) {
             connectorCalled = true;
             throw Exception('Connection failed');
@@ -476,7 +478,7 @@ void main() {
 
     setUp(() {
       mockChannel = FakeWebSocketChannel();
-      presence = Levit.put(() => PresenceController());
+      presence = Levit.find<PresenceController>();
       // Mock project controller for `updateLocalCursor`
       Levit.put(() => ProjectController(channel: mockChannel));
     });

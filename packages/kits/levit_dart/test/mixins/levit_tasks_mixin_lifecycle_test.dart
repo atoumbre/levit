@@ -4,12 +4,9 @@ import 'package:test/test.dart';
 class TestController extends LevitController with LevitTasksMixin {}
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
-  });
-  test('LevitTasksMixin onInit coverage', () {
-    final controller = TestController();
-    controller.didAttachToScope(Ls.currentScope, key: 'test');
-    controller.onInit();
+  test('LevitTasksMixin onInit coverage', () async {
+    await Levit.runInScope<void>(() {
+      Levit.put(() => TestController());
+    }, name: 'task_lifecycle_test');
   });
 }

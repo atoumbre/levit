@@ -14,6 +14,7 @@ This package is responsible for:
 - Mutable and immutable reactive values.
 - Derived state (`LxComputed`, async computed variants).
 - Side-effect workers (`LxWorker` family).
+- Keyed reactive resources (`LxFamily`).
 - Deterministic propagation and batch semantics.
 - Reactive middleware interception.
 
@@ -55,11 +56,62 @@ void main() {
   count(1);
   count(2);
 
-  worker.close();
-  doubled.close();
-  count.close();
+worker.close();
+doubled.close();
+count.close();
 }
 ```
+
+## Async Concurrency
+
+Async computed values and workers accept `LxAsyncConcurrency`:
+
+- `latest` keeps the existing behavior: invalidations may overlap and only the
+  latest result is published.
+- `exhaustLatest` runs one computation at a time and coalesces any changes that
+  arrive while it runs into exactly one trailing computation.
+
+```dart
+final results = LxComputed.async(
+  () => search(query()),
+  concurrency: LxAsyncConcurrency.exhaustLatest,
+);
+```
+
+## Re-bindable Streams
+
+`LxStreamCompletionPolicy.close` remains the default. Use `retain` when a
+completed source should preserve its last status and be explicitly rebound:
+
+```dart
+final updates = LxStream<int>.idle(
+  completionPolicy: LxStreamCompletionPolicy.retain,
+);
+
+updates.restartDeferred(() => repository.watchUpdates());
+```
+
+## Keyed Reactive Families
+
+`LxFamily<K, R>` lazily creates and caches one reactive resource per key:
+
+```dart
+final products = LxFamily<String, LxStream<Product>>(
+  (sku) => LxStream.defer(() => repository.watchProduct(sku)),
+  name: 'products',
+  eviction: const LxFamilyEviction.whenInactive(
+    gracePeriod: Duration(seconds: 30),
+  ),
+);
+
+final selectedProduct = products(selectedSku);
+products.invalidate(selectedSku);
+products.close();
+```
+
+Raw keys are hashed in diagnostic names unless an application-controlled
+`debugKey` is supplied, so high-cardinality or sensitive key values are not
+exported by default.
 
 ## Middleware Lifecycle (Token-Based)
 
@@ -83,4 +135,3 @@ void teardown() {
 - Fine-grained dependency tracking.
 - Explicit lifecycle closure for long-lived resources.
 - Predictable middleware interception.
-

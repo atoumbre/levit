@@ -18,14 +18,11 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - name: Set up Levit
+        uses: ./.github/actions/setup-levit
         with:
-          channel: 'stable'
-          cache: true
-
-      - name: Install Melos
-        uses: bluefireteam/melos-action@v3
+          bootstrap: 'true'
+          pub-cache-suffix: ${{ hashFiles('**/pubspec.yaml', 'melos.yaml') }}
 
       - name: Setup Pub Credentials
         run: |
@@ -33,6 +30,6 @@ jobs:
           echo '${{ secrets.PUB_CREDENTIALS }}' > $HOME/.config/dart/pub-credentials.json
 
       - name: Publish to Pub.dev
-        run: melos publish --no-dry-run --yes
+        run: dart run melos publish --no-dry-run --yes
         env:
           PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}

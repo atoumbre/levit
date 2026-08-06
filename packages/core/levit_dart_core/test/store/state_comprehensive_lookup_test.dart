@@ -7,9 +7,9 @@ void main() {
       Levit.enableAutoLinking();
     });
 
-    tearDown(() {
+    tearDown(() async {
       Levit.disableAutoLinking();
-      Levit.reset(force: true);
+      await Levit.reset(force: true);
     });
 
     test('LevitStore and LevitRef coverage', () async {
@@ -61,8 +61,8 @@ void main() {
           state.isInstantiatedIn(Ls.currentScope, tag: 'provider_test'), true);
 
       // delete
-      expect(state.delete(), true);
-      expect(state.delete(), false); // Already deleted
+      expect(await state.delete(), true);
+      expect(await state.delete(), false); // Already deleted
     });
 
     test('Auto-linking and adoption coverage', () {
@@ -75,13 +75,16 @@ void main() {
       expect(v.ownerId, contains('tag1'));
     });
 
-    test('LevitRef dispose error log coverage', () {
+    test('LevitRef dispose failure coverage', () async {
       final state = LevitStore((ref) {
         ref.onDispose(() => throw Exception('onDispose error'));
         return 'test';
       });
       state.find();
-      Levit.reset(force: true);
+      await expectLater(
+        Levit.reset(force: true),
+        throwsA(isA<LevitDisposalException>()),
+      );
     });
 
     test('Coverage for private/internal paths', () {
@@ -96,8 +99,8 @@ void main() {
       expect(await state.findAsync(), 'test');
 
       // delete extension (state.dart lines 329-330)
-      expect(state.delete(), true);
-      expect(state.delete(), false);
+      expect(await state.delete(), true);
+      expect(await state.delete(), false);
     });
 
     test('Chained capture and nested put coverage', () {

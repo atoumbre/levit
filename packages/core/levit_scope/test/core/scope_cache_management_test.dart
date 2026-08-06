@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('LevitScope Cache Management', () {
-    test('clears resolution cache on delete and reset', () {
+    test('clears resolution cache on delete and reset', () async {
       final root = LevitScope.root();
       final child = root.createScope('child');
 
@@ -13,14 +13,14 @@ void main() {
 
       // Put something local so delete/reset has something to do and triggers the cache clearing logic
       child.put(() => 100, tag: 'local');
-      expect(child.delete<int>(tag: 'local'), true);
+      expect(await child.delete<int>(tag: 'local'), true);
 
       // Repopulate resolution cache for reset test
       child.find<int>(tag: 'parent');
 
       // Put another local item for reset to process
       child.put(() => 200, tag: 'local2');
-      child.reset();
+      await child.reset();
 
       expect(child.isRegisteredLocally<int>(tag: 'local2'), false);
     });

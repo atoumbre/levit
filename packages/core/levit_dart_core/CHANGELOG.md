@@ -1,4 +1,22 @@
 
+## 0.0.11
+
+- Add reusable `LevitResourceOwner` and `LevitResourceOwnership` lifecycle
+  contracts with `own`, `autoDispose`, `disposed`, and idempotent awaited
+  cleanup.
+- Extend auto-linking to every returned `LevitResourceOwner`, not only
+  `LevitController`.
+- Apply resource ownership consistently to controllers and stores.
+- Expose `bindExisting` through `Levit`, `LevitRef`, and store references.
+- Make `Levit.delete`, `Levit.reset`, and `Levit.runInScope` await deterministic
+  scope teardown.
+- Updated internal package constraints to `^0.0.11`.
+
+## 0.0.10
+- `LevitRef.scope` now throws a clear `StateError` when accessed before the store is resolved in a scope (replaces a null-check crash).
+- Coordinated release version bump.
+- Updated internal package constraints to `^0.0.10`.
+
 ## 0.0.9
 - Clarified `permanent` on `put` / `lazyPut` / `lazyPutAsync` vs scope `dispose(force)`.
 - Documented `autoDispose(LxWorker(...))` as the preferred controller reload recipe.

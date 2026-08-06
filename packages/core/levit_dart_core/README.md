@@ -15,7 +15,7 @@
 This package is responsible for:
 
 - `Levit`: a unified facade over DI, reactive batching, and middleware registration.
-- `LevitController`: lifecycle-aware application logic units.
+- `LevitController` and `LevitResourceOwner`: lifecycle-aware ownership units.
 - `LevitStore` / `LevitAsyncStore`: reusable scoped state factories.
 
 This package does not include:
@@ -30,7 +30,8 @@ This package does not include:
 `levit_dart_core` formalizes ownership semantics between state and lifecycle:
 
 - A `LevitScope` owns registrations and deterministic teardown.
-- A `LevitController` owns its auto-disposed resources.
+- Any `LevitResourceOwner` owns resources registered through `own` or
+  `autoDispose`.
 - A `LevitStore` is a portable state definition that resolves per scope.
 
 The package preserves explicit scoping and avoids hidden global behavior.
@@ -57,7 +58,7 @@ class CounterController extends LevitController {
   }
 }
 
-void main() {
+Future<void> main() async {
   final scope = Levit.createScope('app');
 
   scope.run(() {
@@ -65,9 +66,45 @@ void main() {
     Levit.find<CounterController>().increment();
   });
 
-  scope.dispose();
+  await scope.dispose();
 }
 ```
+
+## Resource Ownership
+
+Controllers, stores, and non-controller resources can share one ownership
+contract:
+
+```dart
+final class SessionResource extends LevitScopeDisposable
+    with LevitResourceOwnership {
+  late final subscription = own(events.listen(handleEvent));
+  late final refreshTimer = own(Timer.periodic(
+    const Duration(minutes: 1),
+    (_) => refresh(),
+  ));
+}
+```
+
+`own` and `autoDispose` are equivalent. Cleanup is idempotent, awaited, and
+LIFO; `disposed` completes after terminal cleanup. With auto-linking enabled,
+reactives created while any returned `LevitResourceOwner` is constructed are
+linked to that owner.
+
+Always delegate lifecycle overrides to `super`:
+
+```dart
+@override
+Future<void> onClose() async {
+  await flushPendingWrites();
+  await super.onClose();
+}
+```
+
+Use `Levit.bindExisting<Port, Implementation>()` after registering an
+implementation when several interface types should resolve to the same owned
+instance. This is deliberately smaller than a module system: it does not add a
+second composition abstraction or transactional graph replacement.
 
 ## Design Principles
 

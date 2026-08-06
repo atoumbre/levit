@@ -4,6 +4,8 @@
 /// Flutter utilities into one import surface.
 library levit_flutter_kit;
 
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 export 'package:levit_dart/levit_dart.dart';
