@@ -107,6 +107,25 @@ void main() {
       await active;
     });
 
+    test('drop cancel no-op is safe to invoke', () async {
+      final blocker = Completer<void>();
+      final engine = LevitTaskEngine(maxConcurrent: 1);
+      final active = engine.schedule((_) => blocker.future, id: 'drop-cancel');
+
+      final dropped = engine.submit(
+        (_) => 2,
+        id: 'drop-cancel',
+        conflictPolicy: TaskConflictPolicy.drop,
+      );
+
+      expect(dropped.disposition, LevitTaskSubmissionDisposition.dropped);
+      dropped.cancel();
+      expect(await dropped.result, isNull);
+
+      blocker.complete();
+      await active;
+    });
+
     test('restart admits replacement and suppresses stale completion',
         () async {
       final oldGate = Completer<void>();
