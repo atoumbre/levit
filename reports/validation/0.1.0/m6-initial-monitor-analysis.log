@@ -1,9 +1,0 @@
-Analyzing levit_monitor...
-
-  error - test/middleware/monitor_listener_test.dart:48:20 - The getter 'reactive' isn't defined for the type 'MonitorEvent'. Try importing the library that defines 'reactive', correcting the name to the name of an existing getter, or defining a getter or field named 'reactive'. - undefined_getter
-  error - test/middleware/monitor_listener_test.dart:49:20 - The getter 'context' isn't defined for the type 'MonitorEvent'. Try importing the library that defines 'context', correcting the name to the name of an existing getter, or defining a getter or field named 'context'. - undefined_getter
-  error - test/middleware/monitor_listener_test.dart:75:20 - The getter 'reactive' isn't defined for the type 'MonitorEvent'. Try importing the library that defines 'reactive', correcting the name to the name of an existing getter, or defining a getter or field named 'reactive'. - undefined_getter
-  error - test/middleware/monitor_listener_test.dart:76:20 - The getter 'context' isn't defined for the type 'MonitorEvent'. Try importing the library that defines 'context', correcting the name to the name of an existing getter, or defining a getter or field named 'context'. - undefined_getter
-  error - test/middleware/monitor_listener_test.dart:96:20 - The getter 'context' isn't defined for the type 'MonitorEvent'. Try importing the library that defines 'context', correcting the name to the name of an existing getter, or defining a getter or field named 'context'. - undefined_getter
-
-5 issues found.

@@ -1,6 +1,0 @@
-00:00 +0: loading /private/var/folders/zw/tvf3hyfd3c571fqfbtsff0ph0000gn/T/levit-m8-snapshot-57mla2gi/examples/task_board/test/save_upload_test.dart
-00:00 +0: buttons observe cancellation and feature unmount completes
-00:00 +1: owner waits for cancelled upload finally before repository close
-00:00 +2: failed attachment cancels sibling but root remains usable
-00:00 +3: successful save publishes one completed workflow
-00:01 +4: All tests passed!

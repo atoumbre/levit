@@ -1,6 +1,0 @@
-PASS: 873 source files still match both working checkout and isolated candidate.
-PASS: 23 dependency locks match isolated graph.
-PASS: source manifest, dependency manifest and archive SHA-256 verified.
-PASS: final certificate/performance links resolve; no unchecked progress steps.
-PASS: source archive bytes were verified against embedded manifests during creation.
-Publication: not performed.

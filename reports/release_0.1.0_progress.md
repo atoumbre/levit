@@ -1,5 +1,8 @@
 # Levit 0.1.0 implementation progress
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 This is a work log, not release certification. The approved release includes
 all eight revised milestones in the [0.1.0 plan](release_0.1.0_plan.md).
 Publication is a separate action.
@@ -20,7 +23,7 @@ separately and has not been implemented.
 - [x] Consumer migration and family removal.
 - [ ] Candidate comparison, coverage and certification.
 
-[Baseline manifest and SDKs](validation/0.1.0/collection-redesign/baseline.json).
+Baseline manifest and SDKs (`validation/0.1.0/collection-redesign/baseline.json`).
 The review passed 17 core, 12 query-kit and 4 catalog tests. Single-producer
 refresh, failure, stream and shutdown tests migrate to LxResource; keyed identity,
 retention, freshness and task cancellation tests to LevitAsyncMap. Mounted
@@ -43,13 +46,13 @@ slower shifts and churn. Its native attempt ended with zero complete reports.
 
 ### List shifts and subscription churn
 
-- [x] Profile the two regressions on the archived candidate. The shift profile identified repeated channel lookup, batch sorting and notification costs. The churn profile attributed 466 of 1,917 self samples to formatting names. [Shift samples](validation/0.1.0/collection-performance/shift-before.json) · [Churn samples](validation/0.1.0/collection-performance/churn-before.json)
+- [x] Profile the two regressions on the archived candidate. The shift profile identified repeated channel lookup, batch sorting and notification costs. The churn profile attributed 466 of 1,917 self samples to formatting names. Shift samples (`validation/0.1.0/collection-performance/shift-before.json`) · Churn samples (`validation/0.1.0/collection-performance/churn-before.json`)
 - [x] Verify the historical Flutter entrypoint. The archived reference profile app emitted the interactive profiler’s ready marker. Rebuilding it for the release workload produced a complete 15-round preflight with real frames.
-- [x] Verify cleanup and sparse updates. Aggregate CI passed, the reactive package reached 100% coverage, all 38 stress tests passed, and the mounted catalog rebuilt one of six favorite rows. [CI](validation/0.1.0/collection-performance/ci.log) · [Catalog](validation/0.1.0/collection-performance/catalog.log) · [Stress](validation/0.1.0/collection-performance/stress.log)
-- [x] Rerun the unchanged AOT workloads. Across eight balanced rounds, list shifts took 31.8% less time and subscription churn took 35.7% less than pre-redesign. Against 539f130 the reductions were 71.2% and 7.5%. Sparse map and index writes retained their evaluation counts and took 97.8% and 98.1% less time than pre-redesign. [All samples](validation/0.1.0/collection-performance/addresses-raw.json)
-- [x] Pass the full 100% coverage gate, 7,099/7,099 lines across 11 packages. [Coverage](validation/0.1.0/collection-performance/coverage.log)
+- [x] Verify cleanup and sparse updates. Aggregate CI passed, the reactive package reached 100% coverage, all 38 stress tests passed, and the mounted catalog rebuilt one of six favorite rows. CI (`validation/0.1.0/collection-performance/ci.log`) · Catalog (`validation/0.1.0/collection-performance/catalog.log`) · Stress (`validation/0.1.0/collection-performance/stress.log`)
+- [x] Rerun the unchanged AOT workloads. Across eight balanced rounds, list shifts took 31.8% less time and subscription churn took 35.7% less than pre-redesign. Against 539f130 the reductions were 71.2% and 7.5%. Sparse map and index writes retained their evaluation counts and took 97.8% and 98.1% less time than pre-redesign. All samples (`validation/0.1.0/collection-performance/addresses-raw.json`)
+- [x] Pass the full 100% coverage gate, 7,099/7,099 lines across 11 packages. Coverage (`validation/0.1.0/collection-performance/coverage.log`)
 - [x] Complete all 24 native comparisons on the same 120 Hz display, in profile and release with diagnostics off and on. The run validated 4,320 engine frames. Unmonitored release fan-out took 37.3% less time than pre-redesign and 74.5% less than 539f130. Median frame cadence stayed within 0.2% of pre-redesign. [Comparison and profiles](validation/0.1.0/collection-performance/PERFORMANCE.md)
-- [ ] Overall performance sign-off remains open. The unmonitored release task workload took 9.3% longer than 539f130. Monitored release scope lifetimes took 3.3% longer than pre-redesign and 4.0% longer than 539f130. Monitored profile fan-out took 3.1% longer than pre-redesign. These rows ran slower in both paired launches against the stated reference. [Paired measurements](validation/0.1.0/collection-performance/native-pairs.json)
+- [ ] Overall performance sign-off remains open. The unmonitored release task workload took 9.3% longer than 539f130. Monitored release scope lifetimes took 3.3% longer than pre-redesign and 4.0% longer than 539f130. Monitored profile fan-out took 3.1% longer than pre-redesign. These rows ran slower in both paired launches against the stated reference. Paired measurements (`validation/0.1.0/collection-performance/native-pairs.json`)
 
 ## Published-release comparison (2026-11-13)
 
@@ -165,7 +168,7 @@ packages and `release_performance.dart` are unchanged by this follow-up.
   describe run validity rather than speed. Presentation follow-up: [40 focused
   tests pass](validation/0.1.0/benchmark-status/tests.log), [fatal-info analysis
   passes](validation/0.1.0/benchmark-status/analyze.log), five edited Dart files
-  pass formatting, and the [interactive release app is rebuilt](validation/0.1.0/benchmark-status/build.log).
+  pass formatting, and the interactive release app is rebuilt (`validation/0.1.0/benchmark-status/build.log`).
   This later presentation change leaves workload timing unchanged and does not
   update the earlier archived candidate or benchmark-fix source manifest.
 
@@ -367,8 +370,8 @@ all intermediate evidence are retained.
   validation evidence; refresh candidate certification without publishing.
 
 Current evidence: [performance report](validation/0.1.0/PERFORMANCE.md),
-[frozen validation](validation/0.1.0/performance-remediation/validation-status.json),
-[exact-binary replication](validation/0.1.0/performance-remediation/repeat-status.json),
+frozen validation (`validation/0.1.0/performance-remediation/validation-status.json`),
+exact-binary replication (`validation/0.1.0/performance-remediation/repeat-status.json`),
 [candidate certificate](validation/0.1.0/CANDIDATE.md).
 
 ### Historical corrected comparison and recertification

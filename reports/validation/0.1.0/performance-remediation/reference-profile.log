@@ -1,5 +1,0 @@
-reference off tasks: 3244 CPU samples, {workload: tasks, diagnostics: false, iterations: 25665, elapsedUs: 5000051, type: Response}
-reference off scopes: 3410 CPU samples, {workload: scopes, diagnostics: false, iterations: 18258, elapsedUs: 5000218, type: Response}
-reference on notify: 3639 CPU samples, {workload: notify, diagnostics: true, iterations: 118, elapsedUs: 5016838, type: Response}
-reference on fanout: 3445 CPU samples, {workload: fanout, diagnostics: true, iterations: 81, elapsedUs: 5004232, type: Response}
-reference on scopes: 3715 CPU samples, {workload: scopes, diagnostics: true, iterations: 1221, elapsedUs: 5004819, type: Response}

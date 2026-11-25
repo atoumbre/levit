@@ -1,5 +1,8 @@
 # Levit 0.1.0 performance remediation
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 **Performance sign-off complete for this measured matrix; not published.** The final evidence combines complete matrices **9 and 10**, using the same
 executables and AOT frameworks: **32 isolated native processes, 17,280 timed
 samples and 5,760 matched Flutter frames**. Every result, delivery, teardown and display check passes. Source and
@@ -36,13 +39,13 @@ concurrent builds, tests, profilers or evidence compression.
 
 - Reference runtime: 74 package source/manifests match Git. The common harness,
   native host and adapter changes are recorded in
-  [reference integrity](performance-remediation/reference-integrity.json).
-- Candidate runtime: [exact hashes](performance-remediation/replicated-comparison/runtime-source.json)
-  and [patch from the previous candidate](performance-remediation/replicated-comparison/runtime-from-9ea48ef.patch).
+  reference integrity (`performance-remediation/reference-integrity.json`).
+- Candidate runtime: exact hashes (`performance-remediation/replicated-comparison/runtime-source.json`)
+  and patch from the previous candidate (`performance-remediation/replicated-comparison/runtime-from-9ea48ef.patch`).
   Every raw run records executable and AOT framework SHA-256 values.
-  [Replication verification](performance-remediation/repeat-status.json) proves
+  Replication verification (`performance-remediation/repeat-status.json`) proves
   that the second matrix used the same binaries, with no source changes. Both
-  revisions use the same [41 hosted dependency versions](performance-remediation/external-versions.json).
+  revisions use the same 41 hosted dependency versions (`performance-remediation/external-versions.json`).
 - Host: Apple M1 Pro, eight cores, 16 GiB RAM, macOS 26.6.2; Dart 3.12.2 /
   Flutter 3.44.8. All windows use the same 1600 × 1200 physical pixels, 2× scale,
   display 1 and 120 Hz. Visible unfocused windows use identical process activity
@@ -89,10 +92,10 @@ concurrent builds, tests, profilers or evidence compression.
 | Closing-scope guard | Registrations removed from lookup were omitted from self-disposal checks while their task still drained. | Check retiring registrations too. The permanent test fails before the fix and passes after it. |
 | Middleware failure paths | A throwing deletion callback could skip later cleanup; a final observer failure could mask earlier errors. | Attempt all deletion/disposal observers and all resource cleanup. Aggregate errors after async release. Cover dispose, delete, reset and non-owning aliases. |
 
-[CPU summary](performance-remediation/profile-summary.json) and
-[matching async-scope profiles](performance-remediation/final-async-profile-summary.json)
+CPU summary (`performance-remediation/profile-summary.json`) and
+matching async-scope profiles (`performance-remediation/final-async-profile-summary.json`)
 retain sampled function counts. Original VM-service responses are losslessly
-compressed; [their manifest](performance-remediation/profiles/profile-files.json)
+compressed; their manifest (`performance-remediation/profiles/profile-files.json`)
 records compressed and original SHA-256 values. Instrumented throughput is not
 comparative timing evidence. VM heap counters are not an allocation census.
 The final async profile corresponds to matrix 7; the small subsequent allocation
@@ -117,7 +120,7 @@ build/raster medians are **−6.7% / −13.0%**. Monitored build p95 is **3.905 
 records 4.367 versus 2.834 ms, while matrix 10 records 2.776 versus 2.822 ms.
 These slower observations are retained, not relabelled as improvements.
 
-[Isolated UI CPU profiles](performance-remediation/ui-profile-summary.json)
+Isolated UI CPU profiles (`performance-remediation/ui-profile-summary.json`)
 use the same virtualized list and one `LWatch`, with no concurrent builds/tests.
 Samples with Levit frames are 2.8% candidate / 3.0% reference with diagnostics off,
 and 4.1% / 3.8% with diagnostics on. They do not establish an additional Levit
@@ -208,10 +211,10 @@ Diagnostics-off ranges of all 12 round medians, per complete workload:
 
 ## Evidence and reproduction
 
-- [All process outcomes](performance-remediation/replicated-comparison/run.log),
-  [summary and raw round medians](performance-remediation/replicated-comparison/performance-summary.json),
-  [engine/event analysis](performance-remediation/replicated-comparison/performance-analysis.json).
-- [The raw-run manifest](performance-remediation/replicated-comparison/run-files.json)
+- All process outcomes (`performance-remediation/replicated-comparison/run.log`),
+  summary and raw round medians (`performance-remediation/replicated-comparison/performance-summary.json`),
+  engine/event analysis (`performance-remediation/replicated-comparison/performance-analysis.json`).
+- The raw-run manifest (`performance-remediation/replicated-comparison/run-files.json`)
   links every original JSON result in `comparison-9/` and `comparison-10/`.
   Build logs remain with the original build matrix; the repeat performs no rebuild. Comparison matrices are never assembled by
   selecting favorable rounds from different runs.

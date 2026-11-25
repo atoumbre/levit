@@ -73,7 +73,7 @@ Implementation references: [scope runtime](/Users/atoumbre/SoftiLab/levit-svg/pa
 
 ### 2. Reactive state
 
-Implementation references: [base types](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/base_types.dart), [reactive core](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/core.dart), [collections](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/collections.dart), [computed values](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/computed.dart), [async wrappers](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/async_types.dart), [status](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/async_status.dart), [workers](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/workers.dart), [families](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/family.dart).
+Implementation references: [base types](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/base_types.dart), [reactive core](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/core.dart), [collections](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/collections.dart), [computed values](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/computed.dart), [async wrappers](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/async_types.dart), [status](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/async_status.dart), [workers](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/workers.dart), families (historical source `packages/core/levit_reactive/lib/src/family.dart`).
 
 | Feature | Value | Decision | Assessment |
 | --- | --- | --- | --- |
@@ -219,7 +219,7 @@ await scope.dispose();
 
 Levit already has async computed values, stale data, tasks with TTL caches, and families with eviction. **The missing piece is how those primitives compose into reliable refreshable data.**
 
-The family probe created `LxComputed(() => family('x').value)`, attached a worker, invalidated `x`, and changed the new entry to `99`. The computed still read `1`, and its worker received no notification. `invalidate` removes and closes an entry; family lookup itself is not a tracked dependency. [Source](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/family.dart:96).
+The family probe created `LxComputed(() => family('x').value)`, attached a worker, invalidated `x`, and changed the new entry to `99`. The computed still read `1`, and its worker received no notification. `invalidate` removes and closes an entry; family lookup itself is not a tracked dependency. Source (historical source `packages/core/levit_reactive/lib/src/family.dart:96`).
 
 Decide whether this API means eviction only or refresh of live consumers. Prefer distinct eviction/refresh operations, or a stable per-key observable handle that survives replacement. Then provide a small query recipe covering key identity, freshness, deduplication, retry, cancellation, inactive eviction, and retained data. Add maximum entries/retention budgets for high-cardinality searches.
 

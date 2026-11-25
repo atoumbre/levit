@@ -1,7 +1,0 @@
-00:00 +0: loading test/utilities/query_cleanup_acceptance_test.dart
-00:00 +0: query refresh creates missing entries and invalidation respects observers
-00:00 +1: query resource rejects disposal from its task
-00:00 +2: owned query engine drains failing finally blocks and reports cleanup
-00:00 +3: query drain waits for refresh settlement without closing borrowed engine
-00:00 +4: typed task selectors retain a successful null while waiting and failing
-00:00 +5: All tests passed!

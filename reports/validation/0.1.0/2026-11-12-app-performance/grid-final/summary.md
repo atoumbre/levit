@@ -1,5 +1,8 @@
 # Repeated dashboard comparison
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 Two independent processes per revision; raw within-run samples are not independent trials.
 
 Negative change means lower elapsed time. All values are microseconds.

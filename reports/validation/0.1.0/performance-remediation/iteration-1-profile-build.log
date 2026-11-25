@@ -1,3 +1,0 @@
-Building macOS application...                                   
-2026-11-11 17:38:59.852 xcodebuild[39144:42583558] [MT] IDESchemeActionsInvocationRecord: Device <IDEOSXSupportCore.IDEMacPlaceholder: 0x8fc98a580 (Any Mac | undefined_arch)> is missing operatingSystemVersion, operatingSystemVersionWithBuildNumber.
-✓ Built build/macos/Build/Products/Profile/benchmarks.app (54.7MB)

@@ -1,7 +1,10 @@
 # Reproducing these measurements
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 Use Dart 3.12.2 / Flutter 3.44.8. Match the dependency locks and hashes in
-[comparison-inputs.json](comparison-inputs.json). Run measurements only after all
+comparison-inputs.json (`comparison-inputs.json`). Run measurements only after all
 builds and test processes have ended. The native app needs an unlocked, awake
 macOS display: it waits for real engine frame timings and verifies display size,
 pixel ratio and refresh rate across processes. Do not substitute debug frames.
@@ -15,7 +18,7 @@ pixel ratio and refresh rate across processes. Do not substitute debug frames.
    the preserved 539f130 performance checkout and harness with the tested
    teardown patch, and `--dart-define=LEVIT_REFERENCE=539f130`.
 3. From the candidate root, run the existing
-   [native comparison driver](../../../../benchmarks/tool/compare_release_performance.py):
+   native comparison driver (`../../../../benchmarks/tool/compare_release_performance.py`):
    `python3 benchmarks/tool/compare_release_performance.py REFERENCE_ROOT
    NEW_OUTPUT_DIRECTORY BEFORE_ROOT`. It runs two passes in reverse revision
    order, two build modes and two diagnostics settings: 24 independent processes.

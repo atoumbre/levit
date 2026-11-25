@@ -1,4 +1,0 @@
-Removed-API implementation/consumer scan
-rg -n \b(LWidgetMonitor|LevitReactiveHistoryMiddleware|toBuilder|levitPut|levitLazyPut|levitLazyPutAsync|computedValue|cancelOnClose)\b packages examples --glob *.dart --glob !**/test/** --glob !**/.dart_tool/**
-
-No removed API references in non-test Dart source.

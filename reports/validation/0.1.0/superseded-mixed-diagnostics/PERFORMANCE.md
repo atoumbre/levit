@@ -1,5 +1,8 @@
 # Native performance comparison for Levit 0.1.0
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 Completed on 2026-11-11: eight native processes passed all correctness, cleanup,
 diagnostic-delivery and frame-count checks. The comparison contains **8,640 timed
 samples and 2,880 matched Flutter frames**. Failed/provisional probes remain

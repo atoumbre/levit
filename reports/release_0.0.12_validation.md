@@ -29,7 +29,7 @@ to its SHA-256; the digest hashes sorted compact JSON for that mapping.
 | Stores and views | Ancestor reuse and local isolation; shared async initialization; all four store-view factories; argument and scope updates; fresh resolver closures; scoped teardown. |
 | Explicit bootstrap | Monitoring enabled/disabled crossed with linking enabled/disabled; executable Dart, Flutter, store, and monitor-filter fixtures; runnable example bootstrap and awaited teardown. |
 
-Removed APIs have replacements in [the migration guide](../MIGRATION_0.0.12.md).
+Removed APIs have replacements in [the migration guide](../docs/MIGRATION_0.0.12.md).
 The [audit disposition](feature_set_audit.md) records which broader proposals
 remain excluded from this release.
 

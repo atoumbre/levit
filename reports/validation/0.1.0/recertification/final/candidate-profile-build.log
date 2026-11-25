@@ -1,4 +1,0 @@
-Building macOS application...                                   
-2026-11-11 16:46:32.243 xcodebuild[22819:42460797] [MT] IDESchemeActionsInvocationRecord: Device <IDEOSXSupportCore.IDEMacPlaceholder: 0x7f0b3a440 (Any Mac | undefined_arch)> is missing operatingSystemVersion, operatingSystemVersionWithBuildNumber.
-warning: Run script build phase 'Run Script' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'Flutter Assemble' from project 'Runner')
-✓ Built build/macos/Build/Products/Profile/benchmarks.app (59.0MB)

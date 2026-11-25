@@ -1,9 +1,0 @@
-00:00 +0: loading test/transports/websocket_cleanup_acceptance_test.dart
-00:00 +0: bounds validate before connecting
-00:00 +1: queue overflow drops oldest pending events and flush awaits acknowledgement
-00:00 +2: full in-flight slot drops new events and timeout disconnects with accounting
-00:00 +3: acknowledgement-free transport drains without relay support
-00:00 +4: cleanup drains both subscription and socket failures, disconnect=false
-00:00 +5: cleanup drains both subscription and socket failures, disconnect=true
-00:00 +6: close before ready drops pending events and awaits failed channel release
-00:00 +7: All tests passed!

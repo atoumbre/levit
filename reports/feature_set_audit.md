@@ -22,7 +22,7 @@ below describe 0.0.11; the following decisions supersede its proposed staging.
 | G8/G9 broader tooling/data features | Inspector, monitor shutdown redesign, persistence, and query abstractions excluded from this release. |
 | Package structure | Eight publishable runtime packages coordinated at 0.0.12; no consolidation. |
 
-Consumer changes are documented in [MIGRATION_0.0.12.md](../MIGRATION_0.0.12.md).
+Consumer changes are documented in [MIGRATION_0.0.12.md](../docs/MIGRATION_0.0.12.md).
 Release checks and regenerated evidence are recorded in the
 [release validation report](release_0.0.12_validation.md); implementation alone
 does not authorize publication.
@@ -124,7 +124,7 @@ Construction inside registration is materially different from registering an exi
 
 Centralize the recommended bootstrap, correct all quick starts, and extend lints to unsafe instance registration and missing ownership. Monitoring should observe an explicitly configured lifecycle policy. Retain explicit `own` for dynamic resources; changing the default globally needs compatibility analysis.
 
-Evidence: [extensions](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_scope/lib/src/extensions.dart:3), [bootstrap](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_dart_core/lib/src/core.dart:284), [monitor attach](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/src/core.dart:150), [quick start](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/README.md).
+Evidence: extensions (historical source `packages/core/levit_scope/lib/src/extensions.dart:3`), [bootstrap](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_dart_core/lib/src/core.dart:284), [monitor attach](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/src/core.dart:150), [quick start](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/README.md).
 
 **G6 — Unambiguous store and view semantics. High priority for adoption.**
 
@@ -154,7 +154,7 @@ Evidence: [monitor boundary](/Users/atoumbre/SoftiLab/levit-svg/packages/core/le
 
 Families, async computed values, retained last values, retries, deduplication via task policies, and TTL result caching already exist. What is missing is a documented composition for freshness, observable invalidation, paginated loading, optimistic updates/rollback, and reconnect refresh. Start with one realistic example and reusable adapters; introduce a query abstraction only if the composition remains repetitive. General durable state restoration is also distinct from task-result caching and diagnostic snapshots; add it as an optional integration when actual app requirements justify it.
 
-Evidence: [families](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/family.dart:37), [async status](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/async_status.dart:3), [cache contract](/Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit_dart/lib/src/utilities/task_engine_models.dart:597).
+Evidence: families (historical source `packages/core/levit_reactive/lib/src/family.dart:37`), [async status](/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive/lib/src/async_status.dart:3), [cache contract](/Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit_dart/lib/src/utilities/task_engine_models.dart:597).
 
 **Deprecation decisions**
 

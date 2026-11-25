@@ -1,7 +1,0 @@
-00:00 +0: loading test/core/monitor_failure_acceptance_test.dart
-00:00 +0: monitor validates bounds and rejects updates after close
-00:00 +1: serialization and transport failures remain visible after replacement
-00:00 +2: multi-transport drop totals and disabled subscription failures are retained
-00:00 +3: snapshots bound task owners, restore trees, and redact metadata transitions
-00:00 +4: frozen events keep console severity and configured overrides
-00:00 +5: All tests passed!

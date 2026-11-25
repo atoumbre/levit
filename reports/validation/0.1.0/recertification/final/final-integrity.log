@@ -1,5 +1,0 @@
-PASS: 877 working and isolated source files match the certified source manifest.
-PASS: final source archive SHA-256 matches certificate.
-PASS: 59 current documentation links resolve.
-PASS: progress report contains no pending checkboxes.
-PASS: git diff --check.

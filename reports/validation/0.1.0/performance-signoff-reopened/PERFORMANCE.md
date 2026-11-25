@@ -1,5 +1,8 @@
 # Corrected native performance comparison for Levit 0.1.0
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 Completed on 2026-11-11: **24 isolated native processes, 12,960 timed samples,
 and 4,320 matched Flutter frames**. Profile/release and diagnostics off/on are
 measured separately for the approved reference, the original candidate, and the
@@ -12,7 +15,7 @@ The previous mixed-diagnostics comparison is withdrawn. The legacy monitor's
 later supposedly unmonitored rounds still executed middleware. The earlier
 **88.9% notification and 46.9% fan-out speedup claims are invalid**.
 
-The [direct reproduction](recertification/baseline-detach-reproduction.log) shows
+The direct reproduction (`recertification/baseline-detach-reproduction.log`) shows
 attachment surviving legacy `close()` and ending only after `disable()`. Both
 adapters now explicitly disable before awaiting close and assert removal from
 both reactive and scope registries. The same three-session teardown regression
@@ -40,10 +43,10 @@ changes; baseline differences cannot be assigned solely to one 0.1.0 milestone.
 - `candidate`: optimized, functionally revalidated source identified in
   [candidate certification](CANDIDATE.md).
 
-[Source integrity](recertification/final/source-integrity.json) records the
+Source integrity (`recertification/final/source-integrity.json`) records the
 verified inputs and common harness hashes; it includes the exact legacy adapter,
 benchmark dependency configuration and lockfile. All three builds use the same
-[44 external dependency versions](recertification/final/external-versions.json).
+44 external dependency versions (`recertification/final/external-versions.json`).
 Each raw result records hashes for both the executable and its AOT framework.
 
 Host: Apple M1 Pro, 8 CPU cores, 16 GiB RAM, macOS 26.6.2, Dart 3.12.2 /
@@ -198,14 +201,14 @@ Diagnostics-off round ranges, in microseconds per complete workload (six round m
 
 ## Evidence, reproduction and limits
 
-- [All 24 process outcomes](recertification/final/performance-runs.log),
-  [workload summary and raw round medians](recertification/final/performance-summary.json),
-  [engine/event analysis](recertification/final/performance-analysis.json).
+- All 24 process outcomes (`recertification/final/performance-runs.log`),
+  workload summary and raw round medians (`recertification/final/performance-summary.json`),
+  engine/event analysis (`recertification/final/performance-analysis.json`).
 - Raw `performance-<revision>-<mode>-<diagnostics>-<repeat>.json` files and native
   build logs are in `recertification/final/`. No failed/provisional sample is
   silently substituted into this matrix.
 - Build all three roots in profile and release as described in
-  [the benchmark README](../../../benchmarks/README.md), using `LEVIT_REFERENCE`
+  the benchmark README (`../../../benchmarks/README.md`), using `LEVIT_REFERENCE`
   values `539f130`, `before`, and `candidate`. Then run from the candidate:
 
 ```sh

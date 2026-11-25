@@ -39,6 +39,10 @@ coverage_report/
 .temp-docs
 **/doc/api/
 pana_report.md
-# Release evidence and the publishable inspector's bundled web assets.
-!reports/validation/**/*.log
+# Retain written release summaries while keeping generated runs out of Git.
+reports/validation/**
+!reports/validation/**/
+!reports/validation/**/*.md
+
+# The publishable inspector's bundled web assets.
 !packages/tools/levit_devtools/lib/assets/**

@@ -1,7 +1,0 @@
-00:00 +0: loading test/utilities/task_hot_path_contract_test.dart
-00:00 +0: closing scopes retain self-disposal guards while owned work drains
-00:00 +1: late cancellation observation and group task identities stay isolated
-00:00 +2: late outcome listeners preserve null, failure and cancellation
-00:00 +3: uncached work still starts after admission and observes cancellation
-00:00 +4: nested foreign-engine groups preserve both current group and outer guard
-00:00 +5: All tests passed!

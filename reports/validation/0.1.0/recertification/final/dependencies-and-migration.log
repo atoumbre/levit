@@ -1,3 +1,0 @@
-PASS: all local package roots remain inside revised candidate after CLI activation.
-PASS: all 23 exact dependency lockfiles remain unchanged.
-PASS: removed-API scan has no implementation/consumer references.

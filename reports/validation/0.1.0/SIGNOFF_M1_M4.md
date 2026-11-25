@@ -1,5 +1,8 @@
 # M1–M4 acceptance and coverage sign-off
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 Validation date: 2026-11-11. Toolchain: Dart 3.12.2 / Flutter 3.44.8.
 M1–M4 are complete: implementation, migration/documentation review, permanent
 acceptance regressions and full integration validation pass. This signs off the

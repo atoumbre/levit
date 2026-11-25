@@ -1,4 +1,0 @@
-Reference: 539f130da148d1a802925d02363996f82ae4a323
-Verified 74 runtime source/manifest files byte-for-byte against Git.
-Only the common workload, monitoring adapter, benchmark dependency configuration and native measurement host are overlaid.
-Common workload/frame collector/native host match candidate bytes; exact adapter/dependency text retained in performance-reference-setup.json.

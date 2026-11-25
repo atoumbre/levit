@@ -1,5 +1,8 @@
 # Levit 0.1.0 candidate recertification
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 **Recertified on 2026-11-11; not published.** All eight revised milestones and
 release gates are complete. The optimized source passes functional, packaging,
 coverage and corrected performance checks. Remaining baseline performance costs
@@ -17,14 +20,14 @@ and measures each diagnostics state in a separate process.
   packages plus the private root tool package. All ten publishable packages are
   **0.1.0**. Inspector UI remains private; persistence remains on the separate
   ecosystem roadmap under the approved M7 revision.
-- [Source archive](../../../build/release_0.1.0/9ea48ef041759b5e/levit-0.1.0-source.tar.gz): **15,376,768 bytes**, in the ignored build directory.
-- [Source manifest](candidate-source.sha256), SHA-256:
+- Source archive (`../../../build/release_0.1.0/9ea48ef041759b5e/levit-0.1.0-source.tar.gz`): **15,376,768 bytes**, in the ignored build directory.
+- Source manifest (`candidate-source.sha256`), SHA-256:
   `9ea48ef041759b5ed428dd8075415d914ff715a9d33dcaf02799160f2982660f`.
 - Archive SHA-256: `71bde2babb481459a689590c0aa0cd4b1e693bcaa75c0e0cf0a8445e6521b880`.
-- [Dependency manifest](candidate-dependencies.sha256), SHA-256:
+- Dependency manifest (`candidate-dependencies.sha256`), SHA-256:
   `c532e4fc9cf2bcafde7976cfc989baa31d7de50dbe3962d87598e23896ccd6e5`.
-- [Machine-readable certificate](candidate-certification.json),
-  [gate results](candidate-gates.json), [local package graph](candidate-package-graph.json).
+- Machine-readable certificate (`candidate-certification.json`),
+  gate results (`candidate-gates.json`), local package graph (`candidate-package-graph.json`).
 
 Every archived source and lockfile was read back and checked against the embedded
 `SOURCE.sha256` and `DEPENDENCY_LOCKS.sha256`. All 23 dependency locks match the
@@ -46,27 +49,27 @@ Toolchain: **Dart 3.12.2 / Flutter 3.44.8**, macOS 26.6.2, Apple M1 Pro.
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| Coordinated dependencies | All 22 packages plus root resolve together; local package roots remain inside the isolated candidate after CLI activation; exact locks unchanged | [Dependency checks](recertification/dependencies.log), [final graph/migration check](recertification/final/dependencies-and-migration.log) |
-| Formatting | 582 Dart files, zero changes | [Format](candidate-snapshot-format.log) |
-| Fatal-info analysis | Root and aggregate package analysis pass | [Root analysis](candidate-root-analysis.log), [CI](candidate-ci.log) |
-| Native lint plugin, Dart and Flutter suites | All pass, including real consumer plugin loading, ownership/task failure paths and Nexus two-client convergence | [CI](candidate-ci.log) |
-| Existing 100% coverage gate | **6,524 / 6,524 executable lines across 11 packages**; threshold and exclusions unchanged | [Coverage](candidate-coverage.log) |
-| Browser compilation | Public Dart kit, catalog, save/upload, session replacement and inspector all pass | [Five browser builds](candidate-browser-builds.log) |
-| Reproducible inspector | All 35 release assets match between working and isolated builds; nondeterministic `.last_build_id` excluded | [Asset verification](candidate-assets.log), [rebuild](candidate-inspector-rebuild.log) |
-| Stress | Runtime and Flutter suites pass | [Stress](candidate-stress.log) |
-| Benchmark harness | All 67 tests pass, including cleanup/frame matching and monitor detachment | [Benchmarks](candidate-benchmarks.log) |
-| Optimization regressions | Five monitor tests and 26 task/group/shutdown tests pass; reference teardown regression also passes | [Monitor](recertification/monitor-regressions.log), [tasks](recertification/task-regressions.log), [reference teardown](recertification/corrected-before/reference-detach-test.log) |
-| Native comparison | All 24 separate processes pass: three revisions × profile/release × diagnostics off/on × two orders; 12,960 timed samples, 4,320 matched frames | [Run log](recertification/final/performance-runs.log), [corrected report](PERFORMANCE.md) |
-| Publication preparation | All ten publishable packages pass dry-run; final inspector file-list dry-run passes | [Dry-runs](candidate-publish-dry-run.log), [inspector package](candidate-cli-final-dry-run.log) |
-| Installed inspector | Isolated-cache activation; HTML, JavaScript and bundled font manifest served with only Dart on PATH; awaited interrupt shutdown exits 0 | [Consumer checks](candidate-cli-consumer.json), [activation](candidate-cli-activation.log), [result](candidate-cli-global-check.log) |
-| Migration and boundaries | Removed API scan passes; negative API and readable contracts pass in CI/coverage; private UI and optional ecosystem boundary retained | [Migration checks](candidate-migration-checks.json), [M1–M4 sign-off](SIGNOFF_M1_M4.md) |
+| Coordinated dependencies | All 22 packages plus root resolve together; local package roots remain inside the isolated candidate after CLI activation; exact locks unchanged | Dependency checks (`recertification/dependencies.log`), final graph/migration check (`recertification/final/dependencies-and-migration.log`) |
+| Formatting | 582 Dart files, zero changes | Format (`candidate-snapshot-format.log`) |
+| Fatal-info analysis | Root and aggregate package analysis pass | Root analysis (`candidate-root-analysis.log`), CI (`candidate-ci.log`) |
+| Native lint plugin, Dart and Flutter suites | All pass, including real consumer plugin loading, ownership/task failure paths and Nexus two-client convergence | CI (`candidate-ci.log`) |
+| Existing 100% coverage gate | **6,524 / 6,524 executable lines across 11 packages**; threshold and exclusions unchanged | Coverage (`candidate-coverage.log`) |
+| Browser compilation | Public Dart kit, catalog, save/upload, session replacement and inspector all pass | Five browser builds (`candidate-browser-builds.log`) |
+| Reproducible inspector | All 35 release assets match between working and isolated builds; nondeterministic `.last_build_id` excluded | Asset verification (`candidate-assets.log`), rebuild (`candidate-inspector-rebuild.log`) |
+| Stress | Runtime and Flutter suites pass | Stress (`candidate-stress.log`) |
+| Benchmark harness | All 67 tests pass, including cleanup/frame matching and monitor detachment | Benchmarks (`candidate-benchmarks.log`) |
+| Optimization regressions | Five monitor tests and 26 task/group/shutdown tests pass; reference teardown regression also passes | Monitor (`recertification/monitor-regressions.log`), tasks (`recertification/task-regressions.log`), reference teardown (`recertification/corrected-before/reference-detach-test.log`) |
+| Native comparison | All 24 separate processes pass: three revisions × profile/release × diagnostics off/on × two orders; 12,960 timed samples, 4,320 matched frames | Run log (`recertification/final/performance-runs.log`), [corrected report](PERFORMANCE.md) |
+| Publication preparation | All ten publishable packages pass dry-run; final inspector file-list dry-run passes | Dry-runs (`candidate-publish-dry-run.log`), inspector package (`candidate-cli-final-dry-run.log`) |
+| Installed inspector | Isolated-cache activation; HTML, JavaScript and bundled font manifest served with only Dart on PATH; awaited interrupt shutdown exits 0 | Consumer checks (`candidate-cli-consumer.json`), activation (`candidate-cli-activation.log`), result (`candidate-cli-global-check.log`) |
+| Migration and boundaries | Removed API scan passes; negative API and readable contracts pass in CI/coverage; private UI and optional ecosystem boundary retained | Migration checks (`candidate-migration-checks.json`), [M1–M4 sign-off](../SIGNOFF_M1_M4.md) |
 
 Commands include `dart format --output=none --set-exit-if-changed .`,
 `dart analyze --fatal-infos`, `dart run scripts/ci.dart`,
 `dart run scripts/check_coverage.dart --fail-under=100 --timeout=600 --generate-report`,
 `dart run scripts/stress_test.dart`, `dart run melos run benchmarks --no-select`,
 `dart run scripts/publish_dry_run.dart`, and the six native builds / 24 runs in
-[the benchmark workflow](../../../benchmarks/README.md).
+the benchmark workflow (`../../../benchmarks/README.md`).
 
 The browser build script ran from the working checkout with the same runtime and
 build source subsequently verified against the isolated candidate. The inspector
@@ -135,6 +138,6 @@ blanket speedup claim.
 - The archive is a local unsigned candidate artifact. Publication and release
   tagging require a separate instruction. **Nothing has been published.**
 
-[Progress report](../../release_0.1.0_progress.md) ·
-[Cumulative migration guide](../../../MIGRATION_0.1.0.md) ·
-[Ecosystem roadmap](../../ecosystem_roadmap.md)
+[Progress report](../../../release_0.1.0_progress.md) ·
+[Cumulative migration guide](../../../../docs/MIGRATION_0.1.0.md) ·
+[Ecosystem roadmap](../../../ecosystem_roadmap.md)

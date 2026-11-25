@@ -1,5 +1,8 @@
 # Current Levit versus latest published release — 2026-11-13
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 The current 0.1.0 checkout improves dynamic diamond, fan-in, fan-out and both chain
 modes against published 0.0.11 in every matched pair. Performance is not uniformly
 better: static async and progress-bar rendering are slower in every pair, with
@@ -14,19 +17,19 @@ packages checked: levit, levit_flutter, levit_dart, levit_dart_core,
 levit_flutter_core, levit_reactive, levit_scope and levit_monitor.
 The current checkout targets **0.1.0** and remains unpublished.
 
-[Registry metadata and archive SHA-256s](published-packages.json) are retained.
+Registry metadata and archive SHA-256s (`published-packages.json`) are retained.
 Every downloaded archive was verified against its registry checksum. Published
 runtime code was extracted unchanged into an isolated snapshot. All 58 runtime
 Dart library files, plus two packaged example library files, are byte-identical
 to `539f130`; no library files exist only in one side of that source comparison.
-See [the file comparison](published-versus-539f130.json). This confirms that the
+See the file comparison (`published-versus-539f130.json`). This confirms that the
 previous approved Git reference represents the published runtime; it does not
 make old measurements interchangeable with this new experiment.
 
 The current source was copied from the working tree, including uncommitted work.
-Both measured source snapshots are retained in [source archives](source-archives.json).
+Both measured source snapshots are retained in source archives (`source-archives.json`).
 Their source manifests/digests and AOT hashes are recorded in
-[prepared inputs](prepared.json):
+prepared inputs (`prepared.json`):
 
 - Published: `90346e01aa5b8785eda05b6621c0fcad82c28539b18c4dd986b54ef1fb0fe99a`.
 - Current: `1061bffa235aafc6041661564fd9ed90c661d0386d8ac12658fb2ae52f5b45d8`.
@@ -50,7 +53,7 @@ interactive app binary. Nothing was published or recertified.
   `Future<void>.sync(close)` to accept either void or asynchronous returns. The
   published dashboard uses `ref.autoDispose` where current uses `ref.own`.
   These edits are outside timed work. Exact patches:
-  [published](published-compatibility.patch), [current](current-compatibility.patch).
+  published (`published-compatibility.patch`), current (`current-compatibility.patch`).
   Wrapping a void-returning API does not retrofit 0.1.0 cleanup guarantees into
   0.0.11. These are steady-state timings, not a lifecycle-parity benchmark.
 - Setup, verification and cleanup are outside timing. Logic timing includes
@@ -208,7 +211,7 @@ memory, startup, worker cancellation, task groups, query refresh or inspector co
 Published 0.0.11 already includes ownership APIs, scopes/stores, keyed families,
 async concurrency options, tasks and monitoring. The current release strengthens
 those contracts and adds workflows/tooling; it is not the first version with
-those foundations. The cumulative [migration guide](../../../../MIGRATION_0.1.0.md)
+those foundations. The cumulative [migration guide](../../../../docs/MIGRATION_0.1.0.md)
 describes the breaking changes.
 
 | Area | Published 0.0.11 | Current 0.1.0 checkout |
@@ -231,13 +234,13 @@ all measured overhead is necessary or explained by them.
 
 **144/144 cases passed:** 7,200 wall-time samples and 1,600 matched engine frames.
 Both snapshots passed all 51 selected computed-mode/delivery contract tests
-(102 total): [published tests](published-computed-tests.log),
-[current tests](current-computed-tests.log). Current benchmark fatal-info analysis
-and formatting pass: [analysis](analysis.log), [validation summary](validation.json).
+(102 total): published tests (`published-computed-tests.log`),
+current tests (`current-computed-tests.log`). Current benchmark fatal-info analysis
+and formatting pass: analysis (`analysis.log`), validation summary (`validation.json`).
 All source/binary identities remained unchanged through measurement. Resolved
 Levit package paths were verified to point into the corresponding snapshot.
 
-Raw per-process reports/logs are under [runs](runs/); [summary.json](summary.json)
+Raw per-process reports/logs are under runs (`runs/`); summary.json (`summary.json`)
 contains every per-process p50/p95 and paired change. Build logs, lockfiles,
 compatibility patches and published archive checksums are retained here.
 Prepared source archives preserve the inputs independently of temporary builds.

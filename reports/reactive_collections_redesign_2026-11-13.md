@@ -47,4 +47,4 @@ manager is part of this design.
 
 [Progress and acceptance evidence](release_0.1.0_progress.md) ·
 [Candidate, inputs and measurements](validation/0.1.0/collection-redesign/CANDIDATE.md) ·
-[Migration examples](../MIGRATION_0.1.0.md).
+[Migration examples](../docs/MIGRATION_0.1.0.md).

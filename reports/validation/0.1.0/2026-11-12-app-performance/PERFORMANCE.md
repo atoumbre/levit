@@ -1,5 +1,8 @@
 # Computed and grid performance follow-up — 2026-11-12
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 Computed optimizations are implemented and validated; the unchanged comparison
 has been repeated. Grid measurements remain variable and overall performance
 sign-off stays open. This report does not certify or publish a new release
@@ -14,7 +17,7 @@ against `539f130`; the older reference-comparison evidence remains separate.
 The pasted report had an unrecorded source identity and is not used as a matched
 before result.
 
-[Native host fingerprints](native-host-source.json) also confirm identical
+Native host fingerprints (`native-host-source.json`) also confirm identical
 window/activity-policy sources and assets. Both revisions use the real dashboard and sidebar, the existing benchmark
 implementations, five warmups, 50 samples, normal pacing and consumer verification.
 Each revision runs in its own process in before → after → after → before order.
@@ -24,14 +27,14 @@ refresh rate. All accepted runs so far use 800×600 logical pixels, 2× scale,
 120 Hz, Dart 3.12.2 and Flutter 3.44.8 on the same Mac. Monitor attachment is off.
 Builds, tests and CPU profiling do not overlap latency measurements.
 
-[Resolved package paths](resolved-local-dependencies.json) verify that the
+Resolved package paths (`resolved-local-dependencies.json`) verify that the
 reference actually imports its own preserved runtime. No workload was switched to
 `staticDeps`, and no item count, viewport,
 key behavior, iteration body, validation or cleanup was reduced.
 
 ## Runtime changes
 
-[The patch](runtime-change.patch) changes only `computed.dart` in runtime code:
+The patch (`runtime-change.patch`) changes only `computed.dart` in runtime code:
 
 - Verify each dependency read against the last successful dependency order.
   Exact matches reuse subscriptions and avoid reconstructing dependency sets.
@@ -62,7 +65,7 @@ The chain follow-up matters: the first implementation improved fan-in/fan-out bu
 slowed the unchanged chain by 13–16% in isolated release runs. The compact getter
 removes that regression: two isolated pairs show 3–5% lower chain medians, with
 similar vanilla timings. A plain read-path rewrite and a recomputation inlining
-hint were also tried and not retained. [Iteration provenance](iterations.json)
+hint were also tried and not retained. Iteration provenance (`iterations.json`)
 keeps these unfavorable results and separates them from the final implementation.
 
 Grid profiling shows shared Flutter layout dominating both implementations:
@@ -71,7 +74,7 @@ Computed reconciliation is not on the grid path. Scope bridging is about 1–2%
 of sampled grid CPU, far smaller than the originally reported timing gap.
 
 Raw profiles are losslessly compressed under `profiles/`; the collector source
-is [retained here](profile_collector.dart.txt). Profiling repeats existing fixture
+is retained here (`profile_collector.dart.txt`). Profiling repeats existing fixture
 bodies for eight seconds. Logic profiling omits normal inter-sample idle periods
 to gather CPU samples, so **profile-loop throughput is not reported as latency
 improvement**. Allocation snapshots are retained for inspection, not presented
@@ -96,7 +99,7 @@ The small full-suite grid difference is not evidence of a grid-specific fix.
 [Full results for every framework and workload](release-final/summary.md) include
 all raw runs, per-process p50/p95 and source/AOT fingerprints. The measured
 Dart/manifests input digests are before `05fbe138c82c17a7f2a2342a43dfbd03fcf3b1ae5e178502f08bc6127cb6b2d8` and
-after `cecdfff2b8d212e13ee5a248bd9c652c1db6e9c697297d7ce24ec3a135b149dd`; [the manifests](release-final/inputs.json)
+after `cecdfff2b8d212e13ee5a248bd9c652c1db6e9c697297d7ce24ec3a135b149dd`; the manifests (`release-final/inputs.json`)
 differ only at `packages/core/levit_reactive/lib/src/computed.dart`.
 
 **Overall performance sign-off stays open.** Other full-suite signals are
@@ -140,9 +143,9 @@ Final validation passes: formatting, fatal-info analysis and aggregate CI;
 **6,767/6,767 covered lines across all 11 packages**; all 104 benchmark tests and
 38 stress tests; browser runtime compilation, the catalog release web build, and
 the native release build. Exact commands and exit statuses are in
-[checks-final/results.json](checks-final/results.json). Both normal interactive
-profile and release apps have also been [rebuilt with the measured source identity](checks-final/interactive-builds.json).
-The [final source check](final-source-check.json) confirms that all measured inputs
+checks-final/results.json (`checks-final/results.json`). Both normal interactive
+profile and release apps have also been rebuilt with the measured source identity (`checks-final/interactive-builds.json`).
+The final source check (`final-source-check.json`) confirms that all measured inputs
 and the retained runtime snapshot still match the working tree.
 
 ## Reproduction and limits

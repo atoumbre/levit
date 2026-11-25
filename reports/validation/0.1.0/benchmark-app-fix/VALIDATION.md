@@ -1,5 +1,8 @@
 # Benchmark app methodology correction — 2026-11-11
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 The interactive benchmark app now times completed observable work. The supplied
 2026-11-11 app report predates this correction and must not be compared with
 methodology 2 results as a runtime performance delta.
@@ -28,12 +31,12 @@ Installed Dart 3.12.2 / Flutter 3.44.8:
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Complete benchmark test suite | 104 passed, including 37 new regressions | [tests.log](tests.log) |
-| Fatal-info analysis | No issues | [analyze.log](analyze.log) |
-| Formatting | 34 files, zero changes | [format.log](format.log) |
-| Native smoke release build | Passed | [native-smoke-build.log](native-smoke-build.log) |
-| Production-size app-runner smoke | All 60 framework/workload cases passed; 120 wall samples, 40 matched engine frames | [raw JSON](native-smoke.json), [log](native-smoke.log) |
-| Interactive dashboard release build | Passed; restored the normal app entrypoint | [dashboard-build.log](dashboard-build.log) |
+| Complete benchmark test suite | 104 passed, including 37 new regressions | tests.log (`tests.log`) |
+| Fatal-info analysis | No issues | analyze.log (`analyze.log`) |
+| Formatting | 34 files, zero changes | format.log (`format.log`) |
+| Native smoke release build | Passed | native-smoke-build.log (`native-smoke-build.log`) |
+| Production-size app-runner smoke | All 60 framework/workload cases passed; 120 wall samples, 40 matched engine frames | raw JSON (`native-smoke.json`), log (`native-smoke.log`) |
+| Interactive dashboard release build | Passed; restored the normal app entrypoint | dashboard-build.log (`dashboard-build.log`) |
 
 The smoke uses one warmup and two measured iterations per case. It validates
 completion, cleanup, production workload sizes and actual frame-timing delivery;
@@ -44,8 +47,8 @@ the inherited process log, and the complete rerun passed without changing
 entitlements or sandbox policy. The host Xcode placeholder-device warning was
 non-fatal in both successful release builds.
 
-Source identities are recorded in [benchmark-source.sha256](benchmark-source.sha256)
-and [validation.json](validation.json). The smoke's build-time revision field is
+Source identities are recorded in benchmark-source.sha256 (`benchmark-source.sha256`)
+and validation.json (`validation.json`). The smoke's build-time revision field is
 explicitly `unrecorded`; it is not a frozen candidate certification. Retain the
 manifest and lockfile alongside results when reproducing this validation.
 

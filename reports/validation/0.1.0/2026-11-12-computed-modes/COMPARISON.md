@@ -1,5 +1,8 @@
 # Computed tracking modes — 2026-11-12
 
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
+
 Static tracking is not uniformly faster. With each workload isolated in its own
 process, static reduces fan-in, diamond and batch medians in all four matched
 pairs. Fan-out changes direction between pairs. The observed deep chain is
@@ -10,7 +13,7 @@ These are timing observations on this machine, not a universal mode ranking.
 
 - Six existing app computed implementations; only `staticDeps` changes. Work
   sizes, compute functions, subscriptions, verification, warmups, sample pacing
-  and awaited cleanup remain unchanged. See [the exact fixture diff](workload-options.patch).
+  and awaited cleanup remain unchanged. See the exact fixture diff (`workload-options.patch`).
 - All six graphs have fixed dependencies, so both modes are semantically valid.
   Rapid mutation, DI and UI fixtures do not use computed tracking and are excluded.
 - Same release AOT binary for static/dynamic within each experiment. Diagnostics
@@ -133,8 +136,8 @@ and these results do not justify changing all computeds to static mode.
 
 - **119 benchmark tests pass**, including both modes for all six fixtures,
   consumer-delivery checks before verification, preserved dashboard defaults and
-  explicit result labels. See [test log](tests.log).
-- Final fatal-info analysis passes: [analysis log](analysis.log). Changed Dart
+  explicit result labels. See test log (`tests.log`).
+- Final fatal-info analysis passes: analysis log (`analysis.log`). Changed Dart
   files are formatted. The Python summary was checked against all stored suite
   samples and equivalent isolated grouping.
 - **96/96 native cases pass; 4,800 total samples** across both experiments.
@@ -143,11 +146,11 @@ and these results do not justify changing all computeds to static mode.
   hashes were validated by the driver. This also exercises the optional native
   workload selector in all 48 isolated processes.
 - All 80 runtime Dart library source hashes match the starting checkout:
-  [unchanged-runtime manifest](runtime-unchanged.json). Runtime defaults and
+  unchanged-runtime manifest (`runtime-unchanged.json`). Runtime defaults and
   guarantees are unchanged. Full runtime CI/coverage was not rerun for this
   benchmark-only change; previous certification remains tied to its source.
 - The normal interactive release app is restored with the final comparison's
-  source stamp; see [build log](restore-interactive.log).
+  source stamp; see build log (`restore-interactive.log`).
 
 From the repository root, using two new output directories:
 
@@ -160,12 +163,12 @@ python3 scripts/compare_computed_modes.py --isolate-workloads \
 
 Suite source digest: `cd70dcbabfb3a58e9413d166cc5cdab4c7ad40c9c77e6ed583f54912d0c6e90c`.
 The initial selector-free harness sources are preserved under
-[release/harness](release/harness/) and match that experiment's source manifest.
+release/harness (`release/harness/`) and match that experiment's source manifest.
 Final isolated source digest: `170a8f1a2c7c253449b23e83fc75ef6c7068f79252aea544a653ab2426fc22b0`.
 Raw reports, source manifests, AOT hashes, pair schedules and summaries:
-[initial suite](release/comparison.json), [suite summary](release/summary.json),
-[isolated workloads](release-isolated/comparison.json),
-[isolated summary](release-isolated/summary.json).
+initial suite (`release/comparison.json`), suite summary (`release/summary.json`),
+isolated workloads (`release-isolated/comparison.json`),
+isolated summary (`release-isolated/summary.json`).
 
 This is a current-runtime mode comparison. It does not rerun the `539f130`
 reference comparison, settle the remaining general performance sign-off, or

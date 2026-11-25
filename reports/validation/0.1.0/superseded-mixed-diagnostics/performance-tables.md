@@ -1,3 +1,6 @@
+
+Generated run artifacts were removed during cleanup on 2026-11-24. Historical artifact paths refer to Git commit `bd1a095`.
+
 ### Profile workload latency
 
 | Diagnostics | Workload | Reference ms | Candidate ms | Change |

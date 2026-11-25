@@ -88,13 +88,15 @@ identical benchmark sources/locks, stamps source digests, and rejects changed
 window geometry or refresh rates:
 
 ```sh
-python3 scripts/compare_app_performance.py --before-root /path/to/before \
+dart run scripts/compare_app_performance.dart --before-root /path/to/before \
   --after-root /path/to/after --output /path/to/evidence --flutter /path/to/flutter
 ```
 
 Run the driver from the repository root on an otherwise idle machine. It builds
 both revisions, then runs before → after → after → before in separate processes.
 It retains build logs, raw samples, source manifests and AOT binary hashes.
+Summarize completed runs with
+`dart run scripts/summarize_app_performance.dart /path/to/evidence`.
 `--mode=profile` is also supported. `--grid-only` isolates the unchanged grid
 across all five frameworks; `--chain-only` isolates the unchanged Levit/vanilla
 chain cases. These use normal dashboard selections, so report them separately
@@ -112,7 +114,7 @@ comparisons**: logic iterations omit the normal inter-sample idle period.
 Run every computed dashboard workload in both modes from the repository root:
 
 ```sh
-python3 scripts/compare_computed_modes.py --output /path/to/new-evidence \
+dart run scripts/compare_computed_modes.dart --output /path/to/new-evidence \
   --flutter /path/to/flutter
 ```
 
@@ -154,38 +156,12 @@ The comparison binary exits after cleanup. Restore the interactive app from
 `benchmarks/` with `flutter build macos --release --target=lib/main.dart`, adding
 `--dart-define=BENCHMARK_REVISION=SOURCE_DIGEST` to identify the checkout.
 
-## Comparing against the published release
+## Historical published-release comparison
 
-`scripts/compare_published_performance.py` builds separate snapshots of the
-current runtime and checksum-verified pub.dev archives. It runs the six computed
-workloads in both modes, plus mutation, warm DI and four UI workloads. Each case
-starts in a fresh process; four revision pairs alternate which revision runs
-first. Both sides use the same SDK, non-Levit dependency lock and timed fixtures.
-
-The driver takes an evidence directory containing `published-packages.json`
-(the pub.dev API version, archive URL, checksum and pubspec for each runtime
-package). The [2026-11-13 comparison](../reports/validation/0.1.0/2026-11-13-published-comparison/COMPARISON.md)
-contains frozen metadata and archives for 0.0.11. Copy that metadata into a new
-output directory to reproduce that exact baseline, then run from the repo root:
-
-```sh
-python3 scripts/compare_published_performance.py --prepare-only \
-  --output /path/to/evidence --flutter /path/to/flutter
-python3 scripts/compare_published_performance.py --measure-only \
-  --output /path/to/evidence --flutter /path/to/flutter
-```
-
-Finish builds/tests before measurement. Preparation preserves the workspace and
-normal interactive app, checks identical timed fixtures and non-Levit locks,
-and records the compatibility edits: wrapping teardown with `Future<void>.sync`
-for the old void-returning close API, and the published dashboard's old
-`ref.autoDispose` spelling. These edits do not add the new runtime's cleanup
-guarantees to the published version. Runtime library sources remain untouched.
-
-The output retains raw samples, matched frame timings, per-pair changes, source
-manifests, AOT hashes and validity failures. UI wall time includes frame waiting;
-use the separate build/raster metrics for rendering-cost comparisons. These
-workloads do not establish whole-application performance or lifecycle parity.
+The [November 13 comparison](../reports/validation/0.1.0/2026-11-13-published-comparison/COMPARISON.md)
+summarizes the comparison against version 0.0.11. Its compatibility-rewrite
+driver and generated run artifacts were retired during cleanup. The original
+driver and results remain in Git history at `bd1a095`.
 
 ## Methodology
 
@@ -267,7 +243,7 @@ measurement settings, not recommended application defaults.
 Run binaries sequentially on the same machine without concurrent test/build jobs.
 Use the same workload source and Flutter SDK for each reference. Preserve and
 identify any baseline adapter separately from the original runtime source.
-`python3 benchmarks/tool/compare_release_performance.py REFERENCE_ROOT OUTPUT [BEFORE_ROOT]`
+`dart run scripts/compare_release_performance.dart REFERENCE_ROOT OUTPUT [BEFORE_ROOT]`
 runs each revision in profile/release and each diagnostic state in a fresh
 process, then repeats in reversed revision/diagnostic order (16 processes, or 24
 with an optional before-optimization root). It validates sample counts and matching display
