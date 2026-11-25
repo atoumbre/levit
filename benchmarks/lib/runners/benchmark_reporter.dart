@@ -1,7 +1,23 @@
+import 'dart:convert';
+
 import '../benchmark_environment.dart';
 import '../benchmark_engine.dart';
 
 class BenchmarkReporter {
+  /// Exports raw wall-time and matched frame samples for independent analysis.
+  static String generateJsonReport({
+    required Map<String, List<BenchmarkResult>> results,
+    BenchmarkEnvironment? environment,
+  }) => const JsonEncoder.withIndent('  ').convert({
+    'schemaVersion': 1,
+    'methodologyVersion': 2,
+    'environment': environment?.toJson(),
+    'results': results.values
+        .expand((entries) => entries)
+        .map((r) => r.toJson())
+        .toList(),
+  });
+
   /// Generates a Markdown report from a map of benchmark results.
   static String generateMarkdownReport({
     required Map<String, List<BenchmarkResult>> results,
@@ -24,25 +40,54 @@ class BenchmarkReporter {
       final benchmarkResults = results[benchName]!;
       final lead = benchmarkResults.first;
       buffer.writeln('## $benchName');
+      buffer.writeln('Measurement: ${lead.measurement}  ');
       buffer.writeln(
-          'Classification: ${lead.classification.label}${lead.comparisonNote == null ? '' : '  \nNote: ${lead.comparisonNote}'}');
+        'Methodology: 2 (not comparable with earlier app results)',
+      );
       buffer.writeln(
-          '| Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |');
-      buffer.writeln('|---|---|---|---|---|---|---|');
+        'Classification: ${lead.classification.label}${lead.comparisonNote == null ? '' : '  \nNote: ${lead.comparisonNote}'}',
+      );
+      buffer.writeln(
+        '| Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |',
+      );
+      buffer.writeln('|---|---|---|---|---|---|---|---|');
 
       final sortedResults = List<BenchmarkResult>.from(benchmarkResults)
         ..sort((a, b) => a.durationMicros.compareTo(b.durationMicros));
 
       for (final res in sortedResults) {
-        final status = res.success ? 'OK' : 'Error: ${res.error}';
+        final status =
+            '${res.statusDescription}${res.error == null ? '' : ' Details: ${res.error}'}'
+                .replaceAll('|', r'\|')
+                .replaceAll('\r\n', '\n')
+                .replaceAll('\n', '<br>');
         final range = '${res.minMicros}-${res.maxMicros}';
-        buffer.writeln('| ${res.framework.label} '
-            '| ${res.durationMicros} '
-            '| ${res.meanMicros.toStringAsFixed(1)} '
-            '| $range '
-            '| ${res.stdDevMicros.toStringAsFixed(1)} '
-            '| ${res.iterations} '
-            '| $status |');
+        buffer.writeln(
+          '| ${res.displayLabel} '
+          '| ${res.durationMicros} '
+          '| ${res.p95Micros} '
+          '| ${res.meanMicros.toStringAsFixed(1)} '
+          '| $range '
+          '| ${res.stdDevMicros.toStringAsFixed(1)} '
+          '| ${res.iterations} '
+          '| $status |',
+        );
+      }
+      if (benchmarkResults.any((r) => r.frameTimings.isNotEmpty)) {
+        buffer.writeln(
+          '\nMatched engine frames (µs; whole-frame costs, not isolated framework CPU):',
+        );
+        buffer.writeln(
+          '| Implementation | Build p50 | Build p95 | Raster p50 | Raster p95 | Frames |',
+        );
+        buffer.writeln('|---|---|---|---|---|---|');
+        for (final res in benchmarkResults.where(
+          (r) => r.frameTimings.isNotEmpty,
+        )) {
+          buffer.writeln(
+            '| ${res.displayLabel} | ${res.percentile(50, frameMetric: 'buildUs')} | ${res.percentile(95, frameMetric: 'buildUs')} | ${res.percentile(50, frameMetric: 'rasterUs')} | ${res.percentile(95, frameMetric: 'rasterUs')} | ${res.frameTimings.length} |',
+          );
+        }
       }
       buffer.writeln('');
     }
@@ -72,12 +117,15 @@ class BenchmarkReporter {
       final benchmarkResults = results[benchName]!;
       final lead = benchmarkResults.first;
       buffer.writeln('>>> $benchName');
+      buffer.writeln('Measurement: ${lead.measurement} (methodology 2)');
       buffer.writeln(thinLine);
       buffer.writeln(
-          'Class: ${lead.classification.label}${lead.comparisonNote == null ? '' : ' | Note: ${lead.comparisonNote}'}');
+        'Class: ${lead.classification.label}${lead.comparisonNote == null ? '' : ' | Note: ${lead.comparisonNote}'}',
+      );
       buffer.writeln(thinLine);
       buffer.writeln(
-          '${'Framework'.padRight(15)} | ${'Median µs'.padRight(10)} | ${'Mean µs'.padRight(10)} | ${'Min-Max µs'.padRight(17)} | ${'StdDev'.padRight(10)} | ${'N'.padRight(3)} | Status');
+        '${'Framework'.padRight(15)} | ${'Median µs'.padRight(10)} | ${'Mean µs'.padRight(10)} | ${'Min-Max µs'.padRight(17)} | ${'StdDev'.padRight(10)} | ${'N'.padRight(3)} | Status',
+      );
       buffer.writeln(thinLine);
 
       final sortedResults = List<BenchmarkResult>.from(benchmarkResults)
@@ -85,14 +133,16 @@ class BenchmarkReporter {
 
       for (final res in sortedResults) {
         final status =
-            res.success ? 'OK' : 'ERROR: ${res.error?.split('\n').first}';
-        buffer.writeln('${res.framework.label.padRight(15)} | '
-            '${res.durationMicros.toString().padRight(10)} | '
-            '${res.meanMicros.toStringAsFixed(1).padRight(10)} | '
-            '${'${res.minMicros}-${res.maxMicros}'.padRight(17)} | '
-            '${res.stdDevMicros.toStringAsFixed(1).padRight(10)} | '
-            '${res.iterations.toString().padRight(3)} | '
-            '$status');
+            '${res.statusDescription}${res.error == null ? '' : ' Details: ${res.error!.split('\n').first}'}';
+        buffer.writeln(
+          '${res.displayLabel.padRight(15)} | '
+          '${res.durationMicros.toString().padRight(10)} | '
+          '${res.meanMicros.toStringAsFixed(1).padRight(10)} | '
+          '${'${res.minMicros}-${res.maxMicros}'.padRight(17)} | '
+          '${res.stdDevMicros.toStringAsFixed(1).padRight(10)} | '
+          '${res.iterations.toString().padRight(3)} | '
+          '$status',
+        );
       }
       buffer.writeln('$line\n');
     }
@@ -109,6 +159,11 @@ class BenchmarkReporter {
     buffer.writeln('|---|---|');
 
     final rows = <MapEntry<String, String>>[
+      const MapEntry('Source Revision', BenchmarkEnvironment.sourceRevision),
+      MapEntry(
+        'Display Refresh Rate (Hz)',
+        '${environment.refreshRate ?? 'unrecorded'}',
+      ),
       MapEntry('Execution Context', environment.executionContext),
       MapEntry('Build Mode', environment.buildMode),
       MapEntry('Benchmark Profile', environment.benchmarkProfile),
@@ -132,10 +187,12 @@ class BenchmarkReporter {
     }
 
     if (environment.displayMetrics case final display?) {
-      rows.add(MapEntry(
-        'Display',
-        '${display.logicalSizeLabel} logical, ${display.physicalSizeLabel} physical @ ${display.devicePixelRatio.toStringAsFixed(2)}x',
-      ));
+      rows.add(
+        MapEntry(
+          'Display',
+          '${display.logicalSizeLabel} logical, ${display.physicalSizeLabel} physical @ ${display.devicePixelRatio.toStringAsFixed(2)}x',
+        ),
+      );
     }
 
     for (final row in rows) {
@@ -160,8 +217,9 @@ class BenchmarkReporter {
       'Benchmark Profile': environment.benchmarkProfile,
       'Iterations': environment.iterations.toString(),
       'Warmup Iterations': environment.warmupIterations.toString(),
-      'Framework Order Rotation':
-          environment.frameworkOrderRotation ? 'Enabled' : 'Disabled',
+      'Framework Order Rotation': environment.frameworkOrderRotation
+          ? 'Enabled'
+          : 'Disabled',
       'Frameworks': environment.frameworks.join(', '),
       'Benchmarks': environment.benchmarks.join(', '),
       'Operating System': environment.operatingSystem,

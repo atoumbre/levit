@@ -70,8 +70,9 @@ void main() {
       // Wait for all to finish
       await Future.delayed(Duration(milliseconds: 100));
 
-      expect(results, [10],
-          reason: 'Old result (2) should have been discarded');
+      expect(results, [
+        10,
+      ], reason: 'Old result (2) should have been discarded');
       expect(doubled.valueOrNull, 10);
     });
 
@@ -94,8 +95,11 @@ void main() {
       await Future.delayed(Duration(milliseconds: 50));
 
       expect(computed.value, isA<LxError<int>>());
-      expect(computed.lastValue, 2,
-          reason: 'Should preserve last successful value on error');
+      expect(
+        computed.lastValue,
+        2,
+        reason: 'Should preserve last successful value on error',
+      );
     });
 
     test('manual refresh works', () async {
@@ -116,10 +120,13 @@ void main() {
       expect(asyncVal.valueOrNull, greaterThan(1));
     });
 
-    test('LxAsyncComputed constructor coverage', () {
-      final computed = _TestAsyncComputed();
-      expect(computed, isA<LxAsyncComputed<int>>());
-    });
+    test(
+      'async computed subclasses can initialize through the base constructor',
+      () {
+        final computed = _TestAsyncComputed();
+        expect(computed, isA<LxAsyncComputed<int>>());
+      },
+    );
   });
 }
 
@@ -136,7 +143,7 @@ class _TestAsyncComputed extends LxAsyncComputed<int> {
   void refresh() {}
 
   @override
-  void close() {}
+  Future<void> close() async {}
 
   @override
   LxStatus<int> get value => status;
@@ -152,7 +159,8 @@ class _TestAsyncComputed extends LxAsyncComputed<int> {
 
   @override
   LxStream<R> transform<R>(
-      Stream<R> Function(Stream<LxStatus<int>> stream) transformer) {
+    Stream<R> Function(Stream<LxStatus<int>> stream) transformer,
+  ) {
     throw UnimplementedError();
   }
 

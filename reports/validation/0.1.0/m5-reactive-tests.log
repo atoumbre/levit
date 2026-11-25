@@ -1,0 +1,543 @@
+00:00 +0: loading test/core/notifier_listener_management_test.dart
+00:00 +0: test/core/lx_worker_stat_copy_with_test.dart: LxWorkerStat copyWith coverage
+00:00 +1: test/core/lx_worker_stat_copy_with_test.dart: LxWorkerStat copyWith coverage
+00:00 +2: test/core/wait_error_test.dart: LxStream.wait throws on error
+00:00 +3: test/core/wait_error_test.dart: LxStream.wait throws immediate error
+00:00 +4: test/core/rxdart_interop_test.dart: RxDart Interop works with built-in transformer
+00:00 +5: test/core/rxdart_interop_test.dart: RxDart Interop works with built-in transformer
+00:00 +6: test/core/rxdart_interop_test.dart: RxDart Interop works with built-in transformer
+00:00 +7: test/core/rxdart_interop_test.dart: RxDart Interop works with built-in transformer
+00:00 +8: test/core/rxdart_interop_test.dart: RxDart Interop works with built-in transformer
+00:00 +9: test/core/rxdart_interop_test.dart: RxDart Interop works with built-in transformer
+00:00 +10: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +11: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +12: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +13: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +14: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +15: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +16: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +17: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +18: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +19: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +20: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +21: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +22: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +23: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +24: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +25: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +26: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +27: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +28: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +29: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +30: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart transformer
+00:00 +31: test/core/lx_basic_test.dart: LxStream Coverage Gaps transform applies closure to status stream
+00:00 +32: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart via extension-style (conversion)
+00:00 +33: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart via extension-style (conversion)
+00:00 +34: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart via extension-style (conversion)
+00:00 +35: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart via extension-style (conversion)
+00:00 +36: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart via extension-style (conversion)
+00:00 +37: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart via extension-style (conversion)
+00:00 +38: test/core/rxdart_interop_test.dart: RxDart Interop works with RxDart via extension-style (conversion)
+00:00 +39: test/core/reactive_lifecycle_edge_cases_test.dart: LxComputed init failure does not corrupt dependency tracking
+00:00 +40: test/core/lx_future_extension_test.dart: Future.lx extension creates LxFuture
+00:00 +41: test/core/lx_future_extension_test.dart: Future.lx extension creates LxFuture
+00:00 +42: test/core/lx_future_extension_test.dart: Future.lx extension creates LxFuture
+00:00 +43: test/core/lx_future_extension_test.dart: Future.lx extension creates LxFuture
+00:00 +44: test/core/lx_future_extension_test.dart: Future.lx extension creates LxFuture
+00:00 +45: test/core/lx_notifier_test.dart: LevitReactiveNotifier notify calls all listeners
+00:00 +46: test/core/lx_notifier_test.dart: LevitReactiveNotifier removeListener works
+00:00 +47: test/core/lx_notifier_test.dart: LevitReactiveNotifier dispose clears listeners
+00:00 +48: test/core/lx_notifier_test.dart: LevitReactiveNotifier isDisposed returns correct value
+00:00 +49: test/core/lx_notifier_test.dart: LevitReactiveNotifier addListener ignored after dispose
+00:00 +50: test/core/lx_watch_monitoring_accessor_test.dart: Lx.enableWatchMonitoring setter works
+00:00 +51: test/core/lx_stream_init_observer_test.dart: LxStream constructor calls observer.onInit
+00:00 +52: test/core/lx_bind_stream_errors_test.dart: Lx bind handles stream errors
+00:00 +53: test/core/lx_bind_stream_errors_test.dart: Lx bind handles stream errors
+00:00 +54: test/core/levit_reactive_edge_cases_test.dart: LevitReactive Edge Cases Recovery in _flushGlobalBatch when listener throws
+00:00 +55: test/core/levit_reactive_edge_cases_test.dart: LevitReactive Edge Cases Error handling in _notifyListeners with Middleware
+00:00 +56: test/core/levit_reactive_edge_cases_test.dart: LevitReactive Edge Cases Error handling with multiple listeners (Fast Path throws)
+00:00 +57: test/core/levit_reactive_edge_cases_test.dart: LevitReactive Edge Cases Error handling in _notifyListeners (Fast Path throws)
+00:00 +58: test/core/batch_async_test.dart: Lx.batchAsync suppresses notifications during async gaps
+00:00 +59: test/core/batch_async_test.dart: Lx.batchAsync flushes notifications even on error
+00:00 +60: test/core/batch_async_test.dart: Lx.batchAsync supports nested sync transactions
+00:00 +61: test/core/batch_async_test.dart: Lx.batchAsync triggers middleware hooks
+00:00 +62: test/core/batch_async_test.dart: Lx.batchAsync flushes batched notifiers after async batch completes
+00:00 +63: test/core/read_resolver_delegates_to_different_reactive_test.dart: LevitReactiveReadResolver via proxy delegates read
+00:00 +64: test/core/read_resolver_delegates_to_different_reactive_test.dart: LevitReactiveReadResolver via zoneTracker delegates read
+00:00 +65: test/core/lx_bind_errors_test.dart: bind handles errors
+00:00 +66: test/core/levit_reactive_change_string_test.dart: LevitReactiveChange toString
+00:00 +67: test/core/lx_global_accessors_test.dart: Global Accessors coverage
+00:00 +68: test/core/lx_var_extension_config_test.dart: lxVar extension with config
+00:00 +69: test/core/single_listener_error_batch_test.dart: Single listener error via batch
+00:00 +70: test/core/lx_reactive_notifier_depth_test.dart: LevitReactiveNotifier graphDepth getter and setter
+00:00 +71: test/core/lx_sensitive_attribute_test.dart: isSensitive getter and setter
+00:01 +72: test/core/levit_reactive_batch_logic_test.dart: LevitReactiveBatch logic
+00:01 +73: test/core/middleware_error_hook_test.dart: LevitReactiveMiddleware error hook
+00:01 +74: test/core/async_batch_isolation_test.dart: async isolation middleware=false concurrent batches flush independently reverse=false
+00:01 +75: test/core/async_batch_isolation_test.dart: async isolation middleware=false concurrent batches flush independently reverse=false
+00:01 +76: test/core/recursion_test.dart: Deep recursion in batch does not overflow stack (Iterative Flush)
+00:01 +77: test/core/recursion_test.dart: Deep recursion in batch does not overflow stack (Iterative Flush)
+00:01 +78: test/core/recursion_test.dart: Deep recursion in batch does not overflow stack (Iterative Flush)
+00:01 +79: test/core/recursion_test.dart: Deep recursion in batch does not overflow stack (Iterative Flush)
+00:01 +80: test/core/recursion_test.dart: Deep recursion in batch does not overflow stack (Iterative Flush)
+00:01 +81: test/core/recursion_test.dart: Deep recursion in batch does not overflow stack (Iterative Flush)
+00:01 +82: test/core/async_batch_isolation_test.dart: async isolation middleware=false sync boundary returning a future closes immediately
+00:01 +83: test/core/recursion_test.dart: LxFuture.wait throws clear error when idle
+00:01 +84: test/core/async_batch_isolation_test.dart: async isolation middleware=false escaped nested batch does not duplicate history
+00:01 +85: test/core/async_batch_isolation_test.dart: async isolation middleware=false escaped work finds an enclosing open context
+00:01 +86: test/core/middleware_chain_test.dart: Middleware Chain coverage
+00:01 +87: test/core/middleware_chain_test.dart: Middleware Chain coverage
+00:01 +88: test/core/async_batch_isolation_test.dart: async isolation middleware=false nested failure flushes ordered diamond graph once
+00:01 +89: test/core/async_batch_isolation_test.dart: async isolation middleware=false nested failure flushes ordered diamond graph once
+00:01 +90: test/core/async_batch_isolation_test.dart: async isolation middleware=true concurrent batches flush independently reverse=false
+00:01 +91: test/core/async_batch_isolation_test.dart: async isolation middleware=true concurrent batches flush independently reverse=true
+00:01 +92: test/core/async_batch_isolation_test.dart: async isolation middleware=true concurrent batches share values but own notification boundaries
+00:01 +93: test/core/async_batch_isolation_test.dart: async isolation middleware=true listener failure closes the context and clears pending delivery
+00:01 +94: test/core/async_batch_isolation_test.dart: async isolation middleware=true outside write to the same source is immediately visible
+00:01 +95: test/core/lx_base_refresh_behavior_test.dart: Coverage Gaps LxBase.refresh triggers middleware hooks
+00:01 +96: test/core/lx_base_refresh_behavior_test.dart: Coverage Gaps LxBase.refresh triggers middleware hooks
+00:01 +97: test/core/lx_base_refresh_behavior_test.dart: Coverage Gaps LxBase.refresh triggers middleware hooks
+00:01 +98: test/core/lx_base_refresh_behavior_test.dart: Coverage Gaps LxBase.refresh triggers middleware hooks
+00:01 +99: test/core/lx_base_refresh_behavior_test.dart: Coverage Gaps LxBase.refresh triggers middleware hooks
+00:01 +100: test/core/lx_base_refresh_behavior_test.dart: Coverage Gaps LxBase.refresh triggers middleware hooks
+00:01 +101: test/core/async_batch_isolation_test.dart: async isolation middleware=true nested failure flushes ordered diamond graph once
+00:01 +102: test/core/lx_base_refresh_behavior_test.dart: Coverage Gaps LxBase.refresh captures stack trace when enabled
+00:01 +103: test/core/consistency_test.dart: Design Consistency LxFuture requireValue returns value on success
+00:01 +104: test/core/consistency_test.dart: Design Consistency LxFuture requireValue throws on error
+00:01 +105: test/core/lx_run_with_context_middleware_test.dart: runWithContext logic and middleware hooks
+00:01 +106: test/core/lx_run_with_context_middleware_test.dart: runWithContext logic and middleware hooks
+00:01 +107: test/core/consistency_test.dart: Design Consistency LxFuture hasListener tracks subscriptions
+00:01 +108: test/core/consistency_test.dart: Design Consistency LxStream requireValue returns value on success
+00:01 +109: test/core/consistency_test.dart: Design Consistency LxStream requireValue throws on error
+00:01 +110: test/core/consistency_test.dart: Design Consistency LxStream requireValue throws when waiting
+00:01 +111: test/core/lx_reactive_listener_limit_test.dart: LxReactive 3+ listeners
+00:01 +112: test/core/lx_reactive_listener_limit_test.dart: LxReactive 3+ listeners
+00:01 +113: test/core/lx_reactive_listener_limit_test.dart: LxReactive 3+ listeners
+00:01 +114: test/core/consistency_test.dart: Design Consistency LxComputed.async supports initial value
+00:01 +115: test/core/consistency_test.dart: Design Consistency LxComputed.async memoAsync also supports initial value
+00:01 +116: test/core/consistency_test.dart: Design Consistency Lx.bind activates immediately if hasListener is true
+00:01 +117: test/core/middleware_defaults_test.dart: LevitReactiveMiddleware default implementations
+00:02 +118: test/core/lx_batch_exception_handling_test.dart: Lx.runBatch resets isBatching on exception
+00:02 +119: test/core/lx_call_functor_test.dart: Lx call() functor
+00:02 +120: test/core/lifecycle_middleware_hooks_test.dart: Lifecycle Hooks onInit/onDispose for Lx
+00:02 +121: test/core/lifecycle_middleware_hooks_test.dart: Lifecycle Hooks onInit/onDispose for LxComputed
+00:02 +122: test/core/lifecycle_middleware_hooks_test.dart: Lifecycle Hooks onInit/onDispose for LxStream
+00:02 +123: test/core/lifecycle_middleware_hooks_test.dart: Lifecycle Hooks onInit/onDispose for LxFuture
+00:02 +124: test/core/lx_worker_stream_listener_test.dart: LxWorker stream listener
+00:02 +125: test/core/lx_worker_stream_listener_test.dart: LxWorker stream listener
+00:02 +126: test/core/lx_worker_stream_listener_test.dart: LxWorker stream listener
+00:02 +127: test/core/batch_test.dart: Transactional Batching Lx.batch groups multiple notifications into one
+00:02 +128: test/core/batch_test.dart: Transactional Batching Lx.isBatching returns correct state
+00:02 +129: test/core/batch_test.dart: Transactional Batching Nested batches are supported and notify once at the end
+00:02 +130: test/core/batch_test.dart: Transactional Batching Deeply nested batches work and notify once at the outermost end
+00:02 +131: test/core/batch_test.dart: Transactional Batching Errors in batch still trigger notifications for successful updates
+00:02 +132: test/core/batch_test.dart: Transactional Batching Lx.batch returns value from callback
+00:02 +133: test/core/batch_test.dart: Transactional Batching Lx.batch can return any type
+00:02 +134: test/core/lx_var_callbacks_test.dart: onListen and onCancel callbacks
+00:02 +135: test/core/lx_var_callbacks_test.dart: onListen and onCancel callbacks
+00:02 +136: test/core/lx_var_callbacks_test.dart: onListen and onCancel callbacks
+00:02 +137: test/core/lx_var_callbacks_test.dart: onListen and onCancel callbacks
+00:02 +138: test/core/batch_test.dart: Batch with LxComputed LxComputed notifies after batch with multiple dependency changes
+00:02 +139: test/core/batch_test.dart: Batch with LxComputed Chained LxComputed updates correctly after batch
+00:02 +140: test/core/lx_watch_test.dart: LxWorker tracks synchronous execution
+00:02 +141: test/core/batch_test.dart: Batch async behavior (documentation test) Async code after await is NOT batched - demonstrates sync-only behavior
+00:02 +142: test/core/batch_test.dart: Batch async behavior (documentation test) Async code after await is NOT batched - demonstrates sync-only behavior
+00:02 +143: test/core/batch_test.dart: Batch async behavior (documentation test) Async code after await is NOT batched - demonstrates sync-only behavior
+00:02 +144: test/core/batch_test.dart: Batch async behavior (documentation test) Async code after await is NOT batched - demonstrates sync-only behavior
+00:02 +145: test/core/batch_test.dart: Batch async behavior (documentation test) Async code after await is NOT batched - demonstrates sync-only behavior
+00:02 +146: test/core/batch_test.dart: Batch async behavior (documentation test) Async code after await is NOT batched - demonstrates sync-only behavior
+00:02 +147: test/core/batch_test.dart: Batch async behavior (documentation test) Async code after await is NOT batched - demonstrates sync-only behavior
+00:02 +148: test/core/batch_test.dart: Batch async behavior (documentation test) Synchronous batch completes before async callbacks
+00:02 +149: test/core/batch_test.dart: Batch async behavior (documentation test) Batch notifies multiple listeners in loop
+00:02 +150: test/core/lx_nullable_test.dart: LxNullable setNull
+00:02 +151: test/core/watch_test.dart: watch function watch fires on every change
+00:02 +152: test/core/watch_test.dart: watch function watch with takeFirst fires only on first change
+00:02 +153: test/core/lx_var_equality_test.dart: equality checks
+00:02 +154: test/core/watch_test.dart: watch function debounce transform waits for value to settle
+00:02 +155: test/core/lx_run_with_owner_context_test.dart: Lx runWithOwner and listenerContext
+00:02 +156: test/core/watch_test.dart: watch function throttle transform limits callback frequency
+00:02 +157: test/core/watch_test.dart: watch function throttle transform limits callback frequency
+00:02 +158: test/core/watch_test.dart: watch function throttle transform limits callback frequency
+00:02 +159: test/core/watch_test.dart: watch function watch returns dispose closure
+00:02 +160: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +161: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +162: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +163: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +164: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +165: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +166: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +167: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +168: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +169: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +170: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +171: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +172: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +173: test/core/watch_test.dart: watch function debounce dispose cancels timer
+00:02 +174: test/core/watch_test.dart: watch function watch with onError coverage
+00:02 +175: test/core/watch_test.dart: watch functions (advanced) watch with skip skips first N events
+00:02 +176: test/core/watch_test.dart: watch functions (advanced) watch with distinct emits only distinct values
+00:02 +177: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +178: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +179: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +180: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +181: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +182: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +183: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +184: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +185: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +186: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +187: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:02 +188: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:03 +189: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:03 +190: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:03 +191: test/core/memory_leak_test.dart: Lx Memory Leaks Lx is garbage collected when no listeners exist
+00:03 +192: test/core/memory_leak_test.dart: Lx Memory Leaks Lx raw callbacks work
+00:03 +193: test/lx_state_test.dart: LxState value matches initial
+00:03 +194: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +195: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +196: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +197: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +198: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +199: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +200: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +201: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +202: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +203: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +204: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +205: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +206: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +207: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +208: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +209: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +210: test/core/memory_leak_test.dart: Lx Memory Leaks LxComputed is LAZY (No leak)
+00:03 +211: test/async/async_status_extension_test.dart: LxStatus Extension Coverage LxStatusReactiveExtensions.listen with error callback
+00:03 +212: test/async/async_status_extension_test.dart: LxStatus Extension Coverage LxStatusReactiveExtensions.listen with error callback
+00:03 +213: test/core/memory_leak_test.dart: Lx Memory Leaks LxAsyncComputed is LAZY (No leak)
+00:03 +214: test/core/memory_leak_test.dart: Lx Memory Leaks LxAsyncComputed is LAZY (No leak)
+00:03 +215: test/core/memory_leak_test.dart: Lx Memory Leaks LxAsyncComputed is LAZY (No leak)
+00:03 +216: test/core/memory_leak_test.dart: Lx Memory Leaks LxAsyncComputed is LAZY (No leak)
+00:03 +217: test/core/memory_leak_test.dart: Lx Memory Leaks LxAsyncComputed is LAZY (No leak)
+00:03 +218: test/core/memory_leak_test.dart: Lx Memory Leaks LxAsyncComputed is LAZY (No leak)
+00:03 +219: test/core/memory_leak_test.dart: Lx Memory Leaks LxAsyncComputed is LAZY (No leak)
+00:03 +220: test/computed/cleanup_subscriptions_middleware_test.dart: cleanupSubscriptions notifies middleware on removeListener
+00:03 +221: test/core/memory_leak_test.dart: Lx Memory Leaks LxMemoComputed is LAZY (No leak)
+00:03 +222: test/core/memory_leak_test.dart: Lx Memory Leaks LxMemoComputed is LAZY (No leak)
+00:03 +223: test/core/memory_leak_test.dart: Lx Memory Leaks LxMemoComputed is LAZY (No leak)
+00:03 +224: test/core/memory_leak_test.dart: Lx Memory Leaks LxMemoComputed is LAZY (No leak)
+00:03 +224: test/computed/computed_glitch_test.dart: computed chain glitch test (synchronous propagation check)
+Notifications received: 100
+Final value: 109
+Glitch detected: false
+00:03 +225: test/core/memory_leak_test.dart: Lx Memory Leaks LxMemoComputed is LAZY (No leak)
+00:03 +226: test/core/memory_leak_test.dart: Lx Memory Leaks LxMemoComputed is LAZY (No leak)
+00:03 +227: test/computed/dependency_graph_test.dart: LevitReactiveMiddleware.onGraphChange LxAsyncComputed notifies onDependencyGraphChange
+00:03 +228: test/computed/dependency_graph_test.dart: LevitReactiveMiddleware.onGraphChange LxAsyncComputed notifies onDependencyGraphChange
+00:03 +229: test/computed/dependency_graph_test.dart: LevitReactiveMiddleware.onGraphChange LxAsyncComputed notifies onDependencyGraphChange
+00:03 +230: test/computed/dependency_graph_test.dart: LevitReactiveMiddleware.onGraphChange LxAsyncComputed notifies onDependencyGraphChange
+00:03 +231: test/computed/dependency_graph_test.dart: LevitReactiveMiddleware.onGraphChange LxAsyncComputed notifies onDependencyGraphChange
+00:03 +232: test/computed/lx_computed_proxy_active_test.dart: LxComputed value getter succeeds when proxy is active
+00:03 +233: test/computed/lx_async_computed_graph_change_test.dart: Async Computed triggers onDependencyGraphChange
+00:03 +234: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +235: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +236: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +237: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +238: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +239: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +240: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +241: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +242: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +243: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:03 +244: test/computed/async_computed_test.dart: LxAsyncComputed recomputes when dependency changes
+00:03 +245: test/computed/async_computed_test.dart: LxAsyncComputed recomputes when dependency changes
+00:03 +246: test/computed/async_computed_test.dart: LxAsyncComputed recomputes when dependency changes
+00:03 +247: test/computed/async_computed_test.dart: LxAsyncComputed handles race conditions by discarding old results
+00:04 +248: test/computed/async_computed_test.dart: LxAsyncComputed handles race conditions by discarding old results
+00:04 +249: test/computed/async_computed_test.dart: LxAsyncComputed handles race conditions by discarding old results
+00:04 +250: test/computed/computed_lifecycle_test.dart: LxComputed Lifecycle via addListener async computed activates via addListener path
+00:04 +251: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) recomputes when dependency changes
+00:04 +252: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) recomputes when dependency changes
+00:04 +253: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) recomputes when dependency changes
+00:04 +254: test/computed/async_computed_test.dart: LxAsyncComputed handles async errors and preserves lastValue
+00:04 +255: test/computed/async_computed_test.dart: LxAsyncComputed handles async errors and preserves lastValue
+00:04 +256: test/computed/async_computed_extra_test.dart: LxAsyncComputed & LxComputed Extra Tests LxAsyncComputed listener API coverage
+00:04 +257: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:04 +258: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:04 +259: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:04 +260: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:04 +261: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:04 +262: test/computed/async_computed_extra_test.dart: LxAsyncComputed & LxComputed Extra Tests LxAsyncComputed error getters
+00:04 +263: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +264: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +265: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +266: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +267: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +268: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +269: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +270: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +271: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +272: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +273: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +274: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +275: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +276: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +277: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +278: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +279: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +280: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +281: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +282: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +283: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +284: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +285: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +286: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +287: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +288: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +289: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +290: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +291: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +292: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +293: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +294: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +295: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +296: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +297: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +298: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +299: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +300: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +301: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +302: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +303: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +304: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +305: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +306: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +307: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +308: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +309: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +310: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +311: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +312: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +313: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +314: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +315: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +316: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +317: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +318: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +319: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +320: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:04 +321: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) clears waiting status even if value is equal when showWaiting is true
+00:04 +322: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) toString returns correct type
+00:04 +323: test/computed/computed_features_test.dart: LxComputed (Sync/Memo) only notifies when value actually changes
+00:04 +324: test/computed/computed_deferred_test.dart: LxComputed.deferred converts sync computation to async status-wrapped flow
+00:04 +325: test/computed/computed_features_test.dart: LxComputed (Sync/Memo) uses custom equality function
+00:04 +326: test/computed/computed_features_test.dart: LxComputed (Sync/Memo) uses custom equality function
+00:04 +327: test/computed/computed_features_test.dart: LxComputed (Sync/Memo) uses custom equality function
+00:04 +328: test/computed/lx_computed_batch_update_deferral_test.dart: LxComputed batch update deferral
+00:04 +329: test/computed/computed_features_test.dart: LxComputed (Sync/Memo) close cancels subscriptions
+00:04 +330: test/computed/computed_features_test.dart: LxComputed (Sync/Memo) toString shows value
+00:04 +331: test/computed/computed_features_test.dart: LxComputed (Sync/Memo) adds and removes listeners
+00:05 +332: test/computed/computed_features_test.dart: LxComputed.async factory creates LxAsyncComputed
+00:05 +333: test/computed/computed_features_test.dart: LxComputed.async factory creates LxAsyncComputed
+00:05 +334: test/computed/computed_features_test.dart: reconciles stream dependencies (removing unused)
+00:05 +335: test/computed/lx_computed_refresh_transform_test.dart: LxComputed refresh and transform
+00:05 +336: test/computed/lx_computed_dependency_threshold_test.dart: LxComputed Dependency Tracking Optimization LxComputed optimizes dependency tracking for > 8 dependencies
+00:05 +337: test/computed/lx_computed_dependency_threshold_test.dart: LxComputed Dependency Tracking Optimization LxComputed _add useSet branch coverage
+00:05 +338: test/computed/lx_computed_dependency_threshold_test.dart: _DependencyTracker Set Mode switches to Set mode when more than 8 dependencies
+00:05 +339: test/computed/lx_computed_dependency_threshold_test.dart: _DependencyTracker Set Mode adds to Set after switching mode
+00:05 +340: test/computed/static_async_computed_test.dart: Static LxAsyncComputed Initialization tracks dependencies correctly
+00:05 +341: test/computed/static_async_computed_test.dart: Static LxAsyncComputed lxStatic extension creates static async computed
+00:05 +342: test/computed/static_async_computed_test.dart: Static LxAsyncComputed STATIC nature: ignores new dependencies in branch switch
+00:05 +343: test/computed/static_async_computed_test.dart: Static LxAsyncComputed STATIC nature: skips cleanup overhead
+00:05 +344: test/computed/lx_computed_stack_trace_preservation_test.dart: active recompute preserves original stack trace
+00:05 +345: test/computed/computed_edge_test.dart: LxComputed Manual Listeners Manual addListener/removeListener manages lifecycle
+00:05 +346: test/computed/computed_edge_test.dart: LxComputed Manual Listeners Manual addListener/removeListener manages lifecycle
+00:05 +347: test/computed/computed_edge_test.dart: LxComputed Manual Listeners Manual addListener/removeListener manages lifecycle
+00:05 +348: test/computed/computed_edge_test.dart: LxComputed Manual Listeners Manual addListener/removeListener manages lifecycle
+00:05 +349: test/computed/computed_edge_test.dart: LxComputed Manual Listeners Manual addListener/removeListener manages lifecycle
+00:05 +350: test/computed/lx_computed_read_error_proxy_test.dart: LxComputed handles error during read with active proxy
+00:05 +351: test/family/lx_family_test.dart: stable handle keeps direct, computed and worker subscriptions across refresh
+00:05 +352: test/family/lx_family_test.dart: stable handle keeps direct, computed and worker subscriptions across refresh
+00:05 +353: test/family/lx_family_test.dart: stable handle keeps direct, computed and worker subscriptions across refresh
+00:05 +354: test/family/lx_family_test.dart: stable handle keeps direct, computed and worker subscriptions across refresh
+00:05 +355: test/family/lx_family_test.dart: refresh drains old producer, retains null and joins concurrent replacement
+00:05 +356: test/family/lx_family_test.dart: failed refresh remains observable and permits recovery on the same handle
+00:05 +357: test/middlewares/mutation_test.dart: LxMap mutation triggers middleware
+00:05 +358: test/middlewares/mutation_test.dart: LxMap mutation triggers middleware
+00:05 +359: test/middlewares/mutation_test.dart: LxMap mutation triggers middleware
+00:05 +360: test/middlewares/mutation_test.dart: LxMap mutation triggers middleware
+00:05 +361: test/middlewares/mutation_test.dart: LxMap mutation triggers middleware
+00:05 +362: test/family/lx_family_test.dart: resource reads are tracked and key diagnostics are opaque by default
+00:05 +363: test/family/lx_family_test.dart: resource reads are tracked and key diagnostics are opaque by default
+00:05 +364: test/middlewares/base_middleware_test.dart: LevitReactiveMiddleware Base default onSet returns null
+00:05 +365: test/middlewares/base_middleware_test.dart: LevitReactiveMiddleware Base default onBatch returns null
+00:05 +366: test/middlewares/base_middleware_test.dart: LevitReactiveMiddleware Base default onDispose returns null
+00:05 +367: test/middlewares/base_middleware_test.dart: LevitReactiveMiddleware Base default onInit returns null
+00:05 +368: test/middlewares/base_middleware_test.dart: LevitReactiveMiddleware Base default onGraphChange returns null
+00:05 +369: test/middlewares/registration_idempotency_test.dart: Middleware registration idempotency adding the same middleware instance twice is idempotent
+00:05 +370: test/middlewares/registration_idempotency_test.dart: Middleware registration idempotency token-based registration replaces previous middleware for token
+00:05 +371: test/middlewares/registration_idempotency_test.dart: Middleware registration idempotency token can be attached to an existing middleware without duplicates
+00:05 +372: test/middlewares/registration_idempotency_test.dart: Middleware registration idempotency re-adding the same tokenized middleware is a no-op
+00:05 +373: test/middlewares/basic_middleware_test.dart: LevitReactiveMiddleware middleware receives state changes
+00:05 +374: test/middlewares/middleware_propagation_test.dart: Middleware Propagation Normal flow notifies all middlewares
+00:05 +375: test/middlewares/middleware_propagation_test.dart: Middleware Propagation Normal flow notifies all middlewares
+00:05 +376: test/middlewares/middleware_propagation_test.dart: Middleware Propagation Normal flow notifies all middlewares
+00:05 +377: test/middlewares/middleware_propagation_test.dart: Middleware Propagation Normal flow notifies all middlewares
+00:05 +378: test/middlewares/middleware_propagation_test.dart: Middleware Propagation Normal flow notifies all middlewares
+00:05 +379: test/middlewares/middleware_propagation_test.dart: Middleware Propagation Normal flow notifies all middlewares
+00:05 +380: test/middlewares/middleware_bypass_test.dart: Middleware Bypass runWithoutMiddleware prevents middleware execution
+00:05 +381: test/middlewares/middleware_bypass_test.dart: Middleware Bypass runWithoutMiddleware prevents middleware execution
+00:05 +382: test/middlewares/middleware_propagation_test.dart: Middleware Propagation stopPropagation in onSet (after) affects upstream in unwind
+00:05 +383: test/middlewares/middleware_bypass_test.dart: Middleware Bypass bypassed update correctly notifies listeners
+00:05 +384: test/middlewares/inconsistent_token_state_test.dart: LevitReactiveMiddleware token registry resilience token replacement works even if token map is out-of-sync
+00:05 +385: test/middlewares/batch_middleware_test.dart: Middleware Batch Processing shouldProcessBatch=true allows batch hooks
+00:05 +386: test/async_types/lx_async_status_wait_test.dart: LxStatusReactiveExtensions wait handles consecutive LxWaiting states without throwing StateError
+00:05 +387: test/async_types/lx_async_status_wait_test.dart: LxStatusReactiveExtensions wait handles consecutive LxWaiting states without throwing StateError
+00:05 +388: test/async_types/lx_async_status_wait_test.dart: LxStatusReactiveExtensions wait handles consecutive LxWaiting states without throwing StateError
+00:05 +389: test/async_types/lx_async_status_wait_test.dart: LxStatusReactiveExtensions wait immediately returns value if state is already LxSuccess
+00:05 +390: test/async_types/status_extension_test.dart: LxStatusReactiveExtensions works on raw LxVar<LxStatus<T>>
+00:05 +391: test/async_types/status_extension_test.dart: LxStatusReactiveExtensions works on raw LxVar<LxStatus<T>>
+00:05 +392: test/async_types/lx_async_status_wait_test.dart: LxStatusReactiveExtensions wait throws when stream closes before reaching terminal state
+00:05 +393: test/async_types/status_extension_test.dart: LxStatusReactiveExtensions works on LxFuture (via inheritance)
+00:05 +394: test/async_types/lx_future_wait_test.dart: LxFuture wait works
+00:05 +395: test/async_types/lx_future_edge_test.dart: LxFuture Edge Cases wait propagates error from LxError state
+00:05 +396: test/async_types/lx_future_test.dart: LxFuture Refined Tests LxFuture.transform coverage
+00:05 +397: test/async_types/lx_future_test.dart: LxFuture Refined Tests LxFuture.transform coverage
+00:05 +398: test/async_types/lx_future_unexpected_state_test.dart: LxFuture wait on LxWaiting wait throws StateError when future is still waiting
+00:05 +399: test/async_types/lx_future_unexpected_state_test.dart: LxFuture wait on LxWaiting wait throws StateError when future is still waiting
+00:05 +400: test/async_types/lx_future_unexpected_state_test.dart: LxFuture wait on LxWaiting wait throws StateError when future is still waiting
+00:05 +401: test/async_types/lx_future_unexpected_state_test.dart: LxFuture wait on LxWaiting wait propagates error from LxError state
+00:05 +402: test/async_types/lx_future_unexpected_state_test.dart: LxFuture wait on LxWaiting wait throws StateError on idle LxFuture
+00:05 +403: test/async_types/lx_stream_completion_policy_test.dart: close remains the completion default
+00:05 +404: test/async_types/lx_stream_reactivation_test.dart: LxStream Reactivation single-subscription mapped stream survives reactivation
+00:05 +405: test/async_types/lx_stream_reactivation_test.dart: LxStream Reactivation single-subscription mapped stream survives reactivation
+00:05 +406: test/async_types/lx_stream_reactivation_test.dart: LxStream Reactivation single-subscription mapped stream survives reactivation
+00:05 +407: test/async_types/lx_stream_reactivation_test.dart: LxStream Reactivation single-subscription mapped stream survives reactivation
+00:05 +408: test/async_types/lx_stream_reactivation_test.dart: LxStream Reactivation static stream does not survive reactivation if single-subscription
+00:05 +409: test/async_types/buffering_test.dart: State Buffering (lastValue) LxFuture preserves lastValue on refresh
+00:05 +410: test/async_types/buffering_test.dart: State Buffering (lastValue) LxFuture preserves lastValue on refresh
+00:05 +411: test/async_types/buffering_test.dart: State Buffering (lastValue) LxFuture preserves lastValue on refresh
+00:05 +412: test/async_types/buffering_test.dart: State Buffering (lastValue) LxFuture preserves lastValue on refresh
+00:05 +413: test/async_types/buffering_test.dart: State Buffering (lastValue) LxStream preserves lastValue on error
+00:05 +414: test/base_types/lx_bool_test.dart: LxBool initial value defaults to false
+00:05 +415: test/base_types/lx_bool_test.dart: LxBool initial value can be set
+00:05 +416: test/base_types/lx_bool_test.dart: LxBool toggle works and triggers stream
+00:05 +417: test/base_types/lx_bool_test.dart: LxBool setTrue works
+00:05 +418: test/base_types/lx_bool_test.dart: LxBool setFalse works
+00:05 +419: test/base_types/lx_bool_test.dart: LxBool setting same value does not trigger stream
+00:05 +420: test/base_types/lx_bool_test.dart: LxBool isTrue and isFalse getters work
+00:05 +421: test/base_types/lx_bool_test.dart: LxBool .lxBool extension works
+00:05 +422: test/workers/lx_worker_async_test.dart: LxWorker handles async callbacks
+00:06 +423: test/workers/lx_worker_async_test.dart: LxWorker handles async callbacks
+00:06 +424: test/workers/lx_worker_async_test.dart: LxWorker handles async callbacks
+00:06 +425: test/workers/lx_worker_async_test.dart: LxWorker handles async callbacks
+00:06 +426: test/workers/lx_worker_async_error_test.dart: LxWorker handles async callback error
+00:06 +427: test/workers/worker_exception_test.dart: LxWorker async exception handling debounce catches async exceptions and routes to global handler if no onProcessingError
+00:06 +428: test/workers/lx_worker_sync_error_test.dart: LxWorker handles synchronous error
+00:06 +429: test/workers/worker_exception_test.dart: LxWorker async exception handling throttle catches async exceptions and routes to global handler if no onProcessingError
+00:06 +430: test/workers/lx_worker_sync_error_test.dart: LxWorker uses stream listener when onError is supplied
+00:06 +431: test/workers/lx_worker_convenience_watchers_test.dart: Convenience watchers: isTrue, isFalse, isValue
+00:06 +432: test/workers/lx_worker_stat_test.dart: LxWorkerStat equality and toString
+00:06 +433: test/computed_graph_notification_test.dart: LxComputed handles List in graph change notification
+00:06 +434: test/lx_map_repro_test.dart: LxMap.remove reproduction
+00:06 +435: test/worker/processing_error_test.dart: Watcher onProcessingError catches sync errors via watch
+00:06 +436: test/worker/status_worker_test.dart: LxStatus Watchers watchStatus fires onSuccess
+00:06 +437: test/worker/status_worker_test.dart: LxStatus Watchers watchStatus fires onSuccess
+00:06 +438: test/worker/status_worker_test.dart: LxStatus Watchers watchStatus fires onSuccess
+00:06 +439: test/worker/status_worker_test.dart: LxStatus Watchers watchStatus fires onSuccess
+00:06 +440: test/worker/status_worker_test.dart: LxStatus Watchers watchStatus fires onSuccess
+00:06 +441: test/worker/status_worker_test.dart: LxStatus Watchers watchStatus does not fire success for other statuses
+00:06 +442: test/worker/status_worker_test.dart: LxStatus Watchers watchStatus fires onError
+00:06 +443: test/worker/status_worker_test.dart: LxStatus Watchers watchStatus fires onWaiting
+00:06 +444: test/worker/status_worker_test.dart: LxStatus Watchers watchStatus fires onIdle
+00:06 +445: test/worker/status_worker_test.dart: LxStatus Watchers dispose cancels subscription
+00:06 +446: test/worker/when_test.dart: watchTrue/watchFalse/watchValue watchTrue fires when bool becomes true
+00:06 +447: test/worker/when_test.dart: watchTrue/watchFalse/watchValue watchTrue fires when bool becomes true
+00:06 +448: test/worker/when_test.dart: watchTrue/watchFalse/watchValue watchTrue fires when bool becomes true
+00:06 +449: test/worker/transition_helpers_test.dart: LxWorker transition helpers onRising fires only on false -> true transitions
+00:06 +450: test/worker/transition_helpers_test.dart: LxWorker transition helpers onRising fires only on false -> true transitions
+00:06 +451: test/worker/transition_helpers_test.dart: LxWorker transition helpers onRising fires only on false -> true transitions
+00:06 +452: test/worker/transition_helpers_test.dart: LxWorker transition helpers onRising fires only on false -> true transitions
+00:06 +453: test/worker/transition_helpers_test.dart: LxWorker transition helpers onRising fires only on false -> true transitions
+00:06 +454: test/worker/transition_helpers_test.dart: LxWorker transition helpers onRising fires only on false -> true transitions
+00:06 +455: test/worker/transition_helpers_test.dart: LxWorker transition helpers onFalling fires only on true -> false transitions
+00:06 +456: test/worker/transition_helpers_test.dart: LxWorker transition helpers onChangeDistinct ignores duplicate notifications
+00:06 +457: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +458: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +459: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +460: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +461: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +462: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +463: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +464: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +465: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +466: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +467: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +468: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +469: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +470: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +471: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +472: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce emits only final value in burst
+00:06 +473: test/collections/deep_reactivity_repro_test.dart: Deep Reactivity Repro nested collections are NOT automatically wrapped
+00:06 +474: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +475: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +476: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +477: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +478: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +479: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +480: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +481: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +482: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +483: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +484: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +485: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +486: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +487: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +488: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +489: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +490: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +491: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +492: test/worker/transition_helpers_test.dart: LxWorker timing helpers debounce close cancels pending callback
+00:06 +493: test/collections/lx_list_test.dart: LxList<T> set first triggers stream event
+00:06 +494: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +495: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +496: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +497: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +498: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +499: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +500: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +501: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +502: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +503: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +504: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +505: test/worker/transition_helpers_test.dart: LxWorker timing helpers throttle emits leading value then suppresses until window ends
+00:06 +506: test/collections/lx_list_set_foreach_test.dart: Collections Coverage LxList forEach
+00:06 +507: test/collections/lx_list_set_foreach_test.dart: Collections Coverage LxSet forEach
+00:06 +508: test/collections/lx_map_test.dart: LxMap<K, V> initial map is accessible
+00:06 +509: test/collections/lx_map_test.dart: LxMap<K, V> operator []= triggers stream event
+00:06 +510: test/collections/lx_map_test.dart: LxMap<K, V> addAll triggers stream event
+00:06 +511: test/collections/lx_map_test.dart: LxMap<K, V> addEntries triggers stream event
+00:06 +512: test/collections/lx_map_test.dart: LxMap<K, V> remove triggers stream event
+00:06 +513: test/collections/lx_map_test.dart: LxMap<K, V> removeWhere triggers stream event
+00:06 +514: test/collections/lx_map_test.dart: LxMap<K, V> clear triggers stream event
+00:06 +515: test/collections/lx_map_test.dart: LxMap<K, V> update triggers stream event
+00:06 +516: test/collections/lx_map_test.dart: LxMap<K, V> update with ifAbsent triggers stream event
+00:06 +517: test/collections/lx_map_test.dart: LxMap<K, V> updateAll triggers stream event
+00:06 +518: test/collections/assign_test.dart: LxList.assign assign replaces all elements in one notification
+00:06 +519: test/collections/assign_test.dart: LxList.assign assign replaces all elements in one notification
+00:06 +520: test/collections/assign_test.dart: LxList.assign assign replaces all elements in one notification
+00:06 +521: test/collections/assign_test.dart: LxList.assign assign replaces all elements in one notification
+00:06 +522: test/collections/assign_test.dart: LxList.assign assign replaces all elements in one notification
+00:06 +523: test/collections/assign_test.dart: LxList.assign assign replaces all elements in one notification
+00:06 +524: test/collections/assign_test.dart: LxList.assign assign replaces all elements in one notification
+00:06 +525: test/middleware_error_test.dart: onReactiveError Hook intercepts exception from single listener (Fast Path)
+00:06 +526: test/middleware_error_test.dart: onReactiveError Hook intercepts exception from single listener (Fast Path)
+00:06 +527: test/middleware_error_test.dart: onReactiveError Hook intercepts exception from single listener (Fast Path)
+00:06 +528: test/middleware_error_test.dart: onReactiveError Hook intercepts exception from single listener (Fast Path)
+00:06 +529: test/middleware_error_test.dart: onReactiveError Hook intercepts exception from single listener (Fast Path)
+00:06 +530: test/middleware_error_test.dart: onReactiveError Hook intercepts exception from single listener (Fast Path)
+00:06 +531: test/middleware_error_test.dart: onReactiveError Hook intercepts exception from single listener (Fast Path)
+00:06 +532: test/middleware_error_test.dart: onReactiveError Hook intercepts exception from multiple listeners (Normal Path)
+00:06 +533: test/middleware_error_test.dart: onReactiveError Hook ensures isolation: one failing listener does not stop others
+00:06 +534: test/middleware_error_test.dart: onReactiveError Hook works with computed values
+00:06 +535: test/middleware_error_test.dart: onReactiveError Hook works with Ever worker
+00:06 +536: test/middleware_error_test.dart: Fallback Behavior prints to console when no middleware is present
+00:06 +537: All tests passed!

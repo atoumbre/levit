@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-11",
+  "checks": {
+    "format": {
+      "result": "pass",
+      "evidence": "candidate-snapshot-format.log"
+    },
+    "fatalInfoAnalysis": {
+      "result": "pass",
+      "evidence": "candidate-root-analysis.log"
+    },
+    "aggregateCi": {
+      "result": "pass",
+      "evidence": "candidate-ci.log"
+    },
+    "coverage100": {
+      "result": "pass",
+      "evidence": "candidate-coverage.log"
+    },
+    "stress": {
+      "result": "pass",
+      "evidence": "candidate-stress.log"
+    },
+    "benchmarks": {
+      "result": "pass",
+      "evidence": "candidate-benchmarks.log"
+    },
+    "focusedRegressions": {
+      "result": "pass",
+      "evidence": "candidate-runner-regressions.log"
+    },
+    "publishDryRuns": {
+      "result": "pass",
+      "evidence": "candidate-publish-dry-run.log"
+    },
+    "inspectorCliDryRun": {
+      "result": "pass",
+      "evidence": "candidate-cli-final-dry-run.log"
+    },
+    "installedCli": {
+      "result": "pass",
+      "evidence": "candidate-cli-global-check.log"
+    },
+    "nativePerformance": {
+      "result": "pass",
+      "evidence": "performance-runs.log"
+    },
+    "reproducibleInspectorAssets": {
+      "result": "pass",
+      "evidence": "candidate-assets.log"
+    }
+  },
+  "browserTargets": 5,
+  "coverage": {
+    "covered": 6508,
+    "total": 6508,
+    "packages": 11,
+    "thresholdChanged": false
+  },
+  "nativeSamples": 8640,
+  "matchedFrames": 2880,
+  "publishablePackages": 10,
+  "published": false
+}

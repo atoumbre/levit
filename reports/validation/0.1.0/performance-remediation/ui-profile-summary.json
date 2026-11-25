@@ -1,0 +1,457 @@
+{
+  "note": "Same virtualized 1,000-row list and one LWatch; separate native profile processes, no concurrent builds/tests. Instrumented throughput is not comparison evidence. Includes setup/unmount. Sampling cannot establish absence of sub-sample costs or attribute OS/GPU tails.",
+  "profiles": {
+    "ui-final-candidate-off-ui.json": {
+      "samples": 1288,
+      "levitExclusiveSamples": 11,
+      "samplesWithLevitFrame": 36,
+      "levitInclusivePercent": 2.7950310559006213,
+      "topExclusive": [
+        {
+          "name": "kDartVmSnapshotInstructions",
+          "owner": null,
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 33,
+          "uri": ""
+        },
+        {
+          "name": "dart::Class::IsSubtypeOf(dart::Class const&, dart::TypeArguments const&, dart::Nullability, dart::AbstractType const&, dart::Heap::Space, dart::FunctionTypeMapping*)",
+          "owner": null,
+          "exclusiveSamples": 30,
+          "inclusiveSamples": 30,
+          "uri": ""
+        },
+        {
+          "name": "dart::Type::type_class_id() const",
+          "owner": null,
+          "exclusiveSamples": 23,
+          "inclusiveSamples": 23,
+          "uri": ""
+        },
+        {
+          "name": "[Stub] _iso_stub_AllocateObjectStub",
+          "owner": null,
+          "exclusiveSamples": 17,
+          "inclusiveSamples": 17,
+          "uri": ""
+        },
+        {
+          "name": "dart::Class::GetInstanceTypeArguments(dart::Thread*, dart::TypeArguments const&, bool) const",
+          "owner": null,
+          "exclusiveSamples": 16,
+          "inclusiveSamples": 16,
+          "uri": ""
+        },
+        {
+          "name": "dart::Instance::RuntimeTypeIsSubtypeOf(dart::AbstractType const&, dart::TypeArguments const&, dart::TypeArguments const&) const",
+          "owner": null,
+          "exclusiveSamples": 14,
+          "inclusiveSamples": 14,
+          "uri": ""
+        },
+        {
+          "name": "_invoke1",
+          "owner": "dart.ui",
+          "exclusiveSamples": 9,
+          "inclusiveSamples": 157,
+          "uri": "dart:ui/hooks.dart"
+        },
+        {
+          "name": "forEach",
+          "owner": "__Map&_HashVMBase&MapMixin&_HashBase&_OperatorEqualsAndHashCode&_LinkedHashMapMixin",
+          "exclusiveSamples": 9,
+          "inclusiveSamples": 9,
+          "uri": "dart:_compact_hash"
+        },
+        {
+          "name": "dart::Object::HandleImpl(dart::Zone*, dart::ObjectPtr, long)",
+          "owner": null,
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 8,
+          "uri": ""
+        },
+        {
+          "name": "dart::Object::HandleTag() const",
+          "owner": null,
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 8,
+          "uri": ""
+        },
+        {
+          "name": "[Native] /Users/atoumbre/SoftiLab/levit-svg/benchmarks/build/macos/Build/Products/Profile/benchmarks.app/Contents/Frameworks/App.framework/Versions/A/App+0xc0e0",
+          "owner": null,
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 8,
+          "uri": ""
+        },
+        {
+          "name": "_beginFrame",
+          "owner": "dart.ui",
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 181,
+          "uri": "dart:ui/hooks.dart"
+        },
+        {
+          "name": "start",
+          "owner": "TimelineTask",
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 104,
+          "uri": "dart:developer/timeline.dart"
+        },
+        {
+          "name": "_tlv_get_addr",
+          "owner": null,
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 8,
+          "uri": ""
+        },
+        {
+          "name": "runtimeType",
+          "owner": "Object",
+          "exclusiveSamples": 7,
+          "inclusiveSamples": 19,
+          "uri": "dart:core-patch/object_patch.dart"
+        }
+      ]
+    },
+    "ui-final-candidate-on-ui.json": {
+      "samples": 1254,
+      "levitExclusiveSamples": 14,
+      "samplesWithLevitFrame": 51,
+      "levitInclusivePercent": 4.0669856459330145,
+      "topExclusive": [
+        {
+          "name": "kDartVmSnapshotInstructions",
+          "owner": null,
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 32,
+          "uri": ""
+        },
+        {
+          "name": "dart::Class::IsSubtypeOf(dart::Class const&, dart::TypeArguments const&, dart::Nullability, dart::AbstractType const&, dart::Heap::Space, dart::FunctionTypeMapping*)",
+          "owner": null,
+          "exclusiveSamples": 22,
+          "inclusiveSamples": 22,
+          "uri": ""
+        },
+        {
+          "name": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "owner": null,
+          "exclusiveSamples": 16,
+          "inclusiveSamples": 16,
+          "uri": ""
+        },
+        {
+          "name": "runtimeType",
+          "owner": "Object",
+          "exclusiveSamples": 13,
+          "inclusiveSamples": 28,
+          "uri": "dart:core-patch/object_patch.dart"
+        },
+        {
+          "name": "[Stub] _iso_stub_AllocateObjectStub",
+          "owner": null,
+          "exclusiveSamples": 13,
+          "inclusiveSamples": 13,
+          "uri": ""
+        },
+        {
+          "name": "dart::Type::type_class_id() const",
+          "owner": null,
+          "exclusiveSamples": 12,
+          "inclusiveSamples": 12,
+          "uri": ""
+        },
+        {
+          "name": "start",
+          "owner": "TimelineTask",
+          "exclusiveSamples": 11,
+          "inclusiveSamples": 91,
+          "uri": "dart:developer/timeline.dart"
+        },
+        {
+          "name": "==",
+          "owner": "_Type",
+          "exclusiveSamples": 11,
+          "inclusiveSamples": 11,
+          "uri": "dart:core-patch/type_patch.dart"
+        },
+        {
+          "name": "dart::Function::AreValidArgumentCounts(long, long, long, dart::String*) const",
+          "owner": null,
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 8,
+          "uri": ""
+        },
+        {
+          "name": "_growToNextCapacity",
+          "owner": "_GrowableList",
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 16,
+          "uri": "dart:core-patch/growable_array.dart"
+        },
+        {
+          "name": "dart::Object::HandleImpl(dart::Zone*, dart::ObjectPtr, long)",
+          "owner": null,
+          "exclusiveSamples": 7,
+          "inclusiveSamples": 7,
+          "uri": ""
+        },
+        {
+          "name": "dart::DartEntryScope::DartEntryScope(dart::Thread*)",
+          "owner": null,
+          "exclusiveSamples": 7,
+          "inclusiveSamples": 7,
+          "uri": ""
+        },
+        {
+          "name": "dart::Class::GetInstanceTypeArguments(dart::Thread*, dart::TypeArguments const&, bool) const",
+          "owner": null,
+          "exclusiveSamples": 7,
+          "inclusiveSamples": 7,
+          "uri": ""
+        },
+        {
+          "name": "dart::Scavenger::TryAllocateNewTLAB(dart::Thread*, long, bool)",
+          "owner": null,
+          "exclusiveSamples": 6,
+          "inclusiveSamples": 6,
+          "uri": ""
+        },
+        {
+          "name": "==",
+          "owner": "Element",
+          "exclusiveSamples": 6,
+          "inclusiveSamples": 6,
+          "uri": "package:flutter/src/widgets/framework.dart"
+        }
+      ]
+    },
+    "ui-final-reference-off-ui.json": {
+      "samples": 1244,
+      "levitExclusiveSamples": 16,
+      "samplesWithLevitFrame": 37,
+      "levitInclusivePercent": 2.9742765273311895,
+      "topExclusive": [
+        {
+          "name": "kDartVmSnapshotInstructions",
+          "owner": null,
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 37,
+          "uri": ""
+        },
+        {
+          "name": "[Stub] _iso_stub_AllocateObjectStub",
+          "owner": null,
+          "exclusiveSamples": 25,
+          "inclusiveSamples": 25,
+          "uri": ""
+        },
+        {
+          "name": "dart::Class::IsSubtypeOf(dart::Class const&, dart::TypeArguments const&, dart::Nullability, dart::AbstractType const&, dart::Heap::Space, dart::FunctionTypeMapping*)",
+          "owner": null,
+          "exclusiveSamples": 19,
+          "inclusiveSamples": 19,
+          "uri": ""
+        },
+        {
+          "name": "dart::Type::type_class_id() const",
+          "owner": null,
+          "exclusiveSamples": 19,
+          "inclusiveSamples": 19,
+          "uri": ""
+        },
+        {
+          "name": "_tlv_get_addr",
+          "owner": null,
+          "exclusiveSamples": 17,
+          "inclusiveSamples": 17,
+          "uri": ""
+        },
+        {
+          "name": "start",
+          "owner": "TimelineTask",
+          "exclusiveSamples": 14,
+          "inclusiveSamples": 94,
+          "uri": "dart:developer/timeline.dart"
+        },
+        {
+          "name": "__munmap",
+          "owner": null,
+          "exclusiveSamples": 14,
+          "inclusiveSamples": 14,
+          "uri": ""
+        },
+        {
+          "name": "dart::Class::GetInstanceTypeArguments(dart::Thread*, dart::TypeArguments const&, bool) const",
+          "owner": null,
+          "exclusiveSamples": 12,
+          "inclusiveSamples": 12,
+          "uri": ""
+        },
+        {
+          "name": "dart::Instance::RuntimeTypeIsSubtypeOf(dart::AbstractType const&, dart::TypeArguments const&, dart::TypeArguments const&) const",
+          "owner": null,
+          "exclusiveSamples": 12,
+          "inclusiveSamples": 12,
+          "uri": ""
+        },
+        {
+          "name": "runtimeType",
+          "owner": "Object",
+          "exclusiveSamples": 11,
+          "inclusiveSamples": 30,
+          "uri": "dart:core-patch/object_patch.dart"
+        },
+        {
+          "name": "dart::Function::DoArgumentTypesMatch(dart::Array const&, dart::ArgumentsDescriptor const&, dart::TypeArguments const&) const",
+          "owner": null,
+          "exclusiveSamples": 10,
+          "inclusiveSamples": 10,
+          "uri": ""
+        },
+        {
+          "name": "round",
+          "owner": null,
+          "exclusiveSamples": 9,
+          "inclusiveSamples": 9,
+          "uri": ""
+        },
+        {
+          "name": "length",
+          "owner": "_Array",
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 8,
+          "uri": "dart:core-patch/array.dart"
+        },
+        {
+          "name": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "owner": null,
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 8,
+          "uri": ""
+        },
+        {
+          "name": "_beginFrame",
+          "owner": "dart.ui",
+          "exclusiveSamples": 7,
+          "inclusiveSamples": 169,
+          "uri": "dart:ui/hooks.dart"
+        }
+      ]
+    },
+    "ui-final-reference-on-ui.json": {
+      "samples": 1285,
+      "levitExclusiveSamples": 8,
+      "samplesWithLevitFrame": 49,
+      "levitInclusivePercent": 3.813229571984436,
+      "topExclusive": [
+        {
+          "name": "kDartVmSnapshotInstructions",
+          "owner": null,
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 36,
+          "uri": ""
+        },
+        {
+          "name": "dart::Class::IsSubtypeOf(dart::Class const&, dart::TypeArguments const&, dart::Nullability, dart::AbstractType const&, dart::Heap::Space, dart::FunctionTypeMapping*)",
+          "owner": null,
+          "exclusiveSamples": 27,
+          "inclusiveSamples": 27,
+          "uri": ""
+        },
+        {
+          "name": "dart::Type::type_class_id() const",
+          "owner": null,
+          "exclusiveSamples": 24,
+          "inclusiveSamples": 24,
+          "uri": ""
+        },
+        {
+          "name": "dart::Instance::RuntimeTypeIsSubtypeOf(dart::AbstractType const&, dart::TypeArguments const&, dart::TypeArguments const&) const",
+          "owner": null,
+          "exclusiveSamples": 15,
+          "inclusiveSamples": 15,
+          "uri": ""
+        },
+        {
+          "name": "[Stub] _iso_stub_AllocateObjectStub",
+          "owner": null,
+          "exclusiveSamples": 13,
+          "inclusiveSamples": 13,
+          "uri": ""
+        },
+        {
+          "name": "dart::DartEntryScope::DartEntryScope(dart::Thread*)",
+          "owner": null,
+          "exclusiveSamples": 11,
+          "inclusiveSamples": 11,
+          "uri": ""
+        },
+        {
+          "name": "round",
+          "owner": null,
+          "exclusiveSamples": 10,
+          "inclusiveSamples": 10,
+          "uri": ""
+        },
+        {
+          "name": "dart::Class::GetInstanceTypeArguments(dart::Thread*, dart::TypeArguments const&, bool) const",
+          "owner": null,
+          "exclusiveSamples": 9,
+          "inclusiveSamples": 9,
+          "uri": ""
+        },
+        {
+          "name": "buildScope",
+          "owner": "Element",
+          "exclusiveSamples": 9,
+          "inclusiveSamples": 9,
+          "uri": "package:flutter/src/widgets/framework.dart"
+        },
+        {
+          "name": "length",
+          "owner": "_Array",
+          "exclusiveSamples": 9,
+          "inclusiveSamples": 9,
+          "uri": "dart:core-patch/array.dart"
+        },
+        {
+          "name": "dart::Object::HandleImpl(dart::Zone*, dart::ObjectPtr, long)",
+          "owner": null,
+          "exclusiveSamples": 8,
+          "inclusiveSamples": 8,
+          "uri": ""
+        },
+        {
+          "name": "[Native] /private/tmp/levit-performance-539f130-q8vb_rc4/benchmarks/build/macos/Build/Products/Profile/benchmarks.app/Contents/Frameworks/App.framework/Versions/A/App+0xc0e0",
+          "owner": null,
+          "exclusiveSamples": 7,
+          "inclusiveSamples": 7,
+          "uri": ""
+        },
+        {
+          "name": "_argumentsAsJson",
+          "owner": "dart.developer",
+          "exclusiveSamples": 7,
+          "inclusiveSamples": 7,
+          "uri": "dart:developer/timeline.dart"
+        },
+        {
+          "name": "_invoke1",
+          "owner": "dart.ui",
+          "exclusiveSamples": 7,
+          "inclusiveSamples": 129,
+          "uri": "dart:ui/hooks.dart"
+        },
+        {
+          "name": "_beginFrame",
+          "owner": "dart.ui",
+          "exclusiveSamples": 7,
+          "inclusiveSamples": 153,
+          "uri": "dart:ui/hooks.dart"
+        }
+      ]
+    }
+  }
+}

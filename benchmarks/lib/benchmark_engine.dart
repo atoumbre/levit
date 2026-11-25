@@ -11,12 +11,12 @@ enum Framework {
   riverpod;
 
   String get label => switch (this) {
-        levit => 'Levit',
-        vanilla => 'Vanilla',
-        getx => 'GetX',
-        bloc => 'BLoC',
-        riverpod => 'Riverpod',
-      };
+    levit => 'Levit',
+    vanilla => 'Vanilla',
+    getx => 'GetX',
+    bloc => 'BLoC',
+    riverpod => 'Riverpod',
+  };
 }
 
 /// Indicates how strongly a benchmark supports cross-framework comparison.
@@ -26,10 +26,10 @@ enum BenchmarkClassification {
   featureDemo;
 
   String get label => switch (this) {
-        comparative => 'Comparative',
-        approximate => 'Approximate',
-        featureDemo => 'Feature Demo',
-      };
+    comparative => 'Comparative',
+    approximate => 'Approximate',
+    featureDemo => 'Feature Demo',
+  };
 }
 
 /// A single result from a benchmark iteration.
@@ -38,6 +38,9 @@ class BenchmarkResult {
   final String benchmarkName;
   final BenchmarkClassification classification;
   final String? comparisonNote;
+  final String? implementationLabel;
+  final String measurement;
+  final List<Map<String, int>> frameTimings;
   final List<int> samplesMicros;
   final int warmupIterations;
   final bool success;
@@ -52,7 +55,53 @@ class BenchmarkResult {
     this.success = true,
     this.error,
     this.comparisonNote,
+    this.implementationLabel,
+    this.measurement = 'Completed logic work (wall time)',
+    this.frameTimings = const [],
   });
+
+  String get displayLabel => implementationLabel ?? framework.label;
+
+  /// Describes run validity, independently of how fast the implementation was.
+  String get statusAssessment => success
+      ? 'The benchmark completed successfully, its results passed verification, '
+            'and its resources were cleaned up successfully.'
+      : 'The benchmark could not complete all execution, verification, and '
+            'cleanup checks successfully. Its timings are invalid for performance comparisons.';
+
+  String get statusDescription =>
+      '${success ? 'OK' : 'Error'} — $statusAssessment';
+
+  int get p95Micros => percentile(95);
+
+  /// Nearest-rank percentile; frame metrics use matched engine frames only.
+  int percentile(int percent, {String? frameMetric}) {
+    final values = frameMetric == null
+        ? [...samplesMicros]
+        : frameTimings.map((sample) => sample[frameMetric]!).toList();
+    if (values.isEmpty) return 0;
+    values.sort();
+    return values[(values.length * percent / 100).ceil().clamp(
+          1,
+          values.length,
+        ) -
+        1];
+  }
+
+  Map<String, Object?> toJson() => {
+    'framework': framework.name,
+    'implementation': displayLabel,
+    'benchmark': benchmarkName,
+    'classification': classification.name,
+    'comparisonNote': comparisonNote,
+    'measurement': measurement,
+    'warmupIterations': warmupIterations,
+    'samplesMicros': samplesMicros,
+    'frameTimings': frameTimings,
+    'success': success,
+    'statusAssessment': statusAssessment,
+    'error': error,
+  };
 
   int get iterations => samplesMicros.length;
 
@@ -110,6 +159,10 @@ abstract class Benchmark {
   /// Short caveat to print alongside the benchmark results when needed.
   String? get comparisonNote => null;
 
+  /// Names substitute primitives explicitly instead of attributing them to a
+  /// framework that is not used by this fixture.
+  String implementationLabel(Framework framework) => framework.label;
+
   /// Creates the framework-specific implementation.
   BenchmarkImplementation createImplementation(Framework framework);
 }
@@ -122,7 +175,8 @@ abstract class BenchmarkImplementation {
   /// Run a full benchmark iteration and await any framework-specific settling.
   Future<void> run();
 
-  /// Validate post-conditions after an iteration.
+  /// Inspect post-conditions after an iteration. Do not trigger lazy computation
+  /// or await delivery here: that work must complete inside [run].
   Future<void> verify() async {}
 
   /// Teardown/Cleanup.

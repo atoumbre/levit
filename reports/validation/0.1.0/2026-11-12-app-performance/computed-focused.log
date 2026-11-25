@@ -1,0 +1,145 @@
+00:00 +0: loading test/computed/lx_function_extension_test.dart
+00:00 +0: test/computed/lx_function_extension_test.dart: LxFunctionExtension creates computed
+00:00 +1: test/computed/lx_async_computed_static_deps_error_test.dart: LxAsyncComputed staticDeps async error
+00:00 +2: test/computed/lx_computed_static_deps_test.dart: LxComputed staticDeps success
+00:00 +3: test/computed/lx_computed_static_deps_test.dart: LxComputed staticDeps coverage (Active)
+00:00 +4: test/computed/cleanup_subscriptions_no_middleware_test.dart: cleanupSubscriptions runs without middleware
+00:00 +5: test/computed/lx_computed_static_deps_active_test.dart: LxComputed staticDeps (Active)
+00:00 +6: test/computed/cleanup_subscriptions_middleware_test.dart: cleanupSubscriptions notifies middleware on removeListener
+00:00 +7: test/computed/lx_async_computed_static_deps_sync_error_test.dart: LxAsyncComputed staticDeps sync error on first run (Active)
+00:00 +8: test/computed/lx_async_computed_static_deps_sync_error_test.dart: LxAsyncComputed staticDeps sync error on first run (Active)
+00:00 +9: test/computed/lx_computed_unsubscribe_depth_recalc_test.dart: _unsubscribeFrom default branch recalculates graph depth
+00:00 +10: test/computed/computed_glitch_test.dart: computed chain glitch test (synchronous propagation check)
+Notifications received: 100
+Final value: 109
+Glitch detected: false
+00:00 +11: test/computed/dependency_graph_test.dart: LevitReactiveMiddleware.onGraphChange LxComputed notifies onDependencyGraphChange
+00:00 +12: test/computed/lx_computed_graph_change_middleware_test.dart: Sync Computed triggers onDependencyGraphChange via middleware
+00:00 +13: test/computed/dependency_graph_test.dart: LevitReactiveMiddleware.onGraphChange LxAsyncComputed notifies onDependencyGraphChange
+00:00 +14: test/computed/dependency_graph_test.dart: LevitReactiveMiddleware.onGraphChange LxAsyncComputed notifies onDependencyGraphChange
+00:00 +15: test/computed/lx_async_computed_graph_change_test.dart: Async Computed triggers onDependencyGraphChange
+00:00 +16: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +17: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +18: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +19: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +20: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +21: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +22: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +23: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +24: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +25: test/computed/repro_async_zone_test.dart: LxComputed.async tracks dependencies after await with Zone support
+00:00 +26: test/computed/async_computed_test.dart: LxAsyncComputed recomputes when dependency changes
+00:00 +27: test/computed/async_computed_test.dart: LxAsyncComputed recomputes when dependency changes
+00:00 +28: test/computed/async_computed_test.dart: LxAsyncComputed recomputes when dependency changes
+00:00 +29: test/computed/async_computed_test.dart: LxAsyncComputed handles race conditions by discarding old results
+00:00 +30: test/computed/async_computed_test.dart: LxAsyncComputed handles race conditions by discarding old results
+00:00 +31: test/computed/async_computed_test.dart: LxAsyncComputed handles race conditions by discarding old results
+00:00 +32: test/computed/async_computed_test.dart: LxAsyncComputed handles race conditions by discarding old results
+00:00 +33: test/computed/async_computed_test.dart: LxAsyncComputed handles race conditions by discarding old results
+00:00 +34: test/computed/async_computed_test.dart: LxAsyncComputed handles race conditions by discarding old results
+00:00 +35: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) recomputes when dependency changes
+00:00 +36: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) recomputes when dependency changes
+00:00 +37: test/computed/async_computed_extra_test.dart: LxAsyncComputed & LxComputed Extra Tests LxAsyncComputed listener API coverage
+00:00 +38: test/computed/async_computed_test.dart: LxAsyncComputed handles async errors and preserves lastValue
+00:00 +39: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:00 +40: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:00 +41: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:00 +42: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:00 +43: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) does not notify if resolved value is equal
+00:00 +44: test/computed/async_computed_extra_test.dart: LxAsyncComputed & LxComputed Extra Tests LxAsyncComputed error getters
+00:00 +45: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +46: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +47: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +48: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +49: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +50: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +51: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +52: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +53: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +54: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +55: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +56: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +57: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +58: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +59: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +60: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +61: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +62: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +63: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +64: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +65: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +66: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +67: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +68: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +69: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +70: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +71: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +72: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +73: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +74: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +75: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +76: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +77: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +78: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +79: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +80: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +81: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +82: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +83: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +84: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +85: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:00 +86: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +87: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +88: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +89: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +90: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +91: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +92: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +93: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +94: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +95: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +96: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +97: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +98: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +99: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +100: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +101: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +102: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +103: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +104: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +105: test/computed/computed_extension_test.dart: Function Extensions .lx creates LxAsyncComputed from async function
+00:01 +106: test/computed/computed_features_test.dart: LxComputed (Sync/Memo) only notifies when value actually changes
+00:01 +107: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) clears waiting status even if value is equal when showWaiting is true
+00:01 +108: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) clears waiting status even if value is equal when showWaiting is true
+00:01 +109: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) clears waiting status even if value is equal when showWaiting is true
+00:01 +110: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) clears waiting status even if value is equal when showWaiting is true
+00:01 +111: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) clears waiting status even if value is equal when showWaiting is true
+00:01 +112: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) clears waiting status even if value is equal when showWaiting is true
+00:01 +113: test/computed/memo_async_test.dart: LxComputed.async (memoized by default) clears waiting status even if value is equal when showWaiting is true
+00:01 +114: test/computed/computed_features_test.dart: LxComputed.async factory creates LxAsyncComputed
+00:01 +115: test/computed/computed_features_test.dart: LxComputed.async factory creates LxAsyncComputed
+00:01 +116: test/computed/computed_features_test.dart: reconciles stream dependencies (removing unused)
+00:01 +117: test/computed/lx_computed_refresh_transform_test.dart: LxComputed refresh and transform
+00:01 +118: test/computed/lx_computed_dependency_threshold_test.dart: LxComputed Dependency Tracking Optimization LxComputed optimizes dependency tracking for > 8 dependencies
+00:01 +119: test/computed/lx_computed_dependency_threshold_test.dart: LxComputed Dependency Tracking Optimization LxComputed _add useSet branch coverage
+00:01 +120: test/computed/static_async_computed_test.dart: Static LxAsyncComputed Initialization tracks dependencies correctly
+00:01 +121: test/computed/static_async_computed_test.dart: Static LxAsyncComputed Initialization tracks dependencies correctly
+00:01 +122: test/computed/static_async_computed_test.dart: Static LxAsyncComputed Initialization tracks dependencies correctly
+00:01 +123: test/computed/static_async_computed_test.dart: Static LxAsyncComputed lxStatic extension creates static async computed
+00:01 +124: test/computed/static_async_computed_test.dart: Static LxAsyncComputed STATIC nature: ignores new dependencies in branch switch
+00:01 +125: test/computed/static_async_computed_test.dart: Static LxAsyncComputed STATIC nature: skips cleanup overhead
+00:01 +126: test/computed/lx_computed_stack_trace_preservation_test.dart: active recompute preserves original stack trace
+00:01 +127: test/computed/lx_computed_stack_trace_preservation_test.dart: staticDeps recompute preserves original stack trace
+00:01 +128: test/computed/lx_computed_stack_trace_preservation_test.dart: inactive pull read preserves original stack trace
+00:01 +129: test/computed/lx_computed_stack_trace_preservation_test.dart: graph-captured pull read preserves original stack trace
+00:01 +130: test/computed/lx_computed_stack_trace_preservation_test.dart: nested computed read with active proxy preserves original stack trace
+00:01 +131: test/computed/computed_edge_test.dart: LxComputed Manual Listeners Manual addListener/removeListener manages lifecycle
+00:01 +132: test/computed/lx_computed_read_error_proxy_test.dart: LxComputed handles error during read with active proxy
+00:01 +133: test/computed/dynamic_dependency_reuse_test.dart: dynamic reads stay exact with diagnostics=false
+00:01 +134: test/computed/dynamic_dependency_reuse_test.dart: dynamic reads stay exact with diagnostics=true
+00:01 +135: test/computed/dynamic_dependency_reuse_test.dart: stable membership still updates upstream graph depth
+00:01 +136: test/computed/dynamic_dependency_reuse_test.dart: failed capture does not contaminate a later computation
+00:01 +137: test/computed/dynamic_dependency_reuse_test.dart: eager value listener can close during dependency replacement
+00:01 +138: test/computed_batch_test.dart: Computed updates inside batch
+00:01 +139: test/computed_graph_notification_test.dart: LxComputed handles List in graph change notification
+00:01 +140: All tests passed!

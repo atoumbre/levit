@@ -1,3 +1,13 @@
+## 0.1.0-beta.1
+
+- Add borrowing LxValueListenable and asValueListenable with listener-scoped subscriptions and idempotent disposal.
+
+## 0.0.12
+
+- **Breaking:** remove consuming-view `.put` constructors; use scoped views or explicit registration.
+- Align sync/async view updates around scope and `args`, independent of resolver identity.
+- Add `localOnly` store view factories; verify nullable reads during builds.
+- Updated internal runtime constraints to `^0.0.12`.
 
 ## 0.0.11
 

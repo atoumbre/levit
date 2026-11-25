@@ -4,7 +4,7 @@ import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 
 // Internal Mock Transport for this test
-class MockTransport implements LevitTransport {
+class MockTransport extends LevitTransport {
   final List<MonitorEvent> sentEvents = [];
 
   @override
@@ -23,13 +23,13 @@ void main() {
   group('LevitMonitor Error Tracking', () {
     late MockTransport transport;
 
-    setUp(() {
+    setUp(() async {
       transport = MockTransport();
-      LevitMonitor.attach(transport: transport);
+      await LevitMonitor.attach(transport: transport);
     });
 
-    tearDown(() {
-      LevitMonitor.detach();
+    tearDown(() async {
+      await LevitMonitor.detach();
       LevitReactiveMiddleware.clear();
     });
 
@@ -50,12 +50,17 @@ void main() {
       await Future.delayed(Duration.zero);
 
       // Assertions
-      final errorEvents = transport.sentEvents.whereType<ReactiveErrorEvent>();
+      final errorEvents = transport.sentEvents.where(
+        (event) => event.toJson()['type'] == 'reactive_error',
+      );
       expect(errorEvents, isNotEmpty);
 
       final errorEvent = errorEvents.first;
-      expect(errorEvent.error.toString(), contains('Listener Failure'));
-      expect(errorEvent.reactive?.name, equals('fail_rx'));
+      expect(
+        errorEvent.toJson()['error'].toString(),
+        contains('Listener Failure'),
+      );
+      expect(errorEvent.toJson()['name'], equals('fail_rx'));
     });
 
     test('Buffer contains error event along with state change', () async {
@@ -67,37 +72,38 @@ void main() {
       await Future.delayed(Duration.zero);
 
       expect(transport.sentEvents.length, greaterThanOrEqualTo(2));
-      expect(transport.sentEvents.any((e) => e is ReactiveChangeEvent), isTrue);
-      expect(transport.sentEvents.any((e) => e is ReactiveErrorEvent), isTrue);
+      expect(
+        transport.sentEvents.any((e) => e.toJson()['type'] == 'state_change'),
+        isTrue,
+      );
+      expect(
+        transport.sentEvents.any((e) => e.toJson()['type'] == 'reactive_error'),
+        isTrue,
+      );
     });
   });
 
-  group('LevitMonitor transport error forwarding', () {
-    test('forwards transport.send errors to current zone', () async {
-      final errors = <Object>[];
-
-      await runZonedGuarded(() async {
-        final middleware = LevitMonitorMiddleware(
-          transport: _ThrowingTransport(),
-        );
-        middleware.enable();
-
-        final rx = 0.lx;
-        rx.value = 1; // Emits ReactiveChangeEvent and triggers transport.send
-        await Future<void>.delayed(Duration.zero);
-
-        middleware.disable();
-      }, (error, stackTrace) {
-        errors.add(error);
-      });
-
-      expect(errors, isNotEmpty);
-      expect(errors.whereType<StateError>(), isNotEmpty);
-    });
-  });
+  test(
+    'transport failures propagate through awaited flush and cleanup',
+    () async {
+      final middleware = LevitMonitorMiddleware(transport: _ThrowingTransport())
+        ..enable();
+      final rx = 0.lx;
+      rx.value = 1;
+      await expectLater(
+        middleware.flush(),
+        throwsA(isA<LevitMonitorException>()),
+      );
+      await expectLater(
+        middleware.close(),
+        throwsA(isA<LevitMonitorException>()),
+      );
+      await rx.close();
+    },
+  );
 }
 
-class _ThrowingTransport implements LevitTransport {
+class _ThrowingTransport extends LevitTransport {
   @override
   Stream<void> get onConnect => const Stream<void>.empty();
 

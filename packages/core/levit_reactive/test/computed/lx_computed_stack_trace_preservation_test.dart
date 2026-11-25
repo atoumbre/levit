@@ -19,7 +19,7 @@ void main() {
     addTearDown(worker.close);
 
     try {
-      source(1);
+      (source.value = 1);
       fail('Expected StateError');
     } on StateError catch (error, stackTrace) {
       expect(error.message, 'boom');
@@ -29,18 +29,15 @@ void main() {
 
   test('staticDeps recompute preserves original stack trace', () {
     final source = 0.lx;
-    final computed = LxComputed<int>(
-      () {
-        if (source() == 1) _throwFromComputedHelper();
-        return source();
-      },
-      staticDeps: true,
-    );
+    final computed = LxComputed<int>(() {
+      if (source() == 1) _throwFromComputedHelper();
+      return source();
+    }, staticDeps: true);
     final worker = LxWorker(computed, (_) {});
     addTearDown(worker.close);
 
     try {
-      source(1);
+      (source.value = 1);
       fail('Expected StateError');
     } on StateError catch (error, stackTrace) {
       expect(error.message, 'boom');
@@ -55,7 +52,7 @@ void main() {
       return 1;
     });
 
-    shouldThrow(true);
+    (shouldThrow.value = true);
 
     try {
       computed.value;
@@ -77,7 +74,7 @@ void main() {
       return 1;
     });
 
-    shouldThrow(true);
+    (shouldThrow.value = true);
 
     try {
       computed.value;
@@ -88,27 +85,29 @@ void main() {
     }
   });
 
-  test('nested computed read with active proxy preserves original stack trace',
-      () {
-    final middleware = _GraphChangeMiddleware();
-    Lx.addMiddleware(middleware);
-    addTearDown(() => Lx.removeMiddleware(middleware));
+  test(
+    'nested computed read with active proxy preserves original stack trace',
+    () {
+      final middleware = _GraphChangeMiddleware();
+      Lx.addMiddleware(middleware);
+      addTearDown(() => Lx.removeMiddleware(middleware));
 
-    final shouldThrow = false.lx;
-    final inner = LxComputed<int>(() {
-      if (shouldThrow()) _throwFromComputedHelper();
-      return 1;
-    });
-    final outer = LxComputed<int>(() => inner.value);
+      final shouldThrow = false.lx;
+      final inner = LxComputed<int>(() {
+        if (shouldThrow()) _throwFromComputedHelper();
+        return 1;
+      });
+      final outer = LxComputed<int>(() => inner.value);
 
-    shouldThrow(true);
+      (shouldThrow.value = true);
 
-    try {
-      outer.value;
-      fail('Expected StateError');
-    } on StateError catch (error, stackTrace) {
-      expect(error.message, 'boom');
-      expect(stackTrace.toString(), contains('_throwFromComputedHelper'));
-    }
-  });
+      try {
+        outer.value;
+        fail('Expected StateError');
+      } on StateError catch (error, stackTrace) {
+        expect(error.message, 'boom');
+        expect(stackTrace.toString(), contains('_throwFromComputedHelper'));
+      }
+    },
+  );
 }

@@ -10,7 +10,13 @@ abstract class LevitTransport {
   ///
   /// This method is called by the monitor whenever an event passes through
   /// the active filtering pipeline.
-  void send(MonitorEvent event);
+  FutureOr<void> send(MonitorEvent event);
+
+  /// Completes when all admitted sends have reached the destination buffer.
+  Future<void> flush() async {}
+
+  /// Events dropped by this transport since creation.
+  int get droppedEvents => 0;
 
   /// Releases resources and closes any active connections.
   ///

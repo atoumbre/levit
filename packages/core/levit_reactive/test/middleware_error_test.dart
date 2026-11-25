@@ -7,10 +7,10 @@ class ErrorTrackingMiddleware extends LevitReactiveMiddleware {
 
   @override
   void Function(Object error, StackTrace? stack, LxReactive? context)?
-      get onReactiveError => (error, stack, context) {
-            errors.add(error);
-            contexts.add(context);
-          };
+  get onReactiveError => (error, stack, context) {
+    errors.add(error);
+    contexts.add(context);
+  };
 }
 
 void main() {
@@ -69,8 +69,11 @@ void main() {
       rx.value = 1;
 
       expect(middleware.errors.length, 1);
-      expect(successCalled, isTrue,
-          reason: 'Second listener should run despite first failure');
+      expect(
+        successCalled,
+        isTrue,
+        reason: 'Second listener should run despite first failure',
+      );
     });
 
     test('works with computed values', () {

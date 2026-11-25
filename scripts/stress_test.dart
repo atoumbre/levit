@@ -5,23 +5,22 @@ import 'dart:io';
 Future<void> main() async {
   print('Running internal stress tests and generating report...');
 
-  final process = await Process.start(
-      'flutter',
-      [
-        'test',
-        'lib/levit_reactive',
-        'lib/levit_scope',
-        'lib/levit_flutter',
-        '-r',
-        'json',
-      ],
-      workingDirectory: 'stress_tests');
+  final process = await Process.start('flutter', [
+    'test',
+    'lib/levit_reactive',
+    'lib/levit_scope',
+    'lib/levit_flutter',
+    '-r',
+    'json',
+  ], workingDirectory: 'stress_tests');
 
   final metrics = <Map<String, String>>[];
   final tests = <int, Map<String, dynamic>>{};
   final suites = <int, String>{};
   final descriptions = <int, String>{};
 
+  bool? testsSucceeded;
+  var reportedTestError = false;
   Timer? watchdog;
   void resetWatchdog() {
     watchdog?.cancel();
@@ -32,59 +31,67 @@ Future<void> main() async {
   }
 
   // Transform stdout to lines
-  process.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen(
-    (line) {
-      resetWatchdog();
-      if (line.trim().isEmpty) return;
-      try {
-        final event = jsonDecode(line);
-        final type = event['type'];
+  process.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen((
+    line,
+  ) {
+    resetWatchdog();
+    if (line.trim().isEmpty) return;
+    try {
+      final event = jsonDecode(line);
+      final type = event['type'];
 
-        if (type == 'suite') {
-          final suite = event['suite'];
-          // Normalize path to be relative to lib/ if possible
-          String path = suite['path'] as String;
-          if (path.contains('lib/')) {
-            path = 'lib/${path.split('lib/').last}';
-          }
-          suites[suite['id']] = path;
-        } else if (type == 'testStart') {
-          final test = event['test'];
-          tests[test['id']] = test;
-        } else if (type == 'testDone') {
-          // Track completion if needed
-        } else if (type == 'print') {
-          final int? testId = event['testID'];
-          final message = event['message'].toString();
-
-          if (message.startsWith('[Description]')) {
-            if (testId != null) {
-              descriptions[testId] =
-                  message.replaceFirst('[Description]', '').trim();
-            }
-          } else if (_isMetricMessage(message)) {
-            final test = tests[testId];
-            final testName = test?['name'] ?? 'Setup/Global';
-            final suiteId = test?['suiteID'];
-            final suitePath = suites[suiteId] ?? 'Unknown';
-
-            metrics.add({
-              'test': testName,
-              'message': message,
-              'suite': suitePath,
-              'description': testId != null ? (descriptions[testId] ?? '') : '',
-            });
-            print('[Metric] [$suitePath] $message');
-          }
-        } else if (type == 'done') {
-          // Some test runners might hang even after 'done', force exit to be safe
-          process.kill();
+      if (type == 'suite') {
+        final suite = event['suite'];
+        // Normalize path to be relative to lib/ if possible
+        String path = suite['path'] as String;
+        if (path.contains('lib/')) {
+          path = 'lib/${path.split('lib/').last}';
         }
-      } catch (e) {
-        // Ignore non-json lines or parse errors
+        suites[suite['id']] = path;
+      } else if (type == 'testStart') {
+        final test = event['test'];
+        tests[test['id']] = test;
+      } else if (type == 'testDone') {
+        // Track completion if needed
+      } else if (type == 'print') {
+        final int? testId = event['testID'];
+        final message = event['message'].toString();
+
+        if (message.startsWith('[Description]')) {
+          if (testId != null) {
+            descriptions[testId] = message
+                .replaceFirst('[Description]', '')
+                .trim();
+          }
+        } else if (_isMetricMessage(message)) {
+          final test = tests[testId];
+          final testName = test?['name'] ?? 'Setup/Global';
+          final suiteId = test?['suiteID'];
+          final suitePath = suites[suiteId] ?? 'Unknown';
+
+          metrics.add({
+            'test': testName,
+            'message': message,
+            'suite': suitePath,
+            'description': testId != null ? (descriptions[testId] ?? '') : '',
+          });
+          print('[Metric] [$suitePath] $message');
+        }
+      } else if (type == 'error') {
+        reportedTestError = true;
+        print(
+          'Test runner error [${tests[event['testID']]?['name']}]: ${event['error']}',
+        );
+        print(event['stackTrace'] ?? '');
+      } else if (type == 'done') {
+        // Let Flutter drain its reporter streams before exiting. Killing it
+        // here can interrupt reporter cleanup even after successful tests.
+        testsSucceeded = event['success'] as bool?;
       }
-    },
-  );
+    } catch (e) {
+      // Ignore non-json lines or parse errors
+    }
+  });
 
   // Close stdin to ensure the subprocess doesn't wait for input
   process.stdin.close();
@@ -98,11 +105,11 @@ Future<void> main() async {
   final exitCode = await process.exitCode;
   watchdog?.cancel();
 
-  if (exitCode != 0) {
+  if (exitCode != 0 || testsSucceeded != true || reportedTestError) {
     print(
-      'Warning: Tests failed with exit code $exitCode. Report might be incomplete.',
+      'Tests failed: exit=$exitCode, success=$testsSucceeded, reportedError=$reportedTestError. Report was not regenerated.',
     );
-    exit(exitCode);
+    exit(exitCode == 0 ? 1 : exitCode);
   }
   print('Tests finished successfully.');
 
@@ -111,12 +118,15 @@ Future<void> main() async {
 
 Future<void> _generateMarkdownReport(List<Map<String, String>> metrics) async {
   // Group metrics by category
-  final reactiveMetrics =
-      metrics.where((m) => m['suite']!.contains('levit_reactive')).toList();
-  final diMetrics =
-      metrics.where((m) => m['suite']!.contains('levit_scope')).toList();
-  final flutterMetrics =
-      metrics.where((m) => m['suite']!.contains('levit_flutter')).toList();
+  final reactiveMetrics = metrics
+      .where((m) => m['suite']!.contains('levit_reactive'))
+      .toList();
+  final diMetrics = metrics
+      .where((m) => m['suite']!.contains('levit_scope'))
+      .toList();
+  final flutterMetrics = metrics
+      .where((m) => m['suite']!.contains('levit_flutter'))
+      .toList();
 
   final reportDir = Directory('reports');
   if (!await reportDir.exists()) {
@@ -140,10 +150,16 @@ Future<void> _generateMarkdownReport(List<Map<String, String>> metrics) async {
   _writeMetricsTable(stressBuffer, 'Levit Reactive (Core)', reactiveMetrics);
   stressBuffer.writeln();
   _writeMetricsTable(
-      stressBuffer, 'Levit DI (Dependency Injection)', diMetrics);
+    stressBuffer,
+    'Levit DI (Dependency Injection)',
+    diMetrics,
+  );
   stressBuffer.writeln();
   _writeMetricsTable(
-      stressBuffer, 'Levit Flutter (UI Binding)', flutterMetrics);
+    stressBuffer,
+    'Levit Flutter (UI Binding)',
+    flutterMetrics,
+  );
 
   stressBuffer.writeln();
   stressBuffer.writeln('## Raw Execution Logs');
@@ -152,8 +168,9 @@ Future<void> _generateMarkdownReport(List<Map<String, String>> metrics) async {
   stressBuffer.writeln();
   stressBuffer.writeln('```text');
   for (final item in metrics) {
-    stressBuffer
-        .writeln('[${item['suite']}] [${item['test']}] ${item['message']}');
+    stressBuffer.writeln(
+      '[${item['suite']}] [${item['test']}] ${item['message']}',
+    );
   }
   stressBuffer.writeln('```');
   stressBuffer.writeln('</details>');
@@ -229,7 +246,8 @@ void _writeMetricsTable(
     final displayTestName = testName.replaceAll('Stress Test: ', '');
     final description = item['description'] ?? '';
 
-    buffer
-        .writeln('| $displayTestName | $description | $action | **$result** |');
+    buffer.writeln(
+      '| $displayTestName | $description | $action | **$result** |',
+    );
   }
 }

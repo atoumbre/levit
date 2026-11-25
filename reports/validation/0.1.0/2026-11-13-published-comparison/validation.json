@@ -1,0 +1,41 @@
+{
+  "cases": 144,
+  "validCases": 144,
+  "samples": 7200,
+  "matchedFrames": 1600,
+  "contractTestsPerRevision": 51,
+  "analysis": "pass",
+  "runtimeSourcesChanged": false,
+  "workspaceDependenciesChanged": false,
+  "interactiveWorkspaceAppReplaced": false,
+  "sources": {
+    "published": {
+      "digest": "90346e01aa5b8785eda05b6621c0fcad82c28539b18c4dd986b54ef1fb0fe99a",
+      "unchangedAfterMeasurement": true,
+      "resolvedRuntimePackages": {
+        "levit_dart": "/private/tmp/levit-published-comparison-w5em01rs/published/packages/kits/levit_dart",
+        "levit_dart_core": "/private/tmp/levit-published-comparison-w5em01rs/published/packages/core/levit_dart_core",
+        "levit_flutter": "/private/tmp/levit-published-comparison-w5em01rs/published/packages/kits/levit_flutter",
+        "levit_flutter_core": "/private/tmp/levit-published-comparison-w5em01rs/published/packages/core/levit_flutter_core",
+        "levit_monitor": "/private/tmp/levit-published-comparison-w5em01rs/published/packages/core/levit_monitor",
+        "levit_reactive": "/private/tmp/levit-published-comparison-w5em01rs/published/packages/core/levit_reactive",
+        "levit_scope": "/private/tmp/levit-published-comparison-w5em01rs/published/packages/core/levit_scope"
+      }
+    },
+    "current": {
+      "digest": "1061bffa235aafc6041661564fd9ed90c661d0386d8ac12658fb2ae52f5b45d8",
+      "unchangedAfterMeasurement": true,
+      "resolvedRuntimePackages": {
+        "levit_dart": "/private/tmp/levit-published-comparison-w5em01rs/current/packages/kits/levit_dart",
+        "levit_dart_core": "/private/tmp/levit-published-comparison-w5em01rs/current/packages/core/levit_dart_core",
+        "levit_flutter": "/private/tmp/levit-published-comparison-w5em01rs/current/packages/kits/levit_flutter",
+        "levit_flutter_core": "/private/tmp/levit-published-comparison-w5em01rs/current/packages/core/levit_flutter_core",
+        "levit_monitor": "/private/tmp/levit-published-comparison-w5em01rs/current/packages/core/levit_monitor",
+        "levit_reactive": "/private/tmp/levit-published-comparison-w5em01rs/current/packages/core/levit_reactive",
+        "levit_scope": "/private/tmp/levit-published-comparison-w5em01rs/current/packages/core/levit_scope"
+      }
+    }
+  },
+  "publication": false,
+  "candidateRecertified": false
+}

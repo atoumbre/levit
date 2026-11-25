@@ -19,6 +19,10 @@ class FanOutBenchmark extends Benchmark {
   bool get isUI => false;
 
   @override
+  String implementationLabel(Framework framework) =>
+      framework == Framework.bloc ? 'RxDart' : framework.label;
+
+  @override
   BenchmarkImplementation createImplementation(Framework framework) {
     switch (framework) {
       case Framework.levit:
@@ -37,9 +41,14 @@ class FanOutBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitFanOutBenchmark extends BenchmarkImplementation {
+  LevitFanOutBenchmark({this.staticDeps = false});
+
+  final bool staticDeps;
   late LxVar<int> source;
   final List<LxComputed<int>> dependents = [];
   int expectedSource = 0;
+  final List<int> lastValues = [];
+  final List<int> deliveries = [];
 
   @override
   Future<void> setup() async {
@@ -47,11 +56,21 @@ class LevitFanOutBenchmark extends BenchmarkImplementation {
     dependents.clear();
     for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       // Create 1000 computeds that listen to source
-      dependents.add(LxComputed(() => source.value + i));
+      dependents.add(
+        LxComputed(() => source.value + i, staticDeps: staticDeps),
+      );
     }
-    // Ensure all are listening
-    for (final dep in dependents) {
-      dep.addListener(() {});
+    lastValues
+      ..clear()
+      ..addAll(List.filled(dependents.length, 0));
+    deliveries
+      ..clear()
+      ..addAll(List.filled(dependents.length, 0));
+    for (var i = 0; i < dependents.length; i++) {
+      dependents[i].addListener(() {
+        lastValues[i] = dependents[i].value;
+        deliveries[i]++;
+      });
     }
     expectedSource = 0;
   }
@@ -61,27 +80,35 @@ class LevitFanOutBenchmark extends BenchmarkImplementation {
     // Update source once, which should trigger 1000 updates
     source.value++;
     expectedSource++;
-    final lastValue = dependents.last.value;
+    final lastValue = lastValues.last;
     if (lastValue != expectedSource + BenchmarkConfig.fanOutDependents - 1) {
       throw StateError(
-          'Levit fan-out mismatch: expected last=${expectedSource + BenchmarkConfig.fanOutDependents - 1}, got $lastValue');
+        'Levit fan-out mismatch: expected last=${expectedSource + BenchmarkConfig.fanOutDependents - 1}, got $lastValue',
+      );
     }
   }
 
   @override
   Future<void> verify() async {
-    if (source.value != expectedSource) {
+    for (var i = 0; i < lastValues.length; i++) {
+      if (lastValues[i] != expectedSource + i) {
+        throw StateError("Fan-out consumer $i did not receive $expectedSource");
+      }
+    }
+    if (source.value != expectedSource ||
+        deliveries.any((count) => count != expectedSource)) {
       throw StateError(
-          'Levit fan-out source mismatch: expected $expectedSource, got ${source.value}');
+        'Levit fan-out source mismatch: expected $expectedSource, got ${source.value}',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
     for (final d in dependents) {
-      d.close();
+      await d.close();
     }
-    source.close();
+    await source.close();
   }
 }
 
@@ -118,11 +145,17 @@ class VanillaFanOutBenchmark extends BenchmarkImplementation {
 
   @override
   Future<void> verify() async {
+    for (var i = 0; i < lastValues.length; i++) {
+      if (lastValues[i] != expectedSource + i) {
+        throw StateError("Fan-out consumer $i did not receive $expectedSource");
+      }
+    }
     if (source.value != expectedSource ||
         lastValues.last !=
             expectedSource + BenchmarkConfig.fanOutDependents - 1) {
       throw StateError(
-          'Vanilla fan-out mismatch: source=${source.value}, last=${lastValues.last}, expected=$expectedSource');
+        'Vanilla fan-out mismatch: source=${source.value}, last=${lastValues.last}, expected=$expectedSource',
+      );
     }
   }
 
@@ -148,9 +181,11 @@ class GetXFanOutBenchmark extends BenchmarkImplementation {
       ..addAll(List.filled(BenchmarkConfig.fanOutDependents, 0));
     for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       // listen (isActive: true)
-      workers.add(source.listen((val) {
-        lastValues[i] = val + i;
-      }));
+      workers.add(
+        source.listen((val) {
+          lastValues[i] = val + i;
+        }),
+      );
     }
     expectedSource = 0;
   }
@@ -164,19 +199,26 @@ class GetXFanOutBenchmark extends BenchmarkImplementation {
 
   @override
   Future<void> verify() async {
+    for (var i = 0; i < lastValues.length; i++) {
+      if (lastValues[i] != expectedSource + i) {
+        throw StateError("Fan-out consumer $i did not receive $expectedSource");
+      }
+    }
     if (source.value != expectedSource ||
         lastValues.last !=
             expectedSource + BenchmarkConfig.fanOutDependents - 1) {
       throw StateError(
-          'GetX fan-out mismatch: source=${source.value}, last=${lastValues.last}, expected=$expectedSource');
+        'GetX fan-out mismatch: source=${source.value}, last=${lastValues.last}, expected=$expectedSource',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
     for (final w in workers) {
-      w.cancel();
+      await w.cancel();
     }
+    source.close();
   }
 }
 
@@ -186,16 +228,20 @@ class RiverpodFanOutBenchmark extends BenchmarkImplementation {
   final sourceProvider = StateProvider<int>((ref) => 0);
   final List<Provider<int>> dependents = [];
   int expectedSource = 0;
+  final List<int> lastValues = [];
 
   @override
   Future<void> setup() async {
     container = ProviderContainer();
     dependents.clear();
+    lastValues
+      ..clear()
+      ..addAll(List.filled(BenchmarkConfig.fanOutDependents, 0));
     for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
       final p = Provider((ref) => ref.watch(sourceProvider) + i);
       dependents.add(p);
       // Keep alive by listening
-      container.listen(p, (_, __) {});
+      container.listen(p, (_, value) => lastValues[i] = value);
     }
     expectedSource = 0;
   }
@@ -205,16 +251,23 @@ class RiverpodFanOutBenchmark extends BenchmarkImplementation {
     final notifier = container.read(sourceProvider.notifier);
     notifier.state++;
     expectedSource++;
+    await container.pump();
   }
 
   @override
   Future<void> verify() async {
+    for (var i = 0; i < lastValues.length; i++) {
+      if (lastValues[i] != expectedSource + i) {
+        throw StateError("Fan-out consumer $i did not receive $expectedSource");
+      }
+    }
     final sourceValue = container.read(sourceProvider);
-    final lastValue = container.read(dependents.last);
+    final lastValue = lastValues.last;
     if (sourceValue != expectedSource ||
         lastValue != expectedSource + BenchmarkConfig.fanOutDependents - 1) {
       throw StateError(
-          'Riverpod fan-out mismatch: source=$sourceValue, last=$lastValue, expected=$expectedSource');
+        'Riverpod fan-out mismatch: source=$sourceValue, last=$lastValue, expected=$expectedSource',
+      );
     }
   }
 
@@ -239,9 +292,11 @@ class BlocFanOutBenchmark extends BenchmarkImplementation {
       ..clear()
       ..addAll(List.filled(BenchmarkConfig.fanOutDependents, 0));
     for (int i = 0; i < BenchmarkConfig.fanOutDependents; i++) {
-      subs.add(source.listen((val) {
-        lastValues[i] = val + i;
-      }));
+      subs.add(
+        source.listen((val) {
+          lastValues[i] = val + i;
+        }),
+      );
     }
     expectedSource = 0;
   }
@@ -255,18 +310,24 @@ class BlocFanOutBenchmark extends BenchmarkImplementation {
 
   @override
   Future<void> verify() async {
+    for (var i = 0; i < lastValues.length; i++) {
+      if (lastValues[i] != expectedSource + i) {
+        throw StateError("Fan-out consumer $i did not receive $expectedSource");
+      }
+    }
     if (source.value != expectedSource ||
         lastValues.last !=
             expectedSource + BenchmarkConfig.fanOutDependents - 1) {
       throw StateError(
-          'BLoC fan-out mismatch: source=${source.value}, last=${lastValues.last}, expected=$expectedSource');
+        'BLoC fan-out mismatch: source=${source.value}, last=${lastValues.last}, expected=$expectedSource',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
     for (final s in subs) {
-      s.cancel();
+      await s.cancel();
     }
     await source.close();
   }

@@ -7,6 +7,8 @@ class TestReactive<T> extends LxVar<T> {
 }
 
 void main() {
+  setUp(() => Lx.enableWatchMonitoring = true);
+  tearDown(() => Lx.enableWatchMonitoring = false);
   test('LxWorker handles async callbacks', () async {
     final reactive = TestReactive<int>(0);
     bool callbackRun = false;

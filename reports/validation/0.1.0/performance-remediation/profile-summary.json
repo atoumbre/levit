@@ -1,0 +1,4485 @@
+{
+  "warning": "Instrumented throughput is not comparison evidence; heap counters are not an allocation census. Iteration 6 predates lazy expansion of captured ownership metadata.",
+  "profiles": {
+    "reference-off-tasks.json": {
+      "cpuSamples": 3244,
+      "instrumentedIterations": 25665,
+      "instrumentedElapsedUs": 5000051,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 206,
+          "inclusiveSamples": 206
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 144,
+          "inclusiveSamples": 144
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 143,
+          "inclusiveSamples": 182
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 126,
+          "inclusiveSamples": 127
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 121,
+          "inclusiveSamples": 121
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 98,
+          "inclusiveSamples": 98
+        },
+        {
+          "function": "toString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/integers.dart",
+          "exclusiveSamples": 89,
+          "inclusiveSamples": 117
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 85,
+          "inclusiveSamples": 190
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 78,
+          "inclusiveSamples": 1612
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 74
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 66,
+          "inclusiveSamples": 70
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 61,
+          "inclusiveSamples": 61
+        },
+        {
+          "function": "hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 59
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 55,
+          "inclusiveSamples": 55
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 52,
+          "inclusiveSamples": 465
+        },
+        {
+          "function": "_microtaskLoop",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/schedule_microtask.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 1710
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 40
+        },
+        {
+          "function": "[]=",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 34,
+          "inclusiveSamples": 47
+        },
+        {
+          "function": "_add",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 42
+        }
+      ]
+    },
+    "reference-off-scopes.json": {
+      "cpuSamples": 3410,
+      "instrumentedIterations": 18258,
+      "instrumentedElapsedUs": 5000218,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 149,
+          "inclusiveSamples": 149
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 140,
+          "inclusiveSamples": 140
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 126,
+          "inclusiveSamples": 3178
+        },
+        {
+          "function": "hash",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/core/object.dart",
+          "exclusiveSamples": 122,
+          "inclusiveSamples": 122
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 111,
+          "inclusiveSamples": 111
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 97,
+          "inclusiveSamples": 101
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 97,
+          "inclusiveSamples": 100
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 91,
+          "inclusiveSamples": 295
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 76,
+          "inclusiveSamples": 76
+        },
+        {
+          "function": "Map._fromLiteral",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/map_patch.dart",
+          "exclusiveSamples": 73,
+          "inclusiveSamples": 178
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 67,
+          "inclusiveSamples": 188
+        },
+        {
+          "function": "_resetWhileClosing",
+          "source": "file:///private/tmp/levit-performance-539f130-q8vb_rc4/packages/core/levit_scope/lib/src/core.dart",
+          "exclusiveSamples": 67,
+          "inclusiveSamples": 860
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 57,
+          "inclusiveSamples": 57
+        },
+        {
+          "function": "_disposeAll",
+          "source": "file:///private/tmp/levit-performance-539f130-q8vb_rc4/packages/core/levit_scope/lib/src/core.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 294
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 3225
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 162
+        },
+        {
+          "function": "handleValueCallback",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 44,
+          "inclusiveSamples": 3145
+        },
+        {
+          "function": "_disposeScope",
+          "source": "file:///private/tmp/levit-performance-539f130-q8vb_rc4/packages/core/levit_scope/lib/src/core.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 975
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 43
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 42,
+          "inclusiveSamples": 43
+        }
+      ]
+    },
+    "reference-on-notify.json": {
+      "cpuSamples": 3639,
+      "instrumentedIterations": 118,
+      "instrumentedElapsedUs": 5016838,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 469,
+          "inclusiveSamples": 469
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 320,
+          "inclusiveSamples": 445
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 234,
+          "inclusiveSamples": 457
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 155,
+          "inclusiveSamples": 218
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 102,
+          "inclusiveSamples": 664
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 96,
+          "inclusiveSamples": 123
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 76,
+          "inclusiveSamples": 262
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 75
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 68,
+          "inclusiveSamples": 562
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 60,
+          "inclusiveSamples": 60
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 137
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 321
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 55,
+          "inclusiveSamples": 96
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 50,
+          "inclusiveSamples": 173
+        },
+        {
+          "function": "_quickCopy",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 47
+        },
+        {
+          "function": "<anonymous closure>",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 42,
+          "inclusiveSamples": 42
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 1243
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "isEmpty",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 38
+        },
+        {
+          "function": "toString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/integers.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 48
+        }
+      ]
+    },
+    "reference-on-fanout.json": {
+      "cpuSamples": 3445,
+      "instrumentedIterations": 81,
+      "instrumentedElapsedUs": 5004232,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 385,
+          "inclusiveSamples": 385
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 264,
+          "inclusiveSamples": 398
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 166,
+          "inclusiveSamples": 340
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 141,
+          "inclusiveSamples": 195
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 120,
+          "inclusiveSamples": 548
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 90,
+          "inclusiveSamples": 90
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 81,
+          "inclusiveSamples": 209
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 234
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 95
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 63,
+          "inclusiveSamples": 63
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 57,
+          "inclusiveSamples": 164
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 53
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 51,
+          "inclusiveSamples": 427
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 50,
+          "inclusiveSamples": 88
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 284
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 1083
+        },
+        {
+          "function": "<anonymous closure>",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 38
+        },
+        {
+          "function": "[]=",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 36
+        },
+        {
+          "function": "_quickCopy",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 35
+        }
+      ]
+    },
+    "reference-on-scopes.json": {
+      "cpuSamples": 3715,
+      "instrumentedIterations": 1221,
+      "instrumentedElapsedUs": 5004819,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 409,
+          "inclusiveSamples": 409
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 281,
+          "inclusiveSamples": 387
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 155,
+          "inclusiveSamples": 334
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 144,
+          "inclusiveSamples": 144
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 135,
+          "inclusiveSamples": 177
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 107,
+          "inclusiveSamples": 595
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 78,
+          "inclusiveSamples": 236
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 227
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 63,
+          "inclusiveSamples": 63
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 61,
+          "inclusiveSamples": 80
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 56,
+          "inclusiveSamples": 429
+        },
+        {
+          "function": "_quickCopy",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 54,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 52,
+          "inclusiveSamples": 52
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 158
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 139
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 40
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 273
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 1029
+        },
+        {
+          "function": "<anonymous closure>",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "[]=",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 33
+        }
+      ]
+    },
+    "before-off-tasks.json": {
+      "cpuSamples": 3319,
+      "instrumentedIterations": 15287,
+      "instrumentedElapsedUs": 5000179,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 143,
+          "inclusiveSamples": 143
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 127,
+          "inclusiveSamples": 127
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 120,
+          "inclusiveSamples": 122
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 111,
+          "inclusiveSamples": 112
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 102,
+          "inclusiveSamples": 102
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 87,
+          "inclusiveSamples": 1532
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 82,
+          "inclusiveSamples": 209
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 67,
+          "inclusiveSamples": 88
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 62,
+          "inclusiveSamples": 62
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 61,
+          "inclusiveSamples": 340
+        },
+        {
+          "function": "_add",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 60,
+          "inclusiveSamples": 73
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 60
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 56,
+          "inclusiveSamples": 56
+        },
+        {
+          "function": "[]=",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/collection_patch.dart",
+          "exclusiveSamples": 52,
+          "inclusiveSamples": 87
+        },
+        {
+          "function": "then",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 46
+        },
+        {
+          "function": "_rootRun",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/zone_root.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 1720
+        },
+        {
+          "function": "toString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/integers.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 60
+        },
+        {
+          "function": "<anonymous closure>",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit_dart/lib/src/utilities/levit_task_engine.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 672
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 45
+        }
+      ]
+    },
+    "before-off-scopes.json": {
+      "cpuSamples": 3327,
+      "instrumentedIterations": 12640,
+      "instrumentedElapsedUs": 5000373,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 188,
+          "inclusiveSamples": 188
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 140,
+          "inclusiveSamples": 140
+        },
+        {
+          "function": "hash",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/core/object.dart",
+          "exclusiveSamples": 109,
+          "inclusiveSamples": 109
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 98,
+          "inclusiveSamples": 3156
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 98,
+          "inclusiveSamples": 98
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 94,
+          "inclusiveSamples": 94
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 94,
+          "inclusiveSamples": 234
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 86,
+          "inclusiveSamples": 86
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 76
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 66,
+          "inclusiveSamples": 67
+        },
+        {
+          "function": "Map._fromLiteral",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/map_patch.dart",
+          "exclusiveSamples": 54,
+          "inclusiveSamples": 153
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 162
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 45,
+          "inclusiveSamples": 124
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 44,
+          "inclusiveSamples": 3194
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 209
+        },
+        {
+          "function": "_GrowableList._ofEfficientLengthIterable",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 96
+        },
+        {
+          "function": "handleValueCallback",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 3131
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 118
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 156
+        },
+        {
+          "function": "moveNext",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 38
+        }
+      ]
+    },
+    "before-on-notify.json": {
+      "cpuSamples": 3502,
+      "instrumentedIterations": 54,
+      "instrumentedElapsedUs": 5030279,
+      "dateTimeParseInclusiveSamples": 735,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 221,
+          "inclusiveSamples": 221
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 195,
+          "inclusiveSamples": 268
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 162,
+          "inclusiveSamples": 280
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 151,
+          "inclusiveSamples": 444
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 149,
+          "inclusiveSamples": 149
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 114,
+          "inclusiveSamples": 867
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 108,
+          "inclusiveSamples": 276
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 93,
+          "inclusiveSamples": 584
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 101
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 65,
+          "inclusiveSamples": 118
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 62,
+          "inclusiveSamples": 397
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 51,
+          "inclusiveSamples": 51
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 50,
+          "inclusiveSamples": 50
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 50,
+          "inclusiveSamples": 419
+        },
+        {
+          "function": "writeObject",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 49,
+          "inclusiveSamples": 885
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 123
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 49
+        },
+        {
+          "function": "_freeze",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 29,
+          "inclusiveSamples": 467
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 28,
+          "inclusiveSamples": 335
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 28,
+          "inclusiveSamples": 28
+        }
+      ]
+    },
+    "before-on-fanout.json": {
+      "cpuSamples": 3574,
+      "instrumentedIterations": 41,
+      "instrumentedElapsedUs": 5005981,
+      "dateTimeParseInclusiveSamples": 820,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 207,
+          "inclusiveSamples": 207
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 167,
+          "inclusiveSamples": 504
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 159,
+          "inclusiveSamples": 159
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 154,
+          "inclusiveSamples": 221
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 115,
+          "inclusiveSamples": 659
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 105,
+          "inclusiveSamples": 317
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 102,
+          "inclusiveSamples": 684
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 91,
+          "inclusiveSamples": 176
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 312
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 65,
+          "inclusiveSamples": 91
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 64,
+          "inclusiveSamples": 98
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 61,
+          "inclusiveSamples": 484
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 104
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 42,
+          "inclusiveSamples": 42
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 41
+        },
+        {
+          "function": "_freeze",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 525
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 237
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 32
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 27,
+          "inclusiveSamples": 33
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 26,
+          "inclusiveSamples": 26
+        }
+      ]
+    },
+    "before-on-scopes.json": {
+      "cpuSamples": 3435,
+      "instrumentedIterations": 300,
+      "instrumentedElapsedUs": 5005462,
+      "dateTimeParseInclusiveSamples": 547,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 240,
+          "inclusiveSamples": 240
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 203,
+          "inclusiveSamples": 636
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 187,
+          "inclusiveSamples": 187
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 168,
+          "inclusiveSamples": 223
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 132,
+          "inclusiveSamples": 400
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 117,
+          "inclusiveSamples": 784
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 76,
+          "inclusiveSamples": 98
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 76,
+          "inclusiveSamples": 235
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 73,
+          "inclusiveSamples": 729
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 69,
+          "inclusiveSamples": 562
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 69,
+          "inclusiveSamples": 98
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 64,
+          "inclusiveSamples": 349
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 59
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 57,
+          "inclusiveSamples": 62
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 54,
+          "inclusiveSamples": 54
+        },
+        {
+          "function": "_freeze",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 45,
+          "inclusiveSamples": 690
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 43
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 744
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 109
+        },
+        {
+          "function": "<anonymous closure>",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/collection/linked_hash_map.dart",
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 369
+        }
+      ]
+    },
+    "iteration-1-off-tasks.json": {
+      "cpuSamples": 3380,
+      "instrumentedIterations": 18989,
+      "instrumentedElapsedUs": 5000201,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 162,
+          "inclusiveSamples": 162
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 134,
+          "inclusiveSamples": 1694
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 125,
+          "inclusiveSamples": 126
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 123,
+          "inclusiveSamples": 123
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 123,
+          "inclusiveSamples": 123
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 85,
+          "inclusiveSamples": 88
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 79,
+          "inclusiveSamples": 79
+        },
+        {
+          "function": "[]=",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/collection_patch.dart",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 125
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 73,
+          "inclusiveSamples": 349
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 71,
+          "inclusiveSamples": 93
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 69,
+          "inclusiveSamples": 69
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 66,
+          "inclusiveSamples": 66
+        },
+        {
+          "function": "_add",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 65,
+          "inclusiveSamples": 83
+        },
+        {
+          "function": "then",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 62,
+          "inclusiveSamples": 84
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 57,
+          "inclusiveSamples": 57
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 56,
+          "inclusiveSamples": 85
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 176
+        },
+        {
+          "function": "_rootRun",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/zone_root.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 1655
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 47
+        },
+        {
+          "function": "run",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/zone.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 1714
+        }
+      ]
+    },
+    "iteration-1-off-scopes.json": {
+      "cpuSamples": 3582,
+      "instrumentedIterations": 15053,
+      "instrumentedElapsedUs": 5000297,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 237,
+          "inclusiveSamples": 237
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 156,
+          "inclusiveSamples": 156
+        },
+        {
+          "function": "hash",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/core/object.dart",
+          "exclusiveSamples": 143,
+          "inclusiveSamples": 143
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 88,
+          "inclusiveSamples": 88
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 88,
+          "inclusiveSamples": 88
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 88,
+          "inclusiveSamples": 89
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 80,
+          "inclusiveSamples": 81
+        },
+        {
+          "function": "Map._fromLiteral",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/map_patch.dart",
+          "exclusiveSamples": 78,
+          "inclusiveSamples": 207
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 73,
+          "inclusiveSamples": 3389
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 67,
+          "inclusiveSamples": 72
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 64,
+          "inclusiveSamples": 190
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 181
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 52,
+          "inclusiveSamples": 52
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 51,
+          "inclusiveSamples": 250
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 49,
+          "inclusiveSamples": 245
+        },
+        {
+          "function": "_notifyScopeProgress",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_scope/lib/src/core.dart",
+          "exclusiveSamples": 44,
+          "inclusiveSamples": 92
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 44,
+          "inclusiveSamples": 144
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "moveNext",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 38
+        },
+        {
+          "function": "_GrowableList._ofEfficientLengthIterable",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 111
+        }
+      ]
+    },
+    "iteration-1-on-notify.json": {
+      "cpuSamples": 3459,
+      "instrumentedIterations": 80,
+      "instrumentedElapsedUs": 5019096,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 316,
+          "inclusiveSamples": 316
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 270,
+          "inclusiveSamples": 376
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 179,
+          "inclusiveSamples": 527
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 161,
+          "inclusiveSamples": 312
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 157,
+          "inclusiveSamples": 157
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 146,
+          "inclusiveSamples": 1082
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 111,
+          "inclusiveSamples": 146
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 106,
+          "inclusiveSamples": 672
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 103,
+          "inclusiveSamples": 344
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 101,
+          "inclusiveSamples": 663
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 89,
+          "inclusiveSamples": 479
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 73,
+          "inclusiveSamples": 156
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 71,
+          "inclusiveSamples": 99
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 70,
+          "inclusiveSamples": 70
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 55
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 41
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 389
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "toString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/integers.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 42
+        }
+      ]
+    },
+    "iteration-1-on-fanout.json": {
+      "cpuSamples": 3534,
+      "instrumentedIterations": 61,
+      "instrumentedElapsedUs": 5042768,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 320,
+          "inclusiveSamples": 320
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 229,
+          "inclusiveSamples": 337
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 165,
+          "inclusiveSamples": 300
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 150,
+          "inclusiveSamples": 513
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 139,
+          "inclusiveSamples": 139
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 138,
+          "inclusiveSamples": 1002
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 119,
+          "inclusiveSamples": 648
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 111,
+          "inclusiveSamples": 333
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 104,
+          "inclusiveSamples": 140
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 86,
+          "inclusiveSamples": 613
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 81,
+          "inclusiveSamples": 458
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 75
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 72,
+          "inclusiveSamples": 111
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 63,
+          "inclusiveSamples": 160
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 47
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 45,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 375
+        },
+        {
+          "function": "_quickCopy",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 41
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 37
+        }
+      ]
+    },
+    "iteration-1-on-scopes.json": {
+      "cpuSamples": 3606,
+      "instrumentedIterations": 431,
+      "instrumentedElapsedUs": 5009262,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 323,
+          "inclusiveSamples": 323
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 233,
+          "inclusiveSamples": 330
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 217,
+          "inclusiveSamples": 660
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 161,
+          "inclusiveSamples": 161
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 156,
+          "inclusiveSamples": 412
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 142,
+          "inclusiveSamples": 814
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 127,
+          "inclusiveSamples": 423
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 118,
+          "inclusiveSamples": 175
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 96,
+          "inclusiveSamples": 1085
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 95,
+          "inclusiveSamples": 153
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 897
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 62,
+          "inclusiveSamples": 77
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 548
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 57,
+          "inclusiveSamples": 57
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 49,
+          "inclusiveSamples": 49
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 144
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 489
+        },
+        {
+          "function": "_freeze",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 498
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 1098
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 35,
+          "inclusiveSamples": 36
+        }
+      ]
+    },
+    "iteration-2-off-tasks.json": {
+      "cpuSamples": 2747,
+      "instrumentedIterations": 23310,
+      "instrumentedElapsedUs": 5000216,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 192,
+          "inclusiveSamples": 192
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 117,
+          "inclusiveSamples": 118
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 86,
+          "inclusiveSamples": 86
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 83,
+          "inclusiveSamples": 83
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 79,
+          "inclusiveSamples": 80
+        },
+        {
+          "function": "_add",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 76,
+          "inclusiveSamples": 92
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 105
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 68,
+          "inclusiveSamples": 339
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 67,
+          "inclusiveSamples": 67
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 1305
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 55,
+          "inclusiveSamples": 57
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 51,
+          "inclusiveSamples": 51
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 49,
+          "inclusiveSamples": 139
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 53
+        },
+        {
+          "function": "hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 43
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 42,
+          "inclusiveSamples": 55
+        },
+        {
+          "function": "then",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 52
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 35,
+          "inclusiveSamples": 36
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 34,
+          "inclusiveSamples": 63
+        },
+        {
+          "function": "[]=",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 34,
+          "inclusiveSamples": 34
+        }
+      ]
+    },
+    "iteration-2-off-scopes.json": {
+      "cpuSamples": 2986,
+      "instrumentedIterations": 14899,
+      "instrumentedElapsedUs": 5000255,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 180,
+          "inclusiveSamples": 180
+        },
+        {
+          "function": "hash",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/core/object.dart",
+          "exclusiveSamples": 126,
+          "inclusiveSamples": 126
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 118,
+          "inclusiveSamples": 118
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 87,
+          "inclusiveSamples": 87
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 79,
+          "inclusiveSamples": 2840
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 78,
+          "inclusiveSamples": 80
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 64,
+          "inclusiveSamples": 64
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 59
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 55,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 54,
+          "inclusiveSamples": 162
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 168
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 49,
+          "inclusiveSamples": 134
+        },
+        {
+          "function": "Map._fromLiteral",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/map_patch.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 139
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 43
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 42,
+          "inclusiveSamples": 130
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 41
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 206
+        },
+        {
+          "function": "_GrowableList._ofEfficientLengthIterable",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 103
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 207
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 35,
+          "inclusiveSamples": 35
+        }
+      ]
+    },
+    "iteration-2-on-notify.json": {
+      "cpuSamples": 2833,
+      "instrumentedIterations": 87,
+      "instrumentedElapsedUs": 5003214,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 320,
+          "inclusiveSamples": 320
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 232,
+          "inclusiveSamples": 326
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 144,
+          "inclusiveSamples": 945
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 134,
+          "inclusiveSamples": 292
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 111,
+          "inclusiveSamples": 152
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 87,
+          "inclusiveSamples": 312
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 77,
+          "inclusiveSamples": 77
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 71,
+          "inclusiveSamples": 210
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 71,
+          "inclusiveSamples": 428
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 68,
+          "inclusiveSamples": 154
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 66,
+          "inclusiveSamples": 382
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 57,
+          "inclusiveSamples": 105
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 56,
+          "inclusiveSamples": 308
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 49,
+          "inclusiveSamples": 49
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 44
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 53
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 37
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 29,
+          "inclusiveSamples": 29
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 28,
+          "inclusiveSamples": 356
+        },
+        {
+          "function": "toString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/integers.dart",
+          "exclusiveSamples": 27,
+          "inclusiveSamples": 31
+        }
+      ]
+    },
+    "iteration-2-on-fanout.json": {
+      "cpuSamples": 2705,
+      "instrumentedIterations": 61,
+      "instrumentedElapsedUs": 5052915,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 267,
+          "inclusiveSamples": 267
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 202,
+          "inclusiveSamples": 279
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 130,
+          "inclusiveSamples": 860
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 121,
+          "inclusiveSamples": 241
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 89,
+          "inclusiveSamples": 311
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 86,
+          "inclusiveSamples": 130
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 68,
+          "inclusiveSamples": 378
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 67,
+          "inclusiveSamples": 205
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 66,
+          "inclusiveSamples": 317
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 64,
+          "inclusiveSamples": 64
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 64,
+          "inclusiveSamples": 370
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 103
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 54,
+          "inclusiveSamples": 130
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 53
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 310
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 46
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 31,
+          "inclusiveSamples": 31
+        },
+        {
+          "function": "<anonymous closure>",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 31,
+          "inclusiveSamples": 31
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 30,
+          "inclusiveSamples": 30
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 26,
+          "inclusiveSamples": 26
+        }
+      ]
+    },
+    "iteration-2-on-scopes.json": {
+      "cpuSamples": 2810,
+      "instrumentedIterations": 433,
+      "instrumentedElapsedUs": 5007381,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 265,
+          "inclusiveSamples": 265
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 211,
+          "inclusiveSamples": 298
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 127,
+          "inclusiveSamples": 157
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 116,
+          "inclusiveSamples": 348
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 114,
+          "inclusiveSamples": 415
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 107,
+          "inclusiveSamples": 107
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 95,
+          "inclusiveSamples": 501
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 71,
+          "inclusiveSamples": 486
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 70,
+          "inclusiveSamples": 926
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 68,
+          "inclusiveSamples": 256
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 66,
+          "inclusiveSamples": 104
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 59
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 55,
+          "inclusiveSamples": 545
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 54,
+          "inclusiveSamples": 54
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 121
+        },
+        {
+          "function": "_freeze",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 442
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 46
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 416
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 34,
+          "inclusiveSamples": 940
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 32
+        }
+      ]
+    },
+    "iteration-3-off-tasks.json": {
+      "cpuSamples": 2841,
+      "instrumentedIterations": 24106,
+      "instrumentedElapsedUs": 5000058,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 194,
+          "inclusiveSamples": 194
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 115,
+          "inclusiveSamples": 117
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 96,
+          "inclusiveSamples": 97
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 91,
+          "inclusiveSamples": 350
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 79,
+          "inclusiveSamples": 79
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 77,
+          "inclusiveSamples": 77
+        },
+        {
+          "function": "_add",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 77,
+          "inclusiveSamples": 97
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 1289
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 100
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 67,
+          "inclusiveSamples": 68
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 55,
+          "inclusiveSamples": 55
+        },
+        {
+          "function": "then",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 51,
+          "inclusiveSamples": 67
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 51,
+          "inclusiveSamples": 51
+        },
+        {
+          "function": "hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 49,
+          "inclusiveSamples": 49
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 156
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 56
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 35,
+          "inclusiveSamples": 36
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 28,
+          "inclusiveSamples": 37
+        },
+        {
+          "function": "_microtaskLoop",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/schedule_microtask.dart",
+          "exclusiveSamples": 27,
+          "inclusiveSamples": 1683
+        }
+      ]
+    },
+    "iteration-3-off-scopes.json": {
+      "cpuSamples": 2897,
+      "instrumentedIterations": 14784,
+      "instrumentedElapsedUs": 5000051,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 145,
+          "inclusiveSamples": 145
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 141,
+          "inclusiveSamples": 141
+        },
+        {
+          "function": "hash",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/core/object.dart",
+          "exclusiveSamples": 119,
+          "inclusiveSamples": 119
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 75
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 68,
+          "inclusiveSamples": 70
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 65,
+          "inclusiveSamples": 65
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 61,
+          "inclusiveSamples": 63
+        },
+        {
+          "function": "Map._fromLiteral",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/map_patch.dart",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 156
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 151
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 2752
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 159
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 54
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 47
+        },
+        {
+          "function": "_notifyScopeProgress",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_scope/lib/src/core.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 91
+        },
+        {
+          "function": "addAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 36
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 34,
+          "inclusiveSamples": 205
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 34,
+          "inclusiveSamples": 127
+        },
+        {
+          "function": "_disposeRegistrations",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_scope/lib/src/core.dart",
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 314
+        },
+        {
+          "function": "_GrowableList._ofEfficientLengthIterable",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 81
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 32
+        }
+      ]
+    },
+    "iteration-3-on-notify.json": {
+      "cpuSamples": 2707,
+      "instrumentedIterations": 83,
+      "instrumentedElapsedUs": 5023513,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 292,
+          "inclusiveSamples": 292
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 207,
+          "inclusiveSamples": 309
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 143,
+          "inclusiveSamples": 909
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 114,
+          "inclusiveSamples": 241
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 105,
+          "inclusiveSamples": 348
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 91,
+          "inclusiveSamples": 237
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 91,
+          "inclusiveSamples": 399
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 83,
+          "inclusiveSamples": 83
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 81,
+          "inclusiveSamples": 119
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 422
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 52,
+          "inclusiveSamples": 333
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 79
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 46
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 45,
+          "inclusiveSamples": 45
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 42,
+          "inclusiveSamples": 309
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 99
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "_freeze",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 320
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 27,
+          "inclusiveSamples": 27
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 27,
+          "inclusiveSamples": 930
+        }
+      ]
+    },
+    "iteration-3-on-fanout.json": {
+      "cpuSamples": 2845,
+      "instrumentedIterations": 64,
+      "instrumentedElapsedUs": 5013515,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 288,
+          "inclusiveSamples": 288
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 209,
+          "inclusiveSamples": 300
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 135,
+          "inclusiveSamples": 892
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 132,
+          "inclusiveSamples": 253
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 106,
+          "inclusiveSamples": 309
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 85,
+          "inclusiveSamples": 128
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 75
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 393
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 375
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 57,
+          "inclusiveSamples": 192
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 54,
+          "inclusiveSamples": 92
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 45,
+          "inclusiveSamples": 93
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 304
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 35,
+          "inclusiveSamples": 316
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 32
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 31,
+          "inclusiveSamples": 31
+        },
+        {
+          "function": "_freeze",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 30,
+          "inclusiveSamples": 301
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 30,
+          "inclusiveSamples": 30
+        }
+      ]
+    },
+    "iteration-3-on-scopes.json": {
+      "cpuSamples": 2870,
+      "instrumentedIterations": 545,
+      "instrumentedElapsedUs": 5000309,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 275,
+          "inclusiveSamples": 275
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 192,
+          "inclusiveSamples": 271
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 131,
+          "inclusiveSamples": 414
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 128,
+          "inclusiveSamples": 288
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 110,
+          "inclusiveSamples": 110
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 83,
+          "inclusiveSamples": 251
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 82,
+          "inclusiveSamples": 118
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 81,
+          "inclusiveSamples": 507
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 81,
+          "inclusiveSamples": 845
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 70,
+          "inclusiveSamples": 70
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 63,
+          "inclusiveSamples": 92
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 405
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 56,
+          "inclusiveSamples": 56
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 68
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 44,
+          "inclusiveSamples": 50
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 44,
+          "inclusiveSamples": 425
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 145
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 862
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 34
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 30,
+          "inclusiveSamples": 346
+        }
+      ]
+    },
+    "iteration-4-off-tasks.json": {
+      "cpuSamples": 2929,
+      "instrumentedIterations": 20497,
+      "instrumentedElapsedUs": 5000265,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 183,
+          "inclusiveSamples": 183
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 125,
+          "inclusiveSamples": 126
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 94,
+          "inclusiveSamples": 95
+        },
+        {
+          "function": "_add",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 85,
+          "inclusiveSamples": 103
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 80,
+          "inclusiveSamples": 80
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 78,
+          "inclusiveSamples": 1355
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 76,
+          "inclusiveSamples": 106
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 73,
+          "inclusiveSamples": 330
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 72,
+          "inclusiveSamples": 72
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 70,
+          "inclusiveSamples": 70
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 62,
+          "inclusiveSamples": 161
+        },
+        {
+          "function": "hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 56,
+          "inclusiveSamples": 56
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 55,
+          "inclusiveSamples": 55
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 66
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 47
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 46
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 42,
+          "inclusiveSamples": 48
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 42
+        },
+        {
+          "function": "_takeNextEligible",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit_dart/lib/src/utilities/levit_task_engine.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 86
+        },
+        {
+          "function": "then",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 53
+        }
+      ]
+    },
+    "iteration-4-off-scopes.json": {
+      "cpuSamples": 3188,
+      "instrumentedIterations": 15590,
+      "instrumentedElapsedUs": 5000239,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 279,
+          "inclusiveSamples": 279
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 153,
+          "inclusiveSamples": 153
+        },
+        {
+          "function": "hash",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/core/object.dart",
+          "exclusiveSamples": 152,
+          "inclusiveSamples": 152
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 97,
+          "inclusiveSamples": 97
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 94,
+          "inclusiveSamples": 96
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 297
+        },
+        {
+          "function": "Map._fromLiteral",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/map_patch.dart",
+          "exclusiveSamples": 67,
+          "inclusiveSamples": 188
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 66,
+          "inclusiveSamples": 220
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 62,
+          "inclusiveSamples": 62
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 64
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 56
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 52,
+          "inclusiveSamples": 52
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 52,
+          "inclusiveSamples": 282
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 49,
+          "inclusiveSamples": 155
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 144
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 40
+        },
+        {
+          "function": "_notifyScopeProgress",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_scope/lib/src/core.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 96
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 144
+        },
+        {
+          "function": "toList",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 36
+        }
+      ]
+    },
+    "iteration-4-on-notify.json": {
+      "cpuSamples": 2980,
+      "instrumentedIterations": 87,
+      "instrumentedElapsedUs": 5048879,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 340,
+          "inclusiveSamples": 340
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 247,
+          "inclusiveSamples": 347
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 186,
+          "inclusiveSamples": 385
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 150,
+          "inclusiveSamples": 1146
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 105,
+          "inclusiveSamples": 188
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 76,
+          "inclusiveSamples": 554
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 114
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 71,
+          "inclusiveSamples": 206
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 59
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 157
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 55,
+          "inclusiveSamples": 479
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 49
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 76
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 269
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 44,
+          "inclusiveSamples": 124
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 64
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 41
+        },
+        {
+          "function": "toString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 38
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 30,
+          "inclusiveSamples": 1168
+        }
+      ]
+    },
+    "iteration-4-on-fanout.json": {
+      "cpuSamples": 3227,
+      "instrumentedIterations": 65,
+      "instrumentedElapsedUs": 5007797,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 399,
+          "inclusiveSamples": 400
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 286,
+          "inclusiveSamples": 381
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 151,
+          "inclusiveSamples": 296
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 142,
+          "inclusiveSamples": 1066
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 106,
+          "inclusiveSamples": 164
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 86,
+          "inclusiveSamples": 460
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 81,
+          "inclusiveSamples": 81
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 73,
+          "inclusiveSamples": 208
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 61,
+          "inclusiveSamples": 61
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 54,
+          "inclusiveSamples": 172
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 54,
+          "inclusiveSamples": 98
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 373
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 273
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 45,
+          "inclusiveSamples": 76
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 41
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 126
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 1089
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 34,
+          "inclusiveSamples": 48
+        },
+        {
+          "function": "<anonymous closure>",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 32
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 26,
+          "inclusiveSamples": 26
+        }
+      ]
+    },
+    "iteration-4-on-scopes.json": {
+      "cpuSamples": 3261,
+      "instrumentedIterations": 533,
+      "instrumentedElapsedUs": 5007911,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 359,
+          "inclusiveSamples": 359
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 257,
+          "inclusiveSamples": 432
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 139,
+          "inclusiveSamples": 340
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 131,
+          "inclusiveSamples": 382
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 94,
+          "inclusiveSamples": 94
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 93,
+          "inclusiveSamples": 93
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 88,
+          "inclusiveSamples": 1000
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 86,
+          "inclusiveSamples": 126
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 75
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 462
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 70,
+          "inclusiveSamples": 228
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 68,
+          "inclusiveSamples": 473
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 63,
+          "inclusiveSamples": 81
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 55,
+          "inclusiveSamples": 92
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 202
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 42,
+          "inclusiveSamples": 56
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 333
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 1030
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 404
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 32,
+          "inclusiveSamples": 35
+        }
+      ]
+    },
+    "iteration-6-off-tasks.json": {
+      "cpuSamples": 2907,
+      "instrumentedIterations": 26789,
+      "instrumentedElapsedUs": 5000226,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 184,
+          "inclusiveSamples": 184
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 114,
+          "inclusiveSamples": 117
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 95,
+          "inclusiveSamples": 95
+        },
+        {
+          "function": "_add",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 89,
+          "inclusiveSamples": 114
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 79,
+          "inclusiveSamples": 79
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 76,
+          "inclusiveSamples": 76
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 75,
+          "inclusiveSamples": 108
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 74,
+          "inclusiveSamples": 74
+        },
+        {
+          "function": "_propagateToListeners",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 72,
+          "inclusiveSamples": 1257
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 64,
+          "inclusiveSamples": 73
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 63,
+          "inclusiveSamples": 279
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 63,
+          "inclusiveSamples": 63
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateClosureStub",
+          "source": "",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 63
+        },
+        {
+          "function": "[unknown stub]",
+          "source": "",
+          "exclusiveSamples": 53,
+          "inclusiveSamples": 176
+        },
+        {
+          "function": "hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 43
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 43
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 43
+        },
+        {
+          "function": "then",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/future_impl.dart",
+          "exclusiveSamples": 38,
+          "inclusiveSamples": 64
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 44
+        },
+        {
+          "function": "run",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/async/zone.dart",
+          "exclusiveSamples": 36,
+          "inclusiveSamples": 1541
+        }
+      ]
+    },
+    "iteration-6-off-scopes.json": {
+      "cpuSamples": 3080,
+      "instrumentedIterations": 21486,
+      "instrumentedElapsedUs": 5000112,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 229,
+          "inclusiveSamples": 229
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 204,
+          "inclusiveSamples": 204
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 86,
+          "inclusiveSamples": 248
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 85,
+          "inclusiveSamples": 85
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 81,
+          "inclusiveSamples": 81
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 72,
+          "inclusiveSamples": 109
+        },
+        {
+          "function": "remove",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 71,
+          "inclusiveSamples": 108
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 68,
+          "inclusiveSamples": 327
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectStub",
+          "source": "",
+          "exclusiveSamples": 65,
+          "inclusiveSamples": 65
+        },
+        {
+          "function": "Map._fromLiteral",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/map_patch.dart",
+          "exclusiveSamples": 63,
+          "inclusiveSamples": 205
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 60,
+          "inclusiveSamples": 60
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateContextStub",
+          "source": "",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 60
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 50,
+          "inclusiveSamples": 50
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 45,
+          "inclusiveSamples": 83
+        },
+        {
+          "function": "forEach",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 192
+        },
+        {
+          "function": "_addEntry",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/collection_patch.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 40
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 196
+        },
+        {
+          "function": "moveNext",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "[Stub] _iso_stub_ResumeStub",
+          "source": "",
+          "exclusiveSamples": 39,
+          "inclusiveSamples": 39
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateUint32ArrayStub",
+          "source": "",
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 37
+        }
+      ]
+    },
+    "iteration-6-on-notify.json": {
+      "cpuSamples": 2904,
+      "instrumentedIterations": 126,
+      "instrumentedElapsedUs": 5036795,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 430,
+          "inclusiveSamples": 430
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 326,
+          "inclusiveSamples": 457
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 196,
+          "inclusiveSamples": 375
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 117,
+          "inclusiveSamples": 171
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 107,
+          "inclusiveSamples": 589
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 82,
+          "inclusiveSamples": 161
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 86
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 481
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 49,
+          "inclusiveSamples": 49
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 48,
+          "inclusiveSamples": 76
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 47,
+          "inclusiveSamples": 47
+        },
+        {
+          "function": "forEach",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 76
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 37,
+          "inclusiveSamples": 1137
+        },
+        {
+          "function": "<anonymous closure>",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 35,
+          "inclusiveSamples": 35
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 27,
+          "inclusiveSamples": 27
+        },
+        {
+          "function": "toString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/integers.dart",
+          "exclusiveSamples": 26,
+          "inclusiveSamples": 35
+        },
+        {
+          "function": "writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 26,
+          "inclusiveSamples": 647
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateUint8ArrayStub",
+          "source": "",
+          "exclusiveSamples": 26,
+          "inclusiveSamples": 44
+        },
+        {
+          "function": "toString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 25,
+          "inclusiveSamples": 25
+        },
+        {
+          "function": "_hashCode",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 23,
+          "inclusiveSamples": 23
+        }
+      ]
+    },
+    "iteration-6-on-fanout.json": {
+      "cpuSamples": 2949,
+      "instrumentedIterations": 90,
+      "instrumentedElapsedUs": 5002668,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 456,
+          "inclusiveSamples": 456
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 275,
+          "inclusiveSamples": 387
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 193,
+          "inclusiveSamples": 374
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 123,
+          "inclusiveSamples": 185
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 102,
+          "inclusiveSamples": 585
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 65,
+          "inclusiveSamples": 97
+        },
+        {
+          "function": "_writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 60,
+          "inclusiveSamples": 483
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 56,
+          "inclusiveSamples": 142
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 52,
+          "inclusiveSamples": 52
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 50,
+          "inclusiveSamples": 76
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 46
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 44,
+          "inclusiveSamples": 44
+        },
+        {
+          "function": "forEach",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 41,
+          "inclusiveSamples": 74
+        },
+        {
+          "function": "<anonymous closure>",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 33
+        },
+        {
+          "function": "writeMap",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 30,
+          "inclusiveSamples": 1065
+        },
+        {
+          "function": "toString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 27,
+          "inclusiveSamples": 27
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 27,
+          "inclusiveSamples": 1080
+        },
+        {
+          "function": "[]=",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 23,
+          "inclusiveSamples": 23
+        },
+        {
+          "function": "writeString",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 21,
+          "inclusiveSamples": 636
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 21,
+          "inclusiveSamples": 21
+        }
+      ]
+    },
+    "iteration-6-on-scopes.json": {
+      "cpuSamples": 3048,
+      "instrumentedIterations": 909,
+      "instrumentedElapsedUs": 5005329,
+      "dateTimeParseInclusiveSamples": 0,
+      "topExclusive": [
+        {
+          "function": "_fillBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/utf.dart",
+          "exclusiveSamples": 291,
+          "inclusiveSamples": 291
+        },
+        {
+          "function": "writeStringContent",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 182,
+          "inclusiveSamples": 257
+        },
+        {
+          "function": "_addPart",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 153,
+          "inclusiveSamples": 278
+        },
+        {
+          "function": "[]",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/array.dart",
+          "exclusiveSamples": 106,
+          "inclusiveSamples": 106
+        },
+        {
+          "function": "write",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 90,
+          "inclusiveSamples": 423
+        },
+        {
+          "function": "_grow",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/growable_array.dart",
+          "exclusiveSamples": 86,
+          "inclusiveSamples": 122
+        },
+        {
+          "function": "_insert",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 77,
+          "inclusiveSamples": 241
+        },
+        {
+          "function": "_findValueOrInsertPoint",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 71,
+          "inclusiveSamples": 71
+        },
+        {
+          "function": "_set",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 60,
+          "inclusiveSamples": 311
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateArrayStub",
+          "source": "",
+          "exclusiveSamples": 59,
+          "inclusiveSamples": 84
+        },
+        {
+          "function": "kDartVmSnapshotInstructions",
+          "source": "",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 58
+        },
+        {
+          "function": "_interpolate",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 58,
+          "inclusiveSamples": 182
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateUint8ArrayStub",
+          "source": "",
+          "exclusiveSamples": 46,
+          "inclusiveSamples": 52
+        },
+        {
+          "function": "_init",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 43,
+          "inclusiveSamples": 135
+        },
+        {
+          "function": "_getValueOrData",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/compact_hash.dart",
+          "exclusiveSamples": 40,
+          "inclusiveSamples": 54
+        },
+        {
+          "function": "[Stub] _iso_stub_AllocateObjectParameterizedStub",
+          "source": "",
+          "exclusiveSamples": 35,
+          "inclusiveSamples": 35
+        },
+        {
+          "function": "_concatAll",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm/lib/string_patch.dart",
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 33
+        },
+        {
+          "function": "writeJsonValue",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/convert/json.dart",
+          "exclusiveSamples": 33,
+          "inclusiveSamples": 831
+        },
+        {
+          "function": "_consumeBuffer",
+          "source": "org-dartlang-sdk:///flutter/third_party/dart/sdk/lib/_internal/vm_shared/lib/string_buffer_patch.dart",
+          "exclusiveSamples": 30,
+          "inclusiveSamples": 30
+        },
+        {
+          "function": "_freeze",
+          "source": "file:///Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor/lib/levit_monitor_protocol.dart",
+          "exclusiveSamples": 29,
+          "inclusiveSamples": 227
+        }
+      ]
+    }
+  }
+}

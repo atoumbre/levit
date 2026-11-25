@@ -104,3 +104,11 @@ Levit is best understood as:
 > A runtime for orchestrating reactive systems over time — not just a state management library.
 
 This example shows that philosophy in its smallest complete form.
+
+## Countdown and ValueListenable interoperability
+
+Run `flutter run -t lib/countdown_interop.dart` from this directory. A scoped
+controller owns a five-second elapsed-time countdown and a borrowing adapter.
+Flutter's ValueListenableBuilder displays its value; Pause, Resume, Stop and Restart
+exercise explicit timing controls. Unmounting the feature closes both resources.
+The adapter never takes ownership of its source, and this example uses no storage.

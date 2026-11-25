@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 
 void main() {
+  Levit.enableAutoLinking();
   runApp(const ScopePlaygroundApp());
 }
 
@@ -26,7 +27,7 @@ class WorkspaceCounterController extends LevitController {
   @override
   void onInit() {
     super.onInit();
-    autoDispose(count);
+    own(count);
   }
 
   void increment() {

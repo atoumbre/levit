@@ -6,13 +6,17 @@ class _TestService {}
 
 void main() {
   testWidgets('LView in Scope', (tester) async {
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(
+      MaterialApp(
         home: LScope(
-            dependencyFactory: (s) => s.put<_TestService>(() => _TestService()),
-            child: LView<_TestService>(
-                resolver: (context) => context.levit.find<_TestService>(),
-                builder: (context, controller) =>
-                    const Text('Controller Found')))));
+          dependencyFactory: (s) => s.put<_TestService>(() => _TestService()),
+          child: LView<_TestService>(
+            resolver: (context) => context.levit.find<_TestService>(),
+            builder: (context, controller) => const Text('Controller Found'),
+          ),
+        ),
+      ),
+    );
     expect(find.text('Controller Found'), findsOneWidget);
   });
 }

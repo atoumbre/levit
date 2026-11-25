@@ -31,6 +31,12 @@ jobs:
           - package: levit_flutter
             path: packages/kits/levit_flutter
 
+          # Publishable tooling (the inspector UI remains private).
+          - package: levit_lints
+            path: packages/tools/levit_lints
+          - package: levit_devtools
+            path: packages/tools/levit_devtools
+
     steps:
       - uses: actions/checkout@v4
         with:

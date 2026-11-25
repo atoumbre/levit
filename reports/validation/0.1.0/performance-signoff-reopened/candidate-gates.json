@@ -1,0 +1,89 @@
+{
+  "date": "2026-11-11",
+  "candidateRoot": "/private/tmp/levit-0.1.0-recert-80vkslwn",
+  "checks": {
+    "format": {
+      "result": "pass",
+      "evidence": "candidate-snapshot-format.log"
+    },
+    "fatalInfoAnalysis": {
+      "result": "pass",
+      "evidence": "candidate-root-analysis.log"
+    },
+    "aggregateCi": {
+      "result": "pass",
+      "evidence": "candidate-ci.log"
+    },
+    "coverage100": {
+      "result": "pass",
+      "evidence": "candidate-coverage.log"
+    },
+    "browserBuilds": {
+      "result": "pass",
+      "evidence": "candidate-browser-builds.log"
+    },
+    "stress": {
+      "result": "pass",
+      "evidence": "candidate-stress.log"
+    },
+    "benchmarks": {
+      "result": "pass",
+      "evidence": "candidate-benchmarks.log"
+    },
+    "monitorRegressionTests": {
+      "result": "pass",
+      "evidence": "recertification/monitor-regressions.log"
+    },
+    "taskRegressionTests": {
+      "result": "pass",
+      "evidence": "recertification/task-regressions.log"
+    },
+    "baselineTeardownRegression": {
+      "result": "pass",
+      "evidence": "recertification/corrected-before/reference-detach-test.log"
+    },
+    "publishDryRuns": {
+      "result": "pass",
+      "evidence": "candidate-publish-dry-run.log"
+    },
+    "inspectorCliDryRun": {
+      "result": "pass",
+      "evidence": "candidate-cli-final-dry-run.log"
+    },
+    "installedCli": {
+      "result": "pass",
+      "evidence": "candidate-cli-global-check.log"
+    },
+    "nativePerformance": {
+      "result": "pass",
+      "evidence": "recertification/final/performance-runs.log"
+    },
+    "reproducibleInspectorAssets": {
+      "result": "pass",
+      "evidence": "candidate-assets.log"
+    },
+    "dependenciesAndMigration": {
+      "result": "pass",
+      "evidence": "recertification/final/dependencies-and-migration.log"
+    },
+    "comparisonSourceIntegrity": {
+      "result": "pass",
+      "evidence": "recertification/final/source-integrity.json"
+    }
+  },
+  "browserTargets": 5,
+  "browserBuildRoot": "working checkout; matching runtime/build source verified against isolated candidate",
+  "coverage": {
+    "covered": 6524,
+    "total": 6524,
+    "packages": 11,
+    "thresholdChanged": false,
+    "exclusionsChanged": false
+  },
+  "benchmarkTests": 67,
+  "nativeProcesses": 24,
+  "nativeSamples": 12960,
+  "matchedFrames": 4320,
+  "publishablePackages": 10,
+  "published": false
+}

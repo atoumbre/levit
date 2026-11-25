@@ -17,8 +17,9 @@ void main() {
     expect(find.text('Value: 4'), findsOneWidget);
   });
 
-  testWidgets('LSelectorBuilder updates when dependency changes',
-      (tester) async {
+  testWidgets('LSelectorBuilder updates when dependency changes', (
+    tester,
+  ) async {
     final count = 2.lx;
     await tester.pumpWidget(
       MaterialApp(
@@ -37,8 +38,9 @@ void main() {
     expect(find.text('Value: 6'), findsOneWidget);
   });
 
-  testWidgets('LSelectorBuilder updates when builder function changes',
-      (tester) async {
+  testWidgets('LSelectorBuilder updates when builder function changes', (
+    tester,
+  ) async {
     final count = 2.lx;
     await tester.pumpWidget(
       MaterialApp(

@@ -143,7 +143,7 @@ class LevitLogLevelConfig {
 ///   ),
 /// );
 /// ```
-class ConsoleTransport implements LevitTransport {
+class ConsoleTransport extends LevitTransport {
   /// The minimum log level to output.
   ///
   /// Events below this level will be suppressed.
@@ -165,18 +165,19 @@ class ConsoleTransport implements LevitTransport {
     this.levelOverrides,
     LogPrinter? printer,
   }) : _logger = Logger(
-          filter: ProductionFilter(),
-          level: minLevel.level,
-          printer: printer ??
-              PrettyPrinter(
-                methodCount: 0,
-                errorMethodCount: 0,
-                lineLength: 80,
-                colors: true,
-                printEmojis: true,
-                dateTimeFormat: DateTimeFormat.none,
-              ),
-        );
+         filter: ProductionFilter(),
+         level: minLevel.level,
+         printer:
+             printer ??
+             PrettyPrinter(
+               methodCount: 0,
+               errorMethodCount: 0,
+               lineLength: 80,
+               colors: true,
+               printEmojis: true,
+               dateTimeFormat: DateTimeFormat.none,
+             ),
+       );
 
   @override
   void send(MonitorEvent event) {
@@ -207,6 +208,9 @@ class ConsoleTransport implements LevitTransport {
     final overrides = levelOverrides;
 
     return switch (event) {
+      _ScopeProgressEvent() => LevitLogLevel.info,
+      FrozenMonitorEvent e => _frozenLevel(e),
+      ReactiveMetadataEvent _ => LevitLogLevel.debug,
       ReactiveChangeEvent _ => overrides?.stateChange ?? LevitLogLevel.trace,
       ReactiveBatchEvent _ => overrides?.batch ?? LevitLogLevel.debug,
       ReactiveInitEvent _ => overrides?.reactiveInit ?? LevitLogLevel.debug,
@@ -230,25 +234,55 @@ class ConsoleTransport implements LevitTransport {
       ScopeDisposeEvent _ => LevitLogLevel.debug,
       SnapshotEvent _ => LevitLogLevel.debug, // Default for SnapshotEvent
       CustomMonitorEvent e => switch (e.level) {
-          Level.off => LevitLogLevel.off,
-          Level.fatal => LevitLogLevel.fatal,
-          Level.error => LevitLogLevel.error,
-          Level.warning => LevitLogLevel.warning,
-          Level.info => LevitLogLevel.info,
-          Level.debug => LevitLogLevel.debug,
-          Level.trace => LevitLogLevel.trace,
-          _ => LevitLogLevel.all,
-        },
+        Level.off => LevitLogLevel.off,
+        Level.fatal => LevitLogLevel.fatal,
+        Level.error => LevitLogLevel.error,
+        Level.warning => LevitLogLevel.warning,
+        Level.info => LevitLogLevel.info,
+        Level.debug => LevitLogLevel.debug,
+        Level.trace => LevitLogLevel.trace,
+        _ => LevitLogLevel.all,
+      },
       LogEvent e => switch (e.level) {
-          Level.off => LevitLogLevel.off,
-          Level.fatal => LevitLogLevel.fatal,
-          Level.error => LevitLogLevel.error,
-          Level.warning => LevitLogLevel.warning,
-          Level.info => LevitLogLevel.info,
-          Level.debug => LevitLogLevel.debug,
-          Level.trace => LevitLogLevel.trace,
-          _ => LevitLogLevel.all,
-        },
+        Level.off => LevitLogLevel.off,
+        Level.fatal => LevitLogLevel.fatal,
+        Level.error => LevitLogLevel.error,
+        Level.warning => LevitLogLevel.warning,
+        Level.info => LevitLogLevel.info,
+        Level.debug => LevitLogLevel.debug,
+        Level.trace => LevitLogLevel.trace,
+        _ => LevitLogLevel.all,
+      },
+    };
+  }
+
+  LevitLogLevel _frozenLevel(FrozenMonitorEvent event) {
+    final data = event.toJson();
+    final explicit = data['level'];
+    if (explicit != null) {
+      return LevitLogLevel.values.firstWhere(
+        (level) => level.name == explicit,
+        orElse: () => LevitLogLevel.info,
+      );
+    }
+    return switch (data['type']) {
+      'scope_progress' => LevitLogLevel.info,
+      'state_change' => levelOverrides?.stateChange ?? LevitLogLevel.trace,
+      'batch' => levelOverrides?.batch ?? LevitLogLevel.debug,
+      'reactive_init' => levelOverrides?.reactiveInit ?? LevitLogLevel.debug,
+      'reactive_dispose' =>
+        levelOverrides?.reactiveDispose ?? LevitLogLevel.debug,
+      'graph_change' => levelOverrides?.graphChange ?? LevitLogLevel.debug,
+      'di_register' => levelOverrides?.diRegister ?? LevitLogLevel.info,
+      'di_resolve' => levelOverrides?.diResolve ?? LevitLogLevel.debug,
+      'di_delete' => levelOverrides?.diDelete ?? LevitLogLevel.info,
+      'di_instance_create' => levelOverrides?.diCreate ?? LevitLogLevel.debug,
+      'di_instance_init' => levelOverrides?.diInit ?? LevitLogLevel.debug,
+      'listener_add' => levelOverrides?.listenerAdd ?? LevitLogLevel.debug,
+      'listener_remove' =>
+        levelOverrides?.listenerRemove ?? LevitLogLevel.debug,
+      'reactive_error' => levelOverrides?.reactiveError ?? LevitLogLevel.error,
+      _ => LevitLogLevel.debug,
     };
   }
 
@@ -257,6 +291,9 @@ class ConsoleTransport implements LevitTransport {
         '${MonitorEvent._stringify(value, isSensitive: sensitive)}';
 
     return switch (event) {
+      _ScopeProgressEvent e => jsonEncode(e.toJson()),
+      FrozenMonitorEvent e => jsonEncode(e.toJson()),
+      ReactiveMetadataEvent e => 'METADATA: ${e.reactive.name}',
       ReactiveChangeEvent e =>
         'VAL: ${e.reactive.name ?? '[anon]'} <${e.change.valueType}> -> ${safeValue(e.change.newValue, sensitive: e.reactive.isSensitive)}',
       ReactiveBatchEvent e =>
@@ -287,9 +324,10 @@ class ConsoleTransport implements LevitTransport {
       CustomMonitorEvent e =>
         'CUSTOM ${e.namespace}:${e.name} ${safeValue(e.toJson()['attributes'])}'
             '${e.error != null ? '\nError: ${safeValue(e.error, sensitive: e.sensitive)}' : ''}',
-      LogEvent e => 'LOG: ${safeValue(e.data)}'
-          '${e.error != null ? '\nError: ${safeValue(e.error)}' : ''}'
-          '${e.stackTrace != null ? '\nStack: \n${e.stackTrace}' : ''}',
+      LogEvent e =>
+        'LOG: ${safeValue(e.data)}'
+            '${e.error != null ? '\nError: ${safeValue(e.error)}' : ''}'
+            '${e.stackTrace != null ? '\nStack: \n${e.stackTrace}' : ''}',
     };
   }
 

@@ -3,11 +3,11 @@ import 'package:test/test.dart';
 
 void main() {
   group('Levit middleware entry-point contracts', () {
-    tearDown(() {
+    tearDown(() async {
       Levit.removeDependencyMiddlewareByToken('dep_token');
       Levit.removeStateMiddlewareByToken('state_token');
       Lx.clearMiddlewares();
-      Levit.reset(force: true);
+      await Levit.reset(force: true);
     });
 
     test('addDependencyMiddleware is idempotent by instance identity', () {
@@ -97,9 +97,9 @@ class _ReactiveRecordingMiddleware implements LevitReactiveMiddleware {
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
-        calls.add(id);
-        return next;
-      };
+    calls.add(id);
+    return next;
+  };
 
   @override
   LxOnBatch? get onBatch => null;

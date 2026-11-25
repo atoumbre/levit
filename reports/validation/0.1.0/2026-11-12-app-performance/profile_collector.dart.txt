@@ -1,0 +1,60 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:vm_service/vm_service_io.dart';
+
+Future<void> main(List<String> args) async {
+  final root = args[0];
+  final output = Directory(args[1])..createSync(recursive: true);
+  final label = args[2];
+  for (final mode in ['off']) {
+    final process = await Process.start(
+      '$root/benchmarks/build/macos/Build/Products/Profile/benchmarks.app/Contents/MacOS/benchmarks',
+      [],
+      environment: {'LEVIT_PERFORMANCE_RUN': '1', 'LEVIT_DIAGNOSTICS': mode},
+    );
+    final uriReady = Completer<String>();
+    final appReady = Completer<void>();
+    final logs = <String>[];
+    final stdoutSub = process.stdout.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
+      logs.add(line);
+      final match = RegExp(r'The Dart VM service is listening on (http://\S+)').firstMatch(line);
+      if (match != null && !uriReady.isCompleted) uriReady.complete(match[1]!);
+      if (line.contains('LEVIT_PROFILE_READY') && !appReady.isCompleted) appReady.complete();
+    });
+    final stderrSub = process.stderr.transform(utf8.decoder).listen(logs.add);
+    try {
+      final uri = await uriReady.future.timeout(const Duration(seconds: 30));
+      await appReady.future.timeout(const Duration(seconds: 30));
+      final service = await vmServiceConnectUri('${uri.replaceFirst('http:', 'ws:')}ws');
+      try {
+        final vm = await service.getVM();
+        final isolate = vm.isolates!.firstWhere((value) => value.name == 'main').id!;
+        await service.setFlag('profiler', 'true');
+        for (final workload in (args.length > 3 ? args[3].split(',') : ['fanin', 'fanout', 'grid'])) for (final framework in ['levit', 'vanilla']) {
+          await service.clearCpuSamples(isolate);
+          Map<String, dynamic>? allocations;
+          String? allocationError;
+          try { await service.getAllocationProfile(isolate, reset: true, gc: true); }
+          catch (error) { allocationError = '$error'; }
+          final result = await service.callServiceExtension('ext.levit.profile', isolateId: isolate, args: {'workload': workload, 'framework': framework});
+          final samples = await service.getCpuSamples(isolate, 0, 999999999999999);
+          try { allocations = (await service.getAllocationProfile(isolate)).toJson(); }
+          catch (error) { allocationError = '$error'; }
+          File('${output.path}/$label-$mode-$workload-$framework.json').writeAsStringSync(jsonEncode({
+            'label': label, 'diagnostics': mode, 'workload': workload, 'framework': framework,
+            'result': result.toJson(), 'cpu': samples.toJson(),
+            'allocations': allocations, 'allocationError': allocationError,
+          }));
+          print('$label $mode $workload $framework: ${samples.sampleCount} CPU samples, ${result.toJson()}');
+        }
+      } finally { await service.dispose(); }
+    } finally {
+      process.kill(ProcessSignal.sigterm);
+      await process.exitCode.timeout(const Duration(seconds: 10));
+      await stdoutSub.cancel();
+      await stderrSub.cancel();
+      File('${output.path}/$label-$mode.log').writeAsStringSync(logs.join('\n'));
+    }
+  }
+}

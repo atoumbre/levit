@@ -59,7 +59,7 @@ void main() {
             valueType: int,
             oldValue: 0,
             newValue: 1,
-          )
+          ),
         ),
         (
           rx2,
@@ -68,7 +68,7 @@ void main() {
             valueType: int,
             oldValue: 1,
             newValue: 2,
-          )
+          ),
         ),
       ], batchId: 123);
 
@@ -79,20 +79,14 @@ void main() {
 
     test('formats ReactiveInitEvent', () {
       final reactive = 0.lx.named('init_test');
-      final event = ReactiveInitEvent(
-        sessionId: 'test',
-        reactive: reactive,
-      );
+      final event = ReactiveInitEvent(sessionId: 'test', reactive: reactive);
 
       expect(() => silentTransport.send(event), returnsNormally);
     });
 
     test('formats ReactiveDisposeEvent', () {
       final reactive = 0.lx.named('dispose_test');
-      final event = ReactiveDisposeEvent(
-        sessionId: 'test',
-        reactive: reactive,
-      );
+      final event = ReactiveDisposeEvent(sessionId: 'test', reactive: reactive);
 
       expect(() => silentTransport.send(event), returnsNormally);
     });
@@ -128,10 +122,7 @@ void main() {
     });
 
     test('formats DependencyResolveEvent', () {
-      final info = LevitDependency(
-        instance: 'test_value',
-        permanent: false,
-      );
+      final info = LevitDependency(instance: 'test_value', permanent: false);
       final event = DependencyResolveEvent(
         sessionId: 'test',
         scopeId: 1,
@@ -145,10 +136,7 @@ void main() {
     });
 
     test('formats DependencyDeleteEvent', () {
-      final info = LevitDependency(
-        instance: 'deleted_value',
-        permanent: false,
-      );
+      final info = LevitDependency(instance: 'deleted_value', permanent: false);
       final event = DependencyDeleteEvent(
         sessionId: 'test',
         scopeId: 1,
@@ -162,10 +150,7 @@ void main() {
     });
 
     test('formats DependencyInstanceCreateEvent', () {
-      final info = LevitDependency(
-        builder: () => 'created',
-        permanent: false,
-      );
+      final info = LevitDependency(builder: () => 'created', permanent: false);
       final event = DependencyInstanceCreateEvent(
         sessionId: 'test',
         scopeId: 1,
@@ -178,10 +163,7 @@ void main() {
     });
 
     test('formats DependencyInstanceReadyEvent', () {
-      final info = LevitDependency(
-        instance: 'initialized',
-        permanent: false,
-      );
+      final info = LevitDependency(instance: 'initialized', permanent: false);
       final event = DependencyInstanceReadyEvent(
         sessionId: 'test',
         scopeId: 1,
@@ -206,10 +188,7 @@ void main() {
       // We expect output to contain Error and Stack strings
       LevitMonitor.setObfuscator(null);
       final printer = _CapturePrinter();
-      final t = ConsoleTransport(
-        minLevel: LevitLogLevel.all,
-        printer: printer,
-      );
+      final t = ConsoleTransport(minLevel: LevitLogLevel.all, printer: printer);
       t.send(event);
 
       final output = printer.lines.join('\n');
@@ -221,17 +200,22 @@ void main() {
     test('LogEvent trace and debug levels are mapped correctly', () {
       final t = ConsoleTransport(minLevel: LevitLogLevel.all);
 
-      final traceEvent =
-          LogEvent(sessionId: '1', level: logger.Level.trace, data: 'trace');
-      final debugEvent =
-          LogEvent(sessionId: '1', level: logger.Level.debug, data: 'debug');
+      final traceEvent = LogEvent(
+        sessionId: '1',
+        level: logger.Level.trace,
+        data: 'trace',
+      );
+      final debugEvent = LogEvent(
+        sessionId: '1',
+        level: logger.Level.debug,
+        data: 'debug',
+      );
 
       expect(() => t.send(traceEvent), returnsNormally);
       expect(() => t.send(debugEvent), returnsNormally);
     });
 
-    test('LogEvent level fallback is not needed as LevitLogLevel covers all',
-        () {
+    test('LogEvent level fallback is not needed as LevitLogLevel covers all', () {
       // package:logger Level is an enum. We map all possible values
       // in _levelFor, but we need to cover the `orElse` branch
       // of `LevitLogLevel.values.firstWhere`.
@@ -254,25 +238,26 @@ void main() {
     test('obfuscates sensitive values in logged messages', () async {
       LevitMonitor.setObfuscator(null);
       final printer = _CapturePrinter();
-      final t = ConsoleTransport(
-        minLevel: LevitLogLevel.all,
-        printer: printer,
+      final t = ConsoleTransport(minLevel: LevitLogLevel.all, printer: printer);
+
+      final reactive = 'sensitive-value'.lxVar(
+        named: 'password',
+        isSensitive: true,
       );
 
-      final reactive =
-          'sensitive-value'.lxVar(named: 'password', isSensitive: true);
-
       t.send(ReactiveInitEvent(sessionId: 'test', reactive: reactive));
-      t.send(ReactiveChangeEvent(
-        sessionId: 'test',
-        reactive: reactive,
-        change: LevitReactiveChange<String>(
-          timestamp: DateTime.now(),
-          valueType: String,
-          oldValue: 'sensitive-value',
-          newValue: 'new-sensitive-value',
+      t.send(
+        ReactiveChangeEvent(
+          sessionId: 'test',
+          reactive: reactive,
+          change: LevitReactiveChange<String>(
+            timestamp: DateTime.now(),
+            valueType: String,
+            oldValue: 'sensitive-value',
+            newValue: 'new-sensitive-value',
+          ),
         ),
-      ));
+      );
 
       final output = printer.lines.join('\n');
       expect(output, contains('***'));
@@ -342,24 +327,27 @@ void main() {
       await transport.close();
     });
 
-    test('reactiveDispose override is applied (line 188)', () async {
-      final transport = ConsoleTransport(
-        minLevel: LevitLogLevel.off,
-        levelOverrides: const LevitLogLevelConfig(
-          reactiveDispose: LevitLogLevel.info,
-        ),
-      );
+    test(
+      'reactiveDispose overrides determine the console disposal message',
+      () async {
+        final transport = ConsoleTransport(
+          minLevel: LevitLogLevel.off,
+          levelOverrides: const LevitLogLevelConfig(
+            reactiveDispose: LevitLogLevel.info,
+          ),
+        );
 
-      final reactive = 0.lx.named('dispose_test');
-      final event = ReactiveDisposeEvent(
-        sessionId: 'test',
-        reactive: reactive,
-      );
+        final reactive = 0.lx.named('dispose_test');
+        final event = ReactiveDisposeEvent(
+          sessionId: 'test',
+          reactive: reactive,
+        );
 
-      // This triggers the reactiveDispose branch in _levelFor
-      expect(() => transport.send(event), returnsNormally);
-      await transport.close();
-    });
+        // This triggers the reactiveDispose branch in _levelFor
+        expect(() => transport.send(event), returnsNormally);
+        await transport.close();
+      },
+    );
   });
 
   group('LevitLogLevel enum', () {

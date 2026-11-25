@@ -21,3 +21,6 @@ jobs:
 
       - name: Run analysis and tests
         run: dart run scripts/ci.dart
+
+      - name: Browser build contracts
+        run: dart run scripts/check_browser_builds.dart

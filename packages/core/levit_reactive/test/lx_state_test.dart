@@ -19,10 +19,7 @@ class UserState {
   const UserState({required this.name, required this.age});
 
   UserState copyWith({String? name, int? age}) {
-    return UserState(
-      name: name ?? this.name,
-      age: age ?? this.age,
-    );
+    return UserState(name: name ?? this.name, age: age ?? this.age);
   }
 }
 
@@ -90,10 +87,7 @@ void main() {
     test('mutate/updateValue are not available', () {
       final state = LxState(1);
       final dynamic dyn = state;
-      expect(
-        () => dyn.mutate((int v) {}),
-        throwsA(isA<NoSuchMethodError>()),
-      );
+      expect(() => dyn.mutate((int v) {}), throwsA(isA<NoSuchMethodError>()));
       expect(
         () => dyn.updateValue((int v) => v + 1),
         throwsA(isA<NoSuchMethodError>()),

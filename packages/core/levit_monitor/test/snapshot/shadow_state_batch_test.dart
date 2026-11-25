@@ -14,8 +14,11 @@ void main() {
     state.applyEvent(ReactiveInitEvent(sessionId: sid, reactive: rx));
 
     // Assert initialization using correct ID
-    expect(state.variables.containsKey(rx.id), isTrue,
-        reason: 'Variable should be present after InitEvent');
+    expect(
+      state.variables.containsKey(rx.id),
+      isTrue,
+      reason: 'Variable should be present after InitEvent',
+    );
 
     // Create a batch event
     final change = LevitReactiveChange(
@@ -31,10 +34,16 @@ void main() {
     state.applyEvent(batchEvent);
 
     // Shadow state should be updated with the value from the batch
-    expect(state.variables[rx.id]?.value, '42',
-        reason: 'Value should be updated by BatchEvent');
-    expect(state.variables[rx.id]?.valueType, 'int',
-        reason: 'Value type should be updated by BatchEvent');
+    expect(
+      state.variables[rx.id]?.value,
+      '42',
+      reason: 'Value should be updated by BatchEvent',
+    );
+    expect(
+      state.variables[rx.id]?.valueType,
+      'int',
+      reason: 'Value type should be updated by BatchEvent',
+    );
   });
 
   test('StateSnapshot batch keeps sensitive values obfuscated', () {

@@ -32,30 +32,31 @@ void main() {
       final r1 = 0.lx.named('r1');
       final r2 = 10.lx.named('r2');
 
-      final batchChange = LevitReactiveBatch(
-        [
-          (
-            r1,
-            LevitReactiveChange(
-                timestamp: DateTime.now(),
-                valueType: int,
-                oldValue: 0,
-                newValue: 1)
+      final batchChange = LevitReactiveBatch([
+        (
+          r1,
+          LevitReactiveChange(
+            timestamp: DateTime.now(),
+            valueType: int,
+            oldValue: 0,
+            newValue: 1,
           ),
-          (
-            r2,
-            LevitReactiveChange(
-                timestamp: DateTime.now(),
-                valueType: int,
-                oldValue: 10,
-                newValue: 11)
+        ),
+        (
+          r2,
+          LevitReactiveChange(
+            timestamp: DateTime.now(),
+            valueType: int,
+            oldValue: 10,
+            newValue: 11,
           ),
-        ],
-        batchId: 123,
-      );
+        ),
+      ], batchId: 123);
 
-      final event =
-          ReactiveBatchEvent(sessionId: 'test-session', change: batchChange);
+      final event = ReactiveBatchEvent(
+        sessionId: 'test-session',
+        change: batchChange,
+      );
       final json = event.toJson();
 
       expect(json['type'], 'batch');
@@ -102,10 +103,7 @@ void main() {
 
     test('ReactiveInitEvent with null value', () {
       final reactive = null.lxNullable.named('nullable');
-      final event = ReactiveInitEvent(
-        sessionId: 'test',
-        reactive: reactive,
-      );
+      final event = ReactiveInitEvent(sessionId: 'test', reactive: reactive);
 
       final json = event.toJson();
       expect(json['type'], 'reactive_init');
@@ -115,10 +113,7 @@ void main() {
 
     test('ReactiveDisposeEvent serialization', () {
       final reactive = 0.lx.named('disposed');
-      final event = ReactiveDisposeEvent(
-        sessionId: 'test',
-        reactive: reactive,
-      );
+      final event = ReactiveDisposeEvent(sessionId: 'test', reactive: reactive);
 
       final json = event.toJson();
       expect(json['type'], 'reactive_dispose');
@@ -166,10 +161,7 @@ void main() {
     });
 
     test('DependencyDeleteEvent serialization', () {
-      final info = LevitDependency(
-        instance: 'deleted',
-        permanent: false,
-      );
+      final info = LevitDependency(instance: 'deleted', permanent: false);
 
       final event = DependencyDeleteEvent(
         sessionId: 'test',
@@ -206,10 +198,7 @@ void main() {
     });
 
     test('DependencyInstanceReadyEvent serialization', () {
-      final info = LevitDependency(
-        instance: 'initialized',
-        permanent: false,
-      );
+      final info = LevitDependency(instance: 'initialized', permanent: false);
 
       final event = DependencyInstanceReadyEvent(
         sessionId: 'test',

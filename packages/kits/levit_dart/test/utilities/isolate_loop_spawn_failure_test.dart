@@ -31,7 +31,7 @@ void main() {
     }
 
     expect(status, isA<LxError>());
-    engine.dispose();
+    await engine.dispose();
   });
 }
 

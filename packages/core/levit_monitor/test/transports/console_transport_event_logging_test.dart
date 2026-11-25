@@ -4,7 +4,7 @@ import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('ConsoleTransport Coverage', () {
+  group('Console event logging', () {
     test('handles all monitor events', () async {
       final transport = ConsoleTransport();
       final sessionId = 'test-session';
@@ -13,30 +13,36 @@ void main() {
       final info = LevitDependency(instance: 42);
 
       // Trigger ReactiveGraphChangeEvent log level switch case
-      transport.send(ReactiveGraphChangeEvent(
-        sessionId: sessionId,
-        reactive: reactive,
-        dependencies: [reactive],
-      ));
+      transport.send(
+        ReactiveGraphChangeEvent(
+          sessionId: sessionId,
+          reactive: reactive,
+          dependencies: [reactive],
+        ),
+      );
 
       // Trigger DependencyInstanceCreateEvent log level switch case
-      transport.send(DependencyInstanceCreateEvent(
-        sessionId: sessionId,
-        scopeId: scope.id,
-        scopeName: scope.name,
-        key: 'test',
-        info: info,
-      ));
+      transport.send(
+        DependencyInstanceCreateEvent(
+          sessionId: sessionId,
+          scopeId: scope.id,
+          scopeName: scope.name,
+          key: 'test',
+          info: info,
+        ),
+      );
 
       // Trigger DependencyInstanceReadyEvent log level switch case
-      transport.send(DependencyInstanceReadyEvent(
-        sessionId: sessionId,
-        scopeId: scope.id,
-        scopeName: scope.name,
-        key: 'test',
-        info: info,
-        instance: 42,
-      ));
+      transport.send(
+        DependencyInstanceReadyEvent(
+          sessionId: sessionId,
+          scopeId: scope.id,
+          scopeName: scope.name,
+          key: 'test',
+          info: info,
+          instance: 42,
+        ),
+      );
 
       await transport.close();
     });
@@ -55,28 +61,34 @@ void main() {
       final info = LevitDependency(instance: 42);
 
       // These will hit the 'overrides?.field' part of the expression
-      transport.send(ReactiveGraphChangeEvent(
-        sessionId: sessionId,
-        reactive: reactive,
-        dependencies: [reactive],
-      ));
+      transport.send(
+        ReactiveGraphChangeEvent(
+          sessionId: sessionId,
+          reactive: reactive,
+          dependencies: [reactive],
+        ),
+      );
 
-      transport.send(DependencyInstanceCreateEvent(
-        sessionId: sessionId,
-        scopeId: scope.id,
-        scopeName: scope.name,
-        key: 'test',
-        info: info,
-      ));
+      transport.send(
+        DependencyInstanceCreateEvent(
+          sessionId: sessionId,
+          scopeId: scope.id,
+          scopeName: scope.name,
+          key: 'test',
+          info: info,
+        ),
+      );
 
-      transport.send(DependencyInstanceReadyEvent(
-        sessionId: sessionId,
-        scopeId: scope.id,
-        scopeName: scope.name,
-        key: 'test',
-        info: info,
-        instance: 42,
-      ));
+      transport.send(
+        DependencyInstanceReadyEvent(
+          sessionId: sessionId,
+          scopeId: scope.id,
+          scopeName: scope.name,
+          key: 'test',
+          info: info,
+          instance: 42,
+        ),
+      );
 
       await transport.close();
     });

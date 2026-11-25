@@ -51,7 +51,11 @@ class Levit {
 
   /// Executes an asynchronous [callback] in a batch.
   ///
-  /// The batching context is maintained across await points.
+  /// Notifications are batched across awaits only in this execution context.
+  /// Concurrent batches flush independently, and nested batches merge at the
+  /// outer open boundary. Errors flush pending notifications before propagating.
+  /// Values remain shared: outside writes notify immediately, including writes
+  /// to the same reactive. Batching provides neither isolation nor rollback.
   ///
   /// Returns the value returned by [callback].
   ///
@@ -103,7 +107,7 @@ class Levit {
   /// ```dart
   /// final service = Levit.put(() => AuthService());
   /// ```
-  static S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
+  static S put<S>(S Function() builder, {Object? tag, bool permanent = false}) {
     return Ls.put<S>(builder, tag: tag, permanent: permanent);
   }
 
@@ -114,10 +118,18 @@ class Levit {
   /// *   If [isFactory] is true, [builder] runs on every request.
   /// *   If [permanent] is true, registration survives a *non-forced* [reset].
   ///     Scope dispose always force-clears permanents.
-  static void lazyPut<S>(S Function() builder,
-      {String? tag, bool permanent = false, bool isFactory = false}) {
-    Ls.lazyPut<S>(builder,
-        tag: tag, permanent: permanent, isFactory: isFactory);
+  static void lazyPut<S>(
+    S Function() builder, {
+    Object? tag,
+    bool permanent = false,
+    bool isFactory = false,
+  }) {
+    Ls.lazyPut<S>(
+      builder,
+      tag: tag,
+      permanent: permanent,
+      isFactory: isFactory,
+    );
   }
 
   /// Registers an asynchronous lazy dependency builder.
@@ -125,21 +137,26 @@ class Levit {
   /// Retrieve the instance using [findAsync].
   /// If [permanent] is true, registration survives a *non-forced* [reset].
   /// Scope dispose always force-clears permanents.
-  static Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
-      {String? tag, bool permanent = false, bool isFactory = false}) {
-    return Ls.lazyPutAsync<S>(builder,
-        tag: tag, permanent: permanent, isFactory: isFactory);
+  static Future<S> Function() lazyPutAsync<S>(
+    Future<S> Function() builder, {
+    Object? tag,
+    bool permanent = false,
+    bool isFactory = false,
+  }) {
+    return Ls.lazyPutAsync<S>(
+      builder,
+      tag: tag,
+      permanent: permanent,
+      isFactory: isFactory,
+    );
   }
 
   /// Binds [Alias] to an existing local singleton [Concrete].
   static void bindExisting<Alias, Concrete extends Alias>({
-    String? sourceTag,
-    String? tag,
+    Object? sourceTag,
+    Object? tag,
   }) {
-    Ls.bindExisting<Alias, Concrete>(
-      sourceTag: sourceTag,
-      tag: tag,
-    );
+    Ls.bindExisting<Alias, Concrete>(sourceTag: sourceTag, tag: tag);
   }
 
   /// Finds a registered instance of type [S].
@@ -148,34 +165,34 @@ class Levit {
   /// ```dart
   /// final service = Levit.find<AuthService>();
   /// ```
-  static S find<S>({String? tag}) {
+  static S find<S>({Object? tag}) {
     return Ls.find<S>(tag: tag);
   }
 
   /// Finds an instance of type [S], or returns `null` if missing.
-  static S? findOrNull<S>({String? tag}) {
+  static S? findOrNull<S>({Object? tag}) {
     return Ls.findOrNull<S>(tag: tag);
   }
 
   /// Asynchronously finds an instance of type [S].
   ///
   /// Use for dependencies registered via [lazyPutAsync].
-  static Future<S> findAsync<S>({String? tag}) async {
+  static Future<S> findAsync<S>({Object? tag}) async {
     return Ls.findAsync<S>(tag: tag);
   }
 
   /// Asynchronously finds an instance of type [S], or returning `null`.
-  static Future<S?> findOrNullAsync<S>({String? tag}) async {
+  static Future<S?> findOrNullAsync<S>({Object? tag}) async {
     return Ls.findOrNullAsync<S>(tag: tag);
   }
 
   /// Returns `true` if type [S] is registered.
-  static bool isRegistered<S>({String? tag}) {
+  static bool isRegistered<S>({Object? tag}) {
     return Ls.isRegistered<S>(tag: tag);
   }
 
   /// Returns `true` if type [S] is already instantiated (not just pending lazy init).
-  static bool isInstantiated<S>({String? tag}) {
+  static bool isInstantiated<S>({Object? tag}) {
     return Ls.isInstantiated<S>(tag: tag);
   }
 
@@ -184,7 +201,7 @@ class Levit {
   /// If the instance implements [LevitScopeDisposable], its `onClose` method is called.
   /// If [force] is true, deletes even if the dependency was marked as `permanent`.
   /// Returns `true` if a registration was found and removed.
-  static Future<bool> delete<S>({String? tag, bool force = false}) {
+  static Future<bool> delete<S>({Object? tag, bool force = false}) {
     return Ls.delete<S>(tag: tag, force: force);
   }
 
@@ -199,8 +216,8 @@ class Levit {
   ///
   /// Child scopes can override parent dependencies and provide their own
   /// isolated lifecycle. The [name] is used for profiling and logs.
-  static LevitScope createScope(String name) {
-    return Ls.createScope(name);
+  static LevitScope createScope(String name, {bool ownedByParent = true}) {
+    return Ls.createScope(name, ownedByParent: ownedByParent);
   }
 
   /// Runs [callback] in a fresh child scope and disposes it automatically.
@@ -285,7 +302,7 @@ class Levit {
   ///
   /// When enabled, [LxReactive] objects created while instantiating or
   /// initializing a returned [LevitResourceOwner] are automatically registered
-  /// through [LevitResourceOwner.autoDispose] and disposed with that owner.
+  /// through [LevitResourceOwner.own] and disposed with that owner.
   static void enableAutoLinking() {
     if (_autoLinkMiddleware != null) return; // Already enabled
 
@@ -307,81 +324,41 @@ class Levit {
     _autoDisposeMiddleware = null;
   }
 
-// -------------------------------------------------------------
-//    Internal utils
-// -------------------------------------------------------------
+  // -------------------------------------------------------------
+  //    Internal utils
+  // -------------------------------------------------------------
 
-  /// Internal utility that detects and executes the appropriate cleanup method for an [item].
-  static dynamic _levitDisposeItem(dynamic item) {
+  static bool _canDisposeItem(Object item) =>
+      item is LxReactive ||
+      item is LxResource ||
+      item is LevitScopeDisposable ||
+      item is LevitDisposable ||
+      item is StreamSubscription ||
+      item is Timer ||
+      item is Sink ||
+      item is FutureOr<void> Function();
+
+  /// Runs a supported typed cleanup operation. Other resources need an adapter.
+  static Future<void> _levitDisposeItem(Object? item) async {
     if (item == null) return;
-    if (item is LxReactive) {
-      item.close();
-      return;
-    }
-
-    if (item is LevitScopeDisposable) {
-      return item.onClose();
-    }
-
-    if (item is LevitDisposable) {
-      return item.dispose();
-    }
-    if (item is StreamSubscription) {
-      return item.cancel();
-    }
-
+    if (item is LxReactive) return item.close();
+    if (item is LxResource) return item.close();
+    if (item is LevitScopeDisposable) return item.onClose();
+    if (item is LevitDisposable) return item.dispose();
+    if (item is StreamSubscription) return item.cancel();
     if (item is Timer) {
       item.cancel();
       return;
     }
+    if (item is StreamSink) return item.close().then<void>((_) {});
     if (item is Sink) {
       item.close();
       return;
     }
-
-    for (final operation in _CleanupOperation.values) {
-      final result = _tryDynamicCleanup(item, operation);
-      if (!identical(result, _cleanupNotFound)) {
-        return result is Future ? result.then<void>((_) {}) : null;
-      }
-    }
-
-    if (item is FutureOr<void> Function()) {
-      return item();
-    }
+    // own() validates supported resources before admission. After the resource
+    // adapters above, the only remaining supported type is a cleanup callback.
+    return (item as FutureOr<void> Function())();
   }
-
-  static const Object _cleanupNotFound = Object();
-
-  static Object? _tryDynamicCleanup(Object item, _CleanupOperation operation) {
-    try {
-      dynamic result;
-      switch (operation) {
-        case _CleanupOperation.cancel:
-          result = (item as dynamic).cancel();
-          break;
-        case _CleanupOperation.dispose:
-          result = (item as dynamic).dispose();
-          break;
-        case _CleanupOperation.close:
-          result = (item as dynamic).close();
-          break;
-      }
-      return result;
-    } on NoSuchMethodError {
-      return _cleanupNotFound;
-    }
-  }
-}
-
-enum _CleanupOperation {
-  cancel('cancelling'),
-  dispose('disposing'),
-  close('closing');
-
-  const _CleanupOperation(this.label);
-
-  final String label;
 }
 
 /// Fluent extensions for naming and configuring reactive objects.

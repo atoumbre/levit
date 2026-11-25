@@ -63,15 +63,23 @@ class LevitReactiveBatch implements LevitReactiveChange<void> {
   /// A unique identifier for this batch execution.
   final int batchId;
 
+  /// Whether this boundary remains open until its returned future completes.
+  /// Synchronous batches close when their callback returns, even a Future.
+  final bool isAsync;
+
   DateTime? _timestamp;
 
   @override
   DateTime get timestamp => _timestamp ??= DateTime.now();
 
   /// Creates a batch container for the current execution.
-  LevitReactiveBatch(this.entries, {int? batchId, DateTime? timestamp})
-      : batchId = batchId ?? ++_batchCounter,
-        _timestamp = timestamp;
+  LevitReactiveBatch(
+    this.entries, {
+    int? batchId,
+    DateTime? timestamp,
+    this.isAsync = false,
+  }) : batchId = batchId ?? ++_batchCounter,
+       _timestamp = timestamp;
 
   /// Returns just the list of state changes from the batch.
   List<LevitReactiveChange> get changes => entries.map((e) => e.$2).toList();
@@ -263,8 +271,9 @@ abstract class LevitReactiveMiddleware {
   static bool remove(LevitReactiveMiddleware middleware) {
     final result = _middlewares.remove(middleware);
     if (result) {
-      _middlewaresByToken
-          .removeWhere((_, registered) => identical(registered, middleware));
+      _middlewaresByToken.removeWhere(
+        (_, registered) => identical(registered, middleware),
+      );
       _updateFlags();
     }
     return result;
@@ -278,9 +287,7 @@ abstract class LevitReactiveMiddleware {
     return _removeByTokenizedMiddleware(middleware);
   }
 
-  static bool _removeByTokenizedMiddleware(
-    LevitReactiveMiddleware middleware,
-  ) {
+  static bool _removeByTokenizedMiddleware(LevitReactiveMiddleware middleware) {
     final removed = _middlewares.remove(middleware);
     if (removed) {
       _updateFlags();
@@ -326,7 +333,8 @@ abstract class LevitReactiveMiddleware {
   /// Return a wrapped function to modify or log the set operation.
   LxOnSet? get onSet => null;
 
-  /// Intercepts batch operations.
+  /// Intercepts batch operations. Await completion only when
+  /// [LevitReactiveBatch.isAsync] is true; synchronous boundaries close on return.
   LxOnBatch? get onBatch => null;
 
   /// Intercepts disposal.
@@ -337,39 +345,39 @@ abstract class LevitReactiveMiddleware {
 
   /// Observes changes to the dependency graph of a computed value.
   void Function(LxReactive computed, List<LxReactive> dependencies)?
-      get onGraphChange => null;
+  get onGraphChange => null;
 
   /// Observes when a new listener is added.
   void Function(LxReactive reactive, LxListenerContext? context)?
-      get startedListening => null;
+  get startedListening => null;
 
   /// Observes when a listener is removed.
   void Function(LxReactive reactive, LxListenerContext? context)?
-      get stoppedListening => null;
+  get stoppedListening => null;
 
   /// Observes errors caught during notification.
   void Function(Object error, StackTrace? stack, LxReactive? context)?
-      get onReactiveError => null;
+  get onReactiveError => null;
 }
 
 /// Helper typedefs for middleware interception.
-typedef LxOnSet = void Function(dynamic value) Function(
-  void Function(dynamic value) next,
-  LxReactive reactive,
-  LevitReactiveChange<dynamic> change,
-);
+typedef LxOnSet =
+    void Function(dynamic value) Function(
+      void Function(dynamic value) next,
+      LxReactive reactive,
+      LevitReactiveChange<dynamic> change,
+    );
 
 /// Helper typedefs for middleware interception.
-typedef LxOnBatch = dynamic Function() Function(
-  dynamic Function() next,
-  LevitReactiveBatch change,
-);
+typedef LxOnBatch =
+    dynamic Function() Function(
+      dynamic Function() next,
+      LevitReactiveBatch change,
+    );
 
 /// Helper typedefs for middleware interception.
-typedef LxOnDispose = void Function() Function(
-  void Function() next,
-  LxReactive reactive,
-);
+typedef LxOnDispose =
+    void Function() Function(void Function() next, LxReactive reactive);
 
 /// Internal utility for applying the middleware chain.
 abstract class _LevitReactiveMiddlewareChain {
@@ -386,7 +394,10 @@ abstract class _LevitReactiveMiddlewareChain {
     for (final mw in LevitReactiveMiddleware._middlewares.reversed) {
       if (mw.onSet != null) {
         current = mw.onSet!(
-            current, reactive, change as LevitReactiveChange<dynamic>);
+          current,
+          reactive,
+          change as LevitReactiveChange<dynamic>,
+        );
       }
     }
 
@@ -444,7 +455,9 @@ abstract class _LevitReactiveMiddlewareChain {
 
   /// Notifies middlewares that a listener has been added.
   static void applyOnListenerAdd(
-      LxReactive reactive, LxListenerContext? context) {
+    LxReactive reactive,
+    LxListenerContext? context,
+  ) {
     if (!LevitReactiveMiddleware.hasListenerMiddlewares) {
       return;
     }
@@ -455,7 +468,9 @@ abstract class _LevitReactiveMiddlewareChain {
 
   /// Notifies middlewares that a listener has been removed.
   static void applyOnListenerRemove(
-      LxReactive reactive, LxListenerContext? context) {
+    LxReactive reactive,
+    LxListenerContext? context,
+  ) {
     if (!LevitReactiveMiddleware.hasListenerMiddlewares) return;
     for (final mw in LevitReactiveMiddleware._middlewares) {
       mw.stoppedListening?.call(reactive, context);
@@ -464,7 +479,10 @@ abstract class _LevitReactiveMiddlewareChain {
 
   /// Notifies middlewares that an error occurred.
   static void applyOnReactiveError(
-      Object error, StackTrace? stack, LxReactive? context) {
+    Object error,
+    StackTrace? stack,
+    LxReactive? context,
+  ) {
     if (!LevitReactiveMiddleware.hasErrorMiddlewares) return;
     for (final mw in LevitReactiveMiddleware._middlewares) {
       mw.onReactiveError?.call(error, stack, context);
@@ -472,156 +490,7 @@ abstract class _LevitReactiveMiddlewareChain {
   }
 }
 
-/// A standard middleware for recording the state history.
-class LevitReactiveHistoryMiddleware extends LevitReactiveMiddleware {
-  /// The maximum number of changes to keep in the undo stack.
-  static int maxHistorySize = 100;
-
-  final List<LevitReactiveChange> _undoStack = [];
-  final List<LevitReactiveChange> _redoStack = [];
-  final _version = LxVar(0);
-
-  bool _isRestoring = false;
-
-  /// Creates a history tracking middleware.
-  LevitReactiveHistoryMiddleware();
-
-  /// The stack of past changes (Undo).
-  List<LevitReactiveChange> get changes {
-    _version.value;
-    return List.unmodifiable(_undoStack);
-  }
-
-  /// The stack of reverted changes (Redo).
-  List<LevitReactiveChange> get redoChanges {
-    _version.value;
-    return List.unmodifiable(_redoStack);
-  }
-
-  /// The number of recorded changes in the undo stack.
-  int get length {
-    _version.value;
-    return _undoStack.length;
-  }
-
-  /// Whether there are changes available to undo.
-  bool get canUndo {
-    _version.value;
-    return _undoStack.isNotEmpty;
-  }
-
-  /// Whether there are changes available to redo.
-  bool get canRedo {
-    _version.value;
-    return _redoStack.isNotEmpty;
-  }
-
-  @override
-  LxOnSet? get onSet => (next, reactive, change) {
-        return (value) {
-          next(value);
-          if (_isRestoring) return;
-          _redoStack.clear();
-          if (_batchDepth == 0) _addChange(change);
-        };
-      };
-
-  int _batchDepth = 0;
-
-  @override
-  LxOnBatch? get onBatch => (next, change) {
-        return () => _runBatchChange(next, change);
-      };
-
-  dynamic _runBatchChange(dynamic Function() next, LevitReactiveBatch change) {
-    if (_isRestoring) return next();
-    _batchDepth++;
-    // dart format off
-    try {
-      return next();
-    } finally {
-      // dart format on
-      _batchDepth--;
-      if (_batchDepth == 0 && change.isNotEmpty) _addChange(change);
-    }
-  }
-
-  void _addChange(LevitReactiveChange change) {
-    _undoStack.add(change);
-    if (maxHistorySize > 0 && _undoStack.length > maxHistorySize) {
-      _undoStack.removeAt(0);
-    }
-    LevitReactiveMiddleware.runWithoutMiddleware(() => _version.value++);
-  }
-
-  /// Reverts the most recent state change.
-  bool undo() {
-    if (_undoStack.isEmpty) return false;
-    final change = _undoStack.removeLast();
-    _redoStack.add(change);
-    _applyRestore(change, isUndo: true);
-    LevitReactiveMiddleware.runWithoutMiddleware(() => _version.value++);
-    return true;
-  }
-
-  /// Re-applies the most recent undone state change.
-  bool redo() {
-    if (_redoStack.isEmpty) return false;
-    final change = _redoStack.removeLast();
-    _undoStack.add(change);
-    _applyRestore(change, isUndo: false);
-    LevitReactiveMiddleware.runWithoutMiddleware(() => _version.value++);
-    return true;
-  }
-
-  void _applyRestore(LevitReactiveChange change, {required bool isUndo}) {
-    _isRestoring = true;
-    try {
-      if (change is LevitReactiveBatch) {
-        final list = isUndo ? change.changes.reversed : change.changes;
-        for (final sub in list) {
-          _restoreSingle(sub, isUndo: isUndo);
-        }
-      } else {
-        _restoreSingle(change, isUndo: isUndo);
-      }
-    } finally {
-      _isRestoring = false;
-    }
-  }
-
-  void _restoreSingle(LevitReactiveChange change, {required bool isUndo}) {
-    final valueToRestore = isUndo ? change.oldValue : change.newValue;
-    if (change.restore != null) {
-      LevitReactiveMiddleware.runWithoutMiddleware(() {
-        change.restore!(valueToRestore);
-      });
-    }
-  }
-
-  /// Clears the history state.
-  void clear() {
-    _undoStack.clear();
-    _redoStack.clear();
-    LevitReactiveMiddleware.runWithoutMiddleware(() => _version.value++);
-  }
-
-  /// Returns all changes of a specific type.
-  List<LevitReactiveChange> changesOfType(Type type) {
-    return _undoStack.where((c) => c.valueType == type).toList();
-  }
-
-  /// Prints the current history to the console for debugging.
-  void printHistory() {
-    print('--- Undo Stack ---');
-    for (final change in _undoStack) {
-      print(change);
-    }
-    if (_redoStack.isNotEmpty) {
-      print('--- Redo Stack ---');
-      for (final change in _redoStack.reversed) {
-        print(change);
-      }
-    }
-  }
+/// Optional metadata observations, independent of value notifications.
+abstract interface class LevitReactiveMetadataObserver {
+  void onReactiveMetadata(LxReactive reactive);
 }

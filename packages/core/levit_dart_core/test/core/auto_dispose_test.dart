@@ -19,13 +19,13 @@ class AsyncTestController extends LevitController {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
     Levit.enableAutoLinking();
   });
 
   group('AutoDispose', () {
-    test('captures reactive variables in constructor via put', () {
+    test('captures reactive variables in constructor via put', () async {
       final controller = Levit.put(() => TestController());
 
       expect(controller.count.ownerId, isNotNull);
@@ -34,22 +34,22 @@ void main() {
 
       // Verify disposal
       expect(controller.count.isDisposed, isFalse);
-      Levit.delete<TestController>();
+      await Levit.delete<TestController>();
       expect(controller.count.isDisposed, isTrue);
       expect(controller.text.isDisposed, isTrue);
     });
 
-    test('captures reactive variables in onInit via put', () {
+    test('captures reactive variables in onInit via put', () async {
       final controller = Levit.put(() => TestController());
 
       expect(controller.flow.ownerId, isNotNull);
       expect(controller.flow.ownerId, contains('TestController'));
 
-      Levit.delete<TestController>();
+      await Levit.delete<TestController>();
       expect(controller.flow.isDisposed, isTrue);
     });
 
-    test('captures reactive variables via lazyPut', () {
+    test('captures reactive variables via lazyPut', () async {
       Levit.lazyPut(() => TestController());
       final controller = Levit.find<TestController>();
 
@@ -57,7 +57,7 @@ void main() {
       expect(controller.flow.ownerId, isNotNull);
 
       expect(controller.count.isDisposed, isFalse);
-      Levit.delete<TestController>();
+      await Levit.delete<TestController>();
       expect(controller.count.isDisposed, isTrue);
       expect(controller.flow.isDisposed, isTrue);
     });
@@ -79,7 +79,7 @@ void main() {
       expect(controller.count.ownerId, isNotNull);
       expect(controller.count.isDisposed, isFalse);
 
-      Levit.delete<AsyncTestController>();
+      await Levit.delete<AsyncTestController>();
       expect(controller.count.isDisposed, isTrue);
     });
   });

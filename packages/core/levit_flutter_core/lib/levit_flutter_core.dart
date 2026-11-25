@@ -25,13 +25,14 @@
 library;
 
 import 'dart:async';
+import 'package:flutter/foundation.dart' show ValueListenable;
 
 export 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter/foundation.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
 
 part 'src/scope.dart';
+part 'src/scope_lifecycle.dart';
 part 'src/l_scope.dart';
 part 'src/l_async_scope.dart';
 part 'src/levit_provider.dart';
@@ -40,3 +41,4 @@ part 'src/view.dart';
 part 'src/watch.dart';
 part 'src/builder.dart';
 part 'src/scoped_view.dart';
+part 'src/value_listenable.dart';

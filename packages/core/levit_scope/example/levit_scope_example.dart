@@ -36,7 +36,7 @@ class UserRepository {
   }
 }
 
-void main() {
+Future<void> main() async {
   // 1. Register dependencies
   print('--- Registering ---');
   Locator.root.put(() => DatabaseService());
@@ -49,7 +49,7 @@ void main() {
 
   // 3. Clean up
   print('\n--- Cleaning up ---');
-  Locator.root.reset(); // Disposes DatabaseService
+  await Locator.root.reset(); // Disposes DatabaseService
 
   try {
     repo.findUser(42);

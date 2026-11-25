@@ -103,7 +103,7 @@ void main() {
       expect(log, contains('waiting'));
       expect(log.last, 'error: fail');
     });
-    test('watchStatus alias coverage', () async {
+    test('watchStatus dispatches waiting and success callbacks', () async {
       final lx = LxVar<LxStatus<int>>(LxIdle<int>());
       bool successCalled = false;
       bool waitingCalled = false;

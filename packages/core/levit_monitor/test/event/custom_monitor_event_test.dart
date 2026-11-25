@@ -4,7 +4,7 @@ import 'package:levit_monitor/levit_monitor.dart';
 import 'package:logger/logger.dart' hide LogEvent;
 import 'package:test/test.dart';
 
-class _CaptureTransport implements LevitTransport {
+class _CaptureTransport extends LevitTransport {
   final events = <MonitorEvent>[];
 
   @override
@@ -23,8 +23,8 @@ class _Unprintable {
 }
 
 void main() {
-  tearDown(() {
-    LevitMonitor.detach();
+  tearDown(() async {
+    await LevitMonitor.detach();
     LevitMonitor.setObfuscator(null);
     LevitMonitor.setFilter(null);
   });
@@ -79,32 +79,33 @@ void main() {
     expect(json.toString(), isNot(contains('secret')));
   });
 
-  test('LevitMonitor emits custom events through the existing pipeline',
-      () async {
-    final transport = _CaptureTransport();
-    LevitMonitor.attach(transport: transport);
-    LevitMonitor.setFilter(
-      (event) => event is CustomMonitorEvent && event.name == 'started',
-    );
+  test(
+    'LevitMonitor emits custom events through the existing pipeline',
+    () async {
+      final transport = _CaptureTransport();
+      await LevitMonitor.attach(transport: transport);
+      LevitMonitor.setFilter(
+        (event) =>
+            event.toJson()['type'] == 'custom' &&
+            event.toJson()['name'] == 'started',
+      );
 
-    LevitMonitor.emitCustomEvent(
-      namespace: 'levit.task',
-      name: 'ignored',
-    );
-    LevitMonitor.emitCustomEvent(
-      namespace: 'levit.task',
-      name: 'started',
-      attributes: const {'category': 'sync'},
-    );
-    await Future<void>.delayed(Duration.zero);
+      LevitMonitor.emitCustomEvent(namespace: 'levit.task', name: 'ignored');
+      LevitMonitor.emitCustomEvent(
+        namespace: 'levit.task',
+        name: 'started',
+        attributes: const {'category': 'sync'},
+      );
+      await Future<void>.delayed(Duration.zero);
 
-    expect(transport.events, hasLength(1));
-    final event = transport.events.single as CustomMonitorEvent;
-    expect(event.attributes, {'category': 'sync'});
-  });
+      expect(transport.events, hasLength(1));
+      final event = transport.events.single;
+      expect(event.toJson()['attributes'], {'category': 'sync'});
+    },
+  );
 
-  test('emitting while detached is a no-op', () {
-    LevitMonitor.detach();
+  test('emitting while detached is a no-op', () async {
+    await LevitMonitor.detach();
     expect(
       () => LevitMonitor.emitCustomEvent(
         namespace: 'levit.task',
@@ -116,19 +117,11 @@ void main() {
 
   test('custom event validates stable names', () {
     expect(
-      () => CustomMonitorEvent(
-        sessionId: 's',
-        namespace: ' ',
-        name: 'event',
-      ),
+      () => CustomMonitorEvent(sessionId: 's', namespace: ' ', name: 'event'),
       throwsArgumentError,
     );
     expect(
-      () => CustomMonitorEvent(
-        sessionId: 's',
-        namespace: 'app',
-        name: '',
-      ),
+      () => CustomMonitorEvent(sessionId: 's', namespace: 'app', name: ''),
       throwsArgumentError,
     );
   });

@@ -52,7 +52,7 @@ void main() {
       expect(r2, 42);
       expect(controller.callCount, 1); // Should NOT have called fetchData again
 
-      controller.onClose();
+      await controller.onClose();
     });
 
     test('re-executes after TTL expiry', () async {
@@ -81,7 +81,7 @@ void main() {
       );
       expect(controller.callCount, 2); // Should have re-executed
 
-      controller.onClose();
+      await controller.onClose();
     });
   });
 
@@ -125,40 +125,42 @@ void main() {
       expect(controller.tasks['shared_key']?.status, isA<LxSuccess<int>>());
       expect((controller.tasks['shared_key']?.status as LxSuccess).value, 42);
 
-      controller.onClose();
+      await controller.onClose();
     });
   });
 
   group('Task Caching - Deserialization Error', () {
-    test('treats deserialization failure as cache miss and deletes entry',
-        () async {
-      final controller = CacheController();
-      controller.onInit();
+    test(
+      'treats deserialization failure as cache miss and deletes entry',
+      () async {
+        final controller = CacheController();
+        controller.onInit();
 
-      final policy = TaskCachePolicy<int>(
-        ttl: const Duration(minutes: 5),
-        toJson: (v) => {'val': v},
-        fromJson: (j) => throw FormatException('Bad data'),
-      );
+        final policy = TaskCachePolicy<int>(
+          ttl: const Duration(minutes: 5),
+          toJson: (v) => {'val': v},
+          fromJson: (j) => throw FormatException('Bad data'),
+        );
 
-      // First call sets cache
-      await controller.tasksEngine.schedule(
-        (_) => controller.fetchData(),
-        id: 'task_fail',
-        cachePolicy: policy,
-      );
+        // First call sets cache
+        await controller.tasksEngine.schedule(
+          (_) => controller.fetchData(),
+          id: 'task_fail',
+          cachePolicy: policy,
+        );
 
-      // Second call fails to deserialize
-      final result = await controller.tasksEngine.schedule(
-        (_) => controller.fetchData(),
-        id: 'task_fail',
-        cachePolicy: policy,
-      );
+        // Second call fails to deserialize
+        final result = await controller.tasksEngine.schedule(
+          (_) => controller.fetchData(),
+          id: 'task_fail',
+          cachePolicy: policy,
+        );
 
-      expect(result, 42);
-      expect(controller.callCount, 2); // Should have re-called fetchData
+        expect(result, 42);
+        expect(controller.callCount, 2); // Should have re-called fetchData
 
-      controller.onClose();
-    });
+        await controller.onClose();
+      },
+    );
   });
 }

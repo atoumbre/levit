@@ -1,0 +1,8 @@
+reference
+attachedAfterEnable=true
+attachedAfterClose=true
+attachedAfterDisable=false
+candidate
+attachedAfterEnable=true
+attachedAfterClose=false
+attachedAfterDisable=false

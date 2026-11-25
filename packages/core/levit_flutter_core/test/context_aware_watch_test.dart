@@ -6,11 +6,11 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 class ListenerMiddleware extends LevitReactiveMiddleware {
   @override
   void Function(LxReactive reactive, LxListenerContext? context)?
-      get startedListening => (rx, ctx) {};
+  get startedListening => (rx, ctx) {};
 
   @override
   void Function(LxReactive reactive, LxListenerContext? context)?
-      get stoppedListening => (rx, ctx) {};
+  get stoppedListening => (rx, ctx) {};
 }
 
 void main() {
@@ -22,8 +22,9 @@ void main() {
     Lx.clearMiddlewares();
   });
 
-  testWidgets('LWatch runs with context when middleware is present',
-      (tester) async {
+  testWidgets('LWatch runs with context when middleware is present', (
+    tester,
+  ) async {
     final count = 0.lx.named('count');
 
     await tester.pumpWidget(
@@ -40,8 +41,9 @@ void main() {
     expect(find.text('1'), findsOneWidget);
   });
 
-  testWidgets('LWatchVar runs with context when middleware is present',
-      (tester) async {
+  testWidgets('LWatchVar runs with context when middleware is present', (
+    tester,
+  ) async {
     final count = 0.lx.named('consumer_count');
 
     await tester.pumpWidget(

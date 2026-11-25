@@ -8,10 +8,7 @@ class _TestSerializable {
 
   _TestSerializable(this.key, this.value);
 
-  Map<String, dynamic> toJson() => {
-        'key': key,
-        'value': value,
-      };
+  Map<String, dynamic> toJson() => {'key': key, 'value': value};
 }
 
 void main() {
@@ -47,11 +44,7 @@ void main() {
 
     test('serializes object with toJson method', () {
       final obj = _TestSerializable('my-key', 100);
-      final event = LogEvent(
-        sessionId: 'test',
-        level: Level.info,
-        data: obj,
-      );
+      final event = LogEvent(sessionId: 'test', level: Level.info, data: obj);
 
       final jsonOutput = event.toJson();
       expect(jsonOutput['data'], same(obj));
@@ -96,36 +89,25 @@ void main() {
     });
 
     test('serialization handles null data', () {
-      final event = LogEvent(
-        sessionId: 'test',
-        level: Level.info,
-        data: null,
-      );
+      final event = LogEvent(sessionId: 'test', level: Level.info, data: null);
       expect(event.toJson()['data'], isNull);
     });
 
     test(
-        'serializes custom object without toJson properly fallback to toString',
-        () {
-      final obj = _CustomObjectWithoutToJson();
-      final event = LogEvent(
-        sessionId: 'test',
-        level: Level.info,
-        data: obj,
-      );
-      // It will fail jsonEncode(obj) because it lacks toJson.
-      // Then it will fail (obj as dynamic).toJson() with NoSuchMethodError.
-      // Then it falls back to toString.
-      expect(event.toJson()['data'], 'custom-toString-value');
-    });
+      'serializes custom object without toJson properly fallback to toString',
+      () {
+        final obj = _CustomObjectWithoutToJson();
+        final event = LogEvent(sessionId: 'test', level: Level.info, data: obj);
+        // It will fail jsonEncode(obj) because it lacks toJson.
+        // Then it will fail (obj as dynamic).toJson() with NoSuchMethodError.
+        // Then it falls back to toString.
+        expect(event.toJson()['data'], 'custom-toString-value');
+      },
+    );
 
     test('serializes object whose toJson throws safely back to stringify', () {
       final obj = _CustomObjectThatThrowsOnToJson();
-      final event = LogEvent(
-        sessionId: 'test',
-        level: Level.info,
-        data: obj,
-      );
+      final event = LogEvent(sessionId: 'test', level: Level.info, data: obj);
       // It will fail jsonEncode(obj) because toJson throws.
       // Then it attempts obj.toJson() directly and catches the same exception.
       // Then falls back to toString.
@@ -133,18 +115,19 @@ void main() {
     });
 
     test(
-        'serializes object whose toJson is valid but complex to jsonEncode directly',
-        () {
-      final nestedObj = _CustomObjectToJsonReturnsNested();
-      final event = LogEvent(
-        sessionId: 'test',
-        level: Level.info,
-        data: nestedObj,
-      );
+      'serializes object whose toJson is valid but complex to jsonEncode directly',
+      () {
+        final nestedObj = _CustomObjectToJsonReturnsNested();
+        final event = LogEvent(
+          sessionId: 'test',
+          level: Level.info,
+          data: nestedObj,
+        );
 
-      final result = event.toJson()['data'];
-      expect(result, same(nestedObj));
-    });
+        final result = event.toJson()['data'];
+        expect(result, same(nestedObj));
+      },
+    );
 
     test('serializes error and stackTrace if present', () {
       final error = StateError('some error');

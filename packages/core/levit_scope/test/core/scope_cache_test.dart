@@ -2,8 +2,8 @@ import 'package:test/test.dart';
 import 'package:levit_scope/levit_scope.dart';
 
 void main() {
-  group('Levit Scope Cache Coverage', () {
-    test('Correctly caches resolutions across deep nested scopes', () {
+  group('Resolution caching across nested scopes', () {
+    test('Correctly caches resolutions across deep nested scopes', () async {
       final root = LevitScope.root();
       final parent = root.createScope('parent');
       final child = parent.createScope('child');
@@ -20,7 +20,7 @@ void main() {
       expect(child.find<String>(tag: 'A'), 'ROOT_VAL');
 
       // Clean up
-      root.reset(force: true);
+      await root.reset(force: true);
     });
   });
 }

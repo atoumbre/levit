@@ -7,7 +7,11 @@ part of '../levit_monitor.dart';
 /// It acts as the bridge between internal state transitions and the external
 /// [LevitTransport].
 class LevitMonitorMiddleware
-    implements LevitReactiveMiddleware, LevitScopeMiddleware {
+    implements
+        LevitReactiveMiddleware,
+        LevitScopeMiddleware,
+        LevitScopeProgressObserver,
+        LevitReactiveMetadataObserver {
   bool _enabled = false;
 
   /// A session identifier generated at initialization to correlate events
@@ -20,102 +24,205 @@ class LevitMonitorMiddleware
   /// The primary destination for captured events.
   LevitTransport transport;
 
-  /// The local shadow state maintained by the monitor.
-  final StateSnapshot _stateSnapshot = StateSnapshot();
-
-  final StreamController<MonitorEvent> _eventStream = StreamController();
-  StreamSubscription<MonitorEvent>? _subscription;
+  final StateSnapshot _stateSnapshot;
+  final int maxPendingEvents;
+  final ListQueue<FrozenMonitorEvent> _pending = ListQueue();
+  final List<AsyncError> _failures = [];
+  final List<Future<void>> _subscriptionCleanup = [];
   StreamSubscription<void>? _connectSubscription;
+  Future<void>? _pumping;
+  Future<void>? _closeFuture;
+  Future<void> _transition = Future.value();
+  bool _closed = false;
+  bool _paused = false;
+  int _droppedEvents = 0;
+  int get droppedEvents => _droppedEvents + transport.droppedEvents;
+  int get pendingEvents => _pending.length;
+  List<LevitEventEnvelope> get history => _stateSnapshot.events;
+  Map<String, dynamic> get snapshot => LevitEventEnvelope({
+    'sessionId': sessionId,
+    'seq': 0,
+    'type': 'snapshot',
+    'category': 'snapshot',
+    ..._stateSnapshot.toJson(),
+    'droppedEvents': droppedEvents,
+  }).data;
 
-  /// Creates a monitor middleware instance.
   LevitMonitorMiddleware({
     LevitTransport? transport,
     this.includeStackTrace = false,
     String? sessionId,
-  }) : transport = transport ?? ConsoleTransport() {
+    this.maxPendingEvents = 1024,
+    int historyCapacity = 0,
+  }) : transport = transport ?? ConsoleTransport(),
+       _stateSnapshot = StateSnapshot(maxEvents: historyCapacity) {
+    if (maxPendingEvents < 1) {
+      throw RangeError.value(maxPendingEvents, 'maxPendingEvents');
+    }
     this.sessionId = sessionId ?? _generateSessionId();
   }
 
-  /// Activates the middleware and registers it with the global [Levit] registry.
   void enable() {
-    if (!_enabled) {
-      Levit.addStateMiddleware(this);
-      Levit.addDependencyMiddleware(this);
-      _enabled = true;
-      _subscription = _eventStream.stream.listen((event) {
-        try {
-          transport.send(event);
-        } catch (e, s) {
-          Zone.current.handleUncaughtError(e, s);
-        }
-      });
-      // Re-send full state after reconnect to rehydrate remote clients.
-      _connectSubscription?.cancel();
-      _connectSubscription = transport.onConnect.listen((_) {
-        _sendSnapshot();
-      });
-    }
+    if (_closed) throw StateError('Monitor is closed.');
+    if (_enabled) return;
+    Levit.addStateMiddleware(this);
+    Levit.addDependencyMiddleware(this);
+    _enabled = true;
+    _listenForConnect();
+  }
+
+  void _listenForConnect() {
+    _connectSubscription = transport.onConnect.listen(
+      (_) => _sendSnapshot(),
+      onError: (Object error, StackTrace stack) => _recordFailure(error, stack),
+    );
   }
 
   void _sendSnapshot() {
-    transport.send(SnapshotEvent(
-      sessionId: sessionId,
-      state: _stateSnapshot.toJson(),
-    ));
+    if (_closed) return;
+    // A reconnect snapshot replaces remote state. Older queued deltas would
+    // corrupt that state if replayed afterwards, so account for and discard them.
+    _droppedEvents += _pending.length;
+    _pending.clear();
+    _enqueue(
+      SnapshotEvent(
+        sessionId: sessionId,
+        state: {
+          ..._stateSnapshot.toJson(),
+          'droppedEvents': droppedEvents,
+          'snapshotKind': 'reconnect',
+          'historyComplete': false,
+        },
+      ).freeze(),
+    );
   }
 
-  /// Deactivates the middleware and stops event processing.
   void disable() {
-    if (_enabled) {
-      Levit.removeStateMiddleware(this);
-      Levit.removeDependencyMiddleware(this);
-      _enabled = false;
-      _subscription?.cancel();
-      _subscription = null;
-      _connectSubscription?.cancel();
-      _connectSubscription = null;
+    if (!_enabled) return;
+    _enabled = false;
+    Levit.removeStateMiddleware(this);
+    Levit.removeDependencyMiddleware(this);
+    final subscription = _connectSubscription;
+    _connectSubscription = null;
+    if (subscription != null) {
+      _subscriptionCleanup.add(
+        Future<void>.sync(subscription.cancel).catchError(
+          (Object error, StackTrace stack) => _recordFailure(error, stack),
+        ),
+      );
     }
   }
 
-  /// Swaps the active transport or updates configuration dynamically.
   Future<void> updateTransport({
     LevitTransport? transport,
     bool? includeStackTrace,
-  }) async {
-    if (transport != null) {
-      _connectSubscription?.cancel();
-      await this.transport.close();
-      this.transport = transport;
-      if (_enabled) {
-        _connectSubscription = this.transport.onConnect.listen((_) {
-          _sendSnapshot();
-        });
+  }) {
+    final operation = _transition.then((_) async {
+      if (_closed) throw StateError('Monitor is closed.');
+      if (includeStackTrace != null) this.includeStackTrace = includeStackTrace;
+      if (transport == null || identical(transport, this.transport)) return;
+      try {
+        await _flushQueue();
+      } catch (_) {
+        /* Failure is retained; still release the old transport. */
       }
-    }
-    if (includeStackTrace != null) {
-      this.includeStackTrace = includeStackTrace;
-    }
+      _paused = true;
+      try {
+        try {
+          await _connectSubscription?.cancel();
+        } catch (error, stack) {
+          _recordFailure(error, stack);
+        }
+        _connectSubscription = null;
+        try {
+          await this.transport.close();
+        } catch (error, stack) {
+          _recordFailure(error, stack);
+        }
+        this.transport = transport;
+        if (_enabled) _listenForConnect();
+      } finally {
+        _paused = false;
+        _sendSnapshot();
+      }
+      await _flushQueue();
+    });
+    _transition = operation.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {},
+    );
+    return operation;
   }
 
-  static String _generateSessionId() {
-    final now = DateTime.now();
-    return '${now.millisecondsSinceEpoch.toRadixString(36)}-${now.microsecond.toRadixString(36)}';
+  static int _sessionCounter = 0;
+  static String _generateSessionId() =>
+      '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}-${_sessionCounter++}';
+
+  void _recordFailure(Object error, StackTrace stack) {
+    if (_failures.length < 32) _failures.add(AsyncError(error, stack));
   }
 
   void _addToBuffer(MonitorEvent event) {
-    // Ignore monitor-owned reactives to avoid monitor->monitor feedback loops.
-    if (event is ReactiveEvent) {
-      if (identical(event.reactive, _stateSnapshot.variables) ||
-          identical(event.reactive, _stateSnapshot.scopes)) {
-        return;
-      }
+    if (_closed || !_enabled || !LevitMonitor.shouldProcess(event)) return;
+    try {
+      final frozen = event.freeze();
+      _stateSnapshot.applyEnvelope(frozen.envelope);
+      _enqueue(frozen);
+    } catch (error, stack) {
+      _droppedEvents++;
+      _recordFailure(error, stack);
     }
+  }
 
-    if (!_eventStream.isClosed && LevitMonitor.shouldProcess(event)) {
-      // Keep shadow state in sync before forwarding externally.
-      _stateSnapshot.applyEvent(event);
-      _eventStream.add(event);
+  void _enqueue(FrozenMonitorEvent event) {
+    if (_pending.length == maxPendingEvents) {
+      _pending.removeFirst();
+      _droppedEvents++;
     }
+    _pending.add(event);
+    _pump();
+  }
+
+  void _pump() {
+    if (_pumping != null || _paused || _pending.isEmpty) return;
+    final complete = Completer<void>();
+    _pumping = complete.future;
+    scheduleMicrotask(() async {
+      try {
+        while (!_paused && _pending.isNotEmpty) {
+          final event = _pending.removeFirst();
+          try {
+            final pending = transport.send(event);
+            if (pending is Future<void>) await pending;
+          } catch (error, stack) {
+            _droppedEvents++;
+            _recordFailure(error, stack);
+          }
+        }
+      } finally {
+        _pumping = null;
+        complete.complete();
+      }
+    });
+  }
+
+  /// Awaits queued sends and the transport's own flush. Failures are observable.
+  Future<void> flush() async {
+    await _transition;
+    await _flushQueue();
+  }
+
+  Future<void> _flushQueue() async {
+    while (_pumping != null || _pending.isNotEmpty) {
+      _pump();
+      await _pumping;
+    }
+    try {
+      await transport.flush();
+    } catch (error, stack) {
+      _recordFailure(error, stack);
+    }
+    if (_failures.isNotEmpty) throw LevitMonitorException(_failures);
   }
 
   // ---------------------------------------------------------------------------
@@ -123,203 +230,300 @@ class LevitMonitorMiddleware
   // ---------------------------------------------------------------------------
 
   @override
+  void onReactiveMetadata(LxReactive reactive) => _addToBuffer(
+    ReactiveMetadataEvent(sessionId: sessionId, reactive: reactive),
+  );
+
+  @override
   LxOnSet? get onSet => (next, reactive, change) {
-        return (value) {
-          next(value);
-          _addToBuffer(ReactiveChangeEvent(
-            sessionId: sessionId,
-            reactive: reactive,
-            change: change,
-          ));
-        };
-      };
+    return (value) {
+      final origin = includeStackTrace ? StackTrace.current : null;
+      next(value);
+      _addToBuffer(
+        ReactiveChangeEvent(
+          sessionId: sessionId,
+          reactive: reactive,
+          change: change,
+          stackTrace: origin,
+        ),
+      );
+    };
+  };
 
   @override
   LxOnBatch? get onBatch => (next, change) {
-        return () {
-          final result = next();
-
-          if (result is Future) {
-            return result.whenComplete(() => _logBatch(change));
-          } else {
-            _logBatch(change);
-            return result;
-          }
-        };
-      };
+    return () {
+      dynamic result;
+      try {
+        result = next();
+      } catch (_) {
+        _logBatch(change);
+        rethrow;
+      }
+      if (change.isAsync && result is Future) {
+        return result.whenComplete(() => _logBatch(change));
+      }
+      _logBatch(change);
+      return result;
+    };
+  };
 
   void _logBatch(LevitReactiveBatch change) {
-    _addToBuffer(ReactiveBatchEvent(
-      sessionId: sessionId,
-      change: change,
-    ));
+    _addToBuffer(ReactiveBatchEvent(sessionId: sessionId, change: change));
   }
 
   @override
   void Function(LxReactive reactive)? get onInit => (reactive) {
-        _addToBuffer(ReactiveInitEvent(
-          sessionId: sessionId,
-          reactive: reactive,
-        ));
-      };
+    _addToBuffer(ReactiveInitEvent(sessionId: sessionId, reactive: reactive));
+  };
 
   @override
   LxOnDispose? get onDispose => (next, reactive) {
-        return () {
-          next();
-          _addToBuffer(ReactiveDisposeEvent(
-            sessionId: sessionId,
-            reactive: reactive,
-          ));
-        };
-      };
+    return () {
+      next();
+      _addToBuffer(
+        ReactiveDisposeEvent(sessionId: sessionId, reactive: reactive),
+      );
+    };
+  };
 
   @override
   void Function(LxReactive, List<LxReactive>)? get onGraphChange =>
       (computed, dependencies) {
-        _addToBuffer(ReactiveGraphChangeEvent(
-          sessionId: sessionId,
-          reactive: computed,
-          dependencies: dependencies,
-        ));
+        _addToBuffer(
+          ReactiveGraphChangeEvent(
+            sessionId: sessionId,
+            reactive: computed,
+            dependencies: dependencies,
+          ),
+        );
       };
 
   @override
   void Function(LxReactive reactive, LxListenerContext? context)?
-      get startedListening => (reactive, context) {
-            _addToBuffer(ReactiveListenerAddedEvent(
-              sessionId: sessionId,
-              reactive: reactive,
-              context: context,
-            ));
-          };
+  get startedListening => (reactive, context) {
+    _addToBuffer(
+      ReactiveListenerAddedEvent(
+        sessionId: sessionId,
+        reactive: reactive,
+        context: context,
+      ),
+    );
+  };
 
   @override
   void Function(LxReactive reactive, LxListenerContext? context)?
-      get stoppedListening => (reactive, context) {
-            _addToBuffer(ReactiveListenerRemovedEvent(
-              sessionId: sessionId,
-              reactive: reactive,
-              context: context,
-            ));
-          };
+  get stoppedListening => (reactive, context) {
+    _addToBuffer(
+      ReactiveListenerRemovedEvent(
+        sessionId: sessionId,
+        reactive: reactive,
+        context: context,
+      ),
+    );
+  };
 
   @override
   void Function(Object error, StackTrace? stack, LxReactive? context)?
-      get onReactiveError => (error, stack, reactive) {
-            _addToBuffer(ReactiveErrorEvent(
-              sessionId: sessionId,
-              reactive: reactive,
-              error: error,
-              stack: includeStackTrace ? stack : null,
-            ));
-          };
+  get onReactiveError => (error, stack, reactive) {
+    _addToBuffer(
+      ReactiveErrorEvent(
+        sessionId: sessionId,
+        reactive: reactive,
+        error: error,
+        stack: includeStackTrace ? stack : null,
+      ),
+    );
+  };
 
   // ---------------------------------------------------------------------------
   // Scope Observer Implementation
   // ---------------------------------------------------------------------------
 
   @override
+  void onScopeProgress(LevitScopeDescription description) {
+    // Once a closing scope has no remaining work, its terminal disposal event
+    // reports completion. Keep progress for live/closing owners with any work,
+    // including unexpected terminal records that still contain owned resources.
+    if ((description.isClosing || description.isDisposed) &&
+        description.pendingInitializations == 0 &&
+        description.ownedChildren.isEmpty &&
+        description.registrations.isEmpty) {
+      return;
+    }
+    final record = _ScopeProgressEvent.encode(description);
+    // Several lifecycle hooks can describe the same state (for example a
+    // synchronous initializer followed by registration). Preserve every changed
+    // snapshot, without serializing identical derived progress repeatedly.
+    final previous = _stateSnapshot.scopes[description.id]?._wireProgress;
+    if (_sameProgress(previous, record)) return;
+    _addToBuffer(_ScopeProgressEvent(sessionId: sessionId, scope: record));
+  }
+
+  static bool _sameProgress(Object? before, Object? after) {
+    if (identical(before, after)) return true;
+    if (before is List && after is List) {
+      if (before.length != after.length) return false;
+      for (var i = 0; i < before.length; i++) {
+        if (!_sameProgress(before[i], after[i])) return false;
+      }
+      return true;
+    }
+    return before == after;
+  }
+
+  @override
   void onScopeCreate(int scopeId, String scopeName, int? parentScopeId) {
-    _addToBuffer(ScopeCreateEvent(
-      sessionId: sessionId,
-      scopeId: scopeId,
-      scopeName: scopeName,
-      parentScopeId: parentScopeId,
-    ));
+    _addToBuffer(
+      ScopeCreateEvent(
+        sessionId: sessionId,
+        scopeId: scopeId,
+        scopeName: scopeName,
+        parentScopeId: parentScopeId,
+      ),
+    );
   }
 
   @override
   void onScopeDispose(int scopeId, String scopeName) {
-    _addToBuffer(ScopeDisposeEvent(
-      sessionId: sessionId,
-      scopeId: scopeId,
-      scopeName: scopeName,
-    ));
+    _addToBuffer(
+      ScopeDisposeEvent(
+        sessionId: sessionId,
+        scopeId: scopeId,
+        scopeName: scopeName,
+      ),
+    );
   }
 
   @override
   void onDependencyRegister(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {
-    _addToBuffer(DependencyRegisterEvent(
-      sessionId: sessionId,
-      scopeId: scopeId,
-      scopeName: scopeName,
-      key: key,
-      info: info,
-      source: source,
-    ));
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {
+    _addToBuffer(
+      DependencyRegisterEvent(
+        sessionId: sessionId,
+        scopeId: scopeId,
+        scopeName: scopeName,
+        key: key,
+        info: info,
+        source: source,
+      ),
+    );
   }
 
   @override
   void onDependencyResolve(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {
-    _addToBuffer(DependencyResolveEvent(
-      sessionId: sessionId,
-      scopeId: scopeId,
-      scopeName: scopeName,
-      key: key,
-      info: info,
-      source: source,
-    ));
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {
+    _addToBuffer(
+      DependencyResolveEvent(
+        sessionId: sessionId,
+        scopeId: scopeId,
+        scopeName: scopeName,
+        key: key,
+        info: info,
+        source: source,
+      ),
+    );
   }
 
   @override
   void onDependencyDelete(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {
-    _addToBuffer(DependencyDeleteEvent(
-      sessionId: sessionId,
-      scopeId: scopeId,
-      scopeName: scopeName,
-      key: key,
-      info: info,
-      source: source,
-    ));
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {
+    _addToBuffer(
+      DependencyDeleteEvent(
+        sessionId: sessionId,
+        scopeId: scopeId,
+        scopeName: scopeName,
+        key: key,
+        info: info,
+        source: source,
+      ),
+    );
   }
 
   @override
-  S Function() onDependencyCreate<S>(S Function() builder, LevitScope scope,
-      String key, LevitDependency info) {
+  S Function() onDependencyCreate<S>(
+    S Function() builder,
+    LevitScope scope,
+    String key,
+    LevitDependency info,
+  ) {
     return () {
-      _addToBuffer(DependencyInstanceCreateEvent(
-        sessionId: sessionId,
-        scopeId: scope.id,
-        scopeName: scope.name,
-        key: key,
-        info: info,
-      ));
+      _addToBuffer(
+        DependencyInstanceCreateEvent(
+          sessionId: sessionId,
+          scopeId: scope.id,
+          scopeName: scope.name,
+          key: key,
+          info: info,
+        ),
+      );
       return builder();
     };
   }
 
   @override
-  void Function() onDependencyInit<S>(void Function() onInit, S instance,
-      LevitScope scope, String key, LevitDependency info) {
+  void Function() onDependencyInit<S>(
+    void Function() onInit,
+    S instance,
+    LevitScope scope,
+    String key,
+    LevitDependency info,
+  ) {
     return () {
-      _addToBuffer(DependencyInstanceReadyEvent(
-        sessionId: sessionId,
-        scopeId: scope.id,
-        scopeName: scope.name,
-        key: key,
-        info: info,
-        instance: instance,
-      ));
+      _addToBuffer(
+        DependencyInstanceReadyEvent(
+          sessionId: sessionId,
+          scopeId: scope.id,
+          scopeName: scope.name,
+          key: key,
+          info: info,
+          instance: instance,
+        ),
+      );
       onInit();
     };
   }
 
-  /// Closes the event stream and releases the underlying transport.
-  Future<void> close() async {
-    await _subscription?.cancel();
-    await _connectSubscription?.cancel();
-    if (_eventStream.hasListener) {
-      await _eventStream.close();
-    } else {
-      _eventStream.close();
-    }
-    await transport.close();
+  /// Stops event admission, drains queued delivery, then releases transports.
+  Future<void> close() {
+    if (_closeFuture != null) return _closeFuture!;
+    disable();
+    _closed = true;
+    return _closeFuture = () async {
+      await _transition;
+      try {
+        await flush();
+      } catch (_) {
+        /* Collected below; still attempt close. */
+      }
+      for (final cleanup in _subscriptionCleanup) {
+        // disable records cancellation failures when adopting this Future.
+        await cleanup;
+      }
+      try {
+        await transport.close();
+      } catch (error, stack) {
+        _recordFailure(error, stack);
+      }
+      if (_failures.isNotEmpty) throw LevitMonitorException(_failures);
+    }();
   }
 }

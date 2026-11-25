@@ -43,7 +43,7 @@ class Ls {
   /// Prefer permanent on root / long-lived scopes.
   ///
   /// Returns the created instance.
-  static S put<S>(S Function() builder, {String? tag, bool permanent = false}) {
+  static S put<S>(S Function() builder, {Object? tag, bool permanent = false}) {
     return currentScope.put<S>(builder, tag: tag, permanent: permanent);
   }
 
@@ -55,10 +55,18 @@ class Ls {
   /// Set [permanent] to `true` to survive a *non-forced* reset only.
   /// Scope [LevitScope.dispose] always force-clears permanents.
   /// Set [isFactory] to `true` to create a new instance every time [find] is called.
-  static void lazyPut<S>(S Function() builder,
-      {String? tag, bool permanent = false, bool isFactory = false}) {
-    currentScope.lazyPut<S>(builder,
-        tag: tag, permanent: permanent, isFactory: isFactory);
+  static void lazyPut<S>(
+    S Function() builder, {
+    Object? tag,
+    bool permanent = false,
+    bool isFactory = false,
+  }) {
+    currentScope.lazyPut<S>(
+      builder,
+      tag: tag,
+      permanent: permanent,
+      isFactory: isFactory,
+    );
   }
 
   /// Registers an asynchronous dependency in the active scope.
@@ -69,54 +77,59 @@ class Ls {
   /// Set [permanent] to `true` to survive a *non-forced* reset only.
   /// Scope [LevitScope.dispose] always force-clears permanents.
   /// Set [isFactory] to `true` to re-run the builder for every [findAsync] call.
-  static Future<S> Function() lazyPutAsync<S>(Future<S> Function() builder,
-      {String? tag, bool permanent = false, bool isFactory = false}) {
-    return currentScope.lazyPutAsync<S>(builder,
-        tag: tag, permanent: permanent, isFactory: isFactory);
+  static Future<S> Function() lazyPutAsync<S>(
+    Future<S> Function() builder, {
+    Object? tag,
+    bool permanent = false,
+    bool isFactory = false,
+  }) {
+    return currentScope.lazyPutAsync<S>(
+      builder,
+      tag: tag,
+      permanent: permanent,
+      isFactory: isFactory,
+    );
   }
 
   /// Binds [Alias] to an existing local singleton [Concrete].
   static void bindExisting<Alias, Concrete extends Alias>({
-    String? sourceTag,
-    String? tag,
+    Object? sourceTag,
+    Object? tag,
   }) {
-    currentScope.bindExisting<Alias, Concrete>(
-      sourceTag: sourceTag,
-      tag: tag,
-    );
+    currentScope.bindExisting<Alias, Concrete>(sourceTag: sourceTag, tag: tag);
   }
 
   /// Finds a registered instance of type [S] in the active scope.
   ///
   /// Throws an [Exception] if the dependency is not found.
-  static S find<S>({String? tag}) {
+  static S find<S>({Object? tag}) {
     return currentScope.find<S>(tag: tag);
   }
 
   /// Finds a registered instance of type [S] in the active scope, or `null`.
-  static S? findOrNull<S>({String? tag}) {
+  static S? findOrNull<S>({Object? tag}) {
     return currentScope.findOrNull<S>(tag: tag);
   }
 
   /// Asynchronously finds a registered instance of type [S] in the active scope.
   ///
   /// Throws an [Exception] if the dependency is not found.
-  static Future<S> findAsync<S>({String? tag}) {
+  static Future<S> findAsync<S>({Object? tag}) {
     return currentScope.findAsync<S>(tag: tag);
   }
 
   /// Asynchronously finds a registered instance of type [S], or returns `null`.
-  static Future<S?> findOrNullAsync<S>({String? tag}) {
+  static Future<S?> findOrNullAsync<S>({Object? tag}) {
     return currentScope.findOrNullAsync<S>(tag: tag);
   }
 
   /// Returns `true` if type [S] is registered in the active or any parent scope.
-  static bool isRegistered<S>({String? tag}) {
+  static bool isRegistered<S>({Object? tag}) {
     return currentScope.isRegistered<S>(tag: tag);
   }
 
   /// Returns `true` if type [S] has been instantiated in the active or parent scope.
-  static bool isInstantiated<S>({String? tag}) {
+  static bool isInstantiated<S>({Object? tag}) {
     return currentScope.isInstantiated<S>(tag: tag);
   }
 
@@ -124,7 +137,7 @@ class Ls {
   ///
   /// If [force] is `true`, permanent dependencies are also removed.
   /// Returns `true` if the dependency was found and removed.
-  static Future<bool> delete<S>({String? tag, bool force = false}) {
+  static Future<bool> delete<S>({Object? tag, bool force = false}) {
     return currentScope.delete<S>(tag: tag, force: force);
   }
 
@@ -138,8 +151,8 @@ class Ls {
   /// Creates a child scope from the active scope.
   ///
   /// [name] is used for debugging.
-  static LevitScope createScope(String name) {
-    return currentScope.createScope(name);
+  static LevitScope createScope(String name, {bool ownedByParent = true}) {
+    return currentScope.createScope(name, ownedByParent: ownedByParent);
   }
 
   /// The number of dependencies registered in the active scope.
@@ -149,10 +162,7 @@ class Ls {
   static List<String> get registeredKeys => currentScope.registeredKeys;
 
   /// Adds a global middleware to intercept dependency injection events.
-  static void addMiddleware(
-    LevitScopeMiddleware middleware, {
-    Object? token,
-  }) {
+  static void addMiddleware(LevitScopeMiddleware middleware, {Object? token}) {
     LevitScope.addMiddleware(middleware, token: token);
   }
 
@@ -173,9 +183,6 @@ extension LevitScopeImplicitScopeExtension on LevitScope {
   ///
   /// Returns the result of [callback].
   R run<R>(R Function() callback) {
-    return runZoned(
-      callback,
-      zoneValues: {Ls.zoneScopeKey: this},
-    );
+    return runZoned(callback, zoneValues: {Ls.zoneScopeKey: this});
   }
 }

@@ -1,0 +1,1616 @@
+{
+  "schemaVersion": 1,
+  "methodologyVersion": 2,
+  "environment": {
+    "capturedAt": "2026-11-12T05:51:51.273921",
+    "sourceRevision": "cecdfff2b8d212e13ee5a248bd9c652c1db6e9c697297d7ce24ec3a135b149dd",
+    "executionContext": "app",
+    "buildMode": "release",
+    "benchmarkProfile": "production",
+    "iterations": 50,
+    "warmupIterations": 5,
+    "frameworks": [
+      "Vanilla",
+      "Levit",
+      "GetX",
+      "BLoC",
+      "Riverpod"
+    ],
+    "benchmarks": [
+      "Dynamic Grid Churn (UI)"
+    ],
+    "frameworkOrderRotation": true,
+    "operatingSystem": "macos",
+    "operatingSystemVersion": "Version 26.6.2 (Build 25G83)",
+    "dartVersion": "3.12.2",
+    "processorCount": 8,
+    "refreshRate": 120.0,
+    "display": {
+      "logicalWidth": 800.0,
+      "logicalHeight": 600.0,
+      "devicePixelRatio": 2.0
+    }
+  },
+  "results": [
+    {
+      "framework": "vanilla",
+      "implementation": "Vanilla",
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "classification": "comparative",
+      "comparisonNote": null,
+      "measurement": "Update to frame end (wall time, includes frame wait; excludes raster completion)",
+      "warmupIterations": 5,
+      "samplesMicros": [
+        6176,
+        5234,
+        11256,
+        4298,
+        9191,
+        10251,
+        9356,
+        12158,
+        5225,
+        7699,
+        4101,
+        5831,
+        5440,
+        9709,
+        11320,
+        5602,
+        5732,
+        5771,
+        8337,
+        5978,
+        5383,
+        6652,
+        6108,
+        13539,
+        6844,
+        8188,
+        13440,
+        5851,
+        5837,
+        6090,
+        5593,
+        11946,
+        9019,
+        5856,
+        8947,
+        17843,
+        12516,
+        16290,
+        12496,
+        17250,
+        11227,
+        13372,
+        13325,
+        15319,
+        8955,
+        10080,
+        12344,
+        7968,
+        10538,
+        17581
+      ],
+      "frameTimings": [
+        {
+          "buildUs": 3603,
+          "rasterUs": 988,
+          "totalUs": 4847
+        },
+        {
+          "buildUs": 3290,
+          "rasterUs": 2150,
+          "totalUs": 5574
+        },
+        {
+          "buildUs": 3456,
+          "rasterUs": 997,
+          "totalUs": 4690
+        },
+        {
+          "buildUs": 3201,
+          "rasterUs": 1023,
+          "totalUs": 4371
+        },
+        {
+          "buildUs": 6466,
+          "rasterUs": 965,
+          "totalUs": 7707
+        },
+        {
+          "buildUs": 3186,
+          "rasterUs": 1260,
+          "totalUs": 4623
+        },
+        {
+          "buildUs": 5917,
+          "rasterUs": 981,
+          "totalUs": 7161
+        },
+        {
+          "buildUs": 3742,
+          "rasterUs": 980,
+          "totalUs": 4889
+        },
+        {
+          "buildUs": 3094,
+          "rasterUs": 1019,
+          "totalUs": 4436
+        },
+        {
+          "buildUs": 5781,
+          "rasterUs": 993,
+          "totalUs": 7076
+        },
+        {
+          "buildUs": 3394,
+          "rasterUs": 1026,
+          "totalUs": 4550
+        },
+        {
+          "buildUs": 3403,
+          "rasterUs": 953,
+          "totalUs": 4606
+        },
+        {
+          "buildUs": 3088,
+          "rasterUs": 998,
+          "totalUs": 4372
+        },
+        {
+          "buildUs": 6758,
+          "rasterUs": 996,
+          "totalUs": 8042
+        },
+        {
+          "buildUs": 3255,
+          "rasterUs": 1044,
+          "totalUs": 4481
+        },
+        {
+          "buildUs": 3115,
+          "rasterUs": 1090,
+          "totalUs": 4318
+        },
+        {
+          "buildUs": 2855,
+          "rasterUs": 958,
+          "totalUs": 4089
+        },
+        {
+          "buildUs": 2934,
+          "rasterUs": 962,
+          "totalUs": 4126
+        },
+        {
+          "buildUs": 4424,
+          "rasterUs": 959,
+          "totalUs": 5647
+        },
+        {
+          "buildUs": 4575,
+          "rasterUs": 1383,
+          "totalUs": 6250
+        },
+        {
+          "buildUs": 4339,
+          "rasterUs": 1197,
+          "totalUs": 5746
+        },
+        {
+          "buildUs": 4896,
+          "rasterUs": 1616,
+          "totalUs": 6958
+        },
+        {
+          "buildUs": 4924,
+          "rasterUs": 1449,
+          "totalUs": 6647
+        },
+        {
+          "buildUs": 4579,
+          "rasterUs": 1050,
+          "totalUs": 5968
+        },
+        {
+          "buildUs": 3854,
+          "rasterUs": 1521,
+          "totalUs": 5648
+        },
+        {
+          "buildUs": 5107,
+          "rasterUs": 1580,
+          "totalUs": 6983
+        },
+        {
+          "buildUs": 4298,
+          "rasterUs": 1297,
+          "totalUs": 5872
+        },
+        {
+          "buildUs": 3233,
+          "rasterUs": 1100,
+          "totalUs": 4604
+        },
+        {
+          "buildUs": 2838,
+          "rasterUs": 929,
+          "totalUs": 4007
+        },
+        {
+          "buildUs": 3075,
+          "rasterUs": 1003,
+          "totalUs": 4341
+        },
+        {
+          "buildUs": 2961,
+          "rasterUs": 1021,
+          "totalUs": 4241
+        },
+        {
+          "buildUs": 7830,
+          "rasterUs": 959,
+          "totalUs": 9023
+        },
+        {
+          "buildUs": 2854,
+          "rasterUs": 935,
+          "totalUs": 3952
+        },
+        {
+          "buildUs": 2778,
+          "rasterUs": 1066,
+          "totalUs": 4089
+        },
+        {
+          "buildUs": 6239,
+          "rasterUs": 1185,
+          "totalUs": 7720
+        },
+        {
+          "buildUs": 8176,
+          "rasterUs": 1204,
+          "totalUs": 10744
+        },
+        {
+          "buildUs": 8122,
+          "rasterUs": 1047,
+          "totalUs": 9330
+        },
+        {
+          "buildUs": 8339,
+          "rasterUs": 1030,
+          "totalUs": 9935
+        },
+        {
+          "buildUs": 7275,
+          "rasterUs": 1027,
+          "totalUs": 8411
+        },
+        {
+          "buildUs": 10649,
+          "rasterUs": 1195,
+          "totalUs": 12280
+        },
+        {
+          "buildUs": 8037,
+          "rasterUs": 913,
+          "totalUs": 9184
+        },
+        {
+          "buildUs": 8167,
+          "rasterUs": 1465,
+          "totalUs": 9918
+        },
+        {
+          "buildUs": 7641,
+          "rasterUs": 1356,
+          "totalUs": 9231
+        },
+        {
+          "buildUs": 8680,
+          "rasterUs": 998,
+          "totalUs": 9964
+        },
+        {
+          "buildUs": 3176,
+          "rasterUs": 1001,
+          "totalUs": 4387
+        },
+        {
+          "buildUs": 6365,
+          "rasterUs": 966,
+          "totalUs": 7547
+        },
+        {
+          "buildUs": 5963,
+          "rasterUs": 999,
+          "totalUs": 7165
+        },
+        {
+          "buildUs": 3100,
+          "rasterUs": 950,
+          "totalUs": 4160
+        },
+        {
+          "buildUs": 6436,
+          "rasterUs": 1026,
+          "totalUs": 7697
+        },
+        {
+          "buildUs": 10210,
+          "rasterUs": 1083,
+          "totalUs": 11493
+        }
+      ],
+      "success": true,
+      "statusAssessment": "The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.",
+      "error": null
+    },
+    {
+      "framework": "levit",
+      "implementation": "Levit",
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "classification": "comparative",
+      "comparisonNote": null,
+      "measurement": "Update to frame end (wall time, includes frame wait; excludes raster completion)",
+      "warmupIterations": 5,
+      "samplesMicros": [
+        7918,
+        5270,
+        6835,
+        6322,
+        13158,
+        4179,
+        12242,
+        9279,
+        10311,
+        7817,
+        12593,
+        8690,
+        10268,
+        13185,
+        16824,
+        14369,
+        12216,
+        10167,
+        3524,
+        12265,
+        11534,
+        15402,
+        14938,
+        11819,
+        15226,
+        5624,
+        9493,
+        16585,
+        14482,
+        13358,
+        11217,
+        13657,
+        16836,
+        12445,
+        15359,
+        12689,
+        7228,
+        14641,
+        18317,
+        11741,
+        14001,
+        6421,
+        13453,
+        9248,
+        8153,
+        14519,
+        15639,
+        9664,
+        13487,
+        10674
+      ],
+      "frameTimings": [
+        {
+          "buildUs": 3449,
+          "rasterUs": 926,
+          "totalUs": 4593
+        },
+        {
+          "buildUs": 2921,
+          "rasterUs": 912,
+          "totalUs": 4127
+        },
+        {
+          "buildUs": 3084,
+          "rasterUs": 912,
+          "totalUs": 4308
+        },
+        {
+          "buildUs": 3078,
+          "rasterUs": 933,
+          "totalUs": 4231
+        },
+        {
+          "buildUs": 8873,
+          "rasterUs": 1090,
+          "totalUs": 10235
+        },
+        {
+          "buildUs": 3070,
+          "rasterUs": 1036,
+          "totalUs": 4515
+        },
+        {
+          "buildUs": 9532,
+          "rasterUs": 1020,
+          "totalUs": 10892
+        },
+        {
+          "buildUs": 4979,
+          "rasterUs": 1885,
+          "totalUs": 7076
+        },
+        {
+          "buildUs": 9049,
+          "rasterUs": 1061,
+          "totalUs": 10436
+        },
+        {
+          "buildUs": 3283,
+          "rasterUs": 974,
+          "totalUs": 4544
+        },
+        {
+          "buildUs": 9262,
+          "rasterUs": 1132,
+          "totalUs": 10738
+        },
+        {
+          "buildUs": 3653,
+          "rasterUs": 1497,
+          "totalUs": 5368
+        },
+        {
+          "buildUs": 6568,
+          "rasterUs": 954,
+          "totalUs": 7704
+        },
+        {
+          "buildUs": 5756,
+          "rasterUs": 982,
+          "totalUs": 6971
+        },
+        {
+          "buildUs": 8685,
+          "rasterUs": 974,
+          "totalUs": 9887
+        },
+        {
+          "buildUs": 8737,
+          "rasterUs": 879,
+          "totalUs": 9769
+        },
+        {
+          "buildUs": 7312,
+          "rasterUs": 810,
+          "totalUs": 8252
+        },
+        {
+          "buildUs": 5141,
+          "rasterUs": 968,
+          "totalUs": 6382
+        },
+        {
+          "buildUs": 2986,
+          "rasterUs": 833,
+          "totalUs": 3960
+        },
+        {
+          "buildUs": 8923,
+          "rasterUs": 858,
+          "totalUs": 10066
+        },
+        {
+          "buildUs": 7117,
+          "rasterUs": 960,
+          "totalUs": 8321
+        },
+        {
+          "buildUs": 6957,
+          "rasterUs": 944,
+          "totalUs": 8361
+        },
+        {
+          "buildUs": 7906,
+          "rasterUs": 991,
+          "totalUs": 9405
+        },
+        {
+          "buildUs": 6102,
+          "rasterUs": 924,
+          "totalUs": 7370
+        },
+        {
+          "buildUs": 7029,
+          "rasterUs": 979,
+          "totalUs": 8728
+        },
+        {
+          "buildUs": 3030,
+          "rasterUs": 951,
+          "totalUs": 4242
+        },
+        {
+          "buildUs": 6910,
+          "rasterUs": 907,
+          "totalUs": 8147
+        },
+        {
+          "buildUs": 8293,
+          "rasterUs": 937,
+          "totalUs": 9488
+        },
+        {
+          "buildUs": 8974,
+          "rasterUs": 1020,
+          "totalUs": 10209
+        },
+        {
+          "buildUs": 8545,
+          "rasterUs": 2032,
+          "totalUs": 10761
+        },
+        {
+          "buildUs": 5524,
+          "rasterUs": 865,
+          "totalUs": 6710
+        },
+        {
+          "buildUs": 6246,
+          "rasterUs": 933,
+          "totalUs": 7711
+        },
+        {
+          "buildUs": 9058,
+          "rasterUs": 1097,
+          "totalUs": 10596
+        },
+        {
+          "buildUs": 6257,
+          "rasterUs": 1094,
+          "totalUs": 7583
+        },
+        {
+          "buildUs": 7763,
+          "rasterUs": 962,
+          "totalUs": 9153
+        },
+        {
+          "buildUs": 6402,
+          "rasterUs": 935,
+          "totalUs": 7501
+        },
+        {
+          "buildUs": 6428,
+          "rasterUs": 937,
+          "totalUs": 7514
+        },
+        {
+          "buildUs": 6495,
+          "rasterUs": 972,
+          "totalUs": 8169
+        },
+        {
+          "buildUs": 10884,
+          "rasterUs": 1117,
+          "totalUs": 12550
+        },
+        {
+          "buildUs": 8634,
+          "rasterUs": 942,
+          "totalUs": 9828
+        },
+        {
+          "buildUs": 9200,
+          "rasterUs": 849,
+          "totalUs": 10374
+        },
+        {
+          "buildUs": 3868,
+          "rasterUs": 1078,
+          "totalUs": 5220
+        },
+        {
+          "buildUs": 9882,
+          "rasterUs": 1128,
+          "totalUs": 11426
+        },
+        {
+          "buildUs": 4723,
+          "rasterUs": 1437,
+          "totalUs": 6361
+        },
+        {
+          "buildUs": 7058,
+          "rasterUs": 1883,
+          "totalUs": 9110
+        },
+        {
+          "buildUs": 7532,
+          "rasterUs": 2348,
+          "totalUs": 10241
+        },
+        {
+          "buildUs": 8911,
+          "rasterUs": 1529,
+          "totalUs": 10693
+        },
+        {
+          "buildUs": 3933,
+          "rasterUs": 2312,
+          "totalUs": 6614
+        },
+        {
+          "buildUs": 4409,
+          "rasterUs": 1211,
+          "totalUs": 6039
+        },
+        {
+          "buildUs": 3034,
+          "rasterUs": 956,
+          "totalUs": 4131
+        }
+      ],
+      "success": true,
+      "statusAssessment": "The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.",
+      "error": null
+    },
+    {
+      "framework": "getx",
+      "implementation": "GetX",
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "classification": "comparative",
+      "comparisonNote": null,
+      "measurement": "Update to frame end (wall time, includes frame wait; excludes raster completion)",
+      "warmupIterations": 5,
+      "samplesMicros": [
+        10067,
+        12299,
+        9492,
+        6577,
+        12075,
+        6239,
+        4216,
+        10356,
+        12122,
+        12240,
+        6055,
+        8556,
+        11735,
+        6241,
+        6472,
+        5996,
+        5172,
+        12686,
+        7369,
+        5680,
+        4919,
+        4017,
+        8030,
+        5806,
+        5549,
+        5099,
+        11796,
+        9723,
+        7109,
+        6405,
+        6413,
+        4815,
+        12596,
+        4316,
+        5898,
+        5849,
+        9893,
+        7931,
+        5936,
+        5785,
+        6172,
+        6132,
+        5768,
+        7443,
+        5698,
+        5601,
+        7624,
+        5815,
+        5981,
+        5704
+      ],
+      "frameTimings": [
+        {
+          "buildUs": 4741,
+          "rasterUs": 1235,
+          "totalUs": 6153
+        },
+        {
+          "buildUs": 3954,
+          "rasterUs": 1087,
+          "totalUs": 5366
+        },
+        {
+          "buildUs": 3263,
+          "rasterUs": 1092,
+          "totalUs": 4616
+        },
+        {
+          "buildUs": 3374,
+          "rasterUs": 1266,
+          "totalUs": 4871
+        },
+        {
+          "buildUs": 3527,
+          "rasterUs": 1031,
+          "totalUs": 4752
+        },
+        {
+          "buildUs": 3255,
+          "rasterUs": 1085,
+          "totalUs": 4688
+        },
+        {
+          "buildUs": 3276,
+          "rasterUs": 1064,
+          "totalUs": 4568
+        },
+        {
+          "buildUs": 3356,
+          "rasterUs": 1043,
+          "totalUs": 4737
+        },
+        {
+          "buildUs": 3314,
+          "rasterUs": 1080,
+          "totalUs": 5204
+        },
+        {
+          "buildUs": 3912,
+          "rasterUs": 1129,
+          "totalUs": 5263
+        },
+        {
+          "buildUs": 3287,
+          "rasterUs": 1364,
+          "totalUs": 4936
+        },
+        {
+          "buildUs": 4313,
+          "rasterUs": 986,
+          "totalUs": 5610
+        },
+        {
+          "buildUs": 3214,
+          "rasterUs": 1052,
+          "totalUs": 4490
+        },
+        {
+          "buildUs": 3386,
+          "rasterUs": 1149,
+          "totalUs": 4804
+        },
+        {
+          "buildUs": 3172,
+          "rasterUs": 1158,
+          "totalUs": 4475
+        },
+        {
+          "buildUs": 3376,
+          "rasterUs": 1110,
+          "totalUs": 4809
+        },
+        {
+          "buildUs": 3422,
+          "rasterUs": 1017,
+          "totalUs": 4789
+        },
+        {
+          "buildUs": 9785,
+          "rasterUs": 1066,
+          "totalUs": 11100
+        },
+        {
+          "buildUs": 3545,
+          "rasterUs": 1055,
+          "totalUs": 4783
+        },
+        {
+          "buildUs": 3436,
+          "rasterUs": 1029,
+          "totalUs": 4794
+        },
+        {
+          "buildUs": 3274,
+          "rasterUs": 1110,
+          "totalUs": 4714
+        },
+        {
+          "buildUs": 3343,
+          "rasterUs": 1107,
+          "totalUs": 4606
+        },
+        {
+          "buildUs": 3378,
+          "rasterUs": 1043,
+          "totalUs": 4788
+        },
+        {
+          "buildUs": 3630,
+          "rasterUs": 1128,
+          "totalUs": 5083
+        },
+        {
+          "buildUs": 3569,
+          "rasterUs": 1101,
+          "totalUs": 4995
+        },
+        {
+          "buildUs": 3250,
+          "rasterUs": 985,
+          "totalUs": 4554
+        },
+        {
+          "buildUs": 3391,
+          "rasterUs": 1149,
+          "totalUs": 4975
+        },
+        {
+          "buildUs": 3328,
+          "rasterUs": 1028,
+          "totalUs": 4560
+        },
+        {
+          "buildUs": 3493,
+          "rasterUs": 1340,
+          "totalUs": 5077
+        },
+        {
+          "buildUs": 3344,
+          "rasterUs": 1185,
+          "totalUs": 4807
+        },
+        {
+          "buildUs": 3527,
+          "rasterUs": 1102,
+          "totalUs": 4963
+        },
+        {
+          "buildUs": 3287,
+          "rasterUs": 1012,
+          "totalUs": 4607
+        },
+        {
+          "buildUs": 3643,
+          "rasterUs": 1075,
+          "totalUs": 5066
+        },
+        {
+          "buildUs": 3237,
+          "rasterUs": 981,
+          "totalUs": 4433
+        },
+        {
+          "buildUs": 3251,
+          "rasterUs": 1095,
+          "totalUs": 4551
+        },
+        {
+          "buildUs": 3317,
+          "rasterUs": 1002,
+          "totalUs": 4473
+        },
+        {
+          "buildUs": 6937,
+          "rasterUs": 1054,
+          "totalUs": 8245
+        },
+        {
+          "buildUs": 3433,
+          "rasterUs": 1017,
+          "totalUs": 4642
+        },
+        {
+          "buildUs": 3035,
+          "rasterUs": 944,
+          "totalUs": 4066
+        },
+        {
+          "buildUs": 2890,
+          "rasterUs": 998,
+          "totalUs": 4123
+        },
+        {
+          "buildUs": 2909,
+          "rasterUs": 964,
+          "totalUs": 4077
+        },
+        {
+          "buildUs": 3171,
+          "rasterUs": 1122,
+          "totalUs": 4536
+        },
+        {
+          "buildUs": 3140,
+          "rasterUs": 1047,
+          "totalUs": 4484
+        },
+        {
+          "buildUs": 3047,
+          "rasterUs": 958,
+          "totalUs": 4314
+        },
+        {
+          "buildUs": 2975,
+          "rasterUs": 975,
+          "totalUs": 4273
+        },
+        {
+          "buildUs": 2913,
+          "rasterUs": 951,
+          "totalUs": 4106
+        },
+        {
+          "buildUs": 4255,
+          "rasterUs": 982,
+          "totalUs": 5438
+        },
+        {
+          "buildUs": 3670,
+          "rasterUs": 1080,
+          "totalUs": 5064
+        },
+        {
+          "buildUs": 3129,
+          "rasterUs": 1091,
+          "totalUs": 4517
+        },
+        {
+          "buildUs": 2979,
+          "rasterUs": 1001,
+          "totalUs": 4283
+        }
+      ],
+      "success": true,
+      "statusAssessment": "The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.",
+      "error": null
+    },
+    {
+      "framework": "bloc",
+      "implementation": "BLoC",
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "classification": "comparative",
+      "comparisonNote": null,
+      "measurement": "Update to frame end (wall time, includes frame wait; excludes raster completion)",
+      "warmupIterations": 5,
+      "samplesMicros": [
+        7661,
+        6659,
+        5877,
+        6207,
+        5304,
+        8185,
+        3408,
+        13211,
+        12150,
+        14914,
+        15120,
+        14234,
+        12236,
+        5930,
+        10031,
+        15299,
+        13493,
+        14747,
+        13784,
+        14206,
+        16238,
+        11493,
+        11324,
+        18414,
+        14296,
+        10745,
+        16657,
+        11365,
+        13840,
+        17844,
+        14425,
+        7339,
+        13438,
+        11693,
+        15870,
+        14900,
+        11749,
+        15868,
+        6596,
+        8312,
+        16969,
+        8800,
+        8608,
+        15140,
+        17377,
+        8566,
+        13160,
+        11202,
+        14793,
+        12697
+      ],
+      "frameTimings": [
+        {
+          "buildUs": 3023,
+          "rasterUs": 986,
+          "totalUs": 4131
+        },
+        {
+          "buildUs": 3024,
+          "rasterUs": 980,
+          "totalUs": 4197
+        },
+        {
+          "buildUs": 3026,
+          "rasterUs": 1079,
+          "totalUs": 4351
+        },
+        {
+          "buildUs": 3404,
+          "rasterUs": 1099,
+          "totalUs": 4772
+        },
+        {
+          "buildUs": 3031,
+          "rasterUs": 997,
+          "totalUs": 4305
+        },
+        {
+          "buildUs": 5266,
+          "rasterUs": 965,
+          "totalUs": 6560
+        },
+        {
+          "buildUs": 2741,
+          "rasterUs": 918,
+          "totalUs": 3815
+        },
+        {
+          "buildUs": 8905,
+          "rasterUs": 1053,
+          "totalUs": 10221
+        },
+        {
+          "buildUs": 7528,
+          "rasterUs": 966,
+          "totalUs": 8656
+        },
+        {
+          "buildUs": 8210,
+          "rasterUs": 959,
+          "totalUs": 9707
+        },
+        {
+          "buildUs": 9034,
+          "rasterUs": 1631,
+          "totalUs": 11006
+        },
+        {
+          "buildUs": 8150,
+          "rasterUs": 932,
+          "totalUs": 9515
+        },
+        {
+          "buildUs": 8708,
+          "rasterUs": 1043,
+          "totalUs": 10047
+        },
+        {
+          "buildUs": 2975,
+          "rasterUs": 903,
+          "totalUs": 4072
+        },
+        {
+          "buildUs": 7060,
+          "rasterUs": 979,
+          "totalUs": 8310
+        },
+        {
+          "buildUs": 5619,
+          "rasterUs": 865,
+          "totalUs": 9811
+        },
+        {
+          "buildUs": 6837,
+          "rasterUs": 856,
+          "totalUs": 8063
+        },
+        {
+          "buildUs": 8003,
+          "rasterUs": 923,
+          "totalUs": 9211
+        },
+        {
+          "buildUs": 5637,
+          "rasterUs": 1039,
+          "totalUs": 9089
+        },
+        {
+          "buildUs": 8016,
+          "rasterUs": 961,
+          "totalUs": 9182
+        },
+        {
+          "buildUs": 8621,
+          "rasterUs": 1036,
+          "totalUs": 10230
+        },
+        {
+          "buildUs": 3039,
+          "rasterUs": 983,
+          "totalUs": 4185
+        },
+        {
+          "buildUs": 8451,
+          "rasterUs": 979,
+          "totalUs": 9717
+        },
+        {
+          "buildUs": 8913,
+          "rasterUs": 1683,
+          "totalUs": 11489
+        },
+        {
+          "buildUs": 9861,
+          "rasterUs": 945,
+          "totalUs": 10974
+        },
+        {
+          "buildUs": 6648,
+          "rasterUs": 921,
+          "totalUs": 7818
+        },
+        {
+          "buildUs": 8284,
+          "rasterUs": 960,
+          "totalUs": 10435
+        },
+        {
+          "buildUs": 6706,
+          "rasterUs": 892,
+          "totalUs": 7696
+        },
+        {
+          "buildUs": 8389,
+          "rasterUs": 913,
+          "totalUs": 9437
+        },
+        {
+          "buildUs": 8227,
+          "rasterUs": 977,
+          "totalUs": 10202
+        },
+        {
+          "buildUs": 8326,
+          "rasterUs": 912,
+          "totalUs": 9551
+        },
+        {
+          "buildUs": 3158,
+          "rasterUs": 953,
+          "totalUs": 4225
+        },
+        {
+          "buildUs": 9583,
+          "rasterUs": 1028,
+          "totalUs": 10903
+        },
+        {
+          "buildUs": 7502,
+          "rasterUs": 936,
+          "totalUs": 8631
+        },
+        {
+          "buildUs": 8809,
+          "rasterUs": 1084,
+          "totalUs": 10218
+        },
+        {
+          "buildUs": 9931,
+          "rasterUs": 1052,
+          "totalUs": 11110
+        },
+        {
+          "buildUs": 7554,
+          "rasterUs": 855,
+          "totalUs": 8644
+        },
+        {
+          "buildUs": 7485,
+          "rasterUs": 1701,
+          "totalUs": 9457
+        },
+        {
+          "buildUs": 4049,
+          "rasterUs": 981,
+          "totalUs": 5377
+        },
+        {
+          "buildUs": 6685,
+          "rasterUs": 1045,
+          "totalUs": 8061
+        },
+        {
+          "buildUs": 9673,
+          "rasterUs": 1129,
+          "totalUs": 11094
+        },
+        {
+          "buildUs": 4577,
+          "rasterUs": 1870,
+          "totalUs": 6628
+        },
+        {
+          "buildUs": 7385,
+          "rasterUs": 1686,
+          "totalUs": 9367
+        },
+        {
+          "buildUs": 7388,
+          "rasterUs": 990,
+          "totalUs": 8810
+        },
+        {
+          "buildUs": 10587,
+          "rasterUs": 980,
+          "totalUs": 12077
+        },
+        {
+          "buildUs": 3930,
+          "rasterUs": 1062,
+          "totalUs": 5281
+        },
+        {
+          "buildUs": 9735,
+          "rasterUs": 1362,
+          "totalUs": 11360
+        },
+        {
+          "buildUs": 6324,
+          "rasterUs": 1828,
+          "totalUs": 8384
+        },
+        {
+          "buildUs": 7243,
+          "rasterUs": 1829,
+          "totalUs": 9277
+        },
+        {
+          "buildUs": 5650,
+          "rasterUs": 1849,
+          "totalUs": 7801
+        }
+      ],
+      "success": true,
+      "statusAssessment": "The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.",
+      "error": null
+    },
+    {
+      "framework": "riverpod",
+      "implementation": "Riverpod",
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "classification": "comparative",
+      "comparisonNote": null,
+      "measurement": "Update to frame end (wall time, includes frame wait; excludes raster completion)",
+      "warmupIterations": 5,
+      "samplesMicros": [
+        11585,
+        5842,
+        7702,
+        8585,
+        5800,
+        5856,
+        7074,
+        9400,
+        3517,
+        5849,
+        5697,
+        7396,
+        6550,
+        5182,
+        7393,
+        6089,
+        13559,
+        12467,
+        13165,
+        6396,
+        5512,
+        6440,
+        5172,
+        6296,
+        5484,
+        6784,
+        8225,
+        10200,
+        8627,
+        16851,
+        15624,
+        10574,
+        12812,
+        6312,
+        8281,
+        4657,
+        10467,
+        18111,
+        6696,
+        6561,
+        6999,
+        6429,
+        5694,
+        5650,
+        5751,
+        8338,
+        4829,
+        5304,
+        5172,
+        5616
+      ],
+      "frameTimings": [
+        {
+          "buildUs": 4158,
+          "rasterUs": 1165,
+          "totalUs": 5607
+        },
+        {
+          "buildUs": 4215,
+          "rasterUs": 1263,
+          "totalUs": 5749
+        },
+        {
+          "buildUs": 4104,
+          "rasterUs": 1160,
+          "totalUs": 5511
+        },
+        {
+          "buildUs": 4442,
+          "rasterUs": 1230,
+          "totalUs": 5850
+        },
+        {
+          "buildUs": 4143,
+          "rasterUs": 1220,
+          "totalUs": 5691
+        },
+        {
+          "buildUs": 3410,
+          "rasterUs": 1060,
+          "totalUs": 4736
+        },
+        {
+          "buildUs": 3033,
+          "rasterUs": 923,
+          "totalUs": 4092
+        },
+        {
+          "buildUs": 5283,
+          "rasterUs": 1364,
+          "totalUs": 6773
+        },
+        {
+          "buildUs": 3051,
+          "rasterUs": 940,
+          "totalUs": 4063
+        },
+        {
+          "buildUs": 2960,
+          "rasterUs": 938,
+          "totalUs": 4158
+        },
+        {
+          "buildUs": 2890,
+          "rasterUs": 993,
+          "totalUs": 4111
+        },
+        {
+          "buildUs": 2972,
+          "rasterUs": 983,
+          "totalUs": 4148
+        },
+        {
+          "buildUs": 3616,
+          "rasterUs": 1109,
+          "totalUs": 5033
+        },
+        {
+          "buildUs": 3087,
+          "rasterUs": 955,
+          "totalUs": 4326
+        },
+        {
+          "buildUs": 4570,
+          "rasterUs": 1518,
+          "totalUs": 6375
+        },
+        {
+          "buildUs": 5054,
+          "rasterUs": 1409,
+          "totalUs": 6643
+        },
+        {
+          "buildUs": 4549,
+          "rasterUs": 1407,
+          "totalUs": 6195
+        },
+        {
+          "buildUs": 6173,
+          "rasterUs": 2548,
+          "totalUs": 9029
+        },
+        {
+          "buildUs": 5347,
+          "rasterUs": 1966,
+          "totalUs": 7539
+        },
+        {
+          "buildUs": 4318,
+          "rasterUs": 1059,
+          "totalUs": 5678
+        },
+        {
+          "buildUs": 4116,
+          "rasterUs": 1030,
+          "totalUs": 5404
+        },
+        {
+          "buildUs": 3971,
+          "rasterUs": 1170,
+          "totalUs": 5409
+        },
+        {
+          "buildUs": 3529,
+          "rasterUs": 989,
+          "totalUs": 4808
+        },
+        {
+          "buildUs": 4072,
+          "rasterUs": 1081,
+          "totalUs": 5418
+        },
+        {
+          "buildUs": 3735,
+          "rasterUs": 1052,
+          "totalUs": 5099
+        },
+        {
+          "buildUs": 4723,
+          "rasterUs": 1237,
+          "totalUs": 6261
+        },
+        {
+          "buildUs": 7367,
+          "rasterUs": 1244,
+          "totalUs": 8786
+        },
+        {
+          "buildUs": 3527,
+          "rasterUs": 1737,
+          "totalUs": 5613
+        },
+        {
+          "buildUs": 5167,
+          "rasterUs": 1699,
+          "totalUs": 7099
+        },
+        {
+          "buildUs": 7816,
+          "rasterUs": 1884,
+          "totalUs": 10032
+        },
+        {
+          "buildUs": 9724,
+          "rasterUs": 1893,
+          "totalUs": 11821
+        },
+        {
+          "buildUs": 6386,
+          "rasterUs": 1693,
+          "totalUs": 8297
+        },
+        {
+          "buildUs": 5291,
+          "rasterUs": 1697,
+          "totalUs": 7205
+        },
+        {
+          "buildUs": 4840,
+          "rasterUs": 1584,
+          "totalUs": 6666
+        },
+        {
+          "buildUs": 6013,
+          "rasterUs": 1611,
+          "totalUs": 7934
+        },
+        {
+          "buildUs": 3844,
+          "rasterUs": 1163,
+          "totalUs": 5146
+        },
+        {
+          "buildUs": 8631,
+          "rasterUs": 1247,
+          "totalUs": 10258
+        },
+        {
+          "buildUs": 11420,
+          "rasterUs": 1218,
+          "totalUs": 12893
+        },
+        {
+          "buildUs": 3605,
+          "rasterUs": 1238,
+          "totalUs": 5132
+        },
+        {
+          "buildUs": 3678,
+          "rasterUs": 1198,
+          "totalUs": 5121
+        },
+        {
+          "buildUs": 3504,
+          "rasterUs": 1015,
+          "totalUs": 4692
+        },
+        {
+          "buildUs": 3706,
+          "rasterUs": 1231,
+          "totalUs": 5172
+        },
+        {
+          "buildUs": 3693,
+          "rasterUs": 1048,
+          "totalUs": 5015
+        },
+        {
+          "buildUs": 3555,
+          "rasterUs": 989,
+          "totalUs": 4819
+        },
+        {
+          "buildUs": 3493,
+          "rasterUs": 995,
+          "totalUs": 4772
+        },
+        {
+          "buildUs": 5684,
+          "rasterUs": 1342,
+          "totalUs": 7366
+        },
+        {
+          "buildUs": 3968,
+          "rasterUs": 1114,
+          "totalUs": 5294
+        },
+        {
+          "buildUs": 3400,
+          "rasterUs": 968,
+          "totalUs": 4692
+        },
+        {
+          "buildUs": 2885,
+          "rasterUs": 861,
+          "totalUs": 4013
+        },
+        {
+          "buildUs": 2729,
+          "rasterUs": 881,
+          "totalUs": 3860
+        }
+      ],
+      "success": true,
+      "statusAssessment": "The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.",
+      "error": null
+    }
+  ]
+}

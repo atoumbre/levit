@@ -10,7 +10,11 @@ sealed class LxStatus<T> {
   final T? lastValue;
 
   /// Internal constructor for async status types.
-  const LxStatus(this.lastValue);
+  const LxStatus(this.lastValue, {bool? hasLastValue})
+    : hasLastValue = hasLastValue ?? lastValue != null;
+
+  /// Whether retained data exists, independently of whether its value is null.
+  final bool hasLastValue;
 
   /// Returns `true` if the status is [LxWaiting].
   bool get isLoading => this is LxWaiting<T>;
@@ -23,21 +27,21 @@ sealed class LxStatus<T> {
 
   /// Returns the value if successful, otherwise `null`.
   T? get valueOrNull => switch (this) {
-        LxSuccess<T>(:final value) => value,
-        _ => null,
-      };
+    LxSuccess<T>(:final value) => value,
+    _ => null,
+  };
 
   /// Returns the error if the status is [LxError], otherwise `null`.
   Object? get errorOrNull => switch (this) {
-        LxError<T>(:final error) => error,
-        _ => null,
-      };
+    LxError<T>(:final error) => error,
+    _ => null,
+  };
 
   /// Returns the stack trace if the status is [LxError], otherwise `null`.
   StackTrace? get stackTraceOrNull => switch (this) {
-        LxError<T>(:final stackTrace) => stackTrace,
-        _ => null,
-      };
+    LxError<T>(:final stackTrace) => stackTrace,
+    _ => null,
+  };
 }
 
 /// Status: Idle (the operation has not been initiated).
@@ -56,15 +60,25 @@ final class LxIdle<T> extends LxStatus<T> {
 
   const LxIdle._internal(super.lastValue);
 
+  /// Explicit retained data, including a successful null value.
+  const LxIdle.retained(T lastValue) : super(lastValue, hasLastValue: true);
+
+  /// Preserves the presence of previous data across status transitions.
+  factory LxIdle.fromPrevious(LxStatus<T> previous) => previous.hasLastValue
+      ? LxIdle.retained(previous.lastValue as T)
+      : LxIdle<T>();
+
   @override
   String toString() => 'LxIdle<$T>(lastValue: $lastValue)';
 
   @override
   bool operator ==(Object other) =>
-      other is LxIdle<T> && other.lastValue == lastValue;
+      other is LxIdle<T> &&
+      other.lastValue == lastValue &&
+      other.hasLastValue == hasLastValue;
 
   @override
-  int get hashCode => Object.hash(runtimeType, lastValue);
+  int get hashCode => Object.hash(runtimeType, lastValue, hasLastValue);
 }
 
 /// Status: Waiting (the operation is active).
@@ -84,15 +98,25 @@ final class LxWaiting<T> extends LxStatus<T> {
 
   const LxWaiting._internal(super.lastValue);
 
+  /// Explicit retained data, including a successful null value.
+  const LxWaiting.retained(T lastValue) : super(lastValue, hasLastValue: true);
+
+  /// Preserves the presence of previous data across status transitions.
+  factory LxWaiting.fromPrevious(LxStatus<T> previous) => previous.hasLastValue
+      ? LxWaiting.retained(previous.lastValue as T)
+      : LxWaiting<T>();
+
   @override
   String toString() => 'LxWaiting<$T>(lastValue: $lastValue)';
 
   @override
   bool operator ==(Object other) =>
-      other is LxWaiting<T> && other.lastValue == lastValue;
+      other is LxWaiting<T> &&
+      other.lastValue == lastValue &&
+      other.hasLastValue == hasLastValue;
 
   @override
-  int get hashCode => Object.hash(runtimeType, lastValue);
+  int get hashCode => Object.hash(runtimeType, lastValue, hasLastValue);
 }
 
 /// Status: Success (the operation completed with a result).
@@ -101,7 +125,7 @@ final class LxSuccess<T> extends LxStatus<T> {
   final T value;
 
   /// Creates a success status wrapper around [value].
-  const LxSuccess(this.value) : super(value);
+  const LxSuccess(this.value) : super(value, hasLastValue: true);
 
   @override
   String toString() => 'LxSuccess<$T>($value)';
@@ -125,6 +149,17 @@ final class LxError<T> extends LxStatus<T> {
   /// Creates an error status optionally carrying the [lastValue].
   const LxError(this.error, [this.stackTrace, T? lastValue]) : super(lastValue);
 
+  const LxError.retained(this.error, T lastValue, [this.stackTrace])
+    : super(lastValue, hasLastValue: true);
+
+  factory LxError.fromPrevious(
+    Object error,
+    StackTrace? stack,
+    LxStatus<T> previous,
+  ) => previous.hasLastValue
+      ? LxError.retained(error, previous.lastValue as T, stack)
+      : LxError(error, stack);
+
   @override
   String toString() => 'LxError<$T>($error, lastValue: $lastValue)';
 
@@ -132,14 +167,15 @@ final class LxError<T> extends LxStatus<T> {
   bool operator ==(Object other) =>
       other is LxError<T> &&
       other.error == error &&
-      other.lastValue == lastValue;
+      other.lastValue == lastValue &&
+      other.hasLastValue == hasLastValue;
 
   @override
-  int get hashCode => Object.hash(runtimeType, error, lastValue);
+  int get hashCode => Object.hash(runtimeType, error, lastValue, hasLastValue);
 }
 
 /// Ergonomic extensions for interacting with reactive async status sources.
-extension LxStatusReactiveExtensions<T> on LxReactive<LxStatus<T>> {
+extension LxStatusReactiveExtensions<T> on LxReadable<LxStatus<T>> {
   /// Returns the current value if the status is [LxSuccess], otherwise `null`.
   T? get valueOrNull => value.valueOrNull;
 
@@ -170,6 +206,8 @@ extension LxStatusReactiveExtensions<T> on LxReactive<LxStatus<T>> {
   /// Returns the [LxStatus.lastValue] (the most recent successful value).
   T? get lastValue => value.lastValue;
 
+  bool get hasLastValue => value.hasLastValue;
+
   /// Force-retrieves the current value if the status is [LxSuccess].
   ///
   /// Throws the internal error if status is [LxError], or a [StateError] if
@@ -181,9 +219,6 @@ extension LxStatusReactiveExtensions<T> on LxReactive<LxStatus<T>> {
     throw StateError('Async operation has no value yet (status: $s)');
   }
 
-  /// Alias for [requireValue].
-  T get computedValue => requireValue;
-
   /// Returns a Future that completes when the operation reaches a terminal state.
   ///
   /// If the current state is [LxSuccess] or [LxError], the Future completes
@@ -194,9 +229,10 @@ extension LxStatusReactiveExtensions<T> on LxReactive<LxStatus<T>> {
     if (s is LxError<T>) return Future.error(s.error, s.stackTrace);
 
     final terminalStatus = await stream.firstWhere(
-        (status) => status is LxSuccess<T> || status is LxError<T>,
-        orElse: () =>
-            throw StateError('Async operation stream closed unexpectedly.'));
+      (status) => status is LxSuccess<T> || status is LxError<T>,
+      orElse: () =>
+          throw StateError('Async operation stream closed unexpectedly.'),
+    );
 
     if (terminalStatus is LxSuccess<T>) return terminalStatus.value;
     throw (terminalStatus as LxError<T>).error;

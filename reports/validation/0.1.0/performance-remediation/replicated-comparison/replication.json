@@ -1,0 +1,13 @@
+{
+  "sourceMatrices": [
+    "comparison-9",
+    "comparison-10"
+  ],
+  "sameExecutableAndAot": true,
+  "processes": 32,
+  "roundsPerConfiguration": 12,
+  "logicSamplesPerConfiguration": 360,
+  "framesPerConfiguration": 720,
+  "sourceFilesUnchanged": true,
+  "publication": false
+}

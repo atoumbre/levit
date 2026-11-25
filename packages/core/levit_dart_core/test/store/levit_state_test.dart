@@ -5,7 +5,7 @@ void main() {
   group('LevitStore', () {
     test('standard functional state resolution', () {
       final counter = LevitStore((ref) {
-        final count = ref.autoDispose(0.lx);
+        final count = ref.own(0.lx);
         return count;
       });
 
@@ -28,8 +28,11 @@ void main() {
       final valA = counter.findIn(scopeA);
       final valB = counter.findIn(scopeB);
 
-      expect(valA, isNot(same(valB)),
-          reason: 'State instances must be isolated per scope');
+      expect(
+        valA,
+        isNot(same(valB)),
+        reason: 'State instances must be isolated per scope',
+      );
 
       valA.value = 10;
       valB.value = 20;
@@ -38,7 +41,7 @@ void main() {
       expect(counter.findIn(scopeB).value, 20);
     });
 
-    test('autoDispose in functional state', () {
+    test('own in functional state', () async {
       var disposed = false;
       final state = LevitStore((ref) {
         ref.onDispose(() => disposed = true);
@@ -49,7 +52,7 @@ void main() {
       state.findIn(root);
       expect(disposed, false);
 
-      root.dispose();
+      await root.dispose();
       expect(disposed, true);
     });
 

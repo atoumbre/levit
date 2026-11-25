@@ -50,14 +50,16 @@ void main() {
     FactoryService.reset();
   });
 
-  tearDown(() {
-    levit.reset(force: true);
+  tearDown(() async {
+    await levit.reset(force: true);
   });
 
   group('put (simulated async)', () {
     test('registers async service manually', () async {
       final instance = await Future.delayed(
-          Duration(milliseconds: 10), () => AsyncService('async'));
+        Duration(milliseconds: 10),
+        () => AsyncService('async'),
+      );
       final service = levit.put(() => instance);
 
       expect(service.name, 'async');
@@ -173,19 +175,21 @@ void main() {
   });
 
   group('putFactoryAsync', () {
-    test('putFactoryAsync returns new instance each time via findAsync',
-        () async {
-      levit.lazyPutAsync(() async {
-        await Future.delayed(Duration(milliseconds: 5));
-        return FactoryService();
-      }, isFactory: true);
+    test(
+      'putFactoryAsync returns new instance each time via findAsync',
+      () async {
+        levit.lazyPutAsync(() async {
+          await Future.delayed(Duration(milliseconds: 5));
+          return FactoryService();
+        }, isFactory: true);
 
-      final a = await levit.findAsync<FactoryService>();
-      final b = await levit.findAsync<FactoryService>();
+        final a = await levit.findAsync<FactoryService>();
+        final b = await levit.findAsync<FactoryService>();
 
-      expect(a.id, 1);
-      expect(b.id, 2);
-    });
+        expect(a.id, 1);
+        expect(b.id, 2);
+      },
+    );
 
     test('putFactoryAsync factory works with sync find for sync builders', () {
       levit.lazyPutAsync(() async => FactoryService(), isFactory: true);

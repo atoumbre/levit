@@ -9,9 +9,9 @@ class TestService {
 }
 
 void main() {
-  testWidgets(
-      'Split-Brain: Levit.find fails inside LScope without context.levit',
-      (tester) async {
+  testWidgets('Split-Brain: Levit.find fails inside LScope without context.levit', (
+    tester,
+  ) async {
     // 1. Setup: Register a global service to ensure we don't accidentally find it
     Levit.put(() => TestService('Global'), tag: 'test');
 
@@ -45,11 +45,12 @@ void main() {
     expect(caughtError, isNull);
 
     // Cleanup
-    Levit.reset(force: true);
+    await Levit.reset(force: true);
   });
 
-  testWidgets('Split-Brain: Levit.find works inside LBuilder with fix',
-      (tester) async {
+  testWidgets('Split-Brain: Levit.find works inside LBuilder with fix', (
+    tester,
+  ) async {
     Levit.put(() => TestService('Global'), tag: 'test');
 
     // Use a reactive value to satisfy LBuilder requirements
@@ -70,6 +71,6 @@ void main() {
     );
 
     expect(foundValue, 'Scoped');
-    Levit.reset(force: true);
+    await Levit.reset(force: true);
   });
 }

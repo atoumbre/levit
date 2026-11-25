@@ -31,6 +31,7 @@ void main() {
     final transport2 = _TestTransport();
     await middleware.updateTransport(transport: transport2);
 
+    transport2.clear();
     transport2.connect();
     await Future<void>.delayed(Duration.zero);
     expect(transport2.snapshotCount, 1);
@@ -39,7 +40,7 @@ void main() {
   });
 }
 
-class _TestTransport implements LevitTransport {
+class _TestTransport extends LevitTransport {
   final StreamController<void> _controller = StreamController<void>.broadcast();
   final List<MonitorEvent> _events = [];
 
@@ -62,7 +63,8 @@ class _TestTransport implements LevitTransport {
     }
   }
 
-  int get snapshotCount => _events.whereType<SnapshotEvent>().length;
+  int get snapshotCount =>
+      _events.where((event) => event.toJson()['type'] == 'snapshot').length;
 
   void clear() => _events.clear();
 }

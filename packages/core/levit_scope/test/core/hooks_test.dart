@@ -12,8 +12,12 @@ void main() {
     test('LevitScopeMiddleware.onCreate works', () {
       bool hookCalled = false;
 
-      S Function() myHook<S>(S Function() builder, LevitScope scope, String key,
-          LevitDependency info) {
+      S Function() myHook<S>(
+        S Function() builder,
+        LevitScope scope,
+        String key,
+        LevitDependency info,
+      ) {
         return () {
           hookCalled = true;
           return builder();
@@ -34,8 +38,12 @@ void main() {
       final order = <String>[];
 
       // Observer 1
-      S Function() hook1<S>(S Function() builder, LevitScope scope, String key,
-          LevitDependency info) {
+      S Function() hook1<S>(
+        S Function() builder,
+        LevitScope scope,
+        String key,
+        LevitDependency info,
+      ) {
         return () {
           order.add('Hook1 Start');
           final result = builder();
@@ -47,8 +55,12 @@ void main() {
       final obs1 = _TestCreateObserver(hook1);
 
       // Observer 2
-      S Function() hook2<S>(S Function() builder, LevitScope scope, String key,
-          LevitDependency info) {
+      S Function() hook2<S>(
+        S Function() builder,
+        LevitScope scope,
+        String key,
+        LevitDependency info,
+      ) {
         return () {
           order.add('Hook2 Start');
           final result = builder();
@@ -69,12 +81,7 @@ void main() {
       // Original Builder
       // Wrapped 1 = Hook1(Original)
       // Wrapped 2 = Hook2(Wrapped 1)
-      expect(order, [
-        'Hook2 Start',
-        'Hook1 Start',
-        'Hook1 End',
-        'Hook2 End',
-      ]);
+      expect(order, ['Hook2 Start', 'Hook1 Start', 'Hook1 End', 'Hook2 End']);
 
       LevitScope.removeMiddleware(obs1);
       LevitScope.removeMiddleware(obs2);
@@ -83,8 +90,12 @@ void main() {
     test('removeMiddleware works', () {
       bool hookCalled = false;
 
-      S Function() myHook<S>(S Function() builder, LevitScope scope, String key,
-          LevitDependency info) {
+      S Function() myHook<S>(
+        S Function() builder,
+        LevitScope scope,
+        String key,
+        LevitDependency info,
+      ) {
         return () {
           hookCalled = true;
           return builder();
@@ -110,7 +121,8 @@ class _TestCreateObserver extends LevitScopeMiddleware {
     LevitScope scope,
     String key,
     LevitDependency info,
-  ) hook;
+  )
+  hook;
 
   const _TestCreateObserver(this.hook);
 

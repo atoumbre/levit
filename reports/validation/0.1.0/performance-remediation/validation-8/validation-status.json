@@ -1,0 +1,134 @@
+{
+  "snapshot": "/private/tmp/levit-0.1.0-performance-x773iaob",
+  "published": false,
+  "phases": [
+    {
+      "name": "native-comparison",
+      "command": [
+        "python3",
+        "benchmarks/tool/compare_release_performance.py",
+        "/private/tmp/levit-performance-539f130-q8vb_rc4",
+        "/Users/atoumbre/SoftiLab/levit-svg/reports/validation/0.1.0/performance-remediation/comparison-8"
+      ],
+      "cwd": "/Users/atoumbre/SoftiLab/levit-svg",
+      "log": "comparison-8/run.log",
+      "started": "2026-11-11T19:35:57.617247-05:00",
+      "status": "pass",
+      "exitCode": 0,
+      "finished": "2026-11-11T19:39:56.664241-05:00"
+    },
+    {
+      "name": "snapshot-format",
+      "command": [
+        "/Users/atoumbre/devs/flutter/bin/cache/dart-sdk/bin/dart",
+        "--suppress-analytics",
+        "format",
+        "--output=none",
+        "--set-exit-if-changed",
+        "."
+      ],
+      "cwd": "/private/tmp/levit-0.1.0-performance-x773iaob",
+      "log": "snapshot-format.log",
+      "started": "2026-11-11T19:39:56.665359-05:00",
+      "status": "pass",
+      "exitCode": 0,
+      "finished": "2026-11-11T19:39:57.539750-05:00"
+    },
+    {
+      "name": "snapshot-ci",
+      "command": [
+        "/Users/atoumbre/devs/flutter/bin/cache/dart-sdk/bin/dart",
+        "--suppress-analytics",
+        "run",
+        "scripts/ci.dart"
+      ],
+      "cwd": "/private/tmp/levit-0.1.0-performance-x773iaob",
+      "log": "snapshot-ci.log",
+      "started": "2026-11-11T19:39:57.540074-05:00",
+      "status": "pass",
+      "exitCode": 0,
+      "finished": "2026-11-11T19:41:32.457627-05:00"
+    },
+    {
+      "name": "snapshot-coverage",
+      "command": [
+        "/Users/atoumbre/devs/flutter/bin/cache/dart-sdk/bin/dart",
+        "--suppress-analytics",
+        "run",
+        "scripts/check_coverage.dart",
+        "--fail-under=100",
+        "--timeout=600",
+        "--generate-report"
+      ],
+      "cwd": "/private/tmp/levit-0.1.0-performance-x773iaob",
+      "log": "snapshot-coverage.log",
+      "started": "2026-11-11T19:41:32.458306-05:00",
+      "status": "pass",
+      "exitCode": 0,
+      "finished": "2026-11-11T19:47:11.418712-05:00"
+    },
+    {
+      "name": "snapshot-stress",
+      "command": [
+        "/Users/atoumbre/devs/flutter/bin/cache/dart-sdk/bin/dart",
+        "--suppress-analytics",
+        "run",
+        "scripts/stress_test.dart"
+      ],
+      "cwd": "/private/tmp/levit-0.1.0-performance-x773iaob",
+      "log": "snapshot-stress.log",
+      "started": "2026-11-11T19:47:11.419945-05:00",
+      "status": "pass",
+      "exitCode": 0,
+      "finished": "2026-11-11T19:47:26.487863-05:00"
+    },
+    {
+      "name": "snapshot-benchmarks",
+      "command": [
+        "/Users/atoumbre/devs/flutter/bin/cache/dart-sdk/bin/dart",
+        "--suppress-analytics",
+        "run",
+        "melos",
+        "run",
+        "benchmarks",
+        "--no-select"
+      ],
+      "cwd": "/private/tmp/levit-0.1.0-performance-x773iaob",
+      "log": "snapshot-benchmarks.log",
+      "started": "2026-11-11T19:47:26.488328-05:00",
+      "status": "pass",
+      "exitCode": 0,
+      "finished": "2026-11-11T19:48:13.974748-05:00"
+    },
+    {
+      "name": "snapshot-browser-builds",
+      "command": [
+        "/Users/atoumbre/devs/flutter/bin/cache/dart-sdk/bin/dart",
+        "--suppress-analytics",
+        "run",
+        "scripts/check_browser_builds.dart"
+      ],
+      "cwd": "/private/tmp/levit-0.1.0-performance-x773iaob",
+      "log": "snapshot-browser-builds.log",
+      "started": "2026-11-11T19:48:13.975515-05:00",
+      "status": "pass",
+      "exitCode": 0,
+      "finished": "2026-11-11T19:49:31.110013-05:00"
+    },
+    {
+      "name": "snapshot-publish-dry-runs",
+      "command": [
+        "/Users/atoumbre/devs/flutter/bin/cache/dart-sdk/bin/dart",
+        "--suppress-analytics",
+        "run",
+        "scripts/publish_dry_run.dart"
+      ],
+      "cwd": "/private/tmp/levit-0.1.0-performance-x773iaob",
+      "log": "snapshot-publish-dry-runs.log",
+      "started": "2026-11-11T19:49:31.110878-05:00",
+      "status": "pass",
+      "exitCode": 0,
+      "finished": "2026-11-11T19:50:47.128765-05:00"
+    }
+  ]
+}

@@ -3,9 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
-  group('LWatch Coverage', () {
-    testWidgets('LWatch with implicit reactive (Line 113 disposal)',
-        (tester) async {
+  group('Reactive widget subscriptions and rebuilds', () {
+    testWidgets('LWatch rebuilds for implicit reactive reads and unmounts', (
+      tester,
+    ) async {
       final v = 0.lx;
 
       await tester.pumpWidget(
@@ -26,7 +27,9 @@ void main() {
       await tester.pumpWidget(Container());
     });
 
-    testWidgets('LWatchVar and updates (Lines 252-276)', (tester) async {
+    testWidgets('LBuilder switches to a replacement reactive source', (
+      tester,
+    ) async {
       final v1 = 0.lx;
       final v2 = 10.lx;
 
@@ -48,46 +51,49 @@ void main() {
       await tester.pumpWidget(Container());
     });
 
-    testWidgets('LWatchStatus fallback paths (Lines 355-390)', (tester) async {
-      final status = LxVar<LxStatus<String>>(LxWaiting());
+    testWidgets(
+      'LStatusBuilder renders status transitions and a replacement source',
+      (tester) async {
+        final status = LxVar<LxStatus<String>>(LxWaiting());
 
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: LStatusBuilder<String>(
-            status,
-            onSuccess: (data) => Text('Success: $data'),
-            onWaiting: () => const Text('Waiting'),
-            onError: (err, stack) => Text('Error: $err'),
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: LStatusBuilder<String>(
+              status,
+              onSuccess: (data) => Text('Success: $data'),
+              onWaiting: (status) => const Text('Waiting'),
+              onError: (status) => Text('Error: ${status.error}'),
+            ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Waiting'), findsOneWidget);
+        expect(find.text('Waiting'), findsOneWidget);
 
-      status.value = LxSuccess('Done');
-      await tester.pump();
-      expect(find.text('Success: Done'), findsOneWidget);
+        status.value = LxSuccess('Done');
+        await tester.pump();
+        expect(find.text('Success: Done'), findsOneWidget);
 
-      status.value = LxError('Fail', null);
-      await tester.pump();
-      expect(find.text('Error: Fail'), findsOneWidget);
+        status.value = LxError('Fail', null);
+        await tester.pump();
+        expect(find.text('Error: Fail'), findsOneWidget);
 
-      // Update logic (Line 355)
-      final status2 = LxVar<LxStatus<String>>(LxSuccess('New'));
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: LStatusBuilder<String>(
-            status2,
-            onSuccess: (data) => Text('Success: $data'),
+        // Update logic (Line 355)
+        final status2 = LxVar<LxStatus<String>>(LxSuccess('New'));
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: LStatusBuilder<String>(
+              status2,
+              onSuccess: (data) => Text('Success: $data'),
+            ),
           ),
-        ),
-      );
-      expect(find.text('Success: New'), findsOneWidget);
+        );
+        expect(find.text('Success: New'), findsOneWidget);
 
-      // Dispose (Line 385)
-      await tester.pumpWidget(Container());
-    });
+        // Dispose (Line 385)
+        await tester.pumpWidget(Container());
+      },
+    );
   });
 }

@@ -2,7 +2,7 @@ import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
 
-class MockTransport implements LevitTransport {
+class MockTransport extends LevitTransport {
   final List<MonitorEvent> events = [];
 
   @override
@@ -35,7 +35,10 @@ void main() {
     test('captures listener added event with context', () async {
       final reactive = 0.lx;
       final ctx = const LxListenerContext(
-          type: 'Test', id: 1, data: {'test_key': 'test_value'});
+        type: 'Test',
+        id: 1,
+        data: {'test_key': 'test_value'},
+      );
 
       Lx.runWithContext(ctx, () {
         reactive.addListener(() {});
@@ -43,17 +46,21 @@ void main() {
 
       await Future.delayed(Duration.zero);
 
-      final event =
-          transport.events.whereType<ReactiveListenerAddedEvent>().first;
-      expect(event.reactive, equals(reactive));
-      expect(event.context, equals(ctx));
+      final event = transport.events
+          .where((event) => event.toJson()['type'] == 'listener_add')
+          .first;
+      expect(event.toJson()['reactiveId'], equals(reactive.id.toString()));
+      expect(event.toJson()['context'], equals(ctx.toJson()));
     });
 
     test('captures listener removed event with context', () async {
       final reactive = 0.lx;
       void listener() {}
-      final addCtx =
-          const LxListenerContext(type: 'Test', id: 1, data: {'ctx': 'add'});
+      final addCtx = const LxListenerContext(
+        type: 'Test',
+        id: 1,
+        data: {'ctx': 'add'},
+      );
 
       Lx.runWithContext(addCtx, () {
         reactive.addListener(listener);
@@ -62,18 +69,22 @@ void main() {
       await Future.delayed(Duration.zero);
       transport.events.clear();
 
-      final removeCtx =
-          const LxListenerContext(type: 'Test', id: 2, data: {'ctx': 'remove'});
+      final removeCtx = const LxListenerContext(
+        type: 'Test',
+        id: 2,
+        data: {'ctx': 'remove'},
+      );
       Lx.runWithContext(removeCtx, () {
         reactive.removeListener(listener);
       });
 
       await Future.delayed(Duration.zero);
 
-      final event =
-          transport.events.whereType<ReactiveListenerRemovedEvent>().first;
-      expect(event.reactive, equals(reactive));
-      expect(event.context, equals(removeCtx));
+      final event = transport.events
+          .where((event) => event.toJson()['type'] == 'listener_remove')
+          .first;
+      expect(event.toJson()['reactiveId'], equals(reactive.id.toString()));
+      expect(event.toJson()['context'], equals(removeCtx.toJson()));
     });
 
     test('captures partial context when runWithContext is nested', () async {
@@ -89,12 +100,13 @@ void main() {
 
       await Future.delayed(Duration.zero);
 
-      final event =
-          transport.events.whereType<ReactiveListenerAddedEvent>().first;
+      final event = transport.events
+          .where((event) => event.toJson()['type'] == 'listener_add')
+          .first;
       // Should capture the immediate context (inner)
       // Note: Current implementation replaces context, doesn't merge.
-      expect(event.context, equals(innerCtx));
-      expect(event.context?.type, equals('Inner'));
+      expect(event.toJson()['context'], equals(innerCtx.toJson()));
+      expect(event.toJson()['context']?['type'], equals('Inner'));
     });
   });
 }

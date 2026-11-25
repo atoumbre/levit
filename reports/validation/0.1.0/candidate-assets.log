@@ -1,0 +1,1 @@
+PASS: 35 optimized inspector assets match byte-for-byte between working and isolated release builds; .last_build_id excluded.

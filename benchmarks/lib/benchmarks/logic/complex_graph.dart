@@ -9,7 +9,7 @@ import 'package:rxdart/rxdart.dart' as rxdart;
 
 class ComplexGraphBenchmark extends Benchmark {
   @override
-  String get name => 'Complex Graph (Diamond)';
+  String get name => 'Diamond Graph (Observed Updates)';
 
   @override
   String get description =>
@@ -24,7 +24,11 @@ class ComplexGraphBenchmark extends Benchmark {
 
   @override
   String get comparisonNote =>
-      'Uses each framework\'s closest graph/computed primitive.';
+      'Consumes the final diamond result after every root write. Intermediate notification counts can differ.';
+
+  @override
+  String implementationLabel(Framework framework) =>
+      framework == Framework.bloc ? 'RxDart' : framework.label;
 
   @override
   BenchmarkImplementation createImplementation(Framework framework) {
@@ -45,6 +49,9 @@ class ComplexGraphBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitGraphBenchmark extends BenchmarkImplementation {
+  LevitGraphBenchmark({this.staticDeps = true});
+
+  final bool staticDeps;
   late LxVar<int> a;
   late LxComputed<int> b;
   late LxComputed<int> c;
@@ -55,13 +62,13 @@ class LevitGraphBenchmark extends BenchmarkImplementation {
   @override
   Future<void> setup() async {
     a = LxVar(0);
-    // Use synchronous LxComputed for fair comparison, with staticDeps optimization
-    b = LxComputed(() => a.value + 1, staticDeps: true);
-    c = LxComputed(() => a.value * 2, staticDeps: true);
-    // Access .computedValue to get the actual int value
-    d = LxComputed(() => b.value + c.value, staticDeps: true);
+    b = LxComputed(() => a.value + 1, staticDeps: staticDeps);
+    c = LxComputed(() => a.value * 2, staticDeps: staticDeps);
+    d = LxComputed(() => b.value + c.value, staticDeps: staticDeps);
 
-    listener = () {};
+    listener = () {
+      d.value;
+    };
     d.addListener(listener);
     expectedA = 0;
   }
@@ -70,12 +77,16 @@ class LevitGraphBenchmark extends BenchmarkImplementation {
   Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.value++;
+      if (d.value != _expectedOutput(a.value)) {
+        throw StateError("Stale diamond output");
+      }
     }
     expectedA += BenchmarkConfig.complexGraphIterations;
     final value = d.value;
     if (value != _expectedOutput(expectedA)) {
       throw StateError(
-          'Levit graph mismatch: expected ${_expectedOutput(expectedA)}, got $value');
+        'Levit graph mismatch: expected ${_expectedOutput(expectedA)}, got $value',
+      );
     }
   }
 
@@ -83,17 +94,18 @@ class LevitGraphBenchmark extends BenchmarkImplementation {
   Future<void> verify() async {
     if (a.value != expectedA || d.value != _expectedOutput(expectedA)) {
       throw StateError(
-          'Levit graph verification failed: a=${a.value}, d=${d.value}, expectedA=$expectedA');
+        'Levit graph verification failed: a=${a.value}, d=${d.value}, expectedA=$expectedA',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
     d.removeListener(listener);
-    a.close();
-    b.close();
-    c.close();
-    d.close();
+    await a.close();
+    await b.close();
+    await c.close();
+    await d.close();
   }
 }
 
@@ -136,11 +148,15 @@ class VanillaGraphBenchmark extends BenchmarkImplementation {
   Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.value++;
+      if (d.value != _expectedOutput(a.value)) {
+        throw StateError("Stale diamond output");
+      }
     }
     expectedA += BenchmarkConfig.complexGraphIterations;
     if (d.value != _expectedOutput(expectedA)) {
       throw StateError(
-          'Vanilla graph mismatch: expected ${_expectedOutput(expectedA)}, got ${d.value}');
+        'Vanilla graph mismatch: expected ${_expectedOutput(expectedA)}, got ${d.value}',
+      );
     }
   }
 
@@ -148,7 +164,8 @@ class VanillaGraphBenchmark extends BenchmarkImplementation {
   Future<void> verify() async {
     if (a.value != expectedA || d.value != _expectedOutput(expectedA)) {
       throw StateError(
-          'Vanilla graph verification failed: a=${a.value}, d=${d.value}, expectedA=$expectedA');
+        'Vanilla graph verification failed: a=${a.value}, d=${d.value}, expectedA=$expectedA',
+      );
     }
   }
 
@@ -214,6 +231,11 @@ class GetXGraphBenchmark extends BenchmarkImplementation {
   Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.value++;
+      await _waitForValue(
+        current: () => dVal.value,
+        expected: _expectedOutput(a.value),
+        label: 'GetX graph',
+      );
     }
     expectedA += BenchmarkConfig.complexGraphIterations;
     await _waitForValue(
@@ -227,7 +249,8 @@ class GetXGraphBenchmark extends BenchmarkImplementation {
   Future<void> verify() async {
     if (a.value != expectedA || dVal.value != _expectedOutput(expectedA)) {
       throw StateError(
-          'GetX graph verification failed: a=${a.value}, d=${dVal.value}, expectedA=$expectedA');
+        'GetX graph verification failed: a=${a.value}, d=${dVal.value}, expectedA=$expectedA',
+      );
     }
   }
 
@@ -266,12 +289,16 @@ class RiverpodGraphBenchmark extends BenchmarkImplementation {
     final notifier = container.read(aProvider.notifier);
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       notifier.state++;
+      if (container.read(dProvider) != _expectedOutput(notifier.state)) {
+        throw StateError('Stale diamond output');
+      }
     }
     expectedA += BenchmarkConfig.complexGraphIterations;
     final value = container.read(dProvider);
     if (value != _expectedOutput(expectedA)) {
       throw StateError(
-          'Riverpod graph mismatch: expected ${_expectedOutput(expectedA)}, got $value');
+        'Riverpod graph mismatch: expected ${_expectedOutput(expectedA)}, got $value',
+      );
     }
   }
 
@@ -281,7 +308,8 @@ class RiverpodGraphBenchmark extends BenchmarkImplementation {
     if (container.read(aProvider) != expectedA ||
         value != _expectedOutput(expectedA)) {
       throw StateError(
-          'Riverpod graph verification failed: a=${container.read(aProvider)}, d=$value, expectedA=$expectedA');
+        'Riverpod graph verification failed: a=${container.read(aProvider)}, d=$value, expectedA=$expectedA',
+      );
     }
   }
 
@@ -321,6 +349,11 @@ class BlocGraphBenchmark extends BenchmarkImplementation {
   Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.complexGraphIterations; i++) {
       a.add(a.value + 1);
+      await _waitForValue(
+        current: () => dSubject.value,
+        expected: _expectedOutput(a.value),
+        label: 'RxDart graph',
+      );
     }
     expectedA += BenchmarkConfig.complexGraphIterations;
     await _waitForValue(
@@ -334,7 +367,8 @@ class BlocGraphBenchmark extends BenchmarkImplementation {
   Future<void> verify() async {
     if (a.value != expectedA || dSubject.value != _expectedOutput(expectedA)) {
       throw StateError(
-          'BLoC graph verification failed: a=${a.value}, d=${dSubject.value}, expectedA=$expectedA');
+        'BLoC graph verification failed: a=${a.value}, d=${dSubject.value}, expectedA=$expectedA',
+      );
     }
   }
 

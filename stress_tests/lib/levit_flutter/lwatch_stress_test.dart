@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('Stress Test: LWatch', () {
@@ -15,16 +15,18 @@ void main() {
 
       var buildCount = 0;
 
-      await tester.pumpWidget(MaterialApp(
-        home: LWatch(() {
-          buildCount++;
-          var sum = 0;
-          for (final s in sources) {
-            sum += s.value;
-          }
-          return Text('Sum: $sum');
-        }),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LWatch(() {
+            buildCount++;
+            var sum = 0;
+            for (final s in sources) {
+              sum += s.value;
+            }
+            return Text('Sum: $sum');
+          }),
+        ),
+      );
 
       expect(buildCount, 1);
 
@@ -36,27 +38,32 @@ void main() {
 
       expect(buildCount, 2);
       print(
-          'LWatch Fan-In: Initial build with $sourceCount sources, single update rebuild in ${sw.elapsedMilliseconds}ms');
+        'LWatch Fan-In: Initial build with $sourceCount sources, single update rebuild in ${sw.elapsedMilliseconds}ms',
+      );
 
       for (final s in sources) {
         s.close();
       }
     });
 
-    testWidgets('Rapid Rebuild - 60fps simulation for 2 seconds',
-        (tester) async {
+    testWidgets('Rapid Rebuild - 60fps simulation for 2 seconds', (
+      tester,
+    ) async {
       print(
-          '[Description] Simulates 60fps updates and measures rebuild performance.');
+        '[Description] Simulates 60fps updates and measures rebuild performance.',
+      );
       final source = 0.lx;
 
       var buildCount = 0;
 
-      await tester.pumpWidget(MaterialApp(
-        home: LWatch(() {
-          buildCount++;
-          return Text('Value: ${source.value}');
-        }),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LWatch(() {
+            buildCount++;
+            return Text('Value: ${source.value}');
+          }),
+        ),
+      );
 
       const frames = 1200; // 20 seconds at 60fps
       final frameDuration = const Duration(milliseconds: 16);
@@ -69,32 +76,39 @@ void main() {
       sw.stop();
 
       print(
-          'Rapid Rebuild: $buildCount builds over $frames frame updates in ${sw.elapsedMilliseconds}ms');
+        'Rapid Rebuild: $buildCount builds over $frames frame updates in ${sw.elapsedMilliseconds}ms',
+      );
       expect(
-          buildCount, greaterThanOrEqualTo(frames)); // May vary due to timing
+        buildCount,
+        greaterThanOrEqualTo(frames),
+      ); // May vary due to timing
 
       source.close();
     });
 
-    testWidgets('Subscribe Cleanup - 5000 mount/unmount cycles',
-        (tester) async {
+    testWidgets('Subscribe Cleanup - 5000 mount/unmount cycles', (
+      tester,
+    ) async {
       print('[Description] Verifies LWatch cleans up subscriptions correctly.');
       final source = 0.lx;
       const cycles = 5000;
 
       final sw = Stopwatch()..start();
       for (var i = 0; i < cycles; i++) {
-        await tester.pumpWidget(MaterialApp(
-          home: LWatch(() {
-            return Text('Value: ${source.value}');
-          }),
-        ));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LWatch(() {
+              return Text('Value: ${source.value}');
+            }),
+          ),
+        );
         await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
       }
       sw.stop();
 
       print(
-          'LWatch Subscribe Cleanup: $cycles mount/unmount cycles in ${sw.elapsedMilliseconds}ms');
+        'LWatch Subscribe Cleanup: $cycles mount/unmount cycles in ${sw.elapsedMilliseconds}ms',
+      );
 
       source.close();
     });

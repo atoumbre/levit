@@ -8,8 +8,8 @@ library levit_monitor;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:developer' as dev;
-import 'dart:io';
+import 'levit_monitor_protocol.dart';
+export 'levit_monitor_protocol.dart';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:logger/logger.dart';
@@ -20,7 +20,7 @@ part 'src/event.dart';
 part 'src/middleware.dart';
 part 'src/snapshot.dart';
 part 'src/transports/console_transport.dart';
-part 'src/transports/file_transport.dart';
+
 part 'src/transports/interface.dart';
 part 'src/transports/multi_transport.dart';
 part 'src/transports/websocket_transport.dart';

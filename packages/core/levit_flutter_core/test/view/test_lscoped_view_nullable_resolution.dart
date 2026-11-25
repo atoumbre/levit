@@ -5,13 +5,14 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 import '../helpers.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('LScopedView orElse', () {
-    testWidgets('renders builder when dependencyFactory registers controller',
-        (tester) async {
+    testWidgets('renders builder when dependencyFactory registers controller', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: LScopedView<TestController>.put(
@@ -27,8 +28,9 @@ void main() {
       expect(find.text('Fallback'), findsNothing);
     });
 
-    testWidgets('renders orElse when no matching controller in scope',
-        (tester) async {
+    testWidgets('renders orElse when no matching controller in scope', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: LScopedView<TestController>(

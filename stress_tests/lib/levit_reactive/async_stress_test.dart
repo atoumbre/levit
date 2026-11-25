@@ -27,7 +27,8 @@ void main() {
       }
 
       print(
-          'Created $iterations LxFuture instances in ${sw.elapsedMilliseconds}ms, $successCount resolved');
+        'Created $iterations LxFuture instances in ${sw.elapsedMilliseconds}ms, $successCount resolved',
+      );
       expect(successCount, greaterThan(0));
     });
 
@@ -48,7 +49,8 @@ void main() {
       sw.stop();
 
       print(
-          'Emitted $eventCount events in ${sw.elapsedMilliseconds}ms, received $receivedCount notifications');
+        'Emitted $eventCount events in ${sw.elapsedMilliseconds}ms, received $receivedCount notifications',
+      );
       expect(receivedCount, greaterThan(0));
 
       await controller.close();
@@ -57,7 +59,8 @@ void main() {
 
     test('LxStream Rapid Restart + Fan-out - 200 restarts', () async {
       print(
-          '[Description] Tests rapid LxStream.restart calls with redundant restarts and fan-out listeners.');
+        '[Description] Tests rapid LxStream.restart calls with redundant restarts and fan-out listeners.',
+      );
       const restartCount = 200;
       const fanOutListeners = 4;
 
@@ -89,7 +92,8 @@ void main() {
 
       final minReceived = received.reduce(min);
       print(
-          'Restarted $restartCount times in ${sw.elapsedMilliseconds}ms, per-listener counts: $received');
+        'Restarted $restartCount times in ${sw.elapsedMilliseconds}ms, per-listener counts: $received',
+      );
 
       expect(minReceived, greaterThan(0));
       expect(lxStream.lastValue, restartCount);
@@ -105,7 +109,8 @@ void main() {
 
     test('LxAsyncComputed Rapid Invalidation - 500 invalidations', () async {
       print(
-          '[Description] Tests LxAsyncComputed behavior under rapid invalidation.');
+        '[Description] Tests LxAsyncComputed behavior under rapid invalidation.',
+      );
       final source = 0.lx;
       var computeCount = 0;
 
@@ -126,13 +131,17 @@ void main() {
 
       final status = asyncComputed.status;
       print(
-          'Invalidated 500x in ${sw.elapsedMilliseconds}ms, compute called $computeCount times');
+        'Invalidated 500x in ${sw.elapsedMilliseconds}ms, compute called $computeCount times',
+      );
       print('Final status: $status');
 
       expect(status, isA<LxSuccess<int>>());
       expect(status.valueOrNull, 998);
-      expect(computeCount, lessThan(500),
-          reason: 'Should coalesce/debounce computations');
+      expect(
+        computeCount,
+        lessThan(500),
+        reason: 'Should coalesce/debounce computations',
+      );
 
       await subscription.cancel();
       source.close();
@@ -141,7 +150,8 @@ void main() {
 
     test('Async Race - 50 concurrent LxAsyncComputed on same source', () async {
       print(
-          '[Description] Tests many async computeds racing on the same source.');
+        '[Description] Tests many async computeds racing on the same source.',
+      );
       final source = 0.lx;
       const computedCount = 50;
 
@@ -169,7 +179,8 @@ void main() {
       }
 
       print(
-          '$computedCount async computeds, $successCount resolved in ${sw.elapsedMilliseconds}ms');
+        '$computedCount async computeds, $successCount resolved in ${sw.elapsedMilliseconds}ms',
+      );
 
       expect(successCount, computedCount);
 

@@ -56,7 +56,10 @@ void main() {
       final values = <String>[];
 
       final worker = LxWorker.debounce(
-          query, const Duration(milliseconds: 30), values.add);
+        query,
+        const Duration(milliseconds: 30),
+        values.add,
+      );
 
       query.value = 'a';
       query.value = 'ab';
@@ -87,23 +90,28 @@ void main() {
       expect(fireCount, 0);
     });
 
-    test('throttle emits leading value then suppresses until window ends',
-        () async {
-      final source = 0.lx;
-      final values = <int>[];
+    test(
+      'throttle emits leading value then suppresses until window ends',
+      () async {
+        final source = 0.lx;
+        final values = <int>[];
 
-      final worker = LxWorker.throttle(
-          source, const Duration(milliseconds: 30), values.add);
+        final worker = LxWorker.throttle(
+          source,
+          const Duration(milliseconds: 30),
+          values.add,
+        );
 
-      source.value = 1;
-      source.value = 2;
-      source.value = 3;
-      await Future<void>.delayed(const Duration(milliseconds: 35));
-      source.value = 4;
-      await Future<void>.delayed(Duration.zero);
+        source.value = 1;
+        source.value = 2;
+        source.value = 3;
+        await Future<void>.delayed(const Duration(milliseconds: 35));
+        source.value = 4;
+        await Future<void>.delayed(Duration.zero);
 
-      expect(values, [1, 4]);
-      worker.close();
-    });
+        expect(values, [1, 4]);
+        worker.close();
+      },
+    );
   });
 }

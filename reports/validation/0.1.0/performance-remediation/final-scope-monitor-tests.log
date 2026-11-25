@@ -1,0 +1,4 @@
+00:00 +0: loading test/middleware/scope_progress_dedup_test.dart
+00:00 +0: terminal disposal replaces empty progress only after real cleanup
+00:00 +1: only identical progress is suppressed; ownership and cleanup changes survive
+00:00 +2: All tests passed!

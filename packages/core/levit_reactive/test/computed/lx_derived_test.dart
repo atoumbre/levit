@@ -348,7 +348,8 @@ void main() {
 
       doubled.addListener(() => notified++);
       await Future.delayed(
-          Duration(milliseconds: 10)); // Wait for listener to activate
+        Duration(milliseconds: 10),
+      ); // Wait for listener to activate
 
       count.value = 5;
       await Future.delayed(Duration(milliseconds: 10));
@@ -405,7 +406,7 @@ void main() {
     });
   });
 
-  group('LxFuture additional coverage', () {
+  group('Future construction and listener notifications', () {
     test('LxFuture.from factory creates future from callback', () async {
       final future = LxFuture.from(() async => 42);
 
@@ -445,7 +446,7 @@ void main() {
     });
   });
 
-  group('LxStream additional coverage', () {
+  group('Stream listeners and status accessors', () {
     test('LxStream addListener and removeListener work', () async {
       final controller = StreamController<int>.broadcast();
       final stream = LxStream(controller.stream);
@@ -496,7 +497,7 @@ void main() {
     });
   });
 
-  group('LxComputed additional coverage', () {
+  group('Computed listeners and value accessors', () {
     test('LxComputed addListener and removeListener work', () async {
       final count = 0.lx;
       final computed = LxComputed(() => count.value * 2);
@@ -505,7 +506,8 @@ void main() {
 
       computed.addListener(listener);
       await Future.delayed(
-          Duration(milliseconds: 10)); // Wait for listener to activate
+        Duration(milliseconds: 10),
+      ); // Wait for listener to activate
 
       count.value = 5;
       await Future.delayed(Duration(milliseconds: 10));
@@ -556,7 +558,7 @@ void main() {
     });
   });
 
-  group('Coverage edge cases', () {
+  group('Future completion and stream error stack traces', () {
     test('LxFuture close method', () async {
       final future = LxFuture(Future.value(42));
 
@@ -568,8 +570,10 @@ void main() {
     });
 
     test('LxStream stackTraceOrNull returns stackTrace on error', () async {
-      final errorStream =
-          Stream<int>.error(Exception('test'), StackTrace.current);
+      final errorStream = Stream<int>.error(
+        Exception('test'),
+        StackTrace.current,
+      );
       final stream = LxStream(errorStream.asBroadcastStream());
 
       // Trigger the subscription to receive error
@@ -588,8 +592,8 @@ void main() {
     });
   });
 
-  // Additional coverage tests for LxReactive interface
-  _lxReactiveCoverageTests();
+  // Shared reactive interface contracts.
+  _reactiveInterfaceTests();
 }
 
 class _MockObserver implements LevitReactiveObserver {
@@ -608,9 +612,9 @@ class _MockObserver implements LevitReactiveObserver {
   }
 }
 
-// Additional tests for 100% coverage of LxReactive interface
-void _lxReactiveCoverageTests() {
-  group('LxReactive interface coverage', () {
+// Shared reactive interface contracts.
+void _reactiveInterfaceTests() {
+  group('Shared reactive value and worker contracts', () {
     test('watch works with LxComputed', () async {
       final count = 0.lx;
       final doubled = LxComputed(() => count.value * 2);
@@ -689,10 +693,7 @@ void _lxReactiveCoverageTests() {
       // The subscription must be on lx.stream to receive errors from the handleError path
       final errors = <Object>[];
       final values = <int>[];
-      lx.stream.listen(
-        (v) => values.add(v),
-        onError: (e) => errors.add(e),
-      );
+      lx.stream.listen((v) => values.add(v), onError: (e) => errors.add(e));
 
       // Emit a value first to ensure subscription is working
       controller.add(42);

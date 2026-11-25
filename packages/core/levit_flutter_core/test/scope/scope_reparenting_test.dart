@@ -9,9 +9,9 @@ class _TestController extends LevitController {
   _TestController(this.label, {this.onClosed});
 
   @override
-  void onClose() {
+  Future<void> onClose() async {
     onClosed?.call();
-    super.onClose();
+    await super.onClose();
   }
 }
 
@@ -45,8 +45,9 @@ Widget _buildMovedChildScope({
 }
 
 void main() {
-  testWidgets('LScope rebinds to new parent scope on re-parent',
-      (tester) async {
+  testWidgets('LScope rebinds to new parent scope on re-parent', (
+    tester,
+  ) async {
     Widget buildStage(String label) {
       return MaterialApp(
         home: LScope(
@@ -70,74 +71,85 @@ void main() {
     expect(find.text('A'), findsOneWidget);
 
     await tester.pumpWidget(buildStage('B'));
+    await tester.pumpAndSettle();
     expect(find.text('B'), findsOneWidget);
   });
 
-  testWidgets('LScope disposes scope on dependencyFactory error',
-      (tester) async {
+  testWidgets('LScope disposes scope on dependencyFactory error', (
+    tester,
+  ) async {
     int closed = 0;
 
-    await tester.pumpWidget(MaterialApp(
-      home: LScope(
-        dependencyFactory: (scope) {
-          scope.put(() => _TestController('x', onClosed: () => closed++));
-          throw StateError('boom');
-        },
-        child: const SizedBox.shrink(),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LScope(
+          dependencyFactory: (scope) {
+            scope.put(() => _TestController('x', onClosed: () => closed++));
+            throw StateError('boom');
+          },
+          child: const SizedBox.shrink(),
+        ),
       ),
-    ));
+    );
 
-    final error = tester.takeException();
-    expect(error, isA<StateError>());
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Scope error: Bad state: boom'), findsOneWidget);
     expect(closed, 1);
   });
 
-  testWidgets('LAsyncScope disposes scope on dependencyFactory error',
-      (tester) async {
+  testWidgets('LAsyncScope disposes scope on dependencyFactory error', (
+    tester,
+  ) async {
     int closed = 0;
 
-    await tester.pumpWidget(MaterialApp(
-      home: LAsyncScope(
-        dependencyFactory: (scope) async {
-          scope.put(() => _TestController('x', onClosed: () => closed++));
-          await Future<void>.delayed(Duration.zero);
-          throw StateError('boom');
-        },
-        child: const SizedBox.shrink(),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LAsyncScope(
+          dependencyFactory: (scope) async {
+            scope.put(() => _TestController('x', onClosed: () => closed++));
+            await Future<void>.delayed(Duration.zero);
+            throw StateError('boom');
+          },
+          child: const SizedBox.shrink(),
+        ),
       ),
-    ));
+    );
 
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Scope Initialization Error'), findsOneWidget);
+    expect(find.textContaining('Scope error:'), findsOneWidget);
     expect(closed, 1);
   });
 
   testWidgets(
-      'LAsyncScope + LView autoWatch:false bridges scope for Levit.find',
-      (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: LAsyncScope(
-        dependencyFactory: (scope) async {
-          scope.put(() => _TestController('local'));
-        },
-        child: LView<_TestController>(
-          resolver: (context) => context.levit.find<_TestController>(),
-          autoWatch: false,
-          builder: (context, controller) {
-            final fromGlobal = Levit.find<_TestController>();
-            return Text(fromGlobal.label);
-          },
+    'LAsyncScope + LView autoWatch:false bridges scope for Levit.find',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LAsyncScope(
+            dependencyFactory: (scope) async {
+              scope.put(() => _TestController('local'));
+            },
+            child: LView<_TestController>(
+              resolver: (context) => context.levit.find<_TestController>(),
+              autoWatch: false,
+              builder: (context, controller) {
+                final fromGlobal = Levit.find<_TestController>();
+                return Text(fromGlobal.label);
+              },
+            ),
+          ),
         ),
-      ),
-    ));
+      );
 
-    await tester.pumpAndSettle();
-    expect(find.text('local'), findsOneWidget);
-  });
+      await tester.pumpAndSettle();
+      expect(find.text('local'), findsOneWidget);
+    },
+  );
 
-  testWidgets('LAsyncScope rebinds to new parent scope on re-parent',
-      (tester) async {
+  testWidgets('LAsyncScope rebinds to new parent scope on re-parent', (
+    tester,
+  ) async {
     Widget buildStage(String label) {
       return MaterialApp(
         home: LScope(
@@ -163,11 +175,13 @@ void main() {
 
     await tester.pumpWidget(buildStage('B'));
     await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
     expect(find.text('B'), findsOneWidget);
   });
 
-  testWidgets('LScope rebinds when keyed child scope moves across parents',
-      (tester) async {
+  testWidgets('LScope rebinds when keyed child scope moves across parents', (
+    tester,
+  ) async {
     final childKey = GlobalKey();
 
     Widget buildChild(Key key) {
@@ -193,51 +207,49 @@ void main() {
     expect(find.text('left'), findsOneWidget);
 
     await tester.pumpWidget(
-      _buildMovedChildScope(
-        moved: true,
-        key: childKey,
-        buildChild: buildChild,
-      ),
+      _buildMovedChildScope(moved: true, key: childKey, buildChild: buildChild),
     );
     await tester.pump();
     expect(find.text('right'), findsOneWidget);
   });
 
-  testWidgets('LAsyncScope rebinds when keyed child scope moves across parents',
-      (tester) async {
-    final childKey = GlobalKey();
+  testWidgets(
+    'LAsyncScope rebinds when keyed child scope moves across parents',
+    (tester) async {
+      final childKey = GlobalKey();
 
-    Widget buildChild(Key key) {
-      return LAsyncScope(
-        key: key,
-        dependencyFactory: (_) async {},
-        child: Builder(
-          builder: (context) {
-            final controller = context.levit.find<_TestController>();
-            return Text(controller.label);
-          },
+      Widget buildChild(Key key) {
+        return LAsyncScope(
+          key: key,
+          dependencyFactory: (_) async {},
+          child: Builder(
+            builder: (context) {
+              final controller = context.levit.find<_TestController>();
+              return Text(controller.label);
+            },
+          ),
+        );
+      }
+
+      await tester.pumpWidget(
+        _buildMovedChildScope(
+          moved: false,
+          key: childKey,
+          buildChild: buildChild,
         ),
       );
-    }
+      await tester.pumpAndSettle();
+      expect(find.text('left'), findsOneWidget);
 
-    await tester.pumpWidget(
-      _buildMovedChildScope(
-        moved: false,
-        key: childKey,
-        buildChild: buildChild,
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('left'), findsOneWidget);
-
-    await tester.pumpWidget(
-      _buildMovedChildScope(
-        moved: true,
-        key: childKey,
-        buildChild: buildChild,
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('right'), findsOneWidget);
-  });
+      await tester.pumpWidget(
+        _buildMovedChildScope(
+          moved: true,
+          key: childKey,
+          buildChild: buildChild,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('right'), findsOneWidget);
+    },
+  );
 }

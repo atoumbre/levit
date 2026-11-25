@@ -42,12 +42,12 @@ void main() {
   });
 
   group('Unified Scope Hierarchy', () {
-    test('Root Scope Basic Operations', () {
+    test('Root Scope Basic Operations', () async {
       levit.put<Service>(() => RootService());
       expect(levit.find<Service>().name, 'Root');
       expect(levit.isRegistered<Service>(), isTrue);
 
-      levit.delete<Service>();
+      await levit.delete<Service>();
       expect(levit.isRegistered<Service>(), isFalse);
     });
 
@@ -91,12 +91,12 @@ void main() {
       expect((await scope.findAsync<Counter>(tag: 'lazy')).id, 'async_c');
     });
 
-    test('Scope Cleanup', () {
+    test('Scope Cleanup', () async {
       final scope = levit.createScope('cleanup');
       final c1 = Counter('c1');
       scope.put(() => c1);
 
-      scope.reset();
+      await scope.reset();
       expect(c1.closed, isTrue);
       expect(scope.isRegistered<Counter>(), isFalse);
     });

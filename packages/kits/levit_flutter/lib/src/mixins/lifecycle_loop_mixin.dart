@@ -43,15 +43,17 @@ class _LifecycleLoopObserver with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
-        _mixin.loopEngine
-            .resumeAllServices(force: _mixin.pauseLifecycleServicesForce);
+        _mixin.loopEngine.resumeAllServices(
+          force: _mixin.pauseLifecycleServicesForce,
+        );
         break;
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
       case AppLifecycleState.hidden:
       case AppLifecycleState.detached:
-        _mixin.loopEngine
-            .pauseAllServices(force: _mixin.pauseLifecycleServicesForce);
+        _mixin.loopEngine.pauseAllServices(
+          force: _mixin.pauseLifecycleServicesForce,
+        );
         break;
     }
   }

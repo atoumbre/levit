@@ -10,23 +10,25 @@ class _Disposable extends LevitScopeDisposable {
 }
 
 void main() {
-  test('lazyPutAsync disposed during init throws and closes instance',
-      () async {
-    final scope = LevitScope.root('root3');
-    int closed = 0;
-    final completer = Completer<void>();
+  test(
+    'lazyPutAsync disposed during init throws and closes instance',
+    () async {
+      final scope = LevitScope.root('root3');
+      int closed = 0;
+      final completer = Completer<void>();
 
-    scope.lazyPutAsync<_Disposable>(() async {
-      await completer.future;
-      return _Disposable(() => closed++);
-    });
+      scope.lazyPutAsync<_Disposable>(() async {
+        await completer.future;
+        return _Disposable(() => closed++);
+      });
 
-    final future = scope.findAsync<_Disposable>();
-    final deleted = await scope.delete<_Disposable>();
-    expect(deleted, isTrue);
-
-    completer.complete();
-    await expectLater(future, throwsA(isA<StateError>()));
-    expect(closed, 1);
-  });
+      final future = scope.findAsync<_Disposable>();
+      final rejected = expectLater(future, throwsA(isA<StateError>()));
+      final deletion = scope.delete<_Disposable>();
+      completer.complete();
+      await rejected;
+      expect(await deletion, isTrue);
+      expect(closed, 1);
+    },
+  );
 }

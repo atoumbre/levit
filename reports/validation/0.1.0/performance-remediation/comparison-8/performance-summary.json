@@ -1,0 +1,1146 @@
+[
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "notify_10000",
+    "roundMediansUs": {
+      "reference": [
+        135.0,
+        135.0,
+        134.0,
+        137.0,
+        134.5,
+        137.0
+      ],
+      "candidate": [
+        135.0,
+        137.0,
+        135.0,
+        138.0,
+        135.0,
+        136.0
+      ]
+    },
+    "referenceUs": 135.0,
+    "candidateUs": 135.5,
+    "changePercent": 0.37037037037037646,
+    "roundBodyMediansUs": {
+      "reference": [
+        127.0,
+        126.0,
+        126.0,
+        128.0,
+        126.0,
+        128.0
+      ],
+      "candidate": [
+        126.0,
+        128.0,
+        126.0,
+        129.0,
+        127.0,
+        128.0
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        9.0,
+        9.0,
+        9.0,
+        9.0,
+        9.0,
+        9.0
+      ],
+      "candidate": [
+        9.0,
+        9.0,
+        9.0,
+        9.0,
+        9.0,
+        9.0
+      ]
+    },
+    "bodyReferenceUs": 126.5,
+    "bodyCandidateUs": 127.5,
+    "bodyChangePercent": 0.7905138339920903
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "fanout_128_x_100",
+    "roundMediansUs": {
+      "reference": [
+        2853.5,
+        3038.5,
+        2867.5,
+        2933.5,
+        2872.0,
+        2954.0
+      ],
+      "candidate": [
+        2862.0,
+        2818.0,
+        2866.0,
+        2889.5,
+        2974.5,
+        2860.5
+      ]
+    },
+    "referenceUs": 2902.75,
+    "candidateUs": 2864.0,
+    "changePercent": -1.334941004220136,
+    "roundBodyMediansUs": {
+      "reference": [
+        2838.0,
+        3011.0,
+        2856.0,
+        2919.5,
+        2860.0,
+        2931.5
+      ],
+      "candidate": [
+        2850.0,
+        2808.0,
+        2853.5,
+        2877.0,
+        2945.5,
+        2849.0
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        15.5,
+        33.0,
+        12.0,
+        14.0,
+        15.0,
+        22.0
+      ],
+      "candidate": [
+        11.0,
+        11.0,
+        11.0,
+        14.0,
+        26.5,
+        12.0
+      ]
+    },
+    "bodyReferenceUs": 2889.75,
+    "bodyCandidateUs": 2851.75,
+    "bodyChangePercent": -1.3149926464226969
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "scope_lifetime_100",
+    "roundMediansUs": {
+      "reference": [
+        233.0,
+        233.0,
+        244.0,
+        239.0,
+        233.5,
+        240.0
+      ],
+      "candidate": [
+        255.0,
+        234.0,
+        233.0,
+        236.5,
+        242.0,
+        238.0
+      ]
+    },
+    "referenceUs": 236.25,
+    "candidateUs": 237.25,
+    "changePercent": 0.4232804232804144,
+    "roundBodyMediansUs": {
+      "reference": [
+        223.0,
+        223.5,
+        233.0,
+        229.0,
+        223.5,
+        230.5
+      ],
+      "candidate": [
+        243.0,
+        225.0,
+        223.0,
+        227.0,
+        231.5,
+        228.0
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        10.0,
+        10.0,
+        11.0,
+        10.0,
+        10.0,
+        10.0
+      ],
+      "candidate": [
+        12.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0
+      ]
+    },
+    "bodyReferenceUs": 226.25,
+    "bodyCandidateUs": 227.5,
+    "bodyChangePercent": 0.5524861878453136
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "tasks_100",
+    "roundMediansUs": {
+      "reference": [
+        175.0,
+        170.0,
+        165.0,
+        168.5,
+        165.0,
+        167.0
+      ],
+      "candidate": [
+        172.0,
+        161.0,
+        172.5,
+        163.0,
+        162.0,
+        163.0
+      ]
+    },
+    "referenceUs": 167.75,
+    "candidateUs": 163.0,
+    "changePercent": -2.8315946348733245,
+    "roundBodyMediansUs": {
+      "reference": [
+        164.0,
+        160.0,
+        155.0,
+        157.0,
+        155.0,
+        157.0
+      ],
+      "candidate": [
+        161.0,
+        152.0,
+        162.0,
+        154.0,
+        152.0,
+        153.0
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        11.0,
+        10.0,
+        9.5,
+        10.0,
+        10.0,
+        10.0
+      ],
+      "candidate": [
+        10.5,
+        9.0,
+        11.0,
+        9.0,
+        9.0,
+        10.0
+      ]
+    },
+    "bodyReferenceUs": 157.0,
+    "bodyCandidateUs": 153.5,
+    "bodyChangePercent": -2.2292993630573243
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "roundMediansUs": {
+      "reference": [
+        8268.5,
+        8335.0,
+        8331.5,
+        8260.0,
+        8350.5,
+        8279.0
+      ],
+      "candidate": [
+        8321.0,
+        8317.5,
+        8324.5,
+        8322.5,
+        8300.5,
+        8339.5
+      ]
+    },
+    "referenceUs": 8305.25,
+    "candidateUs": 8321.75,
+    "changePercent": 0.19866951626983376
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "notify_10000",
+    "roundMediansUs": {
+      "reference": [
+        41511.5,
+        41574.5,
+        40862.5,
+        41699.5,
+        41241.0,
+        42002.5
+      ],
+      "candidate": [
+        40236.5,
+        40231.0,
+        40584.5,
+        40412.5,
+        41558.5,
+        41312.5
+      ]
+    },
+    "referenceUs": 41543.0,
+    "candidateUs": 40498.5,
+    "changePercent": -2.5142623305972167,
+    "roundBodyMediansUs": {
+      "reference": [
+        3766.5,
+        3927.5,
+        3879.0,
+        3772.0,
+        3976.5,
+        3985.5
+      ],
+      "candidate": [
+        40189.5,
+        40197.0,
+        40525.0,
+        40371.5,
+        41518.5,
+        41260.5
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        37444.5,
+        37580.0,
+        37221.0,
+        37747.0,
+        37468.0,
+        37639.0
+      ],
+      "candidate": [
+        42.5,
+        40.0,
+        44.0,
+        44.5,
+        42.5,
+        47.5
+      ]
+    },
+    "bodyReferenceUs": 3903.25,
+    "bodyCandidateUs": 40448.25,
+    "bodyChangePercent": 936.2710561711393
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "fanout_128_x_100",
+    "roundMediansUs": {
+      "reference": [
+        56008.0,
+        56684.5,
+        57159.5,
+        57249.5,
+        57157.5,
+        57299.5
+      ],
+      "candidate": [
+        54911.5,
+        56252.5,
+        55097.0,
+        56793.5,
+        58179.5,
+        55390.0
+      ]
+    },
+    "referenceUs": 57158.5,
+    "candidateUs": 55821.25,
+    "changePercent": -2.3395470489953385,
+    "roundBodyMediansUs": {
+      "reference": [
+        9458.5,
+        9415.5,
+        9483.0,
+        9762.5,
+        9747.0,
+        9626.0
+      ],
+      "candidate": [
+        54872.5,
+        56213.5,
+        55057.0,
+        56757.0,
+        58137.0,
+        55352.5
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        46724.0,
+        47175.5,
+        47154.5,
+        46976.0,
+        47383.0,
+        47287.5
+      ],
+      "candidate": [
+        40.5,
+        44.5,
+        40.0,
+        41.0,
+        39.5,
+        39.0
+      ]
+    },
+    "bodyReferenceUs": 9554.5,
+    "bodyCandidateUs": 55783.0,
+    "bodyChangePercent": 483.8400753571616
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "scope_lifetime_100",
+    "roundMediansUs": {
+      "reference": [
+        4048.0,
+        4231.5,
+        4226.5,
+        4189.5,
+        4180.5,
+        4262.5
+      ],
+      "candidate": [
+        3794.0,
+        3803.0,
+        3839.5,
+        3812.0,
+        3918.5,
+        3967.5
+      ]
+    },
+    "referenceUs": 4208.0,
+    "candidateUs": 3825.75,
+    "changePercent": -9.083887832699622,
+    "roundBodyMediansUs": {
+      "reference": [
+        1092.0,
+        1102.0,
+        1153.0,
+        1148.0,
+        1135.0,
+        1128.0
+      ],
+      "candidate": [
+        3726.5,
+        3788.5,
+        3813.5,
+        3799.0,
+        3892.0,
+        3933.5
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        2887.5,
+        2948.0,
+        2923.5,
+        3007.5,
+        3011.0,
+        3032.5
+      ],
+      "candidate": [
+        17.0,
+        20.0,
+        16.5,
+        15.0,
+        19.5,
+        23.0
+      ]
+    },
+    "bodyReferenceUs": 1131.5,
+    "bodyCandidateUs": 3806.25,
+    "bodyChangePercent": 236.389748121962
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "tasks_100",
+    "roundMediansUs": {
+      "reference": [
+        158.0,
+        163.0,
+        159.0,
+        167.0,
+        164.0,
+        164.0
+      ],
+      "candidate": [
+        156.0,
+        160.5,
+        156.0,
+        157.0,
+        158.5,
+        157.0
+      ]
+    },
+    "referenceUs": 163.5,
+    "candidateUs": 157.0,
+    "changePercent": -3.9755351681957207,
+    "roundBodyMediansUs": {
+      "reference": [
+        154.0,
+        158.0,
+        154.0,
+        162.0,
+        159.0,
+        159.0
+      ],
+      "candidate": [
+        152.0,
+        154.0,
+        152.0,
+        152.0,
+        154.0,
+        152.0
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        4.0,
+        5.0,
+        4.0,
+        5.0,
+        5.0,
+        4.0
+      ],
+      "candidate": [
+        4.0,
+        7.0,
+        4.0,
+        4.0,
+        4.0,
+        4.5
+      ]
+    },
+    "bodyReferenceUs": 158.5,
+    "bodyCandidateUs": 152.0,
+    "bodyChangePercent": -4.100946372239744
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "roundMediansUs": {
+      "reference": [
+        8317.5,
+        8219.5,
+        8339.5,
+        8314.5,
+        8325.0,
+        8302.0
+      ],
+      "candidate": [
+        8340.5,
+        8323.5,
+        8321.0,
+        8317.5,
+        8298.5,
+        8325.0
+      ]
+    },
+    "referenceUs": 8316.0,
+    "candidateUs": 8322.25,
+    "changePercent": 0.07515632515633364
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "notify_10000",
+    "roundMediansUs": {
+      "reference": [
+        134.0,
+        138.0,
+        134.0,
+        134.0,
+        137.0,
+        139.0
+      ],
+      "candidate": [
+        133.0,
+        132.5,
+        132.0,
+        132.0,
+        134.0,
+        134.0
+      ]
+    },
+    "referenceUs": 135.5,
+    "candidateUs": 132.75,
+    "changePercent": -2.0295202952029467,
+    "roundBodyMediansUs": {
+      "reference": [
+        125.0,
+        129.0,
+        126.0,
+        126.0,
+        129.0,
+        131.0
+      ],
+      "candidate": [
+        125.0,
+        124.0,
+        123.5,
+        124.0,
+        126.0,
+        125.5
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        8.5,
+        9.0,
+        8.0,
+        8.0,
+        9.0,
+        8.0
+      ],
+      "candidate": [
+        8.0,
+        9.0,
+        8.0,
+        8.0,
+        8.5,
+        9.0
+      ]
+    },
+    "bodyReferenceUs": 127.5,
+    "bodyCandidateUs": 124.5,
+    "bodyChangePercent": -2.352941176470591
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "fanout_128_x_100",
+    "roundMediansUs": {
+      "reference": [
+        2706.5,
+        2745.5,
+        2789.0,
+        2826.5,
+        2725.5,
+        2691.5
+      ],
+      "candidate": [
+        2739.0,
+        2746.5,
+        2902.0,
+        2756.0,
+        2733.0,
+        2737.5
+      ]
+    },
+    "referenceUs": 2735.5,
+    "candidateUs": 2742.75,
+    "changePercent": 0.26503381465912135,
+    "roundBodyMediansUs": {
+      "reference": [
+        2695.0,
+        2735.5,
+        2777.0,
+        2794.0,
+        2714.0,
+        2685.5
+      ],
+      "candidate": [
+        2729.0,
+        2737.5,
+        2881.5,
+        2744.5,
+        2722.5,
+        2729.0
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        11.0,
+        10.5,
+        9.5,
+        27.0,
+        12.0,
+        6.0
+      ],
+      "candidate": [
+        11.0,
+        10.0,
+        21.0,
+        11.0,
+        11.0,
+        9.0
+      ]
+    },
+    "bodyReferenceUs": 2724.75,
+    "bodyCandidateUs": 2733.25,
+    "bodyChangePercent": 0.31195522525002684
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "scope_lifetime_100",
+    "roundMediansUs": {
+      "reference": [
+        228.0,
+        238.5,
+        228.5,
+        240.5,
+        232.0,
+        225.0
+      ],
+      "candidate": [
+        236.5,
+        234.0,
+        234.5,
+        242.0,
+        246.5,
+        245.5
+      ]
+    },
+    "referenceUs": 230.25,
+    "candidateUs": 239.25,
+    "changePercent": 3.9087947882736174,
+    "roundBodyMediansUs": {
+      "reference": [
+        219.0,
+        228.5,
+        220.0,
+        228.5,
+        222.5,
+        219.0
+      ],
+      "candidate": [
+        226.0,
+        225.0,
+        225.0,
+        231.5,
+        234.5,
+        238.0
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        9.0,
+        9.0,
+        5.0,
+        10.0,
+        9.0,
+        4.0
+      ],
+      "candidate": [
+        10.0,
+        9.0,
+        5.0,
+        9.5,
+        10.0,
+        6.5
+      ]
+    },
+    "bodyReferenceUs": 221.25,
+    "bodyCandidateUs": 228.75,
+    "bodyChangePercent": 3.3898305084745672
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "tasks_100",
+    "roundMediansUs": {
+      "reference": [
+        173.0,
+        172.0,
+        170.0,
+        177.0,
+        174.0,
+        168.0
+      ],
+      "candidate": [
+        160.5,
+        158.0,
+        155.0,
+        167.0,
+        160.0,
+        156.0
+      ]
+    },
+    "referenceUs": 172.5,
+    "candidateUs": 159.0,
+    "changePercent": -7.826086956521738,
+    "roundBodyMediansUs": {
+      "reference": [
+        164.0,
+        163.0,
+        163.0,
+        167.0,
+        165.0,
+        163.0
+      ],
+      "candidate": [
+        151.0,
+        149.0,
+        151.0,
+        156.5,
+        151.0,
+        151.0
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        9.0,
+        9.0,
+        4.0,
+        9.0,
+        9.0,
+        4.0
+      ],
+      "candidate": [
+        9.0,
+        9.0,
+        4.0,
+        9.5,
+        9.0,
+        4.0
+      ]
+    },
+    "bodyReferenceUs": 163.5,
+    "bodyCandidateUs": 151.0,
+    "bodyChangePercent": -7.645259938837922
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "roundMediansUs": {
+      "reference": [
+        8306.0,
+        8318.0,
+        8286.0,
+        8323.0,
+        8319.0,
+        8298.0
+      ],
+      "candidate": [
+        8266.5,
+        8237.0,
+        8359.0,
+        8341.5,
+        8342.0,
+        8273.0
+      ]
+    },
+    "referenceUs": 8312.0,
+    "candidateUs": 8307.25,
+    "changePercent": -0.057146294513954476
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "notify_10000",
+    "roundMediansUs": {
+      "reference": [
+        42450.0,
+        42315.0,
+        42433.0,
+        42917.5,
+        42604.0,
+        42590.0
+      ],
+      "candidate": [
+        40080.5,
+        41252.5,
+        40447.0,
+        40023.0,
+        41591.5,
+        42120.0
+      ]
+    },
+    "referenceUs": 42520.0,
+    "candidateUs": 40849.75,
+    "changePercent": -3.9281514581373522,
+    "roundBodyMediansUs": {
+      "reference": [
+        4378.0,
+        4880.0,
+        4435.5,
+        4420.5,
+        4447.0,
+        4582.5
+      ],
+      "candidate": [
+        40027.0,
+        41204.5,
+        40417.0,
+        39985.5,
+        41553.5,
+        42083.5
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        37763.5,
+        37577.5,
+        37778.0,
+        38139.5,
+        37841.5,
+        37830.0
+      ],
+      "candidate": [
+        40.5,
+        38.5,
+        39.0,
+        37.5,
+        42.5,
+        43.0
+      ]
+    },
+    "bodyReferenceUs": 4441.25,
+    "bodyCandidateUs": 40810.75,
+    "bodyChangePercent": 818.9023360540389
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "fanout_128_x_100",
+    "roundMediansUs": {
+      "reference": [
+        57952.0,
+        58721.0,
+        58744.0,
+        58588.0,
+        58154.0,
+        59017.5
+      ],
+      "candidate": [
+        55407.5,
+        55789.5,
+        55493.0,
+        55435.5,
+        57323.5,
+        56808.0
+      ]
+    },
+    "referenceUs": 58654.5,
+    "candidateUs": 55641.25,
+    "changePercent": -5.13728699417777,
+    "roundBodyMediansUs": {
+      "reference": [
+        10620.0,
+        10944.0,
+        10888.0,
+        10949.0,
+        10625.0,
+        11028.5
+      ],
+      "candidate": [
+        55368.5,
+        55730.5,
+        55458.5,
+        55388.5,
+        57288.0,
+        56765.5
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        47062.0,
+        48038.5,
+        48238.0,
+        47504.5,
+        47449.0,
+        47806.5
+      ],
+      "candidate": [
+        41.0,
+        39.5,
+        37.5,
+        41.0,
+        36.5,
+        41.0
+      ]
+    },
+    "bodyReferenceUs": 10916.0,
+    "bodyCandidateUs": 55594.5,
+    "bodyChangePercent": 409.2936973250275
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "scope_lifetime_100",
+    "roundMediansUs": {
+      "reference": [
+        4038.0,
+        4354.0,
+        4033.0,
+        4126.0,
+        4069.5,
+        4204.0
+      ],
+      "candidate": [
+        3979.0,
+        3971.5,
+        3956.5,
+        4064.0,
+        4050.5,
+        3922.5
+      ]
+    },
+    "referenceUs": 4097.75,
+    "candidateUs": 3975.25,
+    "changePercent": -2.9894454273686755,
+    "roundBodyMediansUs": {
+      "reference": [
+        1198.5,
+        1249.0,
+        1192.5,
+        1200.5,
+        1198.5,
+        1234.5
+      ],
+      "candidate": [
+        3962.5,
+        3959.5,
+        3945.0,
+        4037.5,
+        4034.5,
+        3908.5
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        2800.0,
+        2958.0,
+        2817.5,
+        2817.5,
+        2815.5,
+        2871.0
+      ],
+      "candidate": [
+        15.5,
+        22.0,
+        14.5,
+        19.5,
+        20.0,
+        14.0
+      ]
+    },
+    "bodyReferenceUs": 1199.5,
+    "bodyCandidateUs": 3961.0,
+    "bodyChangePercent": 230.22092538557732
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "tasks_100",
+    "roundMediansUs": {
+      "reference": [
+        153.0,
+        161.5,
+        155.5,
+        154.0,
+        154.0,
+        159.0
+      ],
+      "candidate": [
+        154.5,
+        155.0,
+        156.0,
+        155.5,
+        156.0,
+        160.0
+      ]
+    },
+    "referenceUs": 154.75,
+    "candidateUs": 155.75,
+    "changePercent": 0.646203554119551,
+    "roundBodyMediansUs": {
+      "reference": [
+        150.0,
+        156.5,
+        152.0,
+        150.0,
+        150.0,
+        155.0
+      ],
+      "candidate": [
+        150.0,
+        150.0,
+        151.0,
+        151.0,
+        151.0,
+        155.0
+      ]
+    },
+    "roundEventLoopWaitMediansUs": {
+      "reference": [
+        4.0,
+        5.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "candidate": [
+        4.0,
+        4.5,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "bodyReferenceUs": 151.0,
+    "bodyCandidateUs": 151.0,
+    "bodyChangePercent": 0.0
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "roundMediansUs": {
+      "reference": [
+        8244.5,
+        8245.0,
+        8295.5,
+        8356.0,
+        8338.0,
+        8272.0
+      ],
+      "candidate": [
+        8338.0,
+        8285.0,
+        8304.5,
+        8277.5,
+        8129.5,
+        8336.0
+      ]
+    },
+    "referenceUs": 8283.75,
+    "candidateUs": 8294.75,
+    "changePercent": 0.1327901011015653
+  }
+]

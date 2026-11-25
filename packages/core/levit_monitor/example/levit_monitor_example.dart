@@ -7,14 +7,14 @@ class CounterController extends LevitController {
   final count = 0.lx.named("count");
 
   // Stream state
-  final stream =
-      LxStream(Stream.periodic(const Duration(seconds: 1), (count) => count++))
-          .named("stream");
+  final stream = LxStream(
+    Stream.periodic(const Duration(seconds: 1), (count) => count++),
+  ).named("stream");
 
   // Computed state
-  late final movingDoubleCount =
-      LxComputed(() => count.value * (stream.valueOrNull ?? 0))
-          .named("movingDoubleCount");
+  late final movingDoubleCount = LxComputed(
+    () => count.value * (stream.valueOrNull ?? 0),
+  ).named("movingDoubleCount");
 
   @override
   void onInit() {
@@ -26,24 +26,26 @@ class CounterController extends LevitController {
       (value) => print('DoubleCount changed to: $value'),
     ).named('doubleCountWatcher');
 
-    autoDispose(doubleCountWatcher);
+    own(doubleCountWatcher);
   }
 
   @override
-  void onClose() {
+  Future<void> onClose() async {
     print('CounterController disposed');
-    super.onClose();
+    await super.onClose();
   }
 
   void increment() => count.value++;
 }
 
-void main() {
+Future<void> main() async {
+  Levit.enableAutoLinking();
   print('--- App Start ---');
 
   // 0. Attach monitor
-  LevitMonitor.attach(
-      transport: ConsoleTransport(minLevel: LevitLogLevel.trace));
+  await LevitMonitor.attach(
+    transport: ConsoleTransport(minLevel: LevitLogLevel.trace),
+  );
 
   // 1. Register the controller
   Levit.put(() => CounterController());
@@ -57,5 +59,6 @@ void main() {
 
   // 4. Cleanup (simulating app shutdown or scope destruction)
   print('\n--- App Shutdown ---');
-  Levit.reset();
+  await Levit.reset();
+  await LevitMonitor.detach();
 }

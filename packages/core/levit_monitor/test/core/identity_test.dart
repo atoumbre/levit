@@ -16,7 +16,7 @@ class TestController extends LevitController with TestMixin {
     super.onInit();
     // Simulate stream creation
     final s = Stream.value(1);
-    stream = autoDispose(LxStream(s).named('stream'));
+    stream = own(LxStream(s).named('stream'));
   }
 }
 
@@ -40,19 +40,28 @@ void main() {
     // Check if reactive has ownerId
     print('Owner ID: ${controller.stream.ownerId}');
 
-    expect(controller.stream.ownerId, isNotNull,
-        reason: 'Reactive should have ownerId set by auto-linking');
+    expect(
+      controller.stream.ownerId,
+      isNotNull,
+      reason: 'Reactive should have ownerId set by auto-linking',
+    );
     expect(controller.stream.ownerId, contains('TestController'));
 
     // Check field reactive
-    expect(controller.fieldReactive.ownerId, isNotNull,
-        reason:
-            'Field reactive should have ownerId set (Captured during constructor)');
+    expect(
+      controller.fieldReactive.ownerId,
+      isNotNull,
+      reason:
+          'Field reactive should have ownerId set (Captured during constructor)',
+    );
     expect(controller.fieldReactive.ownerId, contains('TestController'));
 
     // Check mixin reactive
-    expect(controller.mixinReactive.ownerId, isNotNull,
-        reason: 'Mixin field reactive should have ownerId set');
+    expect(
+      controller.mixinReactive.ownerId,
+      isNotNull,
+      reason: 'Mixin field reactive should have ownerId set',
+    );
     expect(controller.mixinReactive.ownerId, contains('TestController'));
   });
 }

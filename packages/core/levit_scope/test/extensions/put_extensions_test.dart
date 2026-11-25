@@ -4,41 +4,21 @@ import 'package:test/test.dart';
 class Service {}
 
 void main() {
-  group('Levit Put Extensions', () {
-    setUp(() {
-      Ls.reset(force: true);
+  group('Explicit builder registration', () {
+    setUp(() async {
+      await Ls.reset(force: true);
     });
 
-    test('T.levitPut registers instance', () {
-      final service = Service();
-      service.levitPut();
-      expect(Ls.find<Service>(), service);
-    });
-
-    test('T.levitLazyPut registers lazy instance', () {
-      final service = Service();
-      service.levitLazyPut();
-      expect(Ls.isInstantiated<Service>(), false);
-      expect(Ls.find<Service>(), service);
-      expect(Ls.isInstantiated<Service>(), true);
-    });
-  });
-
-  group('Levit Put Builder Extensions', () {
-    setUp(() {
-      Ls.reset(force: true);
-    });
-
-    test('T Function().levitPut registers builder', () {
+    test('Ls.put constructs a registered service', () {
       Service builder() => Service();
-      builder.levitPut();
+      Ls.put(builder);
       expect(Ls.isRegistered<Service>(), true);
       expect(Ls.find<Service>(), isA<Service>());
     });
 
-    test('T Function().levitLazyPut registers lazy builder', () {
+    test('Ls.lazyPut defers service construction', () {
       Service builder() => Service();
-      builder.levitLazyPut();
+      Ls.lazyPut(builder);
       expect(Ls.isRegistered<Service>(), true);
       expect(Ls.isInstantiated<Service>(), false);
       expect(Ls.find<Service>(), isA<Service>());

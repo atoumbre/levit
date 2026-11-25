@@ -24,23 +24,26 @@ void main() {
         expect(c.toString(), contains('LxSuccess'));
       });
 
-      test('listener API coverage', () async {
-        final c = LxComputed.async(() async => 1);
-        var calls = 0;
-        void l() => calls++;
+      test(
+        'removed async computed listeners receive no further notifications',
+        () async {
+          final c = LxComputed.async(() async => 1);
+          var calls = 0;
+          void l() => calls++;
 
-        // Activate with listener
-        c.addListener(l);
-        c.stream.listen((_) {});
-        await Future.delayed(Duration(milliseconds: 50));
-        expect(calls, greaterThan(0)); // Status changed
+          // Activate with listener
+          c.addListener(l);
+          c.stream.listen((_) {});
+          await Future.delayed(Duration(milliseconds: 50));
+          expect(calls, greaterThan(0)); // Status changed
 
-        c.removeListener(l);
-        c.refresh(); // Should trigger update
-        final callsBefore = calls;
-        await Future.delayed(Duration(milliseconds: 50));
-        expect(calls, callsBefore); // No new calls
-      });
+          c.removeListener(l);
+          c.refresh(); // Should trigger update
+          final callsBefore = calls;
+          await Future.delayed(Duration(milliseconds: 50));
+          expect(calls, callsBefore); // No new calls
+        },
+      );
 
       test('handle synchronous error in compute', () async {
         final c = LxComputed.async<int>(() {
@@ -82,7 +85,8 @@ void main() {
         final s = 0.lx;
         final c = LxComputed.async(() async => s.value);
         await Future.delayed(
-            Duration(milliseconds: 10)); // let it run and track
+          Duration(milliseconds: 10),
+        ); // let it run and track
 
         c.close();
       });
@@ -108,9 +112,9 @@ void main() {
     });
 
     group('LxComputed (Sync)', () {
-      test('getters coverage', () {
+      test('computed value evaluates a synchronous expression', () {
         final c = LxComputed(() => 42);
-        // Sync computed returns value directly via computedValue
+        // Sync computed returns value directly via requireValue
         expect(c.value, 42);
       });
     });

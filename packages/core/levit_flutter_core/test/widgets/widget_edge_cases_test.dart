@@ -20,115 +20,166 @@ class _UpdateableScopedView extends StatelessWidget {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
-  group('Coverage Gaps - LevitProvider', () {
+  group('Context registration and lookup', () {
     testWidgets('putOrFind uses existing global instance', (tester) async {
       final s1 = _TestService();
       Levit.put<_TestService>(() => s1);
-      await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) {
-        final service =
-            context.levit.putOrFind<_TestService>(() => _TestService());
-        return Text('Service: ${service == s1}');
-      })));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              final service = context.levit.putOrFind<_TestService>(
+                () => _TestService(),
+              );
+              return Text('Service: ${service == s1}');
+            },
+          ),
+        ),
+      );
     });
     testWidgets('putOrFind creates global instance if missing', (tester) async {
-      await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) {
-        context.levit.putOrFind<_TestService>(() => _TestService());
-        return Container();
-      })));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              context.levit.putOrFind<_TestService>(() => _TestService());
+              return Container();
+            },
+          ),
+        ),
+      );
       expect(Levit.isRegistered<_TestService>(), isTrue);
     });
     testWidgets('putOrFind uses existing scoped instance', (tester) async {
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(
+        MaterialApp(
           home: LScope(
-              dependencyFactory: (s) =>
-                  s.put<_TestService>(() => _TestService()),
-              child: Builder(builder: (context) {
+            dependencyFactory: (s) => s.put<_TestService>(() => _TestService()),
+            child: Builder(
+              builder: (context) {
                 context.levit.putOrFind<_TestService>(() => _TestService());
                 return Container();
-              }))));
+              },
+            ),
+          ),
+        ),
+      );
     });
     testWidgets('putOrFind creates scoped instance if missing', (tester) async {
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(
+        MaterialApp(
           home: LScope(
-              dependencyFactory: (s) => s.put<String>(() => 'dummy'),
-              child: Builder(builder: (context) {
+            dependencyFactory: (s) => s.put<String>(() => 'dummy'),
+            child: Builder(
+              builder: (context) {
                 context.levit.putOrFind<_TestService>(() => _TestService());
                 return Container();
-              }))));
+              },
+            ),
+          ),
+        ),
+      );
     });
     testWidgets('lazyPutAsync returns a finder function', (tester) async {
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(
+        MaterialApp(
           home: LScope(
-              dependencyFactory: (s) => s.put<String>(() => 'dummy'),
-              child: Builder(builder: (context) {
-                final finder = context.levit
-                    .lazyPutAsync<_TestService>(() async => _TestService());
+            dependencyFactory: (s) => s.put<String>(() => 'dummy'),
+            child: Builder(
+              builder: (context) {
+                final finder = context.levit.lazyPutAsync<_TestService>(
+                  () async => _TestService(),
+                );
                 return TextButton(
-                    onPressed: () async {
-                      await finder();
-                    },
-                    child: const Text('Find'));
-              }))));
+                  onPressed: () async {
+                    await finder();
+                  },
+                  child: const Text('Find'),
+                );
+              },
+            ),
+          ),
+        ),
+      );
     });
   });
 
-  group('Coverage Gaps - LView', () {
+  group('LView resolution in a scope', () {
     testWidgets('LView in Scope', (tester) async {
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(
+        MaterialApp(
           home: LScope(
-              dependencyFactory: (s) =>
-                  s.put<_TestService>(() => _TestService()),
-              child: LView<_TestService>(
-                  resolver: (context) => context.levit.find<_TestService>(),
-                  builder: (context, controller) =>
-                      const Text('Controller Found')))));
+            dependencyFactory: (s) => s.put<_TestService>(() => _TestService()),
+            child: LView<_TestService>(
+              resolver: (context) => context.levit.find<_TestService>(),
+              builder: (context, controller) => const Text('Controller Found'),
+            ),
+          ),
+        ),
+      );
     });
   });
 
-  group('Coverage Gaps - LWatch', () {
+  group('LWatch subscription cleanup', () {
     testWidgets('LWatch cleans up subscriptions', (tester) async {
       final notifier = 0.lx;
       final toggle = true.lx;
-      await tester.pumpWidget(MaterialApp(
-          home: LWatch(() => toggle.value
-              ? Text('Value: ${notifier.value}')
-              : const Text('Value: Clean'))));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LWatch(
+            () => toggle.value
+                ? Text('Value: ${notifier.value}')
+                : const Text('Value: Clean'),
+          ),
+        ),
+      );
       toggle.value = false;
       await tester.pump();
     });
   });
 
-  group('Coverage Gaps - LScopedView', () {
+  group('Scoped view updates and asynchronous loading', () {
     testWidgets('LScopedView updates correctly', (tester) async {
       final key = GlobalKey();
       await tester.pumpWidget(
-          MaterialApp(home: _UpdateableScopedView(key: key, tag: '1')));
+        MaterialApp(
+          home: _UpdateableScopedView(key: key, tag: '1'),
+        ),
+      );
       expect(find.text('Tag: 1'), findsOneWidget);
       await tester.pumpWidget(
-          MaterialApp(home: _UpdateableScopedView(key: key, tag: '2')));
+        MaterialApp(
+          home: _UpdateableScopedView(key: key, tag: '2'),
+        ),
+      );
+      await tester.pumpAndSettle();
       expect(find.text('Tag: 2'), findsOneWidget);
     });
-    testWidgets('LScopedView.async handles loading and resolution',
-        (tester) async {
+    testWidgets('LScopedView.async handles loading and resolution', (
+      tester,
+    ) async {
       await tester.runAsync(() async {
-        await tester.pumpWidget(MaterialApp(
+        await tester.pumpWidget(
+          MaterialApp(
             home: LScope(
-                dependencyFactory: (s) {
-                  s.lazyPutAsync<_TestService>(() async {
-                    await Future.delayed(const Duration(milliseconds: 100));
-                    return _TestService();
-                  });
-                },
-                child: LAsyncView<_TestService>(
-                    resolver: (context) =>
-                        context.levit.findAsync<_TestService>(),
-                    loading: (context) => const Text('Loading...'),
-                    builder: (context, controller) =>
-                        const Text('Resolved')))));
+              dependencyFactory: (s) {
+                s.lazyPutAsync<_TestService>(() async {
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  return _TestService();
+                });
+              },
+              child: LAsyncView<_TestService>(
+                resolver: (context) => context.levit.findAsync<_TestService>(),
+                loading: (context) => const Text('Loading...'),
+                builder: (context, controller) => const Text('Resolved'),
+              ),
+            ),
+          ),
+        );
         expect(find.text('Loading...'), findsOneWidget);
         await Future.delayed(const Duration(milliseconds: 150));
         await tester.pump();

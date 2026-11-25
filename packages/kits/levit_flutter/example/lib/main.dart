@@ -77,7 +77,7 @@ class CircleController extends LevitController
   @override
   void onInit() {
     super.onInit();
-    autoDispose(circles);
+    own(circles);
 
     // Spawn loop adds circles while canvas bounds are known.
     loopEngine.startLoop('spawn', () async {

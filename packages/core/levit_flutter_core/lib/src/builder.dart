@@ -1,6 +1,6 @@
 part of '../levit_flutter_core.dart';
 
-/// A widget that explicitly observes a single [LxReactive] value.
+/// A widget that explicitly observes a single [LxReadable] value.
 ///
 /// Use [LBuilder] when you want to be explicit about the dependency, or when
 /// avoiding the overhead of proxy-tracking in [LWatch].
@@ -16,7 +16,7 @@ class LBuilder<T> extends Widget {
   final Widget Function(T x) builder;
 
   /// The reactive object to observe.
-  final LxReactive<T> x;
+  final LxReadable<T> x;
 
   /// Creates an explicit reactive builder.
   const LBuilder(this.x, this.builder, {super.key});
@@ -53,8 +53,10 @@ class _LBuilderElement<T> extends ComponentElement
 
   @override
   Widget build() {
-    return LScope.runBridged(this,
-        () => (widget as LBuilder<T>).builder((widget as LBuilder<T>).x.value));
+    return LScope.runBridged(
+      this,
+      () => (widget as LBuilder<T>).builder((widget as LBuilder<T>).x.value),
+    );
   }
 
   @override
@@ -135,7 +137,9 @@ class _LSelectBuilderElement<T> extends ComponentElement
   @override
   Widget build() {
     return LScope.runBridged(
-        this, () => (widget as LSelectorBuilder<T>).builder(_computed.value));
+      this,
+      () => (widget as LSelectorBuilder<T>).builder(_computed.value),
+    );
   }
 
   @override
@@ -158,25 +162,25 @@ class _LSelectBuilderElement<T> extends ComponentElement
 /// LStatusBuilder(
 ///   userStatus,
 ///   onSuccess: (user) => UserProfile(user),
-///   onWaiting: () => const LoadingSpinner(),
-///   onError: (e, s) => ErrorView(e),
+///   onWaiting: (status) => const LoadingSpinner(),
+///   onError: (status) => ErrorView(status.error),
 /// );
 /// ```
 class LStatusBuilder<T> extends Widget {
   /// The reactive status to observe.
-  final LxReactive<LxStatus<T>> x;
+  final LxReadable<LxStatus<T>> x;
 
   /// Called when the status is [LxSuccess].
   final Widget Function(T data) onSuccess;
 
   /// Called when simple waiting logic is needed.
-  final Widget Function()? onWaiting;
+  final Widget Function(LxWaiting<T> status)? onWaiting;
 
   /// Called when the status is [LxError].
-  final Widget Function(Object error, StackTrace? stackTrace)? onError;
+  final Widget Function(LxError<T> status)? onError;
 
   /// Called when the status is [LxIdle].
-  final Widget Function()? onIdle;
+  final Widget Function(LxIdle<T> status)? onIdle;
 
   /// Creates a status-aware builder.
   const LStatusBuilder(
@@ -226,11 +230,12 @@ class _LStatusBuilderElement<T> extends ComponentElement
 
       return switch (status) {
         LxIdle<T>() =>
-          w.onIdle?.call() ?? w.onWaiting?.call() ?? const SizedBox.shrink(),
-        LxWaiting<T>() => w.onWaiting?.call() ?? const SizedBox.shrink(),
-        LxError<T>(:final error, :final stackTrace) =>
-          w.onError?.call(error, stackTrace) ??
-              Center(child: Text('Error: $error')),
+          w.onIdle?.call(status) ??
+              w.onWaiting?.call(LxWaiting<T>.fromPrevious(status)) ??
+              const SizedBox.shrink(),
+        LxWaiting<T>() => w.onWaiting?.call(status) ?? const SizedBox.shrink(),
+        LxError<T>(:final error) =>
+          w.onError?.call(status) ?? Center(child: Text('Error: $error')),
         LxSuccess<T>(:final value) => w.onSuccess(value),
       };
     });

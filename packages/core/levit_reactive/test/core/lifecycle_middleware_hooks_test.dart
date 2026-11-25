@@ -4,7 +4,8 @@ import 'package:test/test.dart';
 class TestHistoryMiddleware extends LevitReactiveMiddleware {
   int disposeCount = 0;
   @override
-  LxOnDispose? get onDispose => (next, reactive) => () {
+  LxOnDispose? get onDispose =>
+      (next, reactive) => () {
         disposeCount++;
         next();
       };
@@ -13,7 +14,8 @@ class TestHistoryMiddleware extends LevitReactiveMiddleware {
 class TestObserver extends LevitReactiveMiddleware {
   int initCount = 0;
   @override
-  void Function(LxReactive reactive)? get onInit => (reactive) => initCount++;
+  void Function(LxReactive reactive)? get onInit =>
+      (reactive) => initCount++;
 }
 
 void main() {

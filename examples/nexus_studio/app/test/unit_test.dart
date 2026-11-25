@@ -36,19 +36,22 @@ class FakeWebSocketChannel implements WebSocketChannel {
 
   @override
   StreamChannel<S> transform<S>(
-      StreamChannelTransformer<S, dynamic> transformer) {
+    StreamChannelTransformer<S, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
   @override
   StreamChannel<dynamic> transformStream(
-      StreamTransformer<dynamic, dynamic> transformer) {
+    StreamTransformer<dynamic, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
   @override
   StreamChannel<dynamic> transformSink(
-      StreamSinkTransformer<dynamic, dynamic> transformer) {
+    StreamSinkTransformer<dynamic, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
@@ -95,7 +98,16 @@ class _FakeSink implements WebSocketSink {
   Future addStream(Stream stream) => _controller.addStream(stream);
 
   @override
-  Future close([int? closeCode, String? closeReason]) => _controller.close();
+  Future close([int? closeCode, String? closeReason]) async {
+    // Real WebSocket sinks drain writes without an application output listener.
+    // Start the fake sink's drain if its outgoing stream was never observed.
+    try {
+      _controller.stream.listen((_) {});
+    } on StateError {
+      /* Already observed. */
+    }
+    await _controller.close();
+  }
 
   @override
   Future get done => _controller.done;
@@ -106,8 +118,9 @@ void main() {
     await Levit.reset(force: true);
     // Dependencies needed for controllers
     Levit.put(() => NexusEngine());
-    Levit.put(() =>
-        PresenceController()); // ProjectController finds PresenceController
+    Levit.put(
+      () => PresenceController(),
+    ); // ProjectController finds PresenceController
   });
 
   tearDown(() => Levit.reset(force: true));
@@ -236,16 +249,19 @@ void main() {
     test('connect handles connection error', () async {
       bool connectorCalled = false;
       await Levit.delete<ProjectController>(force: true);
-      Levit.put(() => ProjectController(connector: (uri) {
+      Levit.put(
+        () => ProjectController(
+          connector: (uri) {
             connectorCalled = true;
             throw Exception('Connection failed');
-          }));
+          },
+        ),
+      );
       // _connect called in onInit
       expect(connectorCalled, true);
     });
 
-    test('moveSelection updates positions locally (syncs on endDrag)',
-        () async {
+    test('moveSelection updates positions locally (syncs on endDrag)', () async {
       pc.addNode('rect');
       final node = pc.engine.nodes.first;
       final initialPos = node.position.value;
@@ -324,12 +340,12 @@ void main() {
 
     test('handleServerMessage updates state (node_create)', () async {
       final nodeData = NodeModel(
-              id: 'remote_1',
-              type: 'rect',
-              pos: const Vec2(100, 100),
-              sz: const Vec2(50, 50),
-              col: 0xFF000000)
-          .toJson();
+        id: 'remote_1',
+        type: 'rect',
+        pos: const Vec2(100, 100),
+        sz: const Vec2(50, 50),
+        col: 0xFF000000,
+      ).toJson();
 
       final msg = jsonEncode({'type': 'node_create', 'node': nodeData});
 
@@ -352,7 +368,7 @@ void main() {
       mockChannel!.simulateIncoming(
         jsonEncode({
           'type': 'snapshot',
-          'nodes': [nodeData]
+          'nodes': [nodeData],
         }),
       );
       await Future.delayed(Duration.zero);
@@ -369,7 +385,7 @@ void main() {
       final msg = jsonEncode({
         'type': 'bulk_move',
         'ids': [id],
-        'delta': {'x': 100.0, 'y': 100.0}
+        'delta': {'x': 100.0, 'y': 100.0},
       });
 
       mockChannel!.simulateIncoming(msg);
@@ -400,7 +416,7 @@ void main() {
 
       final msg = jsonEncode({
         'type': 'bulk_color',
-        'colors': {id: 0xFF0FF0F0}
+        'colors': {id: 0xFF0FF0F0},
       });
 
       mockChannel!.simulateIncoming(msg);
@@ -415,8 +431,8 @@ void main() {
       final msg = jsonEncode({
         'type': 'bulk_update',
         'positions': {
-          id: {'x': 999.0, 'y': 888.0}
-        }
+          id: {'x': 999.0, 'y': 888.0},
+        },
       });
       mockChannel!.simulateIncoming(msg);
       await Future.delayed(Duration.zero);
@@ -430,10 +446,12 @@ void main() {
       expect(true, true);
     });
 
-    test('syncColors sends bulk_color', () async {
+    test('color command sends bulk_color', () async {
       pc.addNode('rect');
       final id = pc.engine.nodes.first.id;
-      pc.syncColors();
+      Levit.find<AuthController>().login('editor@example.com');
+      pc.selectedIds.assignOne(id);
+      pc.colorSelection(0xFF123456);
 
       // Verify message (addNode + bulk_color)
       final msgs = await mockChannel!.sentMessages.take(2).toList();
@@ -488,7 +506,7 @@ void main() {
         'senderId': 'other_user',
         'name': 'Bob',
         'color': 0xFF00FF00,
-        'cursor': {'x': 100, 'y': 200}
+        'cursor': {'x': 100, 'y': 200},
       };
 
       presence.handlePresenceMessage(msg);
@@ -498,7 +516,7 @@ void main() {
       // Update
       final msgUpdate = {
         'senderId': 'other_user',
-        'cursor': {'x': 150, 'y': 250}
+        'cursor': {'x': 150, 'y': 250},
       };
       presence.handlePresenceMessage(msgUpdate);
       expect(presence.remoteUsers['other_user']!.cursor.value.x, 150);
@@ -509,7 +527,7 @@ void main() {
         'senderId': 'other_user',
         'name': 'Bob',
         'color': 0xFF00FF00,
-        'cursor': {'x': 100, 'y': 200}
+        'cursor': {'x': 100, 'y': 200},
       });
       expect(presence.remoteUsers.containsKey('other_user'), true);
 
@@ -518,16 +536,17 @@ void main() {
     });
 
     test(
-        'updateLocalCursor delegates to ProjectController and sends over network',
-        () async {
-      presence.updateLocalCursor(const Offset(10, 10));
+      'updateLocalCursor delegates to ProjectController and sends over network',
+      () async {
+        presence.updateLocalCursor(const Offset(10, 10));
 
-      // Should send message via channel
-      final msg = await mockChannel!.sentMessages.first;
-      final data = jsonDecode(msg);
-      // ProjectController.sendPresenceUpdate sends {'type': 'presence_update', ...}
-      expect(data['type'], 'presence_update');
-      expect(data['cursor']['x'], 10.0);
-    });
+        // Should send message via channel
+        final msg = await mockChannel!.sentMessages.first;
+        final data = jsonDecode(msg);
+        // ProjectController.sendPresenceUpdate sends {'type': 'presence_update', ...}
+        expect(data['type'], 'presence_update');
+        expect(data['cursor']['x'], 10.0);
+      },
+    );
   });
 }

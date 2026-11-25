@@ -1,0 +1,51 @@
+00:00 +0: loading /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart
+00:00 +0: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: (setUpAll)
+00:00 +0: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +1: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +2: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +3: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +4: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +4: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/runner_failure_test.dart: app runner rejects a measured run whose cleanup fails
+Running cleanup failure for Levit...
+Error tearing down cleanup failure: Bad state: teardown failed
+00:00 +5: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +5: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/runner_failure_test.dart: headless logic runner reports cleanup failure
+Error tearing down cleanup failure: Bad state: teardown failed
+00:00 +6: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +6: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/runner_failure_test.dart: headless UI runner unmounts and reports cleanup failure
+Error tearing down cleanup failure: Bad state: teardown failed
+00:00 +7: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +8: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +9: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +10: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +11: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/dashboard_surface_test.dart: measurement surface stays expanded without an animated spinner
+00:00 +12: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Levit: every fan-out consumer completes inside run
+00:00 +13: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Levit: mutation stream is fully delivered before return
+00:00 +14: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Levit: batch aggregate is consumed before verification
+00:00 +15: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Levit: grid replaces keyed elements
+00:01 +16: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Levit: list mutation changes visible text
+00:01 +17: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Levit: leaf and progress fixtures actually render updates
+00:01 +18: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: GetX: fan-in delivers before verification
+00:01 +19: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: GetX: every fan-out consumer completes inside run
+00:01 +20: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: GetX: mutation stream is fully delivered before return
+00:01 +21: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: GetX: batch aggregate is consumed before verification
+00:01 +22: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: GetX: grid replaces keyed elements
+00:01 +23: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: GetX: list mutation changes visible text
+00:01 +24: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: GetX: leaf and progress fixtures actually render updates
+00:01 +25: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: BLoC: fan-in delivers before verification
+00:01 +26: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: BLoC: every fan-out consumer completes inside run
+00:01 +27: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: BLoC: mutation stream is fully delivered before return
+00:01 +28: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: BLoC: batch aggregate is consumed before verification
+00:01 +29: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: BLoC: grid replaces keyed elements
+00:01 +30: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: BLoC: list mutation changes visible text
+00:01 +31: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: BLoC: leaf and progress fixtures actually render updates
+00:01 +32: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Riverpod: fan-in delivers before verification
+00:02 +33: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Riverpod: every fan-out consumer completes inside run
+00:02 +34: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Riverpod: mutation stream is fully delivered before return
+00:02 +35: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Riverpod: batch aggregate is consumed before verification
+00:02 +36: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Riverpod: grid replaces keyed elements
+00:02 +37: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Riverpod: list mutation changes visible text
+00:02 +38: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: Riverpod: leaf and progress fixtures actually render updates
+00:02 +39: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: report names actual primitives and separates frame timing from wall time
+00:02 +40: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/workload_contract_test.dart: (tearDownAll)
+00:02 +40: All tests passed!

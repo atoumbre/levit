@@ -5,6 +5,15 @@ import 'src/process_runner.dart';
 Future<void> main(List<String> args) async {
   final phases = <_Phase>[
     _Phase(
+      name: 'semantic test names',
+      command: ['dart', 'run', 'scripts/check_test_names.dart'],
+    ),
+    _Phase(name: 'workspace tests', command: ['dart', 'test']),
+    _Phase(
+      name: 'native lint plugin',
+      command: ['dart', 'run', 'scripts/check_lint_plugin.dart'],
+    ),
+    _Phase(
       name: 'analysis',
       command: [
         'dart',
@@ -101,8 +110,5 @@ class _Phase {
   final String name;
   final List<String> command;
 
-  const _Phase({
-    required this.name,
-    required this.command,
-  });
+  const _Phase({required this.name, required this.command});
 }

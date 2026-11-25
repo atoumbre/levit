@@ -31,10 +31,8 @@ class ServerController extends LevitController {
   final ServerAdapter _adapter;
 
   /// Creates a server controller.
-  ServerController({
-    this.autoStart = true,
-    ServerAdapter? adapter,
-  }) : _adapter = adapter ?? ServerAdapter();
+  ServerController({this.autoStart = true, ServerAdapter? adapter})
+    : _adapter = adapter ?? ServerAdapter();
 
   @override
   void onInit() {
@@ -43,7 +41,7 @@ class ServerController extends LevitController {
 
     // Log when client count changes
     // This demonstrates reactive side-effects on the server
-    autoDispose(
+    own(
       clientCount.stream.listen((count) {
         print('📊 Connected Clients: $count');
       }),
@@ -51,7 +49,7 @@ class ServerController extends LevitController {
 
     // Demonstrate Isomorphic Reactivity:
     // The server reacts to changes in the shared engine model just like the client!
-    autoDispose(
+    own(
       engine.nodes.stream.listen((_) {
         print('📦 Server Node Count: ${engine.nodes.length}');
       }),
@@ -75,20 +73,24 @@ class ServerController extends LevitController {
   void seedData() {
     // Seed initial data if empty
     if (engine.nodes.isEmpty) {
-      engine.addNode(NodeModel(
-        id: '1',
-        type: 'rect',
-        pos: const Vec2(100, 100),
-        sz: const Vec2(100, 100),
-        col: 0xFF6366F1,
-      ));
-      engine.addNode(NodeModel(
-        id: '2',
-        type: 'circle',
-        pos: const Vec2(300, 200),
-        sz: const Vec2(80, 80),
-        col: 0xFFEC4899,
-      ));
+      engine.addNode(
+        NodeModel(
+          id: '1',
+          type: 'rect',
+          pos: const Vec2(100, 100),
+          sz: const Vec2(100, 100),
+          col: 0xFF6366F1,
+        ),
+      );
+      engine.addNode(
+        NodeModel(
+          id: '2',
+          type: 'circle',
+          pos: const Vec2(300, 200),
+          sz: const Vec2(80, 80),
+          col: 0xFFEC4899,
+        ),
+      );
     }
   }
 
@@ -135,27 +137,9 @@ class ServerController extends LevitController {
       packetMap['senderId'] = senderId;
       final packet = jsonEncode(packetMap);
 
-      // 1. Update Server State (Source of Truth)
-      // We use Levity's reactivity to keep the server model in sync
-      if (type == 'bulk_move') {
-        final ids = Set<String>.from(data['ids']);
-        final delta = Vec2.fromJson(data['delta']);
-        engine.bulkMove(ids, delta);
-      } else if (type == 'bulk_update') {
-        final Map<String, dynamic> positionsRaw = data['positions'];
-        final positions = positionsRaw.map(
-          (k, v) => MapEntry(k, Vec2.fromJson(v)),
-        );
-        engine.bulkUpdate(positions);
-      } else if (type == 'bulk_color') {
-        final Map<String, dynamic> colorsRaw = data['colors'];
-        final colors = colorsRaw.map((k, v) => MapEntry(k, v as int));
-        engine.bulkColor(colors);
-      } else if (type == 'node_create') {
-        engine.addNode(NodeModel.fromJson(data['node']));
-      } else if (type == 'presence_update') {
-        // Presence is ephemeral, we don't store it in the engine permanently
-        // but we relay it.
+      if (!applyNexusDocumentMessage(engine, Map<String, dynamic>.from(data)) &&
+          type != 'presence_update') {
+        return;
       }
 
       // 2. Broadcast to others

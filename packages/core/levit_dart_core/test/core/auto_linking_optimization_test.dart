@@ -6,8 +6,8 @@ void main() {
     Levit.enableAutoLinking();
   });
 
-  tearDown(() {
-    Levit.reset(force: true);
+  tearDown(() async {
+    await Levit.reset(force: true);
     Levit.disableAutoLinking();
   });
 
@@ -16,43 +16,40 @@ void main() {
       final controller = OwnerIdTestController();
       Levit.put(() => controller, tag: 'test-owner-id');
 
-      expect(controller.reactive.ownerId,
-          equals('0:OwnerIdTestController_test-owner-id'));
+      expect(
+        controller.reactive.ownerId,
+        equals('0:OwnerIdTestController_test-owner-id'),
+      );
     });
 
-    test('ChainedCaptureList is flattened for nested captures (Optimization 2)',
-        () {
-      // We'll use reflection-like check or just verify behavior
-      final controller = NestedCaptureController();
-      Levit.put(() => controller);
-
-      // Verify reactives are correctly linked
-      expect(controller.outerReactive, isNotNull);
-      expect(controller.innerReactive, isNotNull);
-
-      // If we could inspect _ChainedCaptureList, we would check targets.length == 3
-      // (Root captured list + Parent flattened list which had 2 targets)
-      // But we can verify it doesn't crash and still link properly.
+    test('nested capture retains the innermost owner ID', () async {
+      final controller = Levit.put(NestedCaptureController.new);
+      expect(controller.innerReactive.ownerId, 'level-2');
+      await Levit.delete<NestedCaptureController>();
+      expect(controller.outerReactive.isDisposed, isTrue);
+      expect(controller.innerReactive.isDisposed, isFalse);
+      await controller.innerReactive.close();
     });
 
     test(
-        'Middleware skips processing when no capture scope is active (Optimization 4)',
-        () {
-      // This is hard to "prove" without internal access, but we can verify
-      // that manual reactive creation outside of a capture scope still works
-      // and doesn't incorrectly pick up a stale capture key from another Zone.
-      final r = 0.lx;
-      expect(r.ownerId, isNull);
-      r.close();
-    });
+      'Middleware skips processing when no capture scope is active (Optimization 4)',
+      () async {
+        // This is hard to "prove" without internal access, but we can verify
+        // that manual reactive creation outside of a capture scope still works
+        // and doesn't incorrectly pick up a stale capture key from another Zone.
+        final r = 0.lx;
+        expect(r.ownerId, isNull);
+        await r.close();
+      },
+    );
 
-    test('disableAutoLinking fully detaches auto-link middlewares', () {
+    test('disableAutoLinking fully detaches auto-link middlewares', () async {
       LxReactive? linked;
       runCapturedForTesting(() {
         linked = 0.lx;
       }, 'owner:on');
       expect(linked!.ownerId, 'owner:on');
-      linked!.close();
+      await linked!.close();
 
       Levit.disableAutoLinking();
 
@@ -61,7 +58,7 @@ void main() {
         unlinked = 1.lx;
       }, 'owner:off');
       expect(unlinked!.ownerId, isNull);
-      unlinked!.close();
+      await unlinked!.close();
 
       Levit.enableAutoLinking();
 
@@ -70,7 +67,7 @@ void main() {
         relinked = 2.lx;
       }, 'owner:on:again');
       expect(relinked!.ownerId, 'owner:on:again');
-      relinked!.close();
+      await relinked!.close();
     });
   });
 }
@@ -93,14 +90,13 @@ class OwnerIdTestController extends LevitController {
 }
 
 class NestedCaptureController extends LevitController {
-  late final LxReactive outerReactive;
-  late final LxReactive innerReactive;
+  late final LxInt outerReactive;
+  late final LxInt innerReactive;
 
   @override
   void onInit() {
     outerReactive = 1.lx;
 
-    // Trigger another runCaptured block to create nested chaining
     runCapturedForTesting(() {
       runCapturedForTesting(() {
         innerReactive = 2.lx;

@@ -3,7 +3,7 @@ import 'package:levit_scope/levit_scope.dart';
 
 void main() {
   group('Levit Init Hooks', () {
-    test('LevitScopeMiddleware.onDependencyInit works', () {
+    test('LevitScopeMiddleware.onDependencyInit works', () async {
       var hookCalled = 0;
 
       void Function() myHook<S>(
@@ -29,11 +29,13 @@ void main() {
       expect(hookCalled, equals(1));
 
       LevitScope.removeMiddleware(observer);
-      levit.delete<MyService>();
+      await levit.delete<MyService>();
 
       levit.put(() => MyService());
-      expect(hookCalled,
-          equals(1)); // Still 1 because we test removal logic is correct?
+      expect(
+        hookCalled,
+        equals(1),
+      ); // Still 1 because we test removal logic is correct?
       // Wait, passing 1 means it was NOT called the second time (1+0=1)
       // If hook was called it would be 2.
     });
@@ -47,7 +49,8 @@ class _TestInitObserver extends LevitScopeMiddleware {
     LevitScope scope,
     String key,
     LevitDependency info,
-  ) hook;
+  )
+  hook;
 
   const _TestInitObserver(this.hook);
 

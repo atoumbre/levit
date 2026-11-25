@@ -1,0 +1,28 @@
+00:00 +0: loading test/utilities/task_pending_accounting_test.dart
+00:00 +0: test/utilities/task_pending_accounting_test.dart: pending counts remain exact through replacement, cancellation and drain
+00:00 +1: test/utilities/structured_task_contract_test.dart: single-slot nested groups coordinate without consuming slots
+00:00 +2: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +3: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +4: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +5: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +6: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +7: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +8: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +9: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +10: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +11: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +12: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +13: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +14: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +15: test/utilities/task_shutdown_contract_test.dart: disposal waits for the body before releasing later-owned resources
+00:00 +16: test/utilities/structured_task_contract_test.dart: group cancellation reaches isolate context and awaits its final message
+00:00 +17: test/utilities/structured_task_contract_test.dart: group cancellation reaches isolate context and awaits its final message
+00:00 +18: test/utilities/structured_task_contract_test.dart: group cancellation reaches isolate context and awaits its final message
+00:00 +19: test/utilities/structured_task_contract_test.dart: group cancellation reaches isolate context and awaits its final message
+00:00 +20: test/utilities/structured_task_contract_test.dart: group cancellation reaches isolate context and awaits its final message
+00:00 +21: test/utilities/task_shutdown_contract_test.dart: plain mixin drains and repeated engine disposal shares completion
+00:00 +22: test/utilities/task_shutdown_contract_test.dart: queued work is cancelled without executing
+00:00 +23: test/utilities/task_shutdown_contract_test.dart: retry waiting is interrupted without waiting for its timer
+00:00 +24: test/utilities/task_shutdown_contract_test.dart: isolate cancellation drains its runner and port cleanup
+00:00 +25: test/utilities/task_shutdown_contract_test.dart: task failure remains on its result, not the disposal future
+00:00 +26: All tests passed!

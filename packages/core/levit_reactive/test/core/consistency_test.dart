@@ -5,21 +5,21 @@ import 'package:levit_reactive/levit_reactive.dart';
 void main() {
   group('Design Consistency', () {
     group('LxFuture', () {
-      test('computedValue returns value on success', () async {
+      test('requireValue returns value on success', () async {
         final f = LxFuture(Future.value(42));
         await Future.delayed(Duration(milliseconds: 10));
-        expect(f.computedValue, equals(42));
+        expect(f.requireValue, equals(42));
       });
 
-      test('computedValue throws on error', () async {
+      test('requireValue throws on error', () async {
         final f = LxFuture(Future.error('failure'));
         await Future.delayed(Duration(milliseconds: 10));
-        expect(() => f.computedValue, throwsA(equals('failure')));
+        expect(() => f.requireValue, throwsA(equals('failure')));
       });
 
-      test('computedValue throws when waiting', () {
+      test('requireValue throws when waiting', () {
         final f = LxFuture(Completer<int>().future);
-        expect(() => f.computedValue, throwsStateError);
+        expect(() => f.requireValue, throwsStateError);
       });
 
       test('hasListener tracks subscriptions', () {
@@ -33,25 +33,26 @@ void main() {
     });
 
     group('LxStream', () {
-      test('computedValue returns value on success', () async {
+      test('requireValue returns value on success', () async {
         final s = LxStream(Stream.value(42));
         s.addListener(() {}); // Activate lazy stream
         await Future.delayed(Duration(milliseconds: 10));
-        expect(s.computedValue, equals(42));
+        expect(s.requireValue, equals(42));
       });
 
-      test('computedValue throws on error', () async {
+      test('requireValue throws on error', () async {
         final s = LxStream(Stream.error('failure'));
         s.addListener(() {}); // Activate lazy stream
         await Future.delayed(Duration(milliseconds: 10));
-        expect(() => s.computedValue, throwsA(equals('failure')));
+        expect(() => s.requireValue, throwsA(equals('failure')));
       });
 
-      test('computedValue throws when waiting', () {
-        final f = LxStream(Stream
-            .empty()); // starts in LxWaiting since no initial and lazy activation not hit yet
+      test('requireValue throws when waiting', () {
+        final f = LxStream(
+          Stream.empty(),
+        ); // starts in LxWaiting since no initial and lazy activation not hit yet
         // Wait, LxStream starts in LxWaiting() if no initial value provided.
-        expect(() => f.computedValue, throwsStateError);
+        expect(() => f.requireValue, throwsStateError);
       });
 
       test('hasListener tracks subscriptions', () {
@@ -68,27 +69,21 @@ void main() {
 
     group('LxComputed.async', () {
       test('supports initial value', () async {
-        final c = LxComputed.async(
-          () async => 42,
-          initial: 10,
-        );
+        final c = LxComputed.async(() async => 42, initial: 10);
 
         expect(c.status, isA<LxSuccess<int>>());
-        expect(c.computedValue, equals(10));
+        expect(c.requireValue, equals(10));
         expect(c.isSuccess, isTrue);
 
         // After recomputation it should update
         c.addListener(() {}); // Activate
         await Future.delayed(Duration(milliseconds: 10));
-        expect(c.computedValue, equals(42));
+        expect(c.requireValue, equals(42));
       });
 
       test('memoAsync also supports initial value', () async {
-        final c = LxComputed.async(
-          () async => 42,
-          initial: 10,
-        );
-        expect(c.computedValue, equals(10));
+        final c = LxComputed.async(() async => 42, initial: 10);
+        expect(c.requireValue, equals(10));
       });
     });
 

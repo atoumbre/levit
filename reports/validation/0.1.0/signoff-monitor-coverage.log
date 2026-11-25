@@ -1,0 +1,22 @@
+Scanning for packages in: packages...
+Excluding example projects (use --include-examples to include).
+Filtering to packages: levit_monitor
+Per-package timeout: 600s
+Coverage threshold: 100.00%
+Found 1 packages: levit_monitor
+
+[levit_monitor] Running tests and generating coverage...
+[levit_monitor] Pure Dart package; using dart test.
+[levit_monitor] Done. (100.0%)
+
+=================================================================
+LEVIT COVERAGE REPORT
+=================================================================
+| Package              | Lines Covered | Total Lines | Coverage |
+|----------------------|---------------|-------------|----------|
+| levit_monitor        |           877 |         877 |  100.00% |
+-----------------------------------------------------------------
+| GLOBAL               |           877 |         877 |  100.00% |
+=================================================================
+
+Skipped report file generation (use --generate-report to enable)

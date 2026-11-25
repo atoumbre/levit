@@ -12,28 +12,46 @@ abstract class LevitScopeMiddleware {
   void onScopeCreate(int scopeId, String scopeName, int? parentScopeId) {}
 
   /// Called when a [LevitScope] is disposed.
+  /// Failures are aggregated after every disposal observer has been attempted.
   void onScopeDispose(int scopeId, String scopeName) {}
 
   /// Called when a dependency matches a registration request.
   ///
   /// This triggers on [LevitScope.put], [LevitScope.lazyPut], and their variants.
   void onDependencyRegister(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
 
   /// Called when a dependency instance is resolved.
   ///
   /// This triggers when [LevitScope.find] or its variants successfully return an instance.
   void onDependencyResolve(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
 
   /// Called when a dependency is removed.
   ///
-  /// This triggers on [LevitScope.delete] or [LevitScope.reset].
+  /// This triggers on [LevitScope.delete], [LevitScope.reset] or scope disposal.
+  /// A failure does not prevent other deletion observers or resource cleanup;
+  /// the awaited operation reports all failures after cleanup finishes.
   void onDependencyDelete(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
 
   /// Intercepts the instantiation logic of a dependency.
   ///
@@ -46,8 +64,7 @@ abstract class LevitScopeMiddleware {
     LevitScope scope,
     String key,
     LevitDependency info,
-  ) =>
-      builder;
+  ) => builder;
 
   /// Intercepts the [onInit] call of a dependency.
   ///
@@ -61,6 +78,5 @@ abstract class LevitScopeMiddleware {
     LevitScope scope,
     String key,
     LevitDependency info,
-  ) =>
-      onInit;
+  ) => onInit;
 }

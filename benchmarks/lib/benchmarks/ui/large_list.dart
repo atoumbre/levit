@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,11 +9,11 @@ import '../../benchmark_engine.dart';
 
 class LargeListBenchmark extends Benchmark {
   @override
-  String get name => 'Large List Update (UI)';
+  String get name => 'Virtualized List: Visible Row Update (UI)';
 
   @override
   String get description =>
-      'Renders 1,000 items. Updates one deterministic item per run. Measures rebuild time.';
+      'A 1,000-item virtualized list; changes the first visible row and rebuilds the list wrapper.';
 
   @override
   bool get isUI => true;
@@ -40,8 +38,7 @@ class LargeListBenchmark extends Benchmark {
 abstract class _LargeListBase extends BenchmarkImplementation {
   final int count = 1000;
   final List<String> items = <String>[];
-  late List<int> updateIndices;
-  int updateCursor = 0;
+  int renderedVersion = 0;
   int updateVersion = 0;
   int lastUpdatedIndex = 0;
 
@@ -50,20 +47,14 @@ abstract class _LargeListBase extends BenchmarkImplementation {
     items
       ..clear()
       ..addAll(List.generate(count, (i) => 'Item $i'));
-    updateIndices = _buildIndexSchedule(
-      count: count,
-      seed: 101,
-      length: 2048,
-    );
-    updateCursor = 0;
+    renderedVersion = 0;
     updateVersion = 0;
     lastUpdatedIndex = 0;
   }
 
   @override
   Future<void> run() async {
-    lastUpdatedIndex = updateIndices[updateCursor % updateIndices.length];
-    updateCursor++;
+    lastUpdatedIndex = 0;
     updateVersion++;
     items[lastUpdatedIndex] = 'Updated $lastUpdatedIndex #$updateVersion';
     notifyUpdate();
@@ -74,11 +65,13 @@ abstract class _LargeListBase extends BenchmarkImplementation {
     final expectedValue = 'Updated $lastUpdatedIndex #$updateVersion';
     if (items[lastUpdatedIndex] != expectedValue) {
       throw StateError(
-          'Large list mismatch at $lastUpdatedIndex: expected $expectedValue, got ${items[lastUpdatedIndex]}');
+        'Large list mismatch at $lastUpdatedIndex: expected $expectedValue, got ${items[lastUpdatedIndex]}',
+      );
     }
-    if (currentVersion != updateVersion) {
+    if (currentVersion != updateVersion || renderedVersion != updateVersion) {
       throw StateError(
-          'Large list version mismatch: expected $updateVersion, got $currentVersion');
+        'Large list version mismatch: expected $updateVersion, got $currentVersion',
+      );
     }
   }
 
@@ -92,7 +85,9 @@ abstract class _LargeListBase extends BenchmarkImplementation {
   int get currentVersion;
 
   Widget buildList() {
+    renderedVersion = currentVersion;
     return ListView.builder(
+      itemExtent: 24,
       itemCount: items.length,
       itemBuilder: (context, index) => Text(items[index]),
     );
@@ -124,7 +119,7 @@ class LevitLargeList extends _LargeListBase {
   @override
   Future<void> teardown() async {
     await super.teardown();
-    version.close();
+    await version.close();
   }
 }
 
@@ -269,13 +264,4 @@ class RiverpodLargeList extends _LargeListBase {
     await super.teardown();
     container.dispose();
   }
-}
-
-List<int> _buildIndexSchedule({
-  required int count,
-  required int seed,
-  required int length,
-}) {
-  final rng = Random(seed);
-  return List<int>.generate(length, (_) => rng.nextInt(count));
 }

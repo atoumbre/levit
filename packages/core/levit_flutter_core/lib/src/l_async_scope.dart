@@ -40,6 +40,9 @@ class LAsyncScope extends StatefulWidget {
   /// Optional dependency keys for reactive re-initialization.
   final List<Object?>? args;
 
+  /// Optional completion/retry handle; must remain stable while mounted.
+  final LevitScopeLifecycleController? lifecycle;
+
   const LAsyncScope({
     super.key,
     required this.dependencyFactory,
@@ -48,6 +51,7 @@ class LAsyncScope extends StatefulWidget {
     this.loading,
     this.error,
     this.args,
+    this.lifecycle,
   });
 
   @override
@@ -55,114 +59,73 @@ class LAsyncScope extends StatefulWidget {
 }
 
 class _LAsyncScopeState extends State<LAsyncScope> {
-  late LevitScope _scope;
-  late Future<void> _initFuture;
+  late final LevitScopeLifecycleController _lifecycle;
+  LevitScope? _parent;
+  bool _configured = false;
 
-  // Guard against re-initializing async scope during normal rebuilds.
-  bool _initialized = false;
-  LevitScope? _parentScope;
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = widget.lifecycle ?? LevitScopeLifecycleController();
+    _lifecycle.addListener(_changed);
+  }
+
+  void _changed() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _syncParentScope(listen: true);
-  }
-
-  void _syncParentScope({required bool listen}) {
-    final newParent = _ScopeProvider.of(context, listen: listen);
-    if (_initialized && !identical(_parentScope, newParent)) {
-      _resetScope();
+    final parent = _ScopeProvider.of(context, listen: true) ?? Ls.currentScope;
+    if (!_configured || !identical(parent, _parent)) {
+      _parent = parent;
+      _configure();
     }
-    _initScope(parentScope: newParent);
   }
 
-  void _initScope({LevitScope? parentScope}) {
-    if (_initialized) return;
-
-    final scopeName = widget.name ?? _uniqueScopeName(widget, this);
-
-    // Parent scope is resolved from inherited context, not global scope.
-    final resolvedParent = parentScope ?? _ScopeProvider.of(context);
-    _parentScope = resolvedParent;
-
-    // Scope hierarchy must mirror widget hierarchy for deterministic resolution.
-    _scope = resolvedParent != null
-        ? resolvedParent.createScope(scopeName)
-        : Levit.createScope(scopeName);
-
-    // Initialization future is created once per scope lifecycle.
-    _initFuture =
-        Future.sync(() => widget.dependencyFactory(_scope)).catchError((e) {
-      _scope.dispose();
-      throw e;
-    });
-    _initialized = true;
-  }
-
-  void _resetScope() {
-    _scope.dispose();
-    _initialized = false;
+  void _configure() {
+    _configured = true;
+    final factory = widget.dependencyFactory;
+    unawaited(
+      _lifecycle.replace(
+        parent: _parent!,
+        name: widget.name ?? _uniqueScopeName(widget, this),
+        initialize: (scope) => factory(scope),
+      ),
+    );
   }
 
   @override
   void didUpdateWidget(LAsyncScope oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    bool shouldReset = false;
-
-    if (widget.name != oldWidget.name) {
-      shouldReset = true;
+    if (!identical(widget.lifecycle, oldWidget.lifecycle)) {
+      throw StateError(
+        'Keep the lifecycle controller stable or use a new widget key.',
+      );
     }
-
-    // Explicit args control when async dependencies are recreated.
-    if (widget.args != null || oldWidget.args != null) {
-      if (!_scopeArgsMatch(widget.args, oldWidget.args)) {
-        shouldReset = true;
-      }
-    }
-
-    if (shouldReset) {
-      _resetScope();
-      _initScope();
+    if (widget.name != oldWidget.name ||
+        !_scopeArgsMatch(widget.args, oldWidget.args)) {
+      _configure();
     }
   }
 
   @override
   void dispose() {
-    if (_initialized) {
-      _scope.dispose();
-    }
+    _lifecycle.removeListener(_changed);
+    unawaited(_lifecycle.close().catchError(_reportScopeCleanupError));
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    _syncParentScope(listen: false);
-    return FutureBuilder<void>(
-      future: _initFuture,
-      builder: (context, snapshot) {
-        // Error state keeps the failed scope isolated from the subtree.
-        if (snapshot.hasError) {
-          return widget.error?.call(context, snapshot.error!) ??
-              Center(
-                child: Text(
-                  'Scope Initialization Error:\n${snapshot.error}',
-                  textAlign: TextAlign.center,
-                ),
-              );
-        }
-
-        // Publish scope only after dependency initialization completes.
-        if (snapshot.connectionState == ConnectionState.done) {
-          return _ScopeProvider(
-            scope: _scope,
-            child: widget.child,
-          );
-        }
-
-        // Loading state avoids exposing a partially initialized scope.
-        return widget.loading?.call(context) ?? const SizedBox.shrink();
-      },
-    );
+    final error = _lifecycle.error;
+    if (error != null) {
+      return widget.error?.call(context, error) ??
+          Text('Scope error: $error', textDirection: TextDirection.ltr);
+    }
+    final scope = _lifecycle.scope;
+    if (scope != null) return _ScopeProvider(scope: scope, child: widget.child);
+    return widget.loading?.call(context) ?? const SizedBox.shrink();
   }
 }

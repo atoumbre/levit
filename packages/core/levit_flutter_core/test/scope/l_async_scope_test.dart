@@ -7,15 +7,17 @@ class DisposeController extends LevitController {
   DisposeController(this.onDisposed);
 
   @override
-  void onClose() {
+  Future<void> onClose() async {
     onDisposed();
-    super.onClose();
+    await super.onClose();
   }
 }
 
 void main() {
-  group('LAsyncScope Coverage', () {
-    testWidgets('LAsyncScope error state (Line 114)', (tester) async {
+  group('Asynchronous scope initialization, replacement, and disposal', () {
+    testWidgets('LAsyncScope renders dependency initialization failures', (
+      tester,
+    ) async {
       await tester.runAsync(() async {
         await tester.pumpWidget(
           Directionality(
@@ -35,8 +37,9 @@ void main() {
       });
     });
 
-    testWidgets('LAsyncScope updateWidget with different args (Line 151, 159)',
-        (tester) async {
+    testWidgets('LAsyncScope recreates dependencies when arguments change', (
+      tester,
+    ) async {
       int createCount = 0;
 
       Widget buildScope(int argsValue) {
@@ -49,10 +52,12 @@ void main() {
               createCount++;
               s.put<String>(() => 'Result $argsValue');
             },
-            child: Builder(builder: (context) {
-              final val = context.levit.findOrNull<String>() ?? 'none';
-              return Text('Val: $val');
-            }),
+            child: Builder(
+              builder: (context) {
+                final val = context.levit.findOrNull<String>() ?? 'none';
+                return Text('Val: $val');
+              },
+            ),
           ),
         );
       }
@@ -71,7 +76,9 @@ void main() {
       });
     });
 
-    testWidgets('LAsyncScope factory disposal (Lines 222-225)', (tester) async {
+    testWidgets('LAsyncScope disposes its controller when unmounted', (
+      tester,
+    ) async {
       bool disposed = false;
 
       await tester.runAsync(() async {
@@ -81,7 +88,8 @@ void main() {
             child: LAsyncScope(
               dependencyFactory: (s) async {
                 s.put<DisposeController>(
-                    () => DisposeController(() => disposed = true));
+                  () => DisposeController(() => disposed = true),
+                );
               },
               child: const Text('ok'),
             ),
@@ -96,42 +104,50 @@ void main() {
     });
   });
 
-  group('LevitProvider and Context Extensions Coverage', () {
-    testWidgets('findOrNull and findAsync (Lines 305+)', (tester) async {
-      await tester.runAsync(() async {
-        await tester.pumpWidget(
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: LScope(
-              dependencyFactory: (s) {
-                s.lazyPutAsync(() async => 'async_val');
-              },
-              child: Builder(builder: (context) {
-                final val = context.levit.findOrNull<String>();
-                return Text('Loaded: ${val != null}');
-              }),
+  group('Context lookups in dependency scopes', () {
+    testWidgets(
+      'context lookups distinguish absent, pending, and resolved dependencies',
+      (tester) async {
+        await tester.runAsync(() async {
+          await tester.pumpWidget(
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: LScope(
+                dependencyFactory: (s) {
+                  s.lazyPutAsync(() async => 'async_val');
+                },
+                child: Builder(
+                  builder: (context) {
+                    expect(
+                      () => context.levit.findOrNull<String>(),
+                      throwsStateError,
+                    );
+                    return const Text('Loaded: false');
+                  },
+                ),
+              ),
             ),
-          ),
-        );
+          );
 
-        await tester.pump();
+          await tester.pump();
 
-        final element = tester.element(find.byType(Builder));
+          final element = tester.element(find.byType(Builder));
 
-        // findOrNull
-        expect(element.levit.findOrNull<int>(), isNull);
+          // findOrNull
+          expect(element.levit.findOrNull<int>(), isNull);
 
-        // findAsync
-        final val = await element.levit.findAsync<String>();
-        expect(val, 'async_val');
+          // findAsync
+          final val = await element.levit.findAsync<String>();
+          expect(val, 'async_val');
 
-        // findOrNullAsync
-        expect(await element.levit.findOrNullAsync<String>(), 'async_val');
-        expect(await element.levit.findOrNullAsync<int>(), isNull);
+          // findOrNullAsync
+          expect(await element.levit.findOrNullAsync<String>(), 'async_val');
+          expect(await element.levit.findOrNullAsync<int>(), isNull);
 
-        // isInstantiated
-        expect(element.levit.isInstantiated<String>(), true);
-      });
-    });
+          // isInstantiated
+          expect(element.levit.isInstantiated<String>(), true);
+        });
+      },
+    );
   });
 }

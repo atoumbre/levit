@@ -1,7 +1,7 @@
 part of '../../levit_monitor.dart';
 
 /// A transport that broadcasts events to multiple underlying transports.
-class MultiTransport implements LevitTransport {
+class MultiTransport extends LevitTransport {
   /// The list of active transports.
   final List<LevitTransport> transports;
 
@@ -9,37 +9,27 @@ class MultiTransport implements LevitTransport {
   MultiTransport(this.transports);
 
   @override
-  void send(MonitorEvent event) {
+  int get droppedEvents =>
+      transports.fold(0, (sum, transport) => sum + transport.droppedEvents);
+  Future<void> _all(FutureOr<void> Function(LevitTransport) operation) async {
+    final failures = <AsyncError>[];
     for (final transport in transports) {
       try {
-        transport.send(event);
-      } catch (e, stackTrace) {
-        // One failing sink must not block delivery to other sinks.
-        _logTransportFailure(
-          'send',
-          transport,
-          e,
-          stackTrace: stackTrace,
-        );
+        await operation(transport);
+      } catch (error, stack) {
+        failures.add(AsyncError(error, stack));
       }
     }
+    if (failures.isNotEmpty) throw LevitMonitorException(failures);
   }
 
   @override
-  Future<void> close() async {
-    for (final transport in transports) {
-      try {
-        await transport.close();
-      } catch (e, stackTrace) {
-        _logTransportFailure(
-          'close',
-          transport,
-          e,
-          stackTrace: stackTrace,
-        );
-      }
-    }
-  }
+  Future<void> send(MonitorEvent event) =>
+      _all((transport) => transport.send(event.freeze()));
+  @override
+  Future<void> flush() => _all((transport) => transport.flush());
+  @override
+  Future<void> close() => _all((transport) => transport.close());
 
   @override
   Stream<void> get onConnect {
@@ -60,27 +50,13 @@ class MultiTransport implements LevitTransport {
       }
     };
 
-    controller.onCancel = () {
+    controller.onCancel = () async {
       for (final sub in subscriptions) {
-        sub.cancel();
+        await sub.cancel();
       }
       subscriptions.clear();
     };
 
     return controller.stream;
   }
-}
-
-void _logTransportFailure(
-  String operation,
-  LevitTransport transport,
-  Object error, {
-  StackTrace? stackTrace,
-}) {
-  dev.log(
-    'LevitMonitor: Failed to $operation transport ${transport.runtimeType}',
-    error: error,
-    stackTrace: stackTrace,
-    name: 'levit_monitor',
-  );
 }

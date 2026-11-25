@@ -1,0 +1,44 @@
+--- a/lib/src/async_types.dart
++++ b/lib/src/async_types.dart
+@@ -198,7 +198,7 @@
+   }
+ 
+   @override
+-  void close() {
++  FutureOr<void> close() {
+     _cleanup();
+     _sourceCompleted = true;
+     _streamFactory = null;
+--- a/lib/src/computed.dart
++++ b/lib/src/computed.dart
+@@ -793,8 +793,8 @@
+   // ---------------------------------------------------------------------------
+ 
+   @override
+-  void close() {
+-    if (_isClosed) return;
++  FutureOr<void> close() {
++    if (_isClosed) return null;
+     super.close();
+     _isClosed = true;
+     _cleanupSubscriptions();
+--- a/lib/src/core.dart
++++ b/lib/src/core.dart
+@@ -272,7 +272,7 @@
+   /// Permanently closes the reactive object and releases all internal resources.
+   ///
+   /// After calling [close], the object should no longer be used.
+-  void close();
++  FutureOr<void> close();
+ 
+   /// An optional descriptive name for debugging and profiling.
+   String? get name;
+@@ -807,7 +807,7 @@
+   }
+ 
+   @override
+-  void close() {
++  FutureOr<void> close() {
+     if (LevitReactiveMiddleware.bypassMiddleware ||
+         !LevitReactiveMiddleware.hasDisposeMiddlewares) {
+       _cleanupBinding();

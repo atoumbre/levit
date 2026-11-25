@@ -16,14 +16,16 @@ class DashboardPage extends StatelessWidget {
     final controller = ref.put(() => AppBenchmarkController());
 
     // Declarative Effect: Triggered when isMobile OR initialized status changes
-    ref.autoDispose(LxComputed(() {
-      if (isMobile.value && !hasInitializedDrawer.value) {
-        hasInitializedDrawer.value = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          scaffoldKey.currentState?.openEndDrawer();
-        });
-      }
-    }, eager: true));
+    ref.own(
+      LxComputed(() {
+        if (isMobile.value && !hasInitializedDrawer.value) {
+          hasInitializedDrawer.value = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            scaffoldKey.currentState?.openEndDrawer();
+          });
+        }
+      }, eager: true),
+    );
 
     return (
       scaffoldKey: scaffoldKey,
@@ -64,12 +66,19 @@ class DashboardPage extends StatelessWidget {
                   tooltip: 'Copy Results',
                   onPressed: () => state.controller.copyResults(),
                 ),
+                IconButton(
+                  icon: const Icon(Icons.data_object),
+                  tooltip: 'Copy JSON with raw samples',
+                  onPressed: () => state.controller.copyResults(json: true),
+                ),
               ],
             ),
             // Use EndDrawer for settings on Mobile to avoid conflict with potential nav drawer
             endDrawer: isMobile
                 ? _SidebarContent(
-                    controller: state.controller, isInDrawer: true)
+                    controller: state.controller,
+                    isInDrawer: true,
+                  )
                 : null,
             body: Row(
               children: [
@@ -83,8 +92,9 @@ class DashboardPage extends StatelessWidget {
                   ),
                 Expanded(
                   child: Card(
-                    margin: const EdgeInsets.all(8)
-                        .copyWith(left: isMobile ? 8 : 0),
+                    margin: const EdgeInsets.all(
+                      8,
+                    ).copyWith(left: isMobile ? 8 : 0),
                     child: _MainContent(controller: state.controller),
                   ),
                 ),
@@ -101,16 +111,12 @@ class _SidebarContent extends StatelessWidget {
   final AppBenchmarkController controller;
   final bool isInDrawer;
 
-  const _SidebarContent({
-    required this.controller,
-    this.isInDrawer = false,
-  });
+  const _SidebarContent({required this.controller, this.isInDrawer = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -118,8 +124,14 @@ class _SidebarContent extends StatelessWidget {
             spacing: 8,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text('Frameworks', style: Theme.of(context).textTheme.titleLarge),
-              Spacer(),
+              Expanded(
+                child: Text(
+                  'Frameworks',
+                  style: Theme.of(context).textTheme.titleLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               TextButton(
                 onPressed: () => controller.toggleAllFrameworks(true),
                 child: Text("All"),
@@ -146,11 +158,14 @@ class _SidebarContent extends StatelessWidget {
             spacing: 8,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Benchmarks',
-                style: Theme.of(context).textTheme.titleLarge,
+              Expanded(
+                child: Text(
+                  'Benchmarks',
+                  style: Theme.of(context).textTheme.titleLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              Spacer(),
               TextButton(
                 onPressed: () => controller.toggleAllBenchmarks(true),
                 child: Text("All"),
@@ -216,30 +231,33 @@ class _MainContent extends StatelessWidget {
     return LWatch(() {
       // Active Benchmark Overlay
       if (controller.activeBenchmarkWidget.value != null) {
-        return Stack(children: [
-          // Dimmed background
-          const Center(
-            child: CircularProgressIndicator(),
-          ),
-          Container(color: Colors.white.withValues(alpha: 0.9)),
-          // The actual widget
-          Positioned.fill(
-            child: Builder(builder: controller.activeBenchmarkWidget.value!),
-          ),
-          // Label
-          const Positioned(
-            top: 20,
-            left: 20,
-            child: Material(
-              color: Colors.transparent,
-              child: Text("Running UI Benchmark...",
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red)),
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            // Keep unrelated animations out of measured frames.
+            const ColoredBox(color: Colors.white),
+            // The actual widget
+            Positioned.fill(
+              child: Builder(builder: controller.activeBenchmarkWidget.value!),
             ),
-          )
-        ]);
+            // Label
+            const Positioned(
+              top: 20,
+              left: 20,
+              child: Material(
+                color: Colors.transparent,
+                child: Text(
+                  "Running UI Benchmark...",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
       }
 
       if (controller.results.isEmpty && !controller.isRunning.value) {
@@ -255,23 +273,38 @@ class _MainContent extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(bench.name,
-                  style: Theme.of(context).textTheme.headlineSmall),
-              Text(bench.description,
-                  style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                bench.name,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              Text(
+                bench.description,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
               Text(
                 '${bench.classification.label}${bench.comparisonNote == null ? '' : ' • ${bench.comparisonNote}'}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade700,
-                      fontStyle: FontStyle.italic,
-                    ),
+                  color: Colors.grey.shade700,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
+              Text(results.first.measurement),
               const Gap(16),
               // Chart
               AspectRatio(
                 aspectRatio: 2, // Widescreen chart
                 child: _buildChart(results),
               ),
+              const Gap(16),
+              for (final result in results)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    '${result.displayLabel}: ${result.statusDescription}'
+                    '${result.error == null ? '' : '\nDetails: ${result.error!.split('\n').first}'}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
               const Gap(32),
             ],
           );
@@ -302,8 +335,10 @@ class _MainContent extends StatelessWidget {
                 if (value.toInt() >= 0 && value.toInt() < sorted.length) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(sorted[value.toInt()].framework.label,
-                        style: const TextStyle(fontSize: 10)),
+                    child: Text(
+                      sorted[value.toInt()].displayLabel,
+                      style: const TextStyle(fontSize: 10),
+                    ),
                   );
                 }
                 return const Text('');
@@ -311,11 +346,14 @@ class _MainContent extends StatelessWidget {
             ),
           ),
           leftTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: true, reservedSize: 40)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: const FlGridData(show: true),
         borderData: FlBorderData(show: false),
@@ -331,12 +369,14 @@ class _MainContent extends StatelessWidget {
                     ? _getColor(res.framework)
                     : Colors.red, // Red on error
                 width: 20,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(4)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(4),
+                ),
                 backDrawRodData: BackgroundBarChartRodData(
-                    show: true,
-                    toY: maxY.toDouble(),
-                    color: Colors.grey.withValues(alpha: 0.1)),
+                  show: true,
+                  toY: maxY.toDouble(),
+                  color: Colors.grey.withValues(alpha: 0.1),
+                ),
               ),
             ],
             showingTooltipIndicators: [0],
@@ -352,7 +392,9 @@ class _MainContent extends StatelessWidget {
               return BarTooltipItem(
                 '${rod.toY.toStringAsFixed(3)}ms',
                 const TextStyle(
-                    color: Colors.black, fontWeight: FontWeight.bold),
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               );
             },
           ),

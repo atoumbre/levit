@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 class MockController extends LevitController {}
 
 void main() {
-  group('StateSnapshot Coverage', () {
+  group('Snapshot dependency disposal and serialization', () {
     late StateSnapshot state;
     final sid = 'test-session';
 
@@ -53,67 +53,79 @@ void main() {
           listenerRemove: LevitLogLevel.info,
         ),
       );
-      transportWithOverrides
-          .send(ReactiveListenerAddedEvent(sessionId: sid, reactive: rx));
-      transportWithOverrides
-          .send(ReactiveListenerRemovedEvent(sessionId: sid, reactive: rx));
+      transportWithOverrides.send(
+        ReactiveListenerAddedEvent(sessionId: sid, reactive: rx),
+      );
+      transportWithOverrides.send(
+        ReactiveListenerRemovedEvent(sessionId: sid, reactive: rx),
+      );
       transportWithOverrides.close();
     });
 
     test('Apply Dependency Events', () {
       final info = LevitDependency(isLazy: true, isFactory: false);
-      state.applyEvent(DependencyRegisterEvent(
-        sessionId: sid,
-        scopeId: 10,
-        scopeName: 'Scope10',
-        key: 'DepA',
-        info: info,
-        source: 'put',
-      ));
+      state.applyEvent(
+        DependencyRegisterEvent(
+          sessionId: sid,
+          scopeId: 10,
+          scopeName: 'Scope10',
+          key: 'DepA',
+          info: info,
+          source: 'put',
+        ),
+      );
 
-      state.applyEvent(DependencyInstanceReadyEvent(
-        sessionId: sid,
-        scopeId: 10,
-        scopeName: 'Scope10',
-        key: 'DepA',
-        info: info,
-        instance: 'InstanceVal',
-      ));
+      state.applyEvent(
+        DependencyInstanceReadyEvent(
+          sessionId: sid,
+          scopeId: 10,
+          scopeName: 'Scope10',
+          key: 'DepA',
+          info: info,
+          instance: 'InstanceVal',
+        ),
+      );
 
       // Cover model toJson
       expect(state.scopes[10]?.toJson(), isNotEmpty);
       expect(state.dependencies['10:DepA']?.toJson(), isNotEmpty);
 
-      state.applyEvent(DependencyDeleteEvent(
-        sessionId: sid,
-        scopeId: 10,
-        scopeName: 'Scope10',
-        key: 'DepA',
-        info: info,
-        source: 'delete',
-      ));
+      state.applyEvent(
+        DependencyDeleteEvent(
+          sessionId: sid,
+          scopeId: 10,
+          scopeName: 'Scope10',
+          key: 'DepA',
+          info: info,
+          source: 'delete',
+        ),
+      );
       expect(state.dependencies.containsKey('10:DepA'), isFalse);
     });
 
     test('DependencyType detection', () {
       final sid = 'sid';
-      state.applyEvent(DependencyRegisterEvent(
-        sessionId: sid,
-        scopeId: 1,
-        scopeName: 's1',
-        key: 'ctrl',
-        info: LevitDependency(),
-        source: 'put',
-      ));
+      state.applyEvent(
+        DependencyRegisterEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's1',
+          key: 'ctrl',
+          info: LevitDependency(),
+          source: 'put',
+        ),
+      );
 
-      state.applyEvent(DependencyInstanceReadyEvent(
-        sessionId: sid,
-        scopeId: 1,
-        scopeName: 's1',
-        key: 'ctrl',
-        info: LevitDependency(),
-        instance: MockController(),
-      ));
+      state.applyEvent(
+        DependencyInstanceReadyEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's1',
+          key: 'ctrl',
+          info: LevitDependency(),
+          instance: MockController(),
+        ),
+      );
 
       expect(state.dependencies['1:ctrl']?.type, DependencyType.controller);
     });
@@ -126,8 +138,9 @@ void main() {
       state.applyEvent(ReactiveInitEvent(sessionId: sid, reactive: rx));
       expect(state.variables[rx.id]?.toJson(), isNotEmpty);
 
-      state
-          .applyEvent(ReactiveListenerAddedEvent(sessionId: sid, reactive: rx));
+      state.applyEvent(
+        ReactiveListenerAddedEvent(sessionId: sid, reactive: rx),
+      );
       expect(state.variables[rx.id]?.listenerCount, 1);
 
       // Update owner info (line 155-156)
@@ -136,46 +149,59 @@ void main() {
       expect(state.variables[rx.id]?.scopeId, 2);
 
       state.applyEvent(
-          ReactiveListenerRemovedEvent(sessionId: sid, reactive: rx));
+        ReactiveListenerRemovedEvent(sessionId: sid, reactive: rx),
+      );
       expect(state.variables[rx.id]?.listenerCount, 0);
 
-      state.applyEvent(ReactiveChangeEvent(
-        sessionId: sid,
-        reactive: rx,
-        change: LevitReactiveChange(
-          timestamp: DateTime.now(),
-          valueType: int,
-          oldValue: 0,
-          newValue: 1,
+      state.applyEvent(
+        ReactiveChangeEvent(
+          sessionId: sid,
+          reactive: rx,
+          change: LevitReactiveChange(
+            timestamp: DateTime.now(),
+            valueType: int,
+            oldValue: 0,
+            newValue: 1,
+          ),
         ),
-      ));
+      );
 
       state.applyEvent(ReactiveDisposeEvent(sessionId: sid, reactive: rx));
       expect(state.variables.containsKey(rx.id), isFalse);
     });
 
-    test('Scope disposal with dependencies (line 107)', () {
+    test('disposing a scope removes its dependencies from the snapshot', () {
       final sid = 'sid';
-      state.applyEvent(ScopeCreateEvent(
-          sessionId: sid, scopeId: 1, scopeName: 's1', parentScopeId: null));
-      state.applyEvent(DependencyRegisterEvent(
+      state.applyEvent(
+        ScopeCreateEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's1',
+          parentScopeId: null,
+        ),
+      );
+      state.applyEvent(
+        DependencyRegisterEvent(
           sessionId: sid,
           scopeId: 1,
           scopeName: 's1',
           key: 'k1',
           info: LevitDependency(),
-          source: 'src'));
+          source: 'src',
+        ),
+      );
       expect(state.dependencies.containsKey('1:k1'), isTrue);
 
       state.applyEvent(
-          ScopeDisposeEvent(sessionId: sid, scopeId: 1, scopeName: 's1'));
+        ScopeDisposeEvent(sessionId: sid, scopeId: 1, scopeName: 's1'),
+      );
       expect(state.dependencies.containsKey('1:k1'), isFalse);
     });
 
     test('Restore from snapshot', () {
       final snapshot = {
         'scopes': [
-          {'id': 1, 'name': 'root', 'parentScopeId': null}
+          {'id': 1, 'name': 'root', 'parentScopeId': null},
         ],
         'dependencies': [
           {
@@ -185,8 +211,8 @@ void main() {
             'isFactory': false,
             'isAsync': false,
             'status': 'active',
-            'value': 'Val1'
-          }
+            'value': 'Val1',
+          },
         ],
         'variables': [
           {
@@ -196,9 +222,9 @@ void main() {
             'value': 'hello',
             'valueType': 'String',
             'listenerCount': 5,
-            'dependencies': [200]
-          }
-        ]
+            'dependencies': [200],
+          },
+        ],
       };
 
       final event = SnapshotEvent(sessionId: sid, state: snapshot);

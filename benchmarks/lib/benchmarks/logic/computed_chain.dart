@@ -23,7 +23,7 @@ class ComputedChainBenchmark extends Benchmark {
 
   @override
   String get comparisonNote =>
-      'Approximates deep computed propagation with each framework\'s closest primitive.';
+      'An observed leaf consumes every root update through the closest computed/stream primitive.';
 
   @override
   BenchmarkImplementation createImplementation(Framework framework) {
@@ -92,7 +92,8 @@ class BlocComputedChain extends BenchmarkImplementation {
     final expectedLeaf = expectedRoot + BenchmarkConfig.computedChainIterations;
     if (root.state != expectedRoot || leaf.state != expectedLeaf) {
       throw StateError(
-          'BLoC chain mismatch: root=${root.state}, leaf=${leaf.state}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+        'BLoC chain mismatch: root=${root.state}, leaf=${leaf.state}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf',
+      );
     }
   }
 
@@ -110,28 +111,39 @@ class BlocComputedChain extends BenchmarkImplementation {
 
 // --- Levit ---
 class LevitComputedChain extends BenchmarkImplementation {
+  LevitComputedChain({this.staticDeps = false});
+
+  final bool staticDeps;
   late LxVar<int> root;
   late LxComputed<int> leaf;
+  int observedLeaf = 0;
+  int deliveries = 0;
   final List<LxComputed<int>> chain = [];
   int expectedRoot = 0;
 
   @override
   Future<void> setup() async {
     root = LxVar(0);
-    LxComputed<int> current = LxComputed(() => root.value + 1);
+    LxComputed<int> current = LxComputed(
+      () => root.value + 1,
+      staticDeps: staticDeps,
+    );
     chain
       ..clear()
       ..add(current);
 
     for (int i = 0; i < BenchmarkConfig.computedChainIterations - 1; i++) {
       final prev = current;
-      current = LxComputed(() => prev.value + 1);
+      current = LxComputed(() => prev.value + 1, staticDeps: staticDeps);
       chain.add(current);
     }
     leaf = current;
 
-    // warm up
-    leaf.value;
+    leaf.addListener(() {
+      observedLeaf = leaf.value;
+      deliveries++;
+    });
+    observedLeaf = leaf.value;
     expectedRoot = 0;
   }
 
@@ -139,7 +151,10 @@ class LevitComputedChain extends BenchmarkImplementation {
   Future<void> run() async {
     for (int i = 0; i < BenchmarkConfig.computedChainRunIterations; i++) {
       root.value++;
-      leaf.value;
+      if (observedLeaf !=
+          root.value + BenchmarkConfig.computedChainIterations) {
+        throw StateError('Chain leaf has not consumed this root update');
+      }
     }
     expectedRoot += BenchmarkConfig.computedChainRunIterations;
   }
@@ -147,17 +162,20 @@ class LevitComputedChain extends BenchmarkImplementation {
   @override
   Future<void> verify() async {
     final expectedLeaf = expectedRoot + BenchmarkConfig.computedChainIterations;
-    if (root.value != expectedRoot || leaf.value != expectedLeaf) {
+    if (root.value != expectedRoot ||
+        observedLeaf != expectedLeaf ||
+        deliveries != expectedRoot) {
       throw StateError(
-          'Levit chain mismatch: root=${root.value}, leaf=${leaf.value}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+        'Levit chain mismatch: root=${root.value}, leaf=${leaf.value}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
-    root.close();
+    await root.close();
     for (var c in chain) {
-      c.close();
+      await c.close();
     }
   }
 }
@@ -206,7 +224,8 @@ class VanillaComputedChain extends BenchmarkImplementation {
     final expectedLeaf = expectedRoot + BenchmarkConfig.computedChainIterations;
     if (root.value != expectedRoot || leaf.value != expectedLeaf) {
       throw StateError(
-          'Vanilla chain mismatch: root=${root.value}, leaf=${leaf.value}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+        'Vanilla chain mismatch: root=${root.value}, leaf=${leaf.value}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf',
+      );
     }
   }
 
@@ -265,7 +284,8 @@ class GetXComputedChain extends BenchmarkImplementation {
     final expectedLeaf = expectedRoot + BenchmarkConfig.computedChainIterations;
     if (root.value != expectedRoot || leafRx.value != expectedLeaf) {
       throw StateError(
-          'GetX chain mismatch: root=${root.value}, leaf=${leafRx.value}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+        'GetX chain mismatch: root=${root.value}, leaf=${leafRx.value}, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf',
+      );
     }
   }
 
@@ -297,7 +317,7 @@ class RiverpodComputedChain extends BenchmarkImplementation {
     }
     leafProvider = currentProvider;
 
-    // Warm up
+    container.listen(leafProvider, (_, __) {});
     container.read(leafProvider);
     expectedRoot = 0;
   }
@@ -320,7 +340,8 @@ class RiverpodComputedChain extends BenchmarkImplementation {
     final leafValue = container.read(leafProvider);
     if (rootValue != expectedRoot || leafValue != expectedLeaf) {
       throw StateError(
-          'Riverpod chain mismatch: root=$rootValue, leaf=$leafValue, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf');
+        'Riverpod chain mismatch: root=$rootValue, leaf=$leafValue, expectedRoot=$expectedRoot, expectedLeaf=$expectedLeaf',
+      );
     }
   }
 

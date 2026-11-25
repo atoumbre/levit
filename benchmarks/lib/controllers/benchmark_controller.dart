@@ -61,8 +61,9 @@ class AppBenchmarkController extends LevitController {
     results.clear();
     progress.value = 0.0;
 
-    final benchmarks =
-        availableBenchmarks.where(selectedBenchmarks.contains).toList();
+    final benchmarks = availableBenchmarks
+        .where(selectedBenchmarks.contains)
+        .toList();
     final sortedFrameworks = selectedFrameworks.toList()
       ..sort((a, b) => a.index.compareTo(b.index));
     lastEnvironment.value = BenchmarkEnvironment.capture(
@@ -77,9 +78,11 @@ class AppBenchmarkController extends LevitController {
     final totalSteps = selectedFrameworks.length * benchmarks.length;
     int completedSteps = 0;
 
-    for (int benchmarkIndex = 0;
-        benchmarkIndex < benchmarks.length;
-        benchmarkIndex++) {
+    for (
+      int benchmarkIndex = 0;
+      benchmarkIndex < benchmarks.length;
+      benchmarkIndex++
+    ) {
       final benchmark = benchmarks[benchmarkIndex];
       final frameworks = _frameworkOrderForBenchmark(benchmarkIndex);
       currentStatus.value = 'Benchmark: ${benchmark.name}';
@@ -88,8 +91,11 @@ class AppBenchmarkController extends LevitController {
         currentStatus.value = 'Running ${benchmark.name} on ${fw.label}...';
 
         // Run
-        final result =
-            await runner.runBenchmark(benchmark, fw, mountWidget: _mountWidget);
+        final result = await runner.runBenchmark(
+          benchmark,
+          fw,
+          mountWidget: _mountWidget,
+        );
 
         // Store
         final currentResults = results[benchmark.name] ?? [];
@@ -113,18 +119,20 @@ class AppBenchmarkController extends LevitController {
     if (frameworks.isEmpty) return frameworks;
 
     final offset = benchmarkIndex % frameworks.length;
-    return [
-      ...frameworks.skip(offset),
-      ...frameworks.take(offset),
-    ];
+    return [...frameworks.skip(offset), ...frameworks.take(offset)];
   }
 
-  Future<void> copyResults() async {
-    final report = BenchmarkReporter.generateMarkdownReport(
-      results: results,
-      title: 'Benchmark Results',
-      environment: lastEnvironment.value,
-    );
+  Future<void> copyResults({bool json = false}) async {
+    final report = json
+        ? BenchmarkReporter.generateJsonReport(
+            results: results,
+            environment: lastEnvironment.value,
+          )
+        : BenchmarkReporter.generateMarkdownReport(
+            results: results,
+            title: 'Benchmark Results',
+            environment: lastEnvironment.value,
+          );
 
     await Clipboard.setData(ClipboardData(text: report));
 

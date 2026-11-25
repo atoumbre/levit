@@ -22,11 +22,12 @@ void main() {
 
       // Since we removed the try-catch block for performance, this now throws.
       expect(
-          () => Lx.batch(() {
-                v1.value = 1;
-                v2.value = 1;
-              }),
-          throwsException);
+        () => Lx.batch(() {
+          v1.value = 1;
+          v2.value = 1;
+        }),
+        throwsException,
+      );
 
       // Verify recover: batchedNotifiers should be clear
       // We can't check internal list directly, but if we run another batch,
@@ -61,7 +62,8 @@ void main() {
       final v = 0.lx;
       v.addListener(() {}); // Add first
       v.addListener(
-          () => throw Exception('Multi Error')); // Add second to trigger loop
+        () => throw Exception('Multi Error'),
+      ); // Add second to trigger loop
 
       expect(() => v.value = 1, throwsException);
     });
@@ -80,5 +82,6 @@ class ErrorMiddleware extends LevitReactiveMiddleware {
 
   @override
   void Function(Object error, StackTrace? stack, LxReactive? context)?
-      get onReactiveError => (e, s, c) => onError(e);
+  get onReactiveError =>
+      (e, s, c) => onError(e);
 }

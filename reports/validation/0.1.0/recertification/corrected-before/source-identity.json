@@ -1,0 +1,10 @@
+{
+  "runtimeSourceManifest": "4c6b6f64dfac2f0bbd8f32dfe30519e51bfd4ec51652ddc7543334eb3f9da1bf",
+  "harness": {
+    "benchmarks/lib/release_performance.dart": "52e1e87740b558f40d5c9796480ac0bc6a4fafcb3812eb05c3fc38a7a5e625bf",
+    "benchmarks/lib/measured_frames.dart": "c62d78d83e81477068276be4a2cd7853a04ebcda71ef01954094536c834438a1",
+    "benchmarks/lib/performance_monitor.dart": "d2d6a492995308e164ee76fb2991d171e6f0a72655b15d1b03e083985848ca52",
+    "benchmarks/tool/compare_release_performance.py": "aa3ac71e34f374ec8a1186ba5e66645a9137a36aa5bd7d19b3500a8647cd3037"
+  },
+  "phase": "corrected comparison before runtime optimizations"
+}

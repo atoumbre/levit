@@ -1,0 +1,12 @@
+{
+  "published": {
+    "path": "published-source.tar.gz",
+    "sha256": "bafb0b468867faa11241b98900c0d45cbbccf3192fdfd6ecb16a79bc67e677a7",
+    "bytes": 315441
+  },
+  "current": {
+    "path": "current-source.tar.gz",
+    "sha256": "b2a19f419f01015620aad3c076a3bb4e10ce3b02d6e271cbcd929a1fe316418c",
+    "bytes": 343168
+  }
+}

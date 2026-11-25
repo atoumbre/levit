@@ -14,6 +14,6 @@ import 'dart:collection';
 import 'dart:developer' as dev;
 
 part 'src/core.dart';
+part 'src/description.dart';
 part 'src/middleware.dart';
 part 'src/global_accessor.dart';
-part 'src/extensions.dart';

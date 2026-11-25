@@ -1,18 +1,14 @@
 part of '../levit_flutter_core.dart';
 
 typedef LScopeDependencyFactory = void Function(LevitScope scope);
-typedef LAsyncScopeDependencyFactory = FutureOr<void> Function(
-  LevitScope scope,
-);
+typedef LAsyncScopeDependencyFactory =
+    FutureOr<void> Function(LevitScope scope);
 
 /// An internal widget that propagates the [LevitScope] down the widget tree.
 class _ScopeProvider extends InheritedWidget {
   final LevitScope scope;
 
-  const _ScopeProvider({
-    required this.scope,
-    required super.child,
-  });
+  const _ScopeProvider({required this.scope, required super.child});
 
   static LevitScope? of(BuildContext context, {bool listen = false}) {
     final provider = listen
@@ -29,17 +25,11 @@ class _CapturedScope extends StatelessWidget {
   final LevitScope scope;
   final Widget child;
 
-  const _CapturedScope({
-    required this.scope,
-    required this.child,
-  });
+  const _CapturedScope({required this.scope, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return _ScopeProvider(
-      scope: scope,
-      child: child,
-    );
+    return _ScopeProvider(scope: scope, child: child);
   }
 }
 

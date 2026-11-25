@@ -1,0 +1,388 @@
+00:00 +0: loading /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart
+00:00 +0: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/computed_mode_benchmarks_test.dart: (setUpAll)
+00:00 +0: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Vanilla
+00:00 +1: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Vanilla
+00:00 +2: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Vanilla
+RESULT: Rapid State Mutation [Vanilla]: 541µs (0.541ms)
+00:00 +3: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Vanilla
+00:00 +4: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/computed_mode_benchmarks_test.dart: dynamic: Fan In Update preserves delivery
+00:00 +5: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Levit
+00:00 +6: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Levit
+00:00 +7: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Levit
+00:00 +8: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Levit
+00:00 +8: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/computed_mode_benchmarks_test.dart: dynamic: runner records explicit mode and valid samples
+Running Fan In Update for Levit...
+00:00 +8: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Levit
+RESULT: Rapid State Mutation [Levit]: 601µs (0.601ms)
+00:00 +9: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/computed_mode_benchmarks_test.dart: dynamic: runner records explicit mode and valid samples
+00:00 +10: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+00:00 +11: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+00:00 +12: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+00:00 +13: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+00:00 +14: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+00:00 +15: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+00:00 +16: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+00:00 +17: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+00:00 +18: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+RESULT: Rapid State Mutation [GetX]: 740µs (0.740ms)
+00:00 +19: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/computed_mode_benchmarks_test.dart: static: Computed Chain (Deep Propagation) preserves delivery
+00:00 +20: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:00 +20: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/computed_mode_benchmarks_test.dart: static: runner records explicit mode and valid samples
+Running Fan In Update for Levit...
+00:00 +21: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:02 +22: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:03 +23: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:04 +23: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/runner_failure_test.dart: app runner rejects a measured run whose cleanup fails
+Running cleanup failure for Levit...
+Error tearing down cleanup failure: Bad state: teardown failed
+00:04 +24: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:04 +24: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/runner_failure_test.dart: headless logic runner reports cleanup failure
+Error tearing down cleanup failure: Bad state: teardown failed
+00:04 +25: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:05 +25: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/runner_failure_test.dart: headless UI runner unmounts and reports cleanup failure
+Error tearing down cleanup failure: Bad state: teardown failed
+00:05 +26: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:05 +27: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:05 +28: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:05 +29: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:05 +30: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:07 +31: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:07 +32: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:07 +33: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:07 +34: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:07 +35: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:07 +36: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:07 +37: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:08 +38: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:08 +39: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:08 +40: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:08 +41: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:08 +42: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:08 +43: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:08 +44: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:08 +45: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +46: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +47: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +48: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +49: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +50: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +51: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +52: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +53: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +54: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +55: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:09 +56: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:10 +57: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:10 +58: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:10 +59: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:10 +60: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:10 +61: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:10 +62: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+RESULT: Rapid State Mutation [BLoC]: 115083µs (115.083ms)
+00:23 +63: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Riverpod
+RESULT: Rapid State Mutation [Riverpod]: 5015µs (5.015ms)
+00:24 +64: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Diamond Graph (Observed Updates) Levit
+RESULT: Diamond Graph (Observed Updates) [Levit]: 67µs (0.067ms)
+00:24 +65: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Diamond Graph (Observed Updates) GetX
+RESULT: Diamond Graph (Observed Updates) [GetX]: 24981µs (24.981ms)
+00:33 +66: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Diamond Graph (Observed Updates) BLoC
+RESULT: Diamond Graph (Observed Updates) [BLoC]: 2867µs (2.867ms)
+00:34 +67: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Diamond Graph (Observed Updates) Riverpod
+RESULT: Diamond Graph (Observed Updates) [Riverpod]: 2310µs (2.310ms)
+00:34 +68: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Diamond Graph (Observed Updates) Vanilla
+RESULT: Diamond Graph (Observed Updates) [Vanilla]: 89µs (0.089ms)
+00:34 +69: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update GetX
+RESULT: Fan Out Update [GetX]: 45µs (0.045ms)
+00:34 +70: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update BLoC
+RESULT: Fan Out Update [BLoC]: 628µs (0.628ms)
+00:35 +71: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update Riverpod
+RESULT: Fan Out Update [Riverpod]: 336µs (0.336ms)
+00:35 +72: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update Vanilla
+RESULT: Fan Out Update [Vanilla]: 10µs (0.010ms)
+00:35 +73: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update Levit
+RESULT: Fan Out Update [Levit]: 34µs (0.034ms)
+00:35 +74: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update BLoC
+RESULT: Fan In Update [BLoC]: 74µs (0.074ms)
+00:35 +75: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update Riverpod
+RESULT: Fan In Update [Riverpod]: 740µs (0.740ms)
+00:35 +76: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update Vanilla
+RESULT: Fan In Update [Vanilla]: 13µs (0.013ms)
+00:35 +77: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update Levit
+RESULT: Fan In Update [Levit]: 16µs (0.016ms)
+00:35 +78: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update GetX
+RESULT: Fan In Update [GetX]: 37µs (0.037ms)
+00:35 +79: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed Riverpod
+RESULT: Async Computed [Riverpod]: 5168µs (5.168ms)
+00:36 +80: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed Vanilla
+RESULT: Async Computed [Vanilla]: 2763µs (2.763ms)
+00:37 +81: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed Levit
+RESULT: Async Computed [Levit]: 3654µs (3.654ms)
+00:38 +82: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed GetX
+RESULT: Async Computed [GetX]: 1210µs (1.210ms)
+00:38 +83: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed BLoC
+RESULT: Async Computed [BLoC]: 1750µs (1.750ms)
+00:38 +84: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched Vanilla
+RESULT: Batch vs Un-batched [Vanilla]: 150µs (0.150ms)
+00:38 +85: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched Levit
+RESULT: Batch vs Un-batched [Levit]: 33µs (0.033ms)
+00:38 +86: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched GetX
+RESULT: Batch vs Un-batched [GetX]: 23µs (0.023ms)
+00:38 +87: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched BLoC
+RESULT: Batch vs Un-batched [BLoC]: 20µs (0.020ms)
+00:38 +88: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched Riverpod
+RESULT: Batch vs Un-batched [Riverpod]: 93µs (0.093ms)
+00:38 +89: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Warm Root DI Lookup Levit
+RESULT: Warm Root DI Lookup [Levit]: 58µs (0.058ms)
+00:38 +90: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Warm Root DI Lookup GetX
+RESULT: Warm Root DI Lookup [GetX]: 139µs (0.139ms)
+00:38 +91: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Warm Root DI Lookup BLoC
+RESULT: Warm Root DI Lookup [BLoC]: 15µs (0.015ms)
+00:38 +92: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Warm Root DI Lookup Riverpod
+RESULT: Warm Root DI Lookup [Riverpod]: 25µs (0.025ms)
+00:38 +93: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Warm Root DI Lookup Vanilla
+RESULT: Warm Root DI Lookup [Vanilla]: 8µs (0.008ms)
+00:38 +94: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) GetX
+RESULT: Computed Chain (Deep Propagation) [GetX]: 449µs (0.449ms)
+00:39 +95: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) BLoC
+RESULT: Computed Chain (Deep Propagation) [BLoC]: 45317µs (45.317ms)
+00:45 +96: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) Riverpod
+RESULT: Computed Chain (Deep Propagation) [Riverpod]: 155861µs (155.861ms)
+01:11 +97: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) Vanilla
+RESULT: Computed Chain (Deep Propagation) [Vanilla]: 209µs (0.209ms)
+01:11 +98: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) Levit
+RESULT: Computed Chain (Deep Propagation) [Levit]: 86µs (0.086ms)
+01:11 +99: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Virtualized List: Visible Row Update (UI) BLoC
+RESULT: Virtualized List: Visible Row Update (UI) [BLoC]: 2467µs (2.467ms)
+01:12 +100: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Virtualized List: Visible Row Update (UI) Riverpod
+RESULT: Virtualized List: Visible Row Update (UI) [Riverpod]: 1959µs (1.959ms)
+01:13 +101: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Virtualized List: Visible Row Update (UI) Vanilla
+RESULT: Virtualized List: Visible Row Update (UI) [Vanilla]: 1497µs (1.497ms)
+01:13 +102: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Virtualized List: Visible Row Update (UI) Levit
+RESULT: Virtualized List: Visible Row Update (UI) [Levit]: 1352µs (1.352ms)
+01:13 +103: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Virtualized List: Visible Row Update (UI) GetX
+RESULT: Virtualized List: Visible Row Update (UI) [GetX]: 1189µs (1.189ms)
+01:13 +104: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Nested Leaf Rebuild (UI) Riverpod
+RESULT: Nested Leaf Rebuild (UI) [Riverpod]: 1038µs (1.038ms)
+01:14 +105: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Nested Leaf Rebuild (UI) Vanilla
+RESULT: Nested Leaf Rebuild (UI) [Vanilla]: 909µs (0.909ms)
+01:14 +106: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Nested Leaf Rebuild (UI) Levit
+RESULT: Nested Leaf Rebuild (UI) [Levit]: 754µs (0.754ms)
+01:14 +107: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Nested Leaf Rebuild (UI) GetX
+RESULT: Nested Leaf Rebuild (UI) [GetX]: 1456µs (1.456ms)
+01:14 +108: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Nested Leaf Rebuild (UI) BLoC
+RESULT: Nested Leaf Rebuild (UI) [BLoC]: 1516µs (1.516ms)
+01:15 +109: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) Vanilla
+RESULT: Dynamic Grid Churn (UI) [Vanilla]: 12868µs (12.868ms)
+01:17 +110: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) Levit
+RESULT: Dynamic Grid Churn (UI) [Levit]: 10513µs (10.513ms)
+01:19 +111: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) GetX
+RESULT: Dynamic Grid Churn (UI) [GetX]: 8225µs (8.225ms)
+01:21 +112: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) BLoC
+RESULT: Dynamic Grid Churn (UI) [BLoC]: 8124µs (8.124ms)
+01:22 +113: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) Riverpod
+RESULT: Dynamic Grid Churn (UI) [Riverpod]: 8221µs (8.221ms)
+01:23 +114: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Progress Bar State Update (UI) Levit
+RESULT: Progress Bar State Update (UI) [Levit]: 284µs (0.284ms)
+01:23 +115: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Progress Bar State Update (UI) GetX
+RESULT: Progress Bar State Update (UI) [GetX]: 324µs (0.324ms)
+01:23 +116: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Progress Bar State Update (UI) BLoC
+RESULT: Progress Bar State Update (UI) [BLoC]: 274µs (0.274ms)
+01:23 +117: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Progress Bar State Update (UI) Riverpod
+RESULT: Progress Bar State Update (UI) [Riverpod]: 171µs (0.171ms)
+01:24 +118: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Progress Bar State Update (UI) Vanilla
+RESULT: Progress Bar State Update (UI) [Vanilla]: 189µs (0.189ms)
+01:24 +119: /Users/atoumbre/SoftiLab/levit-svg/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks (tearDownAll)
+
+================================================================================
+BENCHMARK CONSOLIDATED REPORT
+Date: 2026-11-14 08:01:55.684827
+================================================================================
+
+ENVIRONMENT
+--------------------------------------------------------------------------------
+Execution Context        : flutter_test
+Build Mode               : debug
+Benchmark Profile        : test
+Iterations               : 100
+Warmup Iterations        : 50
+Framework Order Rotation : Enabled
+Frameworks               : Vanilla, Levit, GetX, BLoC, Riverpod
+Benchmarks               : Rapid State Mutation, Diamond Graph (Observed Updates), Fan Out Update, Fan In Update, Async Computed, Batch vs Un-batched, Warm Root DI Lookup, Computed Chain (Deep Propagation), Virtualized List: Visible Row Update (UI), Nested Leaf Rebuild (UI), Dynamic Grid Churn (UI), Progress Bar State Update (UI)
+Operating System         : macos
+OS Version               : Version 26.6.2 (Build 25G83)
+Dart Version             : 3.12.2
+CPU Threads              : 8
+Locale                   : en_US
+Host Name                : MacBookPro.net.rogers.com
+================================================================================
+
+>>> Rapid State Mutation
+Measurement: Completed logic work (wall time) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Vanilla         | 541        | 596.7      | 447-1558          | 169.9      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Levit           | 601        | 671.7      | 522-1895          | 206.5      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 740        | 883.1      | 633-4132          | 440.1      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 5015       | 5675.6     | 3603-21949        | 2327.2     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+BLoC            | 115083     | 141782.6   | 82208-353924      | 58218.4    | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Diamond Graph (Observed Updates)
+Measurement: Completed logic work (wall time) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Approximate | Note: Consumes the final diamond result after every root write. Intermediate notification counts can differ.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Levit           | 67         | 99.2       | 49-626            | 87.0       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Vanilla         | 89         | 113.3      | 52-588            | 74.4       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 2310       | 3022.7     | 1517-27979        | 3031.4     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+RxDart          | 2867       | 4489.8     | 1677-77273        | 7928.1     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 24981      | 35822.2    | 17312-295534      | 34395.5    | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Fan Out Update
+Measurement: Completed logic work (wall time) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Vanilla         | 10         | 17.9       | 5-85              | 18.2       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Levit           | 34         | 49.0       | 21-588            | 61.4       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 45         | 51.0       | 12-146            | 25.8       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 336        | 389.1      | 108-1547          | 224.8      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+RxDart          | 628        | 833.2      | 488-3008          | 435.8      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Fan In Update
+Measurement: Completed logic work (wall time) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Vanilla         | 13         | 23.2       | 11-288            | 32.9       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Levit           | 16         | 22.2       | 13-167            | 21.6       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 37         | 47.2       | 11-312            | 55.9       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+RxDart          | 74         | 153.4      | 35-3366           | 370.4      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 740        | 1052.9     | 373-8310          | 1027.3     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Async Computed
+Measurement: Completed logic work (wall time) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Approximate | Note: Measures sequential async recomputation using each framework's closest async primitive.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+GetX            | 1210       | 1440.5     | 787-3530          | 607.5      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+RxDart          | 1750       | 2064.9     | 1312-5588         | 753.3      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Vanilla         | 2763       | 3653.1     | 1571-10464        | 2078.9     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Levit           | 3654       | 4730.2     | 1661-19573        | 3129.6     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 5168       | 6957.2     | 1889-31062        | 4942.7     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Batch vs Un-batched
+Measurement: Completed logic work (wall time) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Feature Demo | Note: Levit uses a native batching primitive; others measure un-batched closest equivalents.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+ValueNotifier (substitute) | 20         | 31.6       | 17-139            | 25.9       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 23         | 38.2       | 20-187            | 32.7       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Levit           | 33         | 84.6       | 22-1955           | 207.6      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 93         | 143.4      | 78-867            | 126.9      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Vanilla         | 150        | 180.7      | 135-744           | 94.4       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Warm Root DI Lookup
+Measurement: Completed logic work (wall time) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Feature Demo | Note: DI containers are not first-class primitives in every framework.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Vanilla         | 8          | 17.6       | 5-189             | 26.0       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Custom map (substitute) | 15         | 16.6       | 6-93              | 12.8       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 25         | 36.8       | 21-217            | 30.7       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Levit           | 58         | 78.1       | 47-286            | 49.8       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 139        | 182.0      | 121-526           | 89.7       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Computed Chain (Deep Propagation)
+Measurement: Completed logic work (wall time) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Approximate | Note: An observed leaf consumes every root update through the closest computed/stream primitive.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Levit           | 86         | 109.2      | 76-840            | 83.3       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Vanilla         | 209        | 231.3      | 194-481           | 58.3       | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 449        | 528.4      | 362-1638          | 210.7      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+BLoC            | 45317      | 46371.4    | 34864-67773       | 7347.5     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 155861     | 188525.2   | 110260-517738     | 80766.4    | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Virtualized List: Visible Row Update (UI)
+Measurement: Widget-test pump wall time (not device rendering) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+GetX            | 1189       | 1226.6     | 819-2209          | 250.3      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Levit           | 1352       | 1401.9     | 854-2484          | 298.0      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Vanilla         | 1497       | 1586.1     | 1132-3027         | 357.2      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 1959       | 2172.7     | 1234-4406         | 709.7      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+BLoC            | 2467       | 2798.5     | 1546-15864        | 1613.8     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Nested Leaf Rebuild (UI)
+Measurement: Widget-test pump wall time (not device rendering) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Levit           | 754        | 816.3      | 530-2041          | 230.0      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Vanilla         | 909        | 941.2      | 588-1511          | 225.3      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 1038       | 1198.1     | 614-4275          | 562.6      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 1456       | 1720.0     | 629-7595          | 1131.6     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+BLoC            | 1516       | 1818.5     | 697-5934          | 1009.0     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Dynamic Grid Churn (UI)
+Measurement: Widget-test pump wall time (not device rendering) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+BLoC            | 8124       | 8527.3     | 6238-20108        | 2359.4     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Riverpod        | 8221       | 8493.4     | 6109-19420        | 1983.2     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 8225       | 8642.6     | 6377-23436        | 2328.5     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Levit           | 10513      | 11427.7    | 7360-32698        | 3939.1     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Vanilla         | 12868      | 13744.0    | 8453-40617        | 4305.0     | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+>>> Progress Bar State Update (UI)
+Measurement: Widget-test pump wall time (not device rendering) (methodology 2)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Riverpod        | 171        | 239.2      | 151-1255          | 177.8      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Vanilla         | 189        | 275.4      | 147-1209          | 217.5      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+BLoC            | 274        | 408.2      | 189-2310          | 343.1      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+Levit           | 284        | 553.3      | 220-3104          | 571.7      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+GetX            | 324        | 531.0      | 175-2510          | 461.5      | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully.
+================================================================================
+
+
+01:25 +119: All tests passed!

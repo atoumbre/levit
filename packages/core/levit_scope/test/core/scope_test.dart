@@ -36,8 +36,8 @@ void main() {
     TestService.resetCounts();
   });
 
-  tearDown(() {
-    levit.reset(force: true);
+  tearDown(() async {
+    await levit.reset(force: true);
   });
 
   group('LevitScope', () {
@@ -114,10 +114,7 @@ void main() {
       test('find throws if not found anywhere', () {
         final scope = levit.createScope('test');
 
-        expect(
-          () => scope.find<ParentService>(),
-          throwsA(isA<Exception>()),
-        );
+        expect(() => scope.find<ParentService>(), throwsA(isA<Exception>()));
       });
     });
 
@@ -143,34 +140,34 @@ void main() {
     });
 
     group('Scope Reset', () {
-      test('reset clears scope only, not parent', () {
+      test('reset clears scope only, not parent', () async {
         levit.put(() => ParentService());
         final scope = levit.createScope('test');
         scope.put(() => ChildService());
 
         expect(scope.registeredCount, 1);
 
-        scope.reset();
+        await scope.reset();
 
         expect(scope.registeredCount, 0);
         // Parent still has its service
         expect(levit.find<ParentService>(), isA<ParentService>());
       });
 
-      test('reset calls onClose on scope services', () {
+      test('reset calls onClose on scope services', () async {
         final scope = levit.createScope('test');
         scope.put(() => TestService());
 
         expect(TestService.closeCount, 0);
-        scope.reset();
+        await scope.reset();
         expect(TestService.closeCount, 1);
       });
 
-      test('reset does not affect parent services', () {
+      test('reset does not affect parent services', () async {
         levit.put(() => TestService('parent'));
         final scope = levit.createScope('test');
 
-        scope.reset();
+        await scope.reset();
 
         expect(levit.find<TestService>().name, 'parent');
         expect(TestService.closeCount, 0);
@@ -200,13 +197,13 @@ void main() {
         expect(child.find<TestService>().name, 'child-scope');
       });
 
-      test('child reset does not affect parent scope', () {
+      test('child reset does not affect parent scope', () async {
         final parent = levit.createScope('parent');
         parent.put(() => ParentService());
         final child = parent.createScope('child');
         child.put(() => ChildService());
 
-        child.reset();
+        await child.reset();
 
         expect(child.registeredCount, 0);
         expect(parent.registeredCount, 1);
@@ -215,20 +212,20 @@ void main() {
     });
 
     group('Deletion', () {
-      test('delete removes from scope', () {
+      test('delete removes from scope', () async {
         final scope = levit.createScope('test');
         scope.put(() => TestService());
 
-        scope.delete<TestService>();
+        await scope.delete<TestService>();
 
         expect(scope.registeredCount, 0);
       });
 
-      test('delete calls onClose', () {
+      test('delete calls onClose', () async {
         final scope = levit.createScope('test');
         scope.put(() => TestService());
 
-        scope.delete<TestService>();
+        await scope.delete<TestService>();
 
         expect(TestService.closeCount, 1);
       });

@@ -58,7 +58,7 @@ class PresenceController extends LevitController {
 /// Demonstrates high-performance sync, computed logic, and stream handling.
 class ProjectController extends LevitController {
   /// The shared game engine logic (isomorphic).
-  final engine = NexusEngine();
+  late final engine = own(NexusEngine());
 
   /// The set of currently selected node IDs.
   final selectedIds = <String>{}.lx.named('selectedIds');
@@ -70,14 +70,12 @@ class ProjectController extends LevitController {
 
   /// Creates a project controller.
   ProjectController({
-    WebSocketChannel? channel,
+    this._channel,
     WebSocketChannel Function(Uri)? connector,
-    Duration exportDelay = const Duration(seconds: 2),
+    this._exportDelay = const Duration(seconds: 2),
     LxStream<String>? sessionTimer,
-  })  : _channel = channel,
-        _connectFn = connector ?? WebSocketChannel.connect,
-        _exportDelay = exportDelay,
-        _sessionTimerOverride = sessionTimer;
+  }) : _connectFn = connector ?? WebSocketChannel.connect,
+       _sessionTimerOverride = sessionTimer;
 
   /// Showcase: LxFuture (Pillar 6)
   /// Represents the status of a cloud export operation.
@@ -88,9 +86,15 @@ class ProjectController extends LevitController {
   /// whenever any selected node moves, or when the selection set changes.
   late final LxComputed<Rect?> selectionBounds;
 
-  /// Showcase: HistoryMiddleware (Pillar 3)
-  final history = LevitReactiveHistoryMiddleware();
-  LevitReactiveMiddleware? _activeHistoryMiddleware;
+  /// Explicit, bounded local edits with inverse server messages.
+  late final history = own(
+    NexusCommandHistory(
+      engine,
+      send: (message) {
+        _channel?.sink.add(jsonEncode(message));
+      },
+    ),
+  );
 
   /// Showcase: LxStream (Pillar 6)
   /// Tracks session duration reactively
@@ -109,10 +113,10 @@ class ProjectController extends LevitController {
   @override
   void onInit() {
     super.onInit();
-    autoDispose(exportStatus);
+    own(exportStatus);
 
     // Initialize the computed property with auto-dispose tracking
-    selectionBounds = autoDispose(
+    selectionBounds = own(
       LxComputed(() {
         final selectedNodes = engine.nodes.where(
           (n) => selectedIds.contains(n.id),
@@ -125,21 +129,9 @@ class ProjectController extends LevitController {
     // Optimization: Only notifies when length changes, ignoring other node updates
     nodeCount = (() => engine.nodes.length).lx;
 
-    // Register history middleware with named filter
-    _activeHistoryMiddleware = Lx.addMiddleware(
-      _FilteredMiddleware(
-        history,
-        (reactive, change) {
-          final name = reactive.name;
-          if (name == null) return false;
-          return name == 'engine:nodes' || name.startsWith('node:');
-        },
-      ),
-    );
-
     // Showcase: LxStream (Pillar 6)
     // Wraps a Dart Stream into a reactive Lx value
-    sessionTimer = autoDispose(
+    sessionTimer = own(
       _sessionTimerOverride ??
           LxStream<String>(
             Stream.periodic(const Duration(seconds: 1), (i) {
@@ -162,9 +154,9 @@ class ProjectController extends LevitController {
 
       // Showcase: LxStream (Pillar 4)
       // Wrap WebSocket in LxStream to track connection status (Success, Error, Waiting)
-      final connection = LxStream(_channel!.stream.cast<String>());
+      final connection = own(LxStream(_channel!.stream.cast<String>()));
 
-      autoDispose(
+      own(
         LxWorker(connection, (status) {
           if (status is LxSuccess<String>) {
             _handleServerMessage(jsonDecode(status.value));
@@ -181,48 +173,21 @@ class ProjectController extends LevitController {
   void _handleServerMessage(Map<String, dynamic> data) {
     final type = data['type'];
 
-    // Showcase: LxList.assign (Pillar 2)
-    // Replaces entire list logic without triggering individual "add" notifications
-    if (type == 'snapshot') {
-      final List nodesData = data['nodes'];
-      engine.nodes.assign(nodesData.map((n) => NodeModel.fromJson(n)));
-    } else if (type == 'bulk_move') {
-      final ids = Set<String>.from(data['ids']);
-      final delta = Vec2.fromJson(data['delta']);
-
-      debugPrint('📥 Remote move received: ${ids.length} nodes');
-
-      // Apply mutation locally without triggering local history sync
-      Lx.runWithoutMiddleware(() {
-        engine.bulkMove(ids, delta);
-      });
-    } else if (type == 'bulk_update') {
-      final Map<String, dynamic> posData = data['positions'];
-      final updates = posData.map((k, v) => MapEntry(k, Vec2.fromJson(v)));
-
-      // Pillar 3: Use runWithoutMiddleware to avoid recording server syncs in local history
-      Lx.runWithoutMiddleware(() {
-        engine.bulkUpdate(updates);
-      });
-    } else if (type == 'presence_update') {
-      final presence = Levit.findOrNull<PresenceController>();
-      presence?.handlePresenceMessage(data);
-    } else if (type == 'bulk_color') {
-      final Map<String, dynamic> colorData = data['colors'];
-      Lx.runWithoutMiddleware(() {
-        for (final node in engine.nodes) {
-          if (colorData.containsKey(node.id)) {
-            node.color.value = colorData[node.id] as int;
-          }
-        }
-      });
-    } else if (type == 'node_create') {
-      final nodeData = data['node'];
-      final node = NodeModel.fromJson(nodeData);
-      Lx.runWithoutMiddleware(() {
-        engine.addNode(node);
-      });
+    if (type == 'presence_update') {
+      (scope?.findOrNull<PresenceController>() ??
+              Levit.findOrNull<PresenceController>())
+          ?.handlePresenceMessage(data);
+      return;
     }
+    Lx.batch(() {
+      if (history.receiveDocument(data)) {
+        _isDragging = false;
+        _dragStartPositions.clear();
+        selectedIds.removeWhere(
+          (id) => !engine.nodes.any((node) => node.id == id),
+        );
+      }
+    });
   }
 
   // Track if we're in the middle of a drag operation
@@ -246,67 +211,35 @@ class ProjectController extends LevitController {
   void endDrag() {
     if (!_isDragging) return;
     _isDragging = false;
-
-    // Create a single atomic undo operation for the entire drag
-    if (_dragStartPositions.isNotEmpty) {
-      // Capture current (end) positions
-      final endPositions = <String, Vec2>{};
-      for (final entry in _dragStartPositions.entries) {
-        final node = engine.nodes.firstWhere(
-          (n) => n.id == entry.key,
-          orElse: () => engine.nodes.first,
-        );
-        if (node.id == entry.key) {
-          endPositions[entry.key] = node.position.value;
-        }
-      }
-
-      // Restore to start positions WITHOUT middleware
-      Lx.runWithoutMiddleware(() {
-        for (final entry in _dragStartPositions.entries) {
-          final node = engine.nodes.firstWhere(
-            (n) => n.id == entry.key,
-            orElse: () => engine.nodes.first,
-          );
-          if (node.id == entry.key) {
-            node.position.value = entry.value;
-          }
-        }
-      });
-
-      // Now set to end positions WITH middleware - this creates the history entry
-      Lx.batch(() {
-        for (final entry in endPositions.entries) {
-          final node = engine.nodes.firstWhere(
-            (n) => n.id == entry.key,
-            orElse: () => engine.nodes.first,
-          );
-          if (node.id == entry.key) {
-            node.position.value = entry.value;
-          }
-        }
-      });
-    }
-
+    final after = <String, Vec2>{
+      for (final node in engine.nodes)
+        if (_dragStartPositions.containsKey(node.id))
+          node.id: node.position.value,
+    };
+    final before = <String, Vec2>{
+      for (final id in after.keys) id: _dragStartPositions[id]!,
+    };
     _dragStartPositions.clear();
-    _syncAllPositions();
+    history.execute(MoveNodesCommand(before, after));
   }
 
-  /// Move selected nodes (called during drag - no history recorded).
+  /// Previews a drag, or executes one position command for a discrete move.
   void moveSelection(Vec2 delta) {
     if (selectedIds.isEmpty) return;
-
-    // Pillar 1: Check permissions (reactive)
-    if (!Levit.find<AuthController>().canEdit) return;
-
-    // Update positions WITHOUT recording history (we record at drag end)
-    Lx.runWithoutMiddleware(() {
-      for (final node in engine.nodes) {
-        if (selectedIds.contains(node.id)) {
-          node.position.value += delta;
-        }
-      }
-    });
+    if (!(scope?.find<AuthController>() ?? Levit.find<AuthController>())
+        .canEdit) {
+      return;
+    }
+    final before = {
+      for (final node in engine.nodes)
+        if (selectedIds.contains(node.id)) node.id: node.position.value,
+    };
+    final after = before.map((id, position) => MapEntry(id, position + delta));
+    if (_isDragging) {
+      engine.bulkUpdate(after);
+    } else {
+      history.execute(MoveNodesCommand(before, after));
+    }
   }
 
   /// Select or deselect a node.
@@ -327,43 +260,25 @@ class ProjectController extends LevitController {
     debugPrint('   After: $selectedIds');
   }
 
-  /// Showcase: History (Pillar 3)
-  void undo() {
-    debugPrint(
-      '🔄 Undo requested. canUndo: ${history.canUndo}, stack size: ${history.length}',
-    );
-    if (history.undo()) {
-      debugPrint('✅ Undo successful');
-      _syncAllPositions();
-    } else {
-      debugPrint('❌ Undo failed - no history');
-    }
-  }
+  /// Reverts the latest local command and sends its inverse.
+  void undo() => history.undo();
 
-  /// Redo the last undone action.
-  void redo() {
-    debugPrint('🔄 Redo requested. canRedo: ${history.canRedo}');
-    if (history.redo()) {
-      debugPrint('✅ Redo successful');
-      _syncAllPositions();
-    } else {
-      debugPrint('❌ Redo failed - no redo stack');
-    }
-  }
+  /// Reapplies the latest reverted local command.
+  void redo() => history.redo();
 
-  void _syncAllPositions() {
-    final positions = {
-      for (final n in engine.nodes) n.id: n.position.value.toJson(),
+  /// Changes selected colors as one atomic, synchronized command.
+  void colorSelection(int color) {
+    if (!(scope?.find<AuthController>() ?? Levit.find<AuthController>())
+        .canEdit) {
+      return;
+    }
+    final before = {
+      for (final node in engine.nodes)
+        if (selectedIds.contains(node.id)) node.id: node.color.value,
     };
-    _channel?.sink.add(
-      jsonEncode({'type': 'bulk_update', 'positions': positions}),
+    history.execute(
+      ColorNodesCommand(before, {for (final id in before.keys) id: color}),
     );
-  }
-
-  /// Sync color changes to the server.
-  void syncColors() {
-    final colors = {for (final n in engine.nodes) n.id: n.color.value};
-    _channel?.sink.add(jsonEncode({'type': 'bulk_color', 'colors': colors}));
   }
 
   /// Showcase: Presence (Pillar 4)
@@ -384,25 +299,34 @@ class ProjectController extends LevitController {
   /// Showcase: LxFuture (Pillar 6)
   /// Triggers a simulated cloud export with reactive status tracking.
   void export() {
-    exportStatus.value = LxFuture(() async {
-      await Future.delayed(_exportDelay);
-      if (engine.nodes.isEmpty) throw Exception('Cannot export empty project');
-      return 'Project exported successfully at ${DateTime.now().hour}:${DateTime.now().minute}';
-    }());
+    exportStatus.value = own(
+      LxFuture(() async {
+        await Future.delayed(_exportDelay);
+        if (engine.nodes.isEmpty) {
+          throw Exception('Cannot export empty project');
+        }
+        return 'Project exported successfully at ${DateTime.now().hour}:${DateTime.now().minute}';
+      }()),
+    );
   }
 
   /// Showcase: Batch Updates & Sync
   /// Randomizes node positions and syncs to all clients.
   void chaos() {
-    Lx.batch(() {
-      for (final node in engine.nodes) {
-        node.position.value += Vec2(
-          (DateTime.now().microsecond % 20 - 10).toDouble(),
-          (DateTime.now().millisecond % 20 - 10).toDouble(),
-        );
-      }
-    });
-    _syncAllPositions();
+    final before = {
+      for (final node in engine.nodes) node.id: node.position.value,
+    };
+    final after = before.map(
+      (id, position) => MapEntry(
+        id,
+        position +
+            Vec2(
+              (DateTime.now().microsecond % 20 - 10).toDouble(),
+              (DateTime.now().millisecond % 20 - 10).toDouble(),
+            ),
+      ),
+    );
+    history.execute(MoveNodesCommand(before, after));
   }
 
   /// Adds a new node to the project and syncs it.
@@ -413,69 +337,31 @@ class ProjectController extends LevitController {
       200.0 + (DateTime.now().microsecond % 100),
     );
 
-    final node = NodeModel(
-      id: '${type}_${DateTime.now().millisecondsSinceEpoch}',
+    final node = NodeSnapshot(
+      id: '${type}_${DateTime.now().microsecondsSinceEpoch}_${_nextNodeId++}',
       type: type,
-      pos: pos,
-      sz: type == 'rect'
+      position: pos,
+      size: type == 'rect'
           ? const Vec2(100, 100)
           : type == 'circle'
-              ? const Vec2(100, 100)
-              : const Vec2(120, 100), // triangle slightly wider
-      col: 0xFF000000 | (DateTime.now().microsecond & 0xFFFFFF),
+          ? const Vec2(100, 100)
+          : const Vec2(120, 100), // triangle slightly wider
+      color: 0xFF000000 | (DateTime.now().microsecond & 0xFFFFFF),
     );
 
-    // Add locally (history recorded automatically by middleware)
-    engine.addNode(node);
-
-    // Send to server
-    _channel?.sink.add(
-      jsonEncode({'type': 'node_create', 'node': node.toJson()}),
-    );
+    history.execute(CreateNodeCommand(node));
   }
 
+  static int _nextNodeId = 0;
+
   @override
-  void onClose() {
-    if (_activeHistoryMiddleware != null) {
-      Lx.removeMiddleware(_activeHistoryMiddleware!);
+  Future<void> onClose() async {
+    try {
+      await super.onClose();
+    } finally {
+      await _channel?.sink.close();
     }
-    _channel?.sink.close();
-    super.onClose();
   }
-}
-
-class _FilteredMiddleware extends LevitReactiveMiddleware {
-  final LevitReactiveMiddleware inner;
-  final bool Function(LxReactive, LevitReactiveChange) filter;
-
-  _FilteredMiddleware(this.inner, this.filter);
-
-  @override
-  LxOnSet? get onSet => inner.onSet == null
-      ? null
-      : (next, reactive, change) {
-          if (filter(reactive, change)) {
-            return inner.onSet!(next, reactive, change);
-          }
-          return next;
-        };
-
-  @override
-  LxOnBatch? get onBatch => inner.onBatch == null
-      ? null
-      : (next, change) {
-          // For batch, we ideally filter the entries, but LevitReactiveBatch is immutable.
-          // However, inner.onBatch logic handles the batch as a whole.
-          // If we want to filter specific ops inside batch, we can't easily.
-          // Assuming if ANY matches or ALL match?
-          // HistoryMiddleware usually records the whole batch.
-          // Let's pass through batch to inner, or assume filter is for onSet only?
-          // The previous code had (reactive, change) filter.
-          // So likely per-operation check.
-          // If strict compliance: we check if batch contains interesting items?
-          // Or just delegate.
-          return inner.onBatch!(next, change);
-        };
 }
 
 /// Represents a logged-in user session.

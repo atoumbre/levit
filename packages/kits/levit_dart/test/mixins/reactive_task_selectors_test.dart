@@ -37,10 +37,7 @@ void main() {
       expect(controller.taskProgress('sync'), .4);
       expect(controller.isBusyWhere(category: 'sync'), isTrue);
       expect(controller.isBusyWhere(category: 'media'), isFalse);
-      expect(
-        controller.isBusyWhere(blocksUserInteraction: true),
-        isTrue,
-      );
+      expect(controller.isBusyWhere(blocksUserInteraction: true), isTrue);
       expect(controller.progressWhere(category: 'sync'), .4);
       expect(controller.hasBlockingTasks.value, isTrue);
       expect(controller.taskStatus<int>('missing'), isA<LxIdle<int>>());
@@ -58,13 +55,10 @@ void main() {
     await Levit.runInScope<void>(() async {
       final controller = Levit.put(() => _ReactiveTaskController());
       final oldGate = Completer<void>();
-      final old = controller.runTask(
-        (_) async {
-          await oldGate.future;
-          return 'old';
-        },
-        id: 'search',
-      );
+      final old = controller.runTask((_) async {
+        await oldGate.future;
+        return 'old';
+      }, id: 'search');
       final replacement = controller.runTask(
         (_) => 'new',
         id: 'search',
@@ -79,7 +73,7 @@ void main() {
       final replacementId = controller.taskDetails('search')?.executionId;
 
       oldGate.complete();
-      expect(await old, isNull);
+      await expectLater(old, throwsA(isA<LevitTaskSupersededException>()));
       expect(controller.taskDetails('search')?.executionId, replacementId);
       expect(
         (controller.taskStatus<String>('search') as LxSuccess<String>).value,
@@ -104,7 +98,7 @@ void main() {
 
       controller.cancelTask('manual');
       blocker.complete();
-      await task;
+      await expectLater(task, throwsA(isA<LevitTaskCancelledException>()));
     }, name: 'reactive_task_progress');
   });
 }

@@ -1,15 +1,15 @@
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
-// Test controller to verify autoDispose integration
+// Test controller to verify own integration
 class TestController extends LevitController {
   bool isClosedCalled = false;
-  late final value = autoDispose(0.lx);
+  late final value = own(0.lx);
 
   @override
-  void onClose() {
+  Future<void> onClose() async {
     isClosedCalled = true;
-    super.onClose();
+    await super.onClose();
   }
 }
 
@@ -24,9 +24,9 @@ class TestDisposable implements LevitDisposable {
 }
 
 void main() {
-  test('LevitStore should autoDispose LevitTaskEngine', () async {
+  test('LevitStore should own LevitTaskEngine', () async {
     final tasksState = LevitStore((ref) {
-      final engine = ref.autoDispose(LevitTaskEngine(maxConcurrent: 2));
+      final engine = ref.own(LevitTaskEngine(maxConcurrent: 2));
       return engine;
     });
 
@@ -38,7 +38,13 @@ void main() {
       (_) async => 'success',
       id: 'task1',
       priority: TaskPriority.normal,
-      retries: 0,
+      retryPolicy: LevitRetryPolicy(
+        shouldRetry: (error, stack) => true,
+        maxRetries: 0,
+        initialDelay: const Duration(milliseconds: 500),
+        maxDelay: const Duration(seconds: 30),
+        jitter: 0,
+      ),
       onError: (e, s) {},
     );
 
@@ -48,11 +54,11 @@ void main() {
     await scope.dispose();
   });
 
-  test('LevitStore should autoDispose LevitController', () async {
+  test('LevitStore should own LevitController', () async {
     late TestController capturedController;
 
     final controllerState = LevitStore((ref) {
-      final controller = ref.autoDispose(TestController());
+      final controller = ref.own(TestController());
       capturedController = controller;
       // Initialize manually since it's not being put in scope as a controller
       controller.onInit();
@@ -72,12 +78,11 @@ void main() {
     expect(capturedController.isClosedCalled, isTrue);
   });
 
-  test('LevitStore should autoDispose custom LevitAutoDispose object',
-      () async {
+  test('LevitStore should own custom LevitAutoDispose object', () async {
     late TestDisposable capturedDisposable;
 
     final disposableState = LevitStore((ref) {
-      final disposable = ref.autoDispose(TestDisposable());
+      final disposable = ref.own(TestDisposable());
       capturedDisposable = disposable;
       return disposable;
     });

@@ -2,7 +2,7 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('Collections Coverage', () {
+  group('List and set iteration', () {
     test('LxList forEach', () {
       final list = [1, 2, 3].lx;
       int sum = 0;

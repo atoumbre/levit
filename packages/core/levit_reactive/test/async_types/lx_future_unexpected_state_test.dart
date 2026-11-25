@@ -37,10 +37,7 @@ void main() {
       final lxFuture = LxFuture<int>.idle();
 
       expect(lxFuture.status, isA<LxIdle<int>>());
-      expect(
-        () => lxFuture.wait,
-        throwsA(isA<StateError>()),
-      );
+      expect(() => lxFuture.wait, throwsA(isA<StateError>()));
     });
   });
 }

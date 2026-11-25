@@ -1,0 +1,25 @@
+{
+  "packages": 23,
+  "publishable": [
+    "levit",
+    "levit_dart",
+    "levit_dart_core",
+    "levit_devtools",
+    "levit_flutter",
+    "levit_flutter_core",
+    "levit_lints",
+    "levit_monitor",
+    "levit_reactive",
+    "levit_scope"
+  ],
+  "allVersions": "0.1.0",
+  "localGraphVerified": true,
+  "removedApiScan": "no references in non-test Dart consumers/implementations",
+  "migrationGuide": "MIGRATION_0.1.0.md",
+  "negativeApiAndReadableContract": "packages/core/levit_dart_core/test/core/public_surface_contract_test.dart (passed in candidate CI/coverage)",
+  "nexusConvergence": "examples/nexus_studio/server/test/two_client_undo_test.dart (passed in candidate CI)",
+  "persistence": "ecosystem roadmap only",
+  "inspectorUiPrivate": true,
+  "workspacePackages": 22,
+  "includesPrivateRoot": true
+}

@@ -49,22 +49,64 @@ void main() {
       expect(LevitScope.containsMiddlewareToken('ls_scope_token'), isFalse);
     });
 
-    test('token can be attached to an existing middleware without duplicates',
-        () {
-      final calls = <String>[];
-      final middleware = _ScopeRecordingMiddleware('attach', calls);
+    test(
+      'removing an instance clears its tokens and preserves others',
+      () async {
+        final calls = <String>[];
+        final removed = _ScopeRecordingMiddleware('removed', calls);
+        final retained = _ScopeRecordingMiddleware('retained', calls);
+        final token = Object();
+        final alias = Object();
+        final retainedToken = Object();
+        addTearDown(() {
+          LevitScope.removeMiddleware(removed);
+          LevitScope.removeMiddleware(retained);
+          LevitScope.removeMiddlewareByToken(token);
+          LevitScope.removeMiddlewareByToken(alias);
+          LevitScope.removeMiddlewareByToken(retainedToken);
+        });
 
-      LevitScope.addMiddleware(middleware);
-      LevitScope.addMiddleware(middleware, token: 'attach_token');
-      LevitScope.addMiddleware(middleware, token: 'attach_token');
+        LevitScope.addMiddleware(removed, token: token);
+        LevitScope.addMiddleware(removed, token: alias);
+        LevitScope.addMiddleware(retained, token: retainedToken);
+        LevitScope.removeMiddleware(removed);
 
-      LevitScope.root('attach_token_scope');
+        expect(LevitScope.containsMiddleware(removed), isFalse);
+        expect(LevitScope.containsMiddlewareToken(token), isFalse);
+        expect(LevitScope.containsMiddlewareToken(alias), isFalse);
+        expect(LevitScope.containsMiddlewareToken(retainedToken), isTrue);
+        final scope = LevitScope.root('after_instance_removal');
+        addTearDown(scope.dispose);
+        expect(calls, ['retained']);
 
-      expect(calls.where((id) => id == 'attach').length, 1);
-      expect(LevitScope.containsMiddlewareToken('attach_token'), isTrue);
-      expect(LevitScope.removeMiddlewareByToken('attach_token'), isTrue);
-      LevitScope.removeMiddleware(middleware);
-    });
+        // Old tokens must not remove a later registration of the same instance.
+        LevitScope.addMiddleware(removed);
+        expect(LevitScope.removeMiddlewareByToken(token), isFalse);
+        expect(LevitScope.removeMiddlewareByToken(alias), isFalse);
+        expect(LevitScope.containsMiddleware(removed), isTrue);
+        expect(LevitScope.removeMiddlewareByToken(retainedToken), isTrue);
+        expect(LevitScope.containsMiddleware(retained), isFalse);
+      },
+    );
+
+    test(
+      'token can be attached to an existing middleware without duplicates',
+      () {
+        final calls = <String>[];
+        final middleware = _ScopeRecordingMiddleware('attach', calls);
+
+        LevitScope.addMiddleware(middleware);
+        LevitScope.addMiddleware(middleware, token: 'attach_token');
+        LevitScope.addMiddleware(middleware, token: 'attach_token');
+
+        LevitScope.root('attach_token_scope');
+
+        expect(calls.where((id) => id == 'attach').length, 1);
+        expect(LevitScope.containsMiddlewareToken('attach_token'), isTrue);
+        expect(LevitScope.removeMiddlewareByToken('attach_token'), isTrue);
+        LevitScope.removeMiddleware(middleware);
+      },
+    );
   });
 }
 

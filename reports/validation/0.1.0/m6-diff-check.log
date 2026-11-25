@@ -1,0 +1,27 @@
+packages/core/levit_reactive/lib/src/workers.dart:385: new blank line at EOF.
+packages/core/levit_reactive/test/core/lx_base_refresh_behavior_test.dart:33: trailing whitespace.
++    
+packages/core/levit_reactive/test/core/lx_base_refresh_behavior_test.dart:35: trailing whitespace.
++    
+packages/core/levit_reactive/test/middlewares/basic_middleware_test.dart:82: trailing whitespace.
++  
+packages/core/levit_reactive/test/middlewares/granular_check_test.dart:76: trailing whitespace.
++    
+packages/core/levit_reactive/test/middlewares/middleware_bypass_test.dart:78: trailing whitespace.
++    
+packages/kits/levit_dart/example/main.dart:42: trailing whitespace.
++    
+packages/kits/levit_dart/test/mixins/mixins_test.dart:126: trailing whitespace.
++        
+packages/kits/levit_dart/test/mixins/mixins_test.dart:127: trailing whitespace.
++        
+packages/kits/levit_dart/test/mixins/mixins_test.dart:141: trailing whitespace.
++          
+packages/kits/levit_dart/test/mixins/mixins_test.dart:202: trailing whitespace.
++        
+packages/kits/levit_dart/test/utilities/task_conflict_policy_test.dart:300: trailing whitespace.
++        
+packages/kits/levit_dart/test/utilities/task_engine_instrumentation_test.dart:64: trailing whitespace.
++        
+packages/kits/levit_dart/test/utilities/task_engine_instrumentation_test.dart:65: trailing whitespace.
++        

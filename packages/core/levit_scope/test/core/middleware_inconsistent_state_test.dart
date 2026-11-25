@@ -30,16 +30,18 @@ void main() {
       LevitScope.removeMiddlewareByToken(token);
     });
 
-    test('registry helpers report false when middleware and token are absent',
-        () {
-      _clearMiddlewaresViaMirrors();
+    test(
+      'registry helpers report false when middleware and token are absent',
+      () {
+        _clearMiddlewaresViaMirrors();
 
-      final middleware = _NoopMiddleware();
+        final middleware = _NoopMiddleware();
 
-      expect(LevitScope.containsMiddleware(middleware), isFalse);
-      expect(LevitScope.containsMiddlewareToken('missing'), isFalse);
-      expect(LevitScope.removeMiddlewareByToken('missing'), isFalse);
-    });
+        expect(LevitScope.containsMiddleware(middleware), isFalse);
+        expect(LevitScope.containsMiddlewareToken('missing'), isFalse);
+        expect(LevitScope.removeMiddlewareByToken('missing'), isFalse);
+      },
+    );
 
     test('token registration covers attach and fresh-token branches', () {
       _clearMiddlewaresViaMirrors();
@@ -64,17 +66,19 @@ void main() {
 class _NoopMiddleware extends LevitScopeMiddleware {}
 
 (List<LevitScopeMiddleware>, Map<Object, LevitScopeMiddleware>)
-    _getRegistryViaMirrors() {
+_getRegistryViaMirrors() {
   final classMirror = reflectClass(LevitScope);
   final lib = classMirror.owner as LibraryMirror;
 
   final middlewaresSymbol = MirrorSystem.getSymbol('_middlewares', lib);
   final byTokenSymbol = MirrorSystem.getSymbol('_middlewaresByToken', lib);
 
-  final middlewares = classMirror.getField(middlewaresSymbol).reflectee
-      as List<LevitScopeMiddleware>;
-  final byToken = classMirror.getField(byTokenSymbol).reflectee
-      as Map<Object, LevitScopeMiddleware>;
+  final middlewares =
+      classMirror.getField(middlewaresSymbol).reflectee
+          as List<LevitScopeMiddleware>;
+  final byToken =
+      classMirror.getField(byTokenSymbol).reflectee
+          as Map<Object, LevitScopeMiddleware>;
 
   return (middlewares, byToken);
 }

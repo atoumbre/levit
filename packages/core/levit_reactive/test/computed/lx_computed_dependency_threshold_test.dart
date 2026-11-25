@@ -11,7 +11,7 @@ void main() {
       expect(computed.value, '0,1,2,3,4,5,6,7,8,99');
     });
 
-    test('LxComputed _add useSet branch coverage', () {
+    test('computed values remain valid with twenty dependencies', () {
       final deps = List.generate(20, (i) => i.lx);
       final computed = LxComputed(() {
         for (final d in deps) {

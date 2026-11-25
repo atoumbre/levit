@@ -3,7 +3,7 @@ import 'package:levit_dart_core/levit_dart_core.dart';
 // --- PATTERN 1: Functional State (LevitStore) ---
 // Best for stateless logic, simple shared atoms, or derived global state.
 final settingsStore = LevitStore((ref) {
-  final theme = ref.autoDispose('light'.lx);
+  final theme = ref.own('light'.lx);
 
   // React to changes within the functional block
   ref.onDispose(() => print('SettingsState: Cleaned up resources'));
@@ -14,7 +14,7 @@ final settingsStore = LevitStore((ref) {
 // A derived functional state that watches settingsState
 final themeLabelStore = LevitStore((ref) {
   final theme = settingsStore.find();
-  return 'Theme is: ${theme.value.toUpperCase()}';
+  return ref.own(LxComputed(() => 'Theme is: ${theme.value.toUpperCase()}'));
 });
 
 // --- PATTERN 2: Class-based Logic (LevitController) ---
@@ -30,9 +30,11 @@ class AuthController extends LevitController {
 
     // We can also watch functional state from a controller!
     final theme = settingsStore.find();
-    autoDispose(LxWorker(theme, (val) {
-      print('AuthController: Detected theme change to $val');
-    }));
+    own(
+      LxWorker(theme, (val) {
+        print('AuthController: Detected theme change to $val');
+      }),
+    );
   }
 
   void login(String name) {
@@ -47,6 +49,7 @@ class AuthController extends LevitController {
 }
 
 void main() async {
+  Levit.enableAutoLinking();
   print('=== Levit State Management Demo ===\n');
 
   // --- Using Functional State ---
@@ -54,7 +57,7 @@ void main() async {
   final label = themeLabelStore.find();
 
   print('Initial Theme: ${theme.value}');
-  print('Initial Label: $label');
+  print('Initial Label: ${label.value}');
 
   // --- Using Class-based Logic ---
   final auth = Levit.put(() => AuthController());
@@ -66,11 +69,12 @@ void main() async {
   auth.login('Alice');
   theme.value = 'dark';
 
-  print('Label updated automatically: ${themeLabelStore.find()}');
+  print('Label updated automatically: ${themeLabelStore.find().value}');
   print(
-      'User updated: ${auth.username.value} (Auth: ${auth.isAuthenticated.value})');
+    'User updated: ${auth.username.value} (Auth: ${auth.isAuthenticated.value})',
+  );
 
   // Cleanup
   print('\n--- Cleaning Up ---');
-  Levit.reset(); // Disposes everything in root scope
+  await Levit.reset(); // Disposes everything in root scope
 }

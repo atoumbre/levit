@@ -32,11 +32,15 @@ void main() {
 
     test('Lx raw callbacks work', () async {
       bool active = false;
-      final lx = LxVar(0, onListen: () {
-        active = true;
-      }, onCancel: () {
-        active = false;
-      });
+      final lx = LxVar(
+        0,
+        onListen: () {
+          active = true;
+        },
+        onCancel: () {
+          active = false;
+        },
+      );
       expect(active, isFalse);
 
       final sub = lx.stream.listen((v) {});
@@ -52,8 +56,11 @@ void main() {
       // Use single subscription stream to ensure clear onCancel behavior in LxStream
       final dep = LxStream(controller.stream, initial: 0);
 
-      expect(controller.hasListener, isFalse,
-          reason: 'LxStream source should start lazy');
+      expect(
+        controller.hasListener,
+        isFalse,
+        reason: 'LxStream source should start lazy',
+      );
 
       // Create computed - it should be LAZY now
       final computed = LxComputed(() => (dep.valueOrNull ?? 0) * 2);
@@ -62,8 +69,11 @@ void main() {
       await Future.delayed(Duration.zero);
 
       // Expectation FLIPPED: Should be FALSE (Lazy)
-      expect(controller.hasListener, isFalse,
-          reason: 'LxComputed should NOT subscribe actively if no listeners');
+      expect(
+        controller.hasListener,
+        isFalse,
+        reason: 'LxComputed should NOT subscribe actively if no listeners',
+      );
 
       // Verify Value Access (Pull) works
       expect(computed.value, 0); // initial value
@@ -71,16 +81,22 @@ void main() {
       // ACT: Listen to computed
       final sub = computed.stream.listen((_) {});
       await Future.delayed(Duration.zero);
-      expect(controller.hasListener, isTrue,
-          reason: 'LxComputed should subscribe when listened to');
+      expect(
+        controller.hasListener,
+        isTrue,
+        reason: 'LxComputed should subscribe when listened to',
+      );
 
       // ACT: Cancel listener
       sub.cancel();
       // Increase delay to account for asBroadcastStream's potential cancellation debounce in LxStream
       await Future.delayed(Duration(milliseconds: 200));
 
-      expect(controller.hasListener, isFalse,
-          reason: 'LxComputed should unsubscribe when listeners leave');
+      expect(
+        controller.hasListener,
+        isFalse,
+        reason: 'LxComputed should unsubscribe when listeners leave',
+      );
     });
 
     test('LxAsyncComputed is LAZY (No leak)', () async {
@@ -93,21 +109,29 @@ void main() {
 
       await Future.delayed(Duration.zero);
 
-      expect(controller.hasListener, isFalse,
-          reason:
-              'LxAsyncComputed should NOT subscribe actively if no listeners');
+      expect(
+        controller.hasListener,
+        isFalse,
+        reason: 'LxAsyncComputed should NOT subscribe actively if no listeners',
+      );
 
       // ACT: Listen
       final sub = computed.stream.listen((_) {});
       await Future.delayed(Duration.zero);
 
-      expect(controller.hasListener, isTrue,
-          reason: 'LxAsyncComputed should subscribe when listened to');
+      expect(
+        controller.hasListener,
+        isTrue,
+        reason: 'LxAsyncComputed should subscribe when listened to',
+      );
 
       sub.cancel();
       await Future.delayed(Duration(milliseconds: 200));
-      expect(controller.hasListener, isFalse,
-          reason: 'LxAsyncComputed should unsubscribe when listeners leave');
+      expect(
+        controller.hasListener,
+        isFalse,
+        reason: 'LxAsyncComputed should unsubscribe when listeners leave',
+      );
     });
 
     test('LxMemoComputed is LAZY (No leak)', () async {
@@ -118,22 +142,30 @@ void main() {
       final computed = LxComputed(() => (dep.valueOrNull ?? 0) * 2);
 
       await Future.delayed(Duration.zero);
-      expect(controller.hasListener, isFalse,
-          reason:
-              'LxMemoComputed should NOT subscribe actively if no listeners');
+      expect(
+        controller.hasListener,
+        isFalse,
+        reason: 'LxMemoComputed should NOT subscribe actively if no listeners',
+      );
 
       // ACT: Listen
       final sub = computed.stream.listen((_) {});
       await Future.delayed(Duration.zero);
 
-      expect(controller.hasListener, isTrue,
-          reason: 'LxMemoComputed should subscribe when listened to');
+      expect(
+        controller.hasListener,
+        isTrue,
+        reason: 'LxMemoComputed should subscribe when listened to',
+      );
 
       sub.cancel();
       await Future.delayed(Duration(milliseconds: 200));
 
-      expect(controller.hasListener, isFalse,
-          reason: 'LxMemoComputed should unsubscribe when listeners leave');
+      expect(
+        controller.hasListener,
+        isFalse,
+        reason: 'LxMemoComputed should unsubscribe when listeners leave',
+      );
     });
 
     test('Lx.stream closes automatically when listeners cancel', () async {

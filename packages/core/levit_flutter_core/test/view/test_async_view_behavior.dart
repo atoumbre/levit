@@ -11,8 +11,8 @@ class AsyncTestController extends LevitController {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('LView Tests', () {
@@ -102,8 +102,10 @@ void main() {
       );
 
       await tester.pumpAndSettle();
-      expect(find.textContaining('Error: Exception: Failed to resolve'),
-          findsOneWidget);
+      expect(
+        find.textContaining('Error: Exception: Failed to resolve'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('LView.async factory works', (tester) async {

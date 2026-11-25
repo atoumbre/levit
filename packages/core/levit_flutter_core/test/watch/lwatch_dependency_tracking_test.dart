@@ -32,35 +32,37 @@ void main() {
       expect(buildCount, 2);
     });
 
-    testWidgets('LWatch handles multiple dependencies (Fast Path -> Slow Path)',
-        (tester) async {
-      final rx1 = TestReactive<int>(0);
-      final rx2 = TestReactive<int>(10);
-      int buildCount = 0;
+    testWidgets(
+      'LWatch handles multiple dependencies (Fast Path -> Slow Path)',
+      (tester) async {
+        final rx1 = TestReactive<int>(0);
+        final rx2 = TestReactive<int>(10);
+        int buildCount = 0;
 
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: LWatch(() {
-            buildCount++;
-            return Text('${rx1.value} - ${rx2.value}');
-          }),
-        ),
-      );
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: LWatch(() {
+              buildCount++;
+              return Text('${rx1.value} - ${rx2.value}');
+            }),
+          ),
+        );
 
-      expect(find.text('0 - 10'), findsOneWidget);
-      expect(buildCount, 1);
+        expect(find.text('0 - 10'), findsOneWidget);
+        expect(buildCount, 1);
 
-      rx1.value = 1;
-      await tester.pump();
-      expect(find.text('1 - 10'), findsOneWidget);
-      expect(buildCount, 2);
+        rx1.value = 1;
+        await tester.pump();
+        expect(find.text('1 - 10'), findsOneWidget);
+        expect(buildCount, 2);
 
-      rx2.value = 20;
-      await tester.pump();
-      expect(find.text('1 - 20'), findsOneWidget);
-      expect(buildCount, 3);
-    });
+        rx2.value = 20;
+        await tester.pump();
+        expect(find.text('1 - 20'), findsOneWidget);
+        expect(buildCount, 3);
+      },
+    );
 
     testWidgets('LWatch cleanup on dependencies change', (tester) async {
       final rxA = TestReactive<String>('A');

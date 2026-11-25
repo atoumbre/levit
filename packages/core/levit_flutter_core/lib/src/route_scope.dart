@@ -40,20 +40,19 @@ class _RouteBinding extends StatefulWidget {
     ModalRoute<dynamic>? route,
     LxReactive<LRouteVisibility> visibility,
     List<Object?> scopeArgs,
-  ) builder;
+  )
+  builder;
 
-  const _RouteBinding({
-    this.args,
-    required this.builder,
-  });
+  const _RouteBinding({this.args, required this.builder});
 
   @override
   State<_RouteBinding> createState() => _RouteBindingState();
 }
 
 class _RouteBindingState extends State<_RouteBinding> {
-  final LxVar<LRouteVisibility> _visibility =
-      LxVar(LRouteVisibility.inactive).named('routeVisibility');
+  final LxVar<LRouteVisibility> _visibility = LxVar(
+    LRouteVisibility.inactive,
+  ).named('routeVisibility');
   ModalRoute<dynamic>? _route;
   Animation<double>? _routeAnimation;
   Animation<double>? _secondaryAnimation;
@@ -130,20 +129,12 @@ class _RouteBindingState extends State<_RouteBinding> {
   @override
   Widget build(BuildContext context) {
     final route = _route;
-    final scopeArgs = <Object?>[
-      ...?widget.args,
-      route,
-    ];
+    final scopeArgs = <Object?>[...?widget.args, route];
 
     return _RouteScopeProvider(
       route: route,
       visibility: _visibility,
-      child: widget.builder(
-        context,
-        route,
-        _visibility,
-        scopeArgs,
-      ),
+      child: widget.builder(context, route, _visibility, scopeArgs),
     );
   }
 }
@@ -264,20 +255,24 @@ class LRouteScope extends StatelessWidget {
   }
 
   /// The [ModalRoute] currently bound to the nearest [LRouteScope].
-  static ModalRoute<dynamic>? routeOf(BuildContext context,
-          {bool listen = false}) =>
-      _RouteScopeProvider.of(context, listen: listen)?.route;
+  static ModalRoute<dynamic>? routeOf(
+    BuildContext context, {
+    bool listen = false,
+  }) => _RouteScopeProvider.of(context, listen: listen)?.route;
 
   /// Reactive visibility for the nearest [LRouteScope].
   ///
   /// Observe this with [LBuilder] or [LWatch] when route coverage matters.
-  static LxReactive<LRouteVisibility>? visibilityOf(BuildContext context,
-          {bool listen = false}) =>
-      _RouteScopeProvider.of(context, listen: listen)?.visibility;
+  static LxReactive<LRouteVisibility>? visibilityOf(
+    BuildContext context, {
+    bool listen = false,
+  }) => _RouteScopeProvider.of(context, listen: listen)?.visibility;
 
   /// Snapshot visibility for the nearest [LRouteScope].
-  static LRouteVisibility visibilityValueOf(BuildContext context,
-          {bool listen = false}) =>
+  static LRouteVisibility visibilityValueOf(
+    BuildContext context, {
+    bool listen = false,
+  }) =>
       visibilityOf(context, listen: listen)?.value ?? LRouteVisibility.inactive;
 
   @override
@@ -285,7 +280,8 @@ class LRouteScope extends StatelessWidget {
     return _RouteBinding(
       args: args,
       builder: (context, route, visibility, scopeArgs) {
-        final resolvedName = name ??
+        final resolvedName =
+            name ??
             route?.settings.name ??
             _uniqueScopeName('LRouteScope', context);
         return LScope(
@@ -341,26 +337,30 @@ class LAsyncRouteScope extends StatelessWidget {
 
   /// The [ModalRoute] currently bound to the nearest [LAsyncRouteScope] or
   /// [LRouteScope].
-  static ModalRoute<dynamic>? routeOf(BuildContext context,
-          {bool listen = false}) =>
-      LRouteScope.routeOf(context, listen: listen);
+  static ModalRoute<dynamic>? routeOf(
+    BuildContext context, {
+    bool listen = false,
+  }) => LRouteScope.routeOf(context, listen: listen);
 
   /// Reactive visibility for the nearest [LAsyncRouteScope] or [LRouteScope].
-  static LxReactive<LRouteVisibility>? visibilityOf(BuildContext context,
-          {bool listen = false}) =>
-      LRouteScope.visibilityOf(context, listen: listen);
+  static LxReactive<LRouteVisibility>? visibilityOf(
+    BuildContext context, {
+    bool listen = false,
+  }) => LRouteScope.visibilityOf(context, listen: listen);
 
   /// Snapshot visibility for the nearest [LAsyncRouteScope] or [LRouteScope].
-  static LRouteVisibility visibilityValueOf(BuildContext context,
-          {bool listen = false}) =>
-      LRouteScope.visibilityValueOf(context, listen: listen);
+  static LRouteVisibility visibilityValueOf(
+    BuildContext context, {
+    bool listen = false,
+  }) => LRouteScope.visibilityValueOf(context, listen: listen);
 
   @override
   Widget build(BuildContext context) {
     return _RouteBinding(
       args: args,
       builder: (context, route, visibility, scopeArgs) {
-        final resolvedName = name ??
+        final resolvedName =
+            name ??
             route?.settings.name ??
             _uniqueScopeName('LAsyncRouteScope', context);
         return LAsyncScope(

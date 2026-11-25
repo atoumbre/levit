@@ -1,3 +1,17 @@
+## 0.1.0-beta.1
+
+- Reconnect static computed dependencies, including asynchronous reads, when observation resumes.
+
+- Replace families with borrowing map/list entries and the lazy, exclusively owned `LxResource`. Refresh waits for cleanup and validates the replacement before completing.
+
+- Coordinate the breaking ownership, refresh and tooling release. Requires Dart
+  3.12+ and Flutter 3.44+ where applicable; see MIGRATION_0.1.0.md in the repository.
+
+## 0.0.12
+
+- **Breaking:** reactive `call()` only reads; assign through `.value`.
+- Isolate asynchronous batch notification queues by execution context, including nested batches and history middleware.
+- Updated internal runtime constraints to `^0.0.12`.
 
 ## 0.0.11
 

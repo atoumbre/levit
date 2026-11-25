@@ -5,8 +5,8 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 import '../helpers.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('LView', () {
@@ -82,9 +82,7 @@ void main() {
 
   group('LScopedView', () {
     testWidgets('creates and provides controller', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(home: TestScopedView()),
-      );
+      await tester.pumpWidget(MaterialApp(home: TestScopedView()));
 
       expect(find.text('Count: 0'), findsOneWidget);
     });
@@ -118,9 +116,7 @@ void main() {
       late TestController controller;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: MapScopedView(onController: (c) => controller = c),
-        ),
+        MaterialApp(home: MapScopedView(onController: (c) => controller = c)),
       );
 
       expect(find.text('Count: 0'), findsOneWidget);
@@ -132,11 +128,7 @@ void main() {
     });
 
     testWidgets('nests inside another LScopedView', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: OuterScopedView(),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: OuterScopedView()));
 
       expect(find.text('Outer: 1, Inner: 2'), findsOneWidget);
     });

@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:math';
+
+export 'commands.dart';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 
@@ -28,6 +31,11 @@ class Vec2 {
   factory Vec2.fromJson(Map<String, dynamic> json) =>
       Vec2((json['x'] as num).toDouble(), (json['y'] as num).toDouble());
 
+  @override
+  bool operator ==(Object other) =>
+      other is Vec2 && x == other.x && y == other.y;
+  @override
+  int get hashCode => Object.hash(x, y);
   @override
   String toString() => 'Vec2($x, $y)';
 }
@@ -60,27 +68,32 @@ class NodeModel {
     required Vec2 pos,
     required Vec2 sz,
     required int col,
-  })  : position = (pos.lx..name = 'node:$id:pos'),
-        size = (sz.lx..name = 'node:$id:size'),
-        color = (col.lx..name = 'node:$id:color');
+  }) : position = (pos.lx..name = 'node:$id:pos'),
+       size = (sz.lx..name = 'node:$id:size'),
+       color = (col.lx..name = 'node:$id:color');
+
+  /// Closes all per-node state when the document releases this node.
+  Future<void> close() async {
+    await Future.wait([position.close(), size.close(), color.close()]);
+  }
 
   /// Serializes to JSON.
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type,
-        'position': position.value.toJson(),
-        'size': size.value.toJson(),
-        'color': color.value,
-      };
+    'id': id,
+    'type': type,
+    'position': position.value.toJson(),
+    'size': size.value.toJson(),
+    'color': color.value,
+  };
 
   /// Deserializes from JSON.
   factory NodeModel.fromJson(Map<String, dynamic> json) => NodeModel(
-        id: json['id'],
-        type: json['type'],
-        pos: Vec2.fromJson(json['position']),
-        sz: Vec2.fromJson(json['size']),
-        col: json['color'],
-      );
+    id: json['id'],
+    type: json['type'],
+    pos: Vec2.fromJson(json['position']),
+    sz: Vec2.fromJson(json['size']),
+    col: json['color'],
+  );
 }
 
 /// Represents a collaborator in the studio.
@@ -107,19 +120,19 @@ class RemoteUser {
 
   /// Serializes to JSON.
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'color': color,
-        'cursor': cursor.value.toJson(),
-      };
+    'id': id,
+    'name': name,
+    'color': color,
+    'cursor': cursor.value.toJson(),
+  };
 
   /// Deserializes from JSON.
   factory RemoteUser.fromJson(Map<String, dynamic> json) => RemoteUser(
-        id: json['id'],
-        name: json['name'],
-        color: json['color'],
-        cursorPos: Vec2.fromJson(json['cursor']),
-      );
+    id: json['id'],
+    name: json['name'],
+    color: json['color'],
+    cursorPos: Vec2.fromJson(json['cursor']),
+  );
 }
 
 /// A simple Rect for isomorphic use.
@@ -159,6 +172,52 @@ class NexusEngine extends LevitController {
   /// (since those are tracked separately).
   final nodes = <NodeModel>[].lx..named("engine:nodes");
 
+  final Set<Future<void>> _closingNodes = {};
+  final List<LevitDisposalFailure> _nodeFailures = [];
+
+  NexusEngine() {
+    own(_closeNodes);
+    own(nodes);
+  }
+
+  void _releaseNode(NodeModel node) {
+    late final Future<void> operation;
+    operation = node
+        .close()
+        .catchError((Object error, StackTrace stack) {
+          _nodeFailures.add(
+            LevitDisposalFailure(
+              resource: node,
+              error: error,
+              stackTrace: stack,
+            ),
+          );
+        })
+        .whenComplete(() => _closingNodes.remove(operation));
+    _closingNodes.add(operation);
+  }
+
+  Future<void> _closeNodes() async {
+    for (final node in nodes.value) {
+      _releaseNode(node);
+    }
+    while (_closingNodes.isNotEmpty) {
+      await Future.wait(_closingNodes.toList());
+    }
+    if (_nodeFailures.isNotEmpty) {
+      throw LevitDisposalException.aggregate(_nodeFailures);
+    }
+  }
+
+  /// Replaces a snapshot while releasing the previous document's state.
+  void replaceNodes(Iterable<NodeModel> replacement) {
+    final old = nodes.toList();
+    nodes.assign(replacement);
+    for (final node in old) {
+      _releaseNode(node);
+    }
+  }
+
   /// Add a node to the engine.
   void addNode(NodeModel node) {
     nodes.add(node);
@@ -166,7 +225,11 @@ class NexusEngine extends LevitController {
 
   /// Remove a node by [id].
   void removeNode(String id) {
+    final removed = nodes.where((node) => node.id == id).toList();
     nodes.removeWhere((n) => n.id == id);
+    for (final node in removed) {
+      _releaseNode(node);
+    }
   }
 
   /// Bulk move multiple nodes.
@@ -242,6 +305,6 @@ class NexusEngine extends LevitController {
   @override
   void onInit() {
     super.onInit();
-    autoDispose(nodes);
+    own(nodes);
   }
 }

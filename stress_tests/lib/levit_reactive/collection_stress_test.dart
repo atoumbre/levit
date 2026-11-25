@@ -38,7 +38,8 @@ void main() {
 
       final opsPerMs = ops / sw.elapsedMilliseconds;
       print(
-          'Performed $ops mutations in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)');
+        'Performed $ops mutations in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)',
+      );
 
       list.close();
     });
@@ -87,7 +88,8 @@ void main() {
       sw.stop();
 
       print(
-          'Updated $keyCount keys in ${sw.elapsedMilliseconds}ms ($notifyCount notifications)');
+        'Updated $keyCount keys in ${sw.elapsedMilliseconds}ms ($notifyCount notifications)',
+      );
 
       map.close();
     });
@@ -110,7 +112,8 @@ void main() {
       // Sum of 1..100000 = 5000050000
       expect(result, 5000050000);
       print(
-          'Added 10k items, computed sum=$result in ${sw.elapsedMilliseconds}ms');
+        'Added 10k items, computed sum=$result in ${sw.elapsedMilliseconds}ms',
+      );
       print('Compute notifications: $computeCount');
 
       list.close();

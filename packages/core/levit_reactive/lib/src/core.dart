@@ -1,5 +1,16 @@
 part of '../levit_reactive.dart';
 
+// Zone contexts can outlive their callback through escaped asynchronous work.
+// Closed contexts are skipped so late work never enters a flushed queue.
+class _BatchContext {
+  _BatchContext(this.parent, {required this.isAsync});
+  final _BatchContext? parent;
+  final bool isAsync;
+  bool open = true;
+  final notifiers = Set<LevitReactiveNotifier>.identity();
+  final entries = <(LxReactive, LevitReactiveChange)>[];
+}
+
 class _LevitReactiveCore {
   /// Whether to capture stack traces on state changes (expensive).
   static bool captureStackTrace = false;
@@ -21,9 +32,22 @@ class _LevitReactiveCore {
     _updateFastPath();
   }
 
-  static final Object _batchEntriesKey = Object();
+  // Reuse the backing slots across batches. Drop references as they are
+  // delivered so a completed transaction never retains its observers.
+  static List<LevitReactiveNotifier?> _batchedNotifiers = List.filled(16, null);
+  static int _batchCount = 0;
 
-  static final List<LevitReactiveNotifier> _batchedNotifiers = [];
+  @pragma('vm:prefer-inline')
+  static void _enqueueBatched(LevitReactiveNotifier notifier) {
+    if (notifier._isPendingSyncBatch) return;
+    notifier._isPendingSyncBatch = true;
+    if (_batchCount == _batchedNotifiers.length) {
+      final grown = List<LevitReactiveNotifier?>.filled(_batchCount * 2, null);
+      grown.setRange(0, _batchCount, _batchedNotifiers);
+      _batchedNotifiers = grown;
+    }
+    _batchedNotifiers[_batchCount++] = notifier;
+  }
 
   static final List<LevitReactiveNotifier> _propagationQueue = [];
 
@@ -32,24 +56,45 @@ class _LevitReactiveCore {
   static int _batchDepth = 0;
 
   /// Whether a batch operation is in progress.
-  static bool get isBatching => _batchDepth > 0;
+  static bool get isBatching => _batchDepth > 0 || _currentBatch != null;
+
+  static _BatchContext? get _currentBatch {
+    var context = Zone.current[_batchZoneKey] as _BatchContext?;
+    while (context != null && !context.open) {
+      context = context.parent;
+    }
+    return context;
+  }
+
+  static _BatchContext? get _currentAsyncBatch {
+    var context = _currentBatch;
+    while (context != null) {
+      if (context.open && context.isAsync) return context;
+      context = context.parent;
+    }
+    return null;
+  }
 
   /// Internal: Records a change during a batch.
   static void _recordBatchEntry(
-      LxReactive reactive, LevitReactiveChange change) {
+    LxReactive reactive,
+    LevitReactiveChange change,
+  ) {
     // Skip Zone lookup when batch middleware is not registered.
     if (!LevitReactiveMiddleware.hasBatchMiddlewares) return;
 
-    final entries = Zone.current[_batchEntriesKey]
-        as List<(LxReactive, LevitReactiveChange)>?;
-
-    entries?.add((reactive, change));
+    var context = _currentBatch;
+    while (context != null) {
+      if (context.open) context.entries.add((reactive, change));
+      context = context.parent;
+    }
   }
 
   static bool _fastPath = true;
 
   static void _updateFastPath() {
-    _fastPath = _proxy == null &&
+    _fastPath =
+        _proxy == null &&
         _asyncZoneDepth == 0 &&
         _batchDepth == 0 &&
         !_isPropagating;
@@ -60,33 +105,46 @@ class _LevitReactiveCore {
       a._graphDepth.compareTo(b._graphDepth);
 
   static void _flushGlobalBatch() {
-    if (_batchedNotifiers.isEmpty) return;
+    if (_batchCount == 0) return;
 
     _batchDepth++;
     _updateFastPath();
     try {
       // Process shallower graph nodes first to keep derived values glitch-free.
-      if (_batchedNotifiers.length > 1) {
-        _batchedNotifiers.sort(_batchSorter);
+      for (var i = 1; i < _batchCount; i++) {
+        if (_batchedNotifiers[i - 1]!._graphDepth >
+            _batchedNotifiers[i]!._graphDepth) {
+          final sorted =
+              _batchedNotifiers
+                  .take(_batchCount)
+                  .cast<LevitReactiveNotifier>()
+                  .toList()
+                ..sort(_batchSorter);
+          _batchedNotifiers.setRange(0, _batchCount, sorted);
+          break;
+        }
       }
 
       // Re-entrant notifications can append to this list during iteration.
       int processedCount = 0;
-      while (processedCount < _batchedNotifiers.length) {
-        final notifier = _batchedNotifiers[processedCount++];
+      while (processedCount < _batchCount) {
+        final notifier = _batchedNotifiers[processedCount]!;
+        _batchedNotifiers[processedCount++] = null;
         notifier._isPendingSyncBatch = false;
         notifier._notifyListeners();
       }
 
       // Clear only after all appended items were processed.
-      _batchedNotifiers.clear();
+      _batchCount = 0;
     } finally {
       // Ensure pending flags are reset even when listener code throws.
-      if (_batchedNotifiers.isNotEmpty) {
-        for (var n in _batchedNotifiers) {
-          n._isPendingSyncBatch = false;
-        }
-        _batchedNotifiers.clear();
+      for (var i = 0; i < _batchCount; i++) {
+        _batchedNotifiers[i]?._isPendingSyncBatch = false;
+        _batchedNotifiers[i] = null;
+      }
+      _batchCount = 0;
+      if (_batchedNotifiers.length > 4096) {
+        _batchedNotifiers = List.filled(16, null);
       }
       _batchDepth--;
       _updateFastPath();
@@ -146,18 +204,16 @@ class _LevitReactiveCore {
     }
 
     // Middleware path records batch entries in Zone-local storage.
-    final entries = <(LxReactive, LevitReactiveChange)>[];
-    final batchChange = LevitReactiveBatch(entries);
+    final context = _BatchContext(_currentBatch, isAsync: false);
+    final batchChange = LevitReactiveBatch(context.entries);
 
     dynamic coreExecution() {
       _batchDepth++;
       _updateFastPath();
       try {
-        return runZoned(
-          callback,
-          zoneValues: {_batchEntriesKey: entries},
-        );
+        return runZoned(callback, zoneValues: {_batchZoneKey: context});
       } finally {
+        context.open = false;
         _batchDepth--;
         _updateFastPath();
         if (_batchDepth == 0) {
@@ -167,72 +223,53 @@ class _LevitReactiveCore {
     }
 
     // Middleware may wrap execution with interception and cancellation.
-    final wrapped =
-        _LevitReactiveMiddlewareChain.applyOnBatch(coreExecution, batchChange);
+    final wrapped = _LevitReactiveMiddlewareChain.applyOnBatch(
+      coreExecution,
+      batchChange,
+    );
     return wrapped() as R;
   }
 
-  /// Executes [callback] in an asynchronous batch.
-  ///
-  /// Changes are collected and passed to middleware hooks.
-  /// Returns the result of [callback], or throws if a middleware cancels.
+  /// Batches notifications in this execution context across asynchronous gaps.
+  /// Unrelated contexts remain independent; shared values are not isolated.
   static Future<R> batchAsync<R>(Future<R> Function() callback) async {
-    if (!LevitReactiveMiddleware.hasBatchMiddlewares) {
-      _batchDepth++;
-      _updateFastPath();
+    final context = _BatchContext(_currentBatch, isAsync: true);
+    final change = LevitReactiveBatch(context.entries, isAsync: true);
+    Future<R> execute() async {
       _enterAsyncScope();
-      final batchSet = Set<LevitReactiveNotifier>.identity();
       try {
-        return await runZoned(
-          () => callback(),
-          zoneValues: {_batchZoneKey: batchSet},
-        );
+        return await runZoned(callback, zoneValues: {_batchZoneKey: context});
       } finally {
+        context.open = false;
         _exitAsyncScope();
-        _batchDepth--;
-        _updateFastPath();
-        if (_batchDepth == 0) {
-          _flushGlobalBatch();
-        }
-        for (final notifier in batchSet) {
-          notifier.notify();
+        try {
+          final parent = _currentAsyncBatch;
+          if (parent != null) {
+            parent.notifiers.addAll(context.notifiers);
+          } else {
+            // Enter the ordinary ordered synchronous flush once for the full set.
+            _batchDepth++;
+            _updateFastPath();
+            try {
+              for (final notifier in context.notifiers) {
+                if (!notifier._disposed) {
+                  _enqueueBatched(notifier);
+                }
+              }
+            } finally {
+              _batchDepth--;
+              _updateFastPath();
+              if (_batchDepth == 0) _flushGlobalBatch();
+            }
+          }
+        } finally {
+          context.notifiers.clear();
         }
       }
     }
 
-    // Middleware-enabled async path collects entries and preserves batch context.
-    final entries = <(LxReactive, LevitReactiveChange)>[];
-    final batchChange = LevitReactiveBatch(entries);
-
-    dynamic coreExecution() async {
-      _batchDepth++;
-      _updateFastPath();
-      _enterAsyncScope();
-
-      final batchSet = Set<LevitReactiveNotifier>.identity();
-      try {
-        return await runZoned(
-          () => callback(),
-          zoneValues: {
-            _batchZoneKey: batchSet,
-            _batchEntriesKey: entries,
-          },
-        );
-      } finally {
-        _exitAsyncScope();
-        _batchDepth--;
-        _updateFastPath();
-        if (_batchDepth == 0) {
-          _flushGlobalBatch();
-        }
-        for (final notifier in batchSet) {
-          notifier.notify();
-        }
-      }
-    }
-
-    final wrapped =
-        _LevitReactiveMiddlewareChain.applyOnBatch(coreExecution, batchChange);
+    if (!LevitReactiveMiddleware.hasBatchMiddlewares) return execute();
+    final wrapped = _LevitReactiveMiddlewareChain.applyOnBatch(execute, change);
     return await (wrapped() as Future<dynamic>);
   }
 }
@@ -244,7 +281,16 @@ class _LevitReactiveCore {
 ///
 /// Implementations of this interface can be tracked by [LxComputed]
 /// and other observers.
-abstract interface class LxReactive<T> {
+abstract interface class LxReadable<T> {
+  T get value;
+  int get id;
+  Stream<T> get stream;
+  void addListener(void Function() listener);
+  void removeListener(void Function() listener);
+}
+
+/// A reactive source whose owner may refresh and close it.
+abstract interface class LxReactive<T> implements LxReadable<T> {
   /// The current state of the reactive object.
   ///
   /// Reading this property automatically registers the object as a dependency
@@ -272,7 +318,7 @@ abstract interface class LxReactive<T> {
   /// Permanently closes the reactive object and releases all internal resources.
   ///
   /// After calling [close], the object should no longer be used.
-  void close();
+  Future<void> close();
 
   /// An optional descriptive name for debugging and profiling.
   String? get name;
@@ -350,7 +396,9 @@ class LevitReactiveNotifier {
     // Listener middleware receives context for diagnostics/monitoring.
     if (LevitReactiveMiddleware.hasListenerMiddlewares && this is LxReactive) {
       _LevitReactiveMiddlewareChain.applyOnListenerAdd(
-          this as LxReactive, _LevitReactiveCore.listenerContext);
+        this as LxReactive,
+        _LevitReactiveCore.listenerContext,
+      );
     }
 
     if (_singleListener == null && _setListeners == null) {
@@ -380,7 +428,9 @@ class LevitReactiveNotifier {
     // Listener middleware receives context for diagnostics/monitoring.
     if (LevitReactiveMiddleware.hasListenerMiddlewares && this is LxReactive) {
       _LevitReactiveMiddlewareChain.applyOnListenerRemove(
-          this as LxReactive, _LevitReactiveCore.listenerContext);
+        this as LxReactive,
+        _LevitReactiveCore.listenerContext,
+      );
     }
 
     if (_singleListener != null) {
@@ -414,7 +464,10 @@ class LevitReactiveNotifier {
           _singleListener!();
         } catch (e, s) {
           _LevitReactiveMiddlewareChain.applyOnReactiveError(
-              e, s, this is LxReactive ? this as LxReactive : null);
+            e,
+            s,
+            this is LxReactive ? this as LxReactive : null,
+          );
         }
       } else {
         _singleListener!();
@@ -424,19 +477,16 @@ class LevitReactiveNotifier {
 
     // Async batch context defers notifications until async boundary exits.
     if (_LevitReactiveCore._asyncZoneDepth > 0) {
-      final asyncBatch = Zone.current[_LevitReactiveCore._batchZoneKey];
-      if (asyncBatch is Set<LevitReactiveNotifier>) {
-        asyncBatch.add(this);
+      final asyncBatch = _LevitReactiveCore._currentAsyncBatch;
+      if (asyncBatch != null) {
+        asyncBatch.notifiers.add(this);
         return;
       }
     }
 
     // Sync batch context coalesces repeated notifications per notifier.
-    if (_LevitReactiveCore.isBatching) {
-      if (!_isPendingSyncBatch) {
-        _isPendingSyncBatch = true;
-        _LevitReactiveCore._batchedNotifiers.add(this);
-      }
+    if (_LevitReactiveCore._batchDepth > 0) {
+      _LevitReactiveCore._enqueueBatched(this);
       return;
     }
 
@@ -486,7 +536,10 @@ class LevitReactiveNotifier {
         _singleListener!();
       } catch (e, s) {
         _LevitReactiveMiddlewareChain.applyOnReactiveError(
-            e, s, this is LxReactive ? this as LxReactive : null);
+          e,
+          s,
+          this is LxReactive ? this as LxReactive : null,
+        );
       }
       return;
     }
@@ -519,7 +572,10 @@ class LevitReactiveNotifier {
         snapshot[i]();
       } catch (e, s) {
         _LevitReactiveMiddlewareChain.applyOnReactiveError(
-            e, s, this is LxReactive ? this as LxReactive : null);
+          e,
+          s,
+          this is LxReactive ? this as LxReactive : null,
+        );
       }
     }
   }
@@ -558,21 +614,30 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   @override
   final int id = _nextId++;
 
+  String? _name;
   @override
-  String? name;
+  String? get name => _name;
+  @override
+  set name(String? value) {
+    if (_name == value) return;
+    _name = value;
+    _notifyMetadata();
+  }
 
   /// Custom equality function. When null, uses `==`.
   final bool Function(T previous, T current)? equals;
 
   /// Creates a reactive wrapper around [initial].
-  LxBase(T initial,
-      {this.onListen,
-      this.onCancel,
-      this.name,
-      bool isSensitive = false,
-      this.equals})
-      : _value = initial,
-        _isSensitive = isSensitive {
+  LxBase(
+    T initial, {
+    this.onListen,
+    this.onCancel,
+    String? name,
+    bool isSensitive = false,
+    this.equals,
+  }) : _value = initial,
+       _name = name,
+       _isSensitive = isSensitive {
     if (LevitReactiveMiddleware.hasInitMiddlewares) {
       _LevitReactiveMiddlewareChain.applyOnInit(this);
     }
@@ -593,8 +658,23 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   bool _isActive = false;
   Set<void Function(bool active)>? _activityObservers;
 
+  String? _ownerId;
   @override
-  String? ownerId;
+  String? get ownerId => _ownerId;
+  @override
+  set ownerId(String? value) {
+    if (_ownerId == value) return;
+    _ownerId = value;
+    _notifyMetadata();
+  }
+
+  void _notifyMetadata() {
+    for (final middleware in LevitReactiveMiddleware._middlewares.toList()) {
+      if (middleware is LevitReactiveMetadataObserver) {
+        (middleware as LevitReactiveMetadataObserver).onReactiveMetadata(this);
+      }
+    }
+  }
 
   bool _isSensitive = false;
 
@@ -605,6 +685,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   set isSensitive(bool value) {
     if (_isSensitive == value) return;
     _isSensitive = value;
+    _notifyMetadata();
   }
 
   void _protectedOnActive() {
@@ -632,13 +713,6 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     (_activityObservers ??= <void Function(bool active)>{}).add(observer);
   }
 
-  void _removeActivityObserver(void Function(bool active) observer) {
-    _activityObservers?.remove(observer);
-    if (_activityObservers?.isEmpty ?? false) {
-      _activityObservers = null;
-    }
-  }
-
   void _notifyActivityObservers(bool active) {
     final observers = _activityObservers;
     if (observers == null) return;
@@ -655,8 +729,9 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     if (proxy != null) {
       LxReactive resolved = this;
       if (proxy is LevitReactiveReadResolver) {
-        resolved =
-            (proxy as LevitReactiveReadResolver).resolveReactiveRead(this);
+        resolved = (proxy as LevitReactiveReadResolver).resolveReactiveRead(
+          this,
+        );
       }
       if (!identical(resolved, this) && resolved is LxReactive<T>) {
         return resolved.value;
@@ -685,17 +760,25 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   /// Used by subclasses (like [LxComputed]) to propagate "dirty" state
   /// lazily without triggering a full value update cycle usually associated
   /// with middleware.
+  @pragma('vm:prefer-inline')
   void _notifyListenersOnly() {
+    if (_LevitReactiveCore._batchDepth > 0 &&
+        _LevitReactiveCore._asyncZoneDepth == 0) {
+      if (!isDisposed) _LevitReactiveCore._enqueueBatched(this);
+      return;
+    }
     super.notify();
   }
 
-  void _reportRead(LevitReactiveObserver observer,
-      {LxReactive? resolvedReactive}) {
+  void _reportRead(
+    LevitReactiveObserver observer, {
+    LxReactive? resolvedReactive,
+  }) {
     final trackedReactive = resolvedReactive ?? this;
     final LevitReactiveNotifier trackedNotifier =
         trackedReactive is LevitReactiveNotifier
-            ? trackedReactive as LevitReactiveNotifier
-            : this;
+        ? trackedReactive as LevitReactiveNotifier
+        : this;
 
     if (identical(trackedReactive, _LevitReactiveCore._lastReportedReactive) &&
         identical(observer, _LevitReactiveCore._lastReportedObserver)) {
@@ -713,6 +796,10 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     }
   }
 
+  // Collections share this publication hook for whole-value writes, binding,
+  // middleware restores, and explicit refresh.
+  void _publishMutation() => super.notify();
+
   /// Internal setter for subclasses (Computed, etc.)
   void _setValueInternal(T val, {bool notifyListeners = true}) {
     // Fast path bypasses middleware interception.
@@ -722,7 +809,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       _value = val;
       _controller?.add(_value);
       if (notifyListeners) {
-        super.notify();
+        _publishMutation();
       }
       return;
     }
@@ -736,13 +823,14 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       valueType: T,
       oldValue: oldValue,
       newValue: val,
-      stackTrace:
-          _LevitReactiveCore.captureStackTrace ? StackTrace.current : null,
+      stackTrace: _LevitReactiveCore.captureStackTrace
+          ? StackTrace.current
+          : null,
       restore: (v) {
         _value = v;
         _controller?.add(_value);
         if (notifyListeners) {
-          super.notify();
+          _publishMutation();
         }
       },
     );
@@ -752,7 +840,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       _value = v;
       _controller?.add(_value);
       if (notifyListeners) {
-        super.notify();
+        _publishMutation();
       }
       // Batch middleware expects all writes to be recorded with shared batch id.
       if (_LevitReactiveCore.isBatching) {
@@ -760,15 +848,20 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       }
     }
 
-    final wrapped =
-        _LevitReactiveMiddlewareChain.applyOnSet<T>(performSet, this, change);
+    final wrapped = _LevitReactiveMiddlewareChain.applyOnSet<T>(
+      performSet,
+      this,
+      change,
+    );
     wrapped(val);
   }
 
   @override
   Stream<T> get stream {
     _controller ??= StreamController<T>.broadcast(
-        onListen: () => _checkActive(), onCancel: () => _checkActive());
+      onListen: () => _checkActive(),
+      onCancel: () => _checkActive(),
+    );
     return _controller!.stream;
   }
 
@@ -785,44 +878,75 @@ abstract class LxBase<T> extends LevitReactiveNotifier
 
   /// Hook for subclasses to clean up binding resources during [close].
   /// Overridden by [_LxBindable].
-  void _cleanupBinding() {}
+  FutureOr<void> _cleanupBinding() {}
 
-  /// Creates a specific selection of the state that only updates when the selected value changes.
-  ///
-  /// This is useful for optimizing rebuilds when using large state objects.
-  /// The selector receives the current value of the state.
-  ///
-  /// // Example usage:
-  /// ```dart
-  /// final state = {'count': 0, 'data': 'foo'}.lx;
-  /// final count = state.select((val) => val['count']);
-  /// ```
-  LxComputed<R> select<R>(R Function(T value) selector) {
-    return LxComputed<R>(
-      () => selector(value),
-      staticDeps: true,
-      eager: true,
-      name: name != null ? '$name.select' : null,
-    );
-  }
+  Future<void>? _closeFuture;
 
+  /// Stops observation immediately, then drains binding and stream cleanup.
+  /// Middleware failures cannot skip cleanup; all failures are reported together
+  /// after every cleanup attempt finishes.
   @override
-  void close() {
-    if (LevitReactiveMiddleware.bypassMiddleware ||
-        !LevitReactiveMiddleware.hasDisposeMiddlewares) {
-      _cleanupBinding();
-      _controller?.close();
-      super.dispose();
-      _checkActive();
-    } else {
-      final wrapped = _LevitReactiveMiddlewareChain.applyOnDispose(() {
-        _cleanupBinding();
-        _controller?.close();
-        super.dispose();
-        _checkActive();
-      }, this);
-      wrapped();
+  Future<void> close() {
+    if (_closeFuture != null) return _closeFuture!;
+    final completion = Completer<void>();
+    _closeFuture = completion.future;
+    List<Future<void>>? pending;
+    List<AsyncError>? failures;
+    void attempt(FutureOr<void> Function() action) {
+      try {
+        final result = action();
+        if (result is Future) {
+          (pending ??= []).add(
+            result.then<void>(
+              (_) {},
+              onError: (Object e, StackTrace s) {
+                (failures ??= []).add(AsyncError(e, s));
+              },
+            ),
+          );
+        }
+      } catch (e, s) {
+        (failures ??= []).add(AsyncError(e, s));
+      }
     }
+
+    var released = false;
+    void release() {
+      if (released) return;
+      released = true;
+      // Stop synchronous observers before awaiting stream cancellation.
+      super.dispose();
+      attempt(_cleanupBinding);
+      attempt(() => _controller?.close());
+      attempt(_checkActive);
+    }
+
+    try {
+      if (LevitReactiveMiddleware.bypassMiddleware ||
+          !LevitReactiveMiddleware.hasDisposeMiddlewares) {
+        release();
+      } else {
+        _LevitReactiveMiddlewareChain.applyOnDispose(release, this)();
+      }
+    } catch (error, stackTrace) {
+      (failures ??= []).add(AsyncError(error, stackTrace));
+    } finally {
+      release();
+    }
+    void finish() {
+      if (failures == null) {
+        completion.complete();
+      } else {
+        completion.completeError(LxCleanupException(failures!));
+      }
+    }
+
+    if (pending case final operations?) {
+      Future.wait(operations).then((_) => finish());
+    } else {
+      finish();
+    }
+    return _closeFuture!;
   }
 
   /// Functor-like call to get value.
@@ -834,11 +958,12 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   ///
   /// This also triggers middleware hooks to ensure mutations are tracked.
   void refresh() {
+    if (isDisposed) return;
     // Refresh fast path without middleware interception.
     if (LevitReactiveMiddleware.bypassMiddleware ||
         !LevitReactiveMiddleware.hasSetMiddlewares) {
       _controller?.add(_value);
-      super.notify();
+      _publishMutation();
       return;
     }
 
@@ -847,26 +972,31 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       valueType: T,
       oldValue: _value,
       newValue: _value,
-      stackTrace:
-          _LevitReactiveCore.captureStackTrace ? StackTrace.current : null,
+      stackTrace: _LevitReactiveCore.captureStackTrace
+          ? StackTrace.current
+          : null,
       restore: (v) {
         _value = v;
         _controller?.add(_value);
-        super.notify();
+        _publishMutation();
       },
     );
 
     void performRefresh(T v) {
       _controller?.add(
-          v); // Uses v in case middleware modified it (unlikely for refresh but consistent)
-      super.notify();
+        v,
+      ); // Uses v in case middleware modified it (unlikely for refresh but consistent)
+      _publishMutation();
       if (_LevitReactiveCore.isBatching) {
         _LevitReactiveCore._recordBatchEntry(this, change);
       }
     }
 
     final wrapped = _LevitReactiveMiddlewareChain.applyOnSet<T>(
-        performRefresh, this, change);
+      performRefresh,
+      this,
+      change,
+    );
     wrapped(_value);
   }
 
@@ -894,121 +1024,88 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   bool get isDisposed => super.isDisposed;
 }
 
-/// Internal state object for stream binding.
-/// Allocated lazily to save memory since most reactive variables are never bound.
-class _BindingState<T> {
-  Stream<T>? boundStream;
-  int externalListeners = 0;
-  StreamSubscription<T>? activeBoundSubscription;
-}
-
-/// Mixin for reactive types that allow mutable updates and stream-binding.
-///
-/// Kept off [LxBase] so immutable containers (like [LxState]) don't inherit
-/// mutation helpers.
-mixin _LxMutable<T> on LxBase<T> {
-  /// Mutates the value in place and triggers a refresh.
+/// Mutation and explicitly owned stream binding for writable reactive values.
+mixin _LxMutable<T> on LxBase<T> implements LxAsyncResource {
   void mutate(void Function(T value) mutator) {
     mutator(_value);
     refresh();
   }
 
-  /// Updates the value using a transformation function.
-  void updateValue(T Function(T val) fn) {
-    _setValueInternal(fn(_value));
-  }
+  void updateValue(T Function(T val) fn) => _setValueInternal(fn(_value));
 
-  // --- Stream Binding Capabilities ---
-  _BindingState<T>? _binding;
+  Stream<T>? _boundStream;
+  StreamSubscription<T>? _boundSubscription;
+  final Set<Future<void>> _bindingCancellations = {};
+  final List<AsyncError> _bindingFailures = [];
+  bool _bindingClosing = false;
+  int _bindingGeneration = 0;
 
-  _BindingState<T> get _bindingState => _binding ??= _BindingState<T>();
-
-  /// Binds an external stream to this reactive variable.
+  /// Owns one upstream subscription until [unbind] or [close]. Subscribers use
+  /// this value's stable stream, so replacing a binding preserves observation.
   void bind(Stream<T> externalStream) {
-    if (_binding?.boundStream != null &&
-        _binding?.boundStream == externalStream) {
-      return;
+    if (isDisposed || _bindingClosing) {
+      throw StateError('Cannot bind a closing value.');
     }
-
-    unbind();
-
-    _bindingState.boundStream = externalStream.map((event) {
-      // Route stream writes through middleware-aware setter.
-      _setValueInternal(event);
-      return event;
-    }).transform(
-      StreamTransformer<T, T>.fromHandlers(
-        handleError: (error, st, sink) {
-          _controller?.addError(error, st);
-          sink.addError(error, st);
-        },
-      ),
-    ).asBroadcastStream(
-      onListen: (sub) {
-        _bindingState.externalListeners++;
-        _checkActive();
-      },
-      onCancel: (subscription) {
-        if (_binding != null) {
-          _binding!.externalListeners--;
+    if (identical(_boundStream, externalStream)) return;
+    _cancelBinding();
+    _boundStream = externalStream;
+    final generation = _bindingGeneration;
+    _boundSubscription = externalStream.listen(
+      (event) {
+        if (generation == _bindingGeneration && !isDisposed) {
+          _setValueInternal(event);
         }
-        _checkActive();
-        subscription.cancel();
+      },
+      onError: (Object error, StackTrace stack) {
+        if (generation != _bindingGeneration || isDisposed) return;
+        if (_controller?.hasListener ?? false) {
+          _controller!.addError(error, stack);
+        } else {
+          Zone.current.handleUncaughtError(error, stack);
+        }
       },
     );
+  }
 
-    if (hasListener) {
-      _bindingState.activeBoundSubscription =
-          _binding!.boundStream!.listen((_) {});
+  void _cancelBinding() {
+    _bindingGeneration++;
+    _boundStream = null;
+    final subscription = _boundSubscription;
+    _boundSubscription = null;
+    if (subscription == null) return;
+    late final Future<void> cancelled;
+    cancelled = Future<void>.sync(subscription.cancel)
+        .catchError((Object error, StackTrace stack) {
+          _bindingFailures.add(AsyncError(error, stack));
+        })
+        .whenComplete(() => _bindingCancellations.remove(cancelled));
+    _bindingCancellations.add(cancelled);
+  }
+
+  /// Detaches immediately and waits for all replaced upstream subscriptions.
+  Future<void> unbind() {
+    _cancelBinding();
+    return drain();
+  }
+
+  @override
+  void requestCancel() {
+    _bindingClosing = true;
+    _cancelBinding();
+  }
+
+  @override
+  Future<void> drain() async {
+    while (_bindingCancellations.isNotEmpty) {
+      await Future.wait(_bindingCancellations.toList());
     }
-  }
-
-  /// Unbinds any external stream.
-  void unbind() {
-    _binding?.activeBoundSubscription?.cancel();
-    _binding = null;
-    _checkActive();
+    if (_bindingFailures.isNotEmpty) throw LxCleanupException(_bindingFailures);
   }
 
   @override
-  void _cleanupBinding() => unbind();
-
-  @override
-  Stream<T> get stream {
-    if (_binding?.boundStream != null) return _binding!.boundStream!;
-    return super.stream;
-  }
-
-  @override
-  bool get hasListener {
-    // Internal bound-stream subscription should not count as external demand.
-    int effectiveExternal = _binding?.externalListeners ?? 0;
-    if (_binding?.activeBoundSubscription != null) effectiveExternal--;
-
-    return super.hasListener || effectiveExternal > 0;
-  }
-
-  @override
-  void addListener(void Function() listener) {
-    super.addListener(listener);
-
-    if (_binding?.boundStream != null &&
-        _binding?.activeBoundSubscription == null &&
-        hasListener) {
-      _binding!.activeBoundSubscription = _binding!.boundStream!.listen((_) {});
-    }
-  }
-
-  @override
-  void removeListener(void Function() listener) {
-    super.removeListener(listener);
-
-    if (!hasListener) {
-      _binding?.activeBoundSubscription?.cancel();
-      if (_binding != null) {
-        _binding!.activeBoundSubscription = null;
-      }
-    }
+  Future<void> _cleanupBinding() {
+    requestCancel();
+    return drain();
   }
 }
 
@@ -1026,19 +1123,17 @@ class LxListenerContext {
   final Object? data;
 
   /// Creates a standard listener context.
-  const LxListenerContext({
-    required this.type,
-    required this.id,
-    this.data,
-  });
+  const LxListenerContext({required this.type, required this.id, this.data});
 
   /// Serializes the context to a JSON map.
-  Map<String, dynamic> toJson() => {
-        'type': type,
-        'id': id,
-        'data': data,
-      };
+  Map<String, dynamic> toJson() => {'type': type, 'id': id, 'data': data};
 
   @override
   String toString() => 'LxContext(type: $type, id: $id, data: $data)';
+}
+
+/// Derives an independently owned selector from an observation-only source.
+extension LxReadableSelection<T> on LxReadable<T> {
+  LxComputed<R> select<R>(R Function(T value) selector) =>
+      LxComputed(() => selector(value), staticDeps: true, eager: true);
 }

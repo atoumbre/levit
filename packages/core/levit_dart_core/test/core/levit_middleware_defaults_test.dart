@@ -26,24 +26,46 @@ class MyMiddleware implements LevitReactiveMiddleware, LevitScopeMiddleware {
   void onScopeDispose(int scopeId, String scopeName) {}
   @override
   void onDependencyRegister(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
   @override
   void onDependencyResolve(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
   @override
   void onDependencyDelete(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
   @override
-  S Function() onDependencyCreate<S>(S Function() builder, LevitScope scope,
-          String key, LevitDependency info) =>
-      builder;
+  S Function() onDependencyCreate<S>(
+    S Function() builder,
+    LevitScope scope,
+    String key,
+    LevitDependency info,
+  ) => builder;
   @override
-  void Function() onDependencyInit<S>(void Function() onInit, S instance,
-          LevitScope scope, String key, LevitDependency info) =>
-      onInit;
+  void Function() onDependencyInit<S>(
+    void Function() onInit,
+    S instance,
+    LevitScope scope,
+    String key,
+    LevitDependency info,
+  ) => onInit;
 }
 
 class MyController extends LevitController {
@@ -79,17 +101,41 @@ class ErrorInitController extends LevitController {
 void main() {
   test('LevitMiddleware default methods', () {
     final mw = MyMiddleware();
-    mw.onDependencyRegister(0, 'scope', 'key', LevitDependency(instance: null),
-        source: 'src');
-    mw.onDependencyResolve(0, 'scope', 'key', LevitDependency(instance: null),
-        source: 'src');
-    mw.onDependencyDelete(0, 'scope', 'key', LevitDependency(instance: null),
-        source: 'src');
+    mw.onDependencyRegister(
+      0,
+      'scope',
+      'key',
+      LevitDependency(instance: null),
+      source: 'src',
+    );
+    mw.onDependencyResolve(
+      0,
+      'scope',
+      'key',
+      LevitDependency(instance: null),
+      source: 'src',
+    );
+    mw.onDependencyDelete(
+      0,
+      'scope',
+      'key',
+      LevitDependency(instance: null),
+      source: 'src',
+    );
     final builder = mw.onDependencyCreate(
-        () => 42, LevitScope.root(), 'key', LevitDependency(instance: null));
+      () => 42,
+      LevitScope.root(),
+      'key',
+      LevitDependency(instance: null),
+    );
     expect(builder(), 42);
     final init = mw.onDependencyInit(
-        () {}, 42, LevitScope.root(), 'key', LevitDependency(instance: null));
+      () {},
+      42,
+      LevitScope.root(),
+      'key',
+      LevitDependency(instance: null),
+    );
     init();
   });
 }

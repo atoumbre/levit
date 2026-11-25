@@ -1,3 +1,12 @@
+## 0.1.0-beta.1
+
+- Export borrowing ValueListenable interoperability and add a scoped countdown example.
+
+## 0.0.12
+
+- Expose the 0.0.12 runtime contracts; migrate examples and add executable Flutter onboarding coverage.
+- Updated internal runtime constraints to `^0.0.12`.
+
 # Changelog
 
 ## 0.0.11

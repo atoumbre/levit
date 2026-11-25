@@ -59,3 +59,28 @@ cd shared && dart test
 cd ../server && dart test
 cd ../app && flutter test
 ```
+
+
+## Local commands in 0.1.0
+
+`NexusCommandHistory` retains at most 100 immutable domain commands. Creation,
+position and color edits have explicit inverse messages. Drag updates are previews;
+ending a drag commits one command. Execute/undo/redo update state in one synchronous
+batch. A new edit clears redo. Received document updates and snapshots clear local
+history; presence messages do not. `node_create` and `node_delete` are idempotent
+by node ID. This is local undo, with inverses synchronized over the existing server
+protocol; it does not merge competing collaborative undo histories.
+
+Regression coverage lives in `shared/test/command_history_test.dart` and
+`server/test/two_client_undo_test.dart`, which starts a real loopback WebSocket
+server and checks both clients and the authoritative document after undo/redo.
+
+## Local inspector (0.1.0)
+
+Run `dart run bin/levit_devtools.dart` from `packages/tools/levit_devtools`, then
+open http://127.0.0.1:9200. The app and server appear as separate sessions. Debug
+attachments opt in to bounded history, worker statistics and update call stacks.
+Both support the compile-time `LEVIT_INSPECTOR_URL` define for an alternate relay.
+For example, run Flutter with
+`--dart-define=LEVIT_INSPECTOR_URL=ws://127.0.0.1:9201/ws` and Dart with
+`-DLEVIT_INSPECTOR_URL=ws://127.0.0.1:9201/ws`.

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
-import 'package:levit_monitor/levit_monitor.dart';
+import 'package:levit_monitor/levit_monitor_io.dart';
 import 'package:logger/logger.dart' hide LogEvent;
 import 'package:test/test.dart';
 
@@ -105,5 +105,30 @@ void main() {
       final transport = FileTransport(filePath);
       await transport.close();
     });
+
+    test(
+      'failed IO is reported after idempotent close attempts cleanup',
+      () async {
+        final transport = FileTransport(
+          tempDir.path,
+        ); // A directory cannot be opened as a file.
+        transport.send(
+          LogEvent(sessionId: 'io', level: Level.info, data: 'write'),
+        );
+        await expectLater(
+          transport.flush(),
+          throwsA(isA<LevitMonitorException>()),
+        );
+        final closing = transport.close();
+        expect(identical(closing, transport.close()), isTrue);
+        await expectLater(closing, throwsA(isA<LevitMonitorException>()));
+        expect(
+          () => transport.send(
+            LogEvent(sessionId: 'io', level: Level.info, data: 'late'),
+          ),
+          throwsStateError,
+        );
+      },
+    );
   });
 }

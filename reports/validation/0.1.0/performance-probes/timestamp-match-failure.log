@@ -1,0 +1,8 @@
+flutter: The Dart VM service is listening on http://127.0.0.1:57768/Zu9WAEhhKYQ=/
+flutter: LEVIT_PERFORMANCE_FAILED: TimeoutException after 0:00:05.000000: Future not completed
+#0      Future.timeout.<anonymous closure> (dart:async/future_impl.dart:1042)
+<asynchronous suspension>
+#1      main (package:benchmarks/release_performance.dart:171)
+<asynchronous suspension>
+
+2026-11-11 15:19:41.151 benchmarks[94703:42245965] Running with merged UI and platform thread. Experimental.

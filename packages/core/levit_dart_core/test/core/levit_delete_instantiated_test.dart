@@ -3,8 +3,8 @@ import 'package:test/test.dart';
 
 void main() {
   group('Levit Delete and Instantiated', () {
-    tearDown(() {
-      Ls.reset(force: true);
+    tearDown(() async {
+      await Ls.reset(force: true);
     });
 
     test('Levit.delete and Levit.isInstantiated', () async {

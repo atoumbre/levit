@@ -1,0 +1,17 @@
+Analyzing levit-svg...
+
+  error - packages/kits/levit_flutter/test/mixins/lifecycle_loop_mixin_state_restoration_test.dart:34:8 - '_CountingService.stop' ('void Function()') isn't a valid override of 'StoppableService.stop' ('Future<void> Function()'). - invalid_override
+           - The member being overridden at packages/kits/levit_dart/lib/src/utilities/levit_loop_engine.dart:20:16.
+warning - packages/kits/levit_flutter/test/widgets/list_item_monitor_test.dart:4:8 - Unused import: 'package:levit_flutter/levit_flutter.dart'. Try removing the import directive. - unused_import
+   info - packages/core/levit_reactive/lib/src/family.dart:37:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - packages/core/levit_reactive/lib/src/family.dart:39:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - packages/core/levit_reactive/lib/src/family.dart:105:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - packages/core/levit_reactive/lib/src/family.dart:107:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - packages/core/levit_reactive/lib/src/family.dart:121:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - packages/core/levit_reactive/lib/src/family.dart:161:9 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - packages/core/levit_reactive/lib/src/family.dart:178:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - packages/core/levit_reactive/lib/src/family.dart:213:15 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - packages/core/levit_reactive/lib/src/family.dart:263:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - packages/core/levit_reactive/lib/src/family.dart:357:9 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+
+12 issues found.

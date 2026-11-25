@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('LWatchStatus Tests', () {
@@ -31,7 +31,7 @@ void main() {
           home: LStatusBuilder<String>(
             rx,
             onSuccess: (data) => Text('Data: $data'),
-            onWaiting: () => const Text('Loading...'),
+            onWaiting: (status) => const Text('Loading...'),
           ),
         ),
       );
@@ -52,7 +52,7 @@ void main() {
           home: LStatusBuilder<String>(
             rx,
             onSuccess: (data) => Text('Data: $data'),
-            onError: (err, stack) => Text('Error: $err'),
+            onError: (status) => Text('Error: ${status.error}'),
           ),
         ),
       );
@@ -68,7 +68,7 @@ void main() {
           home: LStatusBuilder<String>(
             rx,
             onSuccess: (data) => Text('Data: $data'),
-            onWaiting: () => const Text('Waiting...'),
+            onWaiting: (status) => const Text('Waiting...'),
           ),
         ),
       );

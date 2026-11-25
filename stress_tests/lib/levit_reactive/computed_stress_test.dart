@@ -5,7 +5,8 @@ void main() {
   group('Stress Test: LxComputed', () {
     test('Deep Chain - 5000 LxComputed nodes', () {
       print(
-          '[Description] Tests propagation through a deeply chained dependency graph.');
+        '[Description] Tests propagation through a deeply chained dependency graph.',
+      );
       final source = 0.lx;
       const depth = 5000;
 
@@ -31,7 +32,8 @@ void main() {
 
       expect(result, depth - 1 + 10);
       print(
-          'Propagated change through $depth nodes in ${sw.elapsedMilliseconds}ms');
+        'Propagated change through $depth nodes in ${sw.elapsedMilliseconds}ms',
+      );
 
       source.close();
       current.close();
@@ -39,25 +41,36 @@ void main() {
 
     test('Diamond Graph - Glitch Freedom', () {
       print(
-          '[Description] Verifies that diamond-shaped dependencies do not cause glitches.');
-      final source = 0.lx;
+        '[Description] Verifies that diamond-shaped dependencies do not cause glitches.',
+      );
+      final source = 0.0.lx;
       const layers = 100;
 
+      // Observe each node before constructing dependents so this measures
+      // a live notification graph, not repeated inactive function evaluation.
+      final nodes = <LxComputed<double>>[];
+      LxComputed<double> observe(double Function() compute) {
+        final node = LxComputed(compute)..addListener(() {});
+        nodes.add(node);
+        return node;
+      }
+
       // Diamond pattern: source -> [left, right] -> join
-      var left = LxComputed(() => source.value);
-      var right = LxComputed(() => source.value);
-      var join = LxComputed(() => left.value + right.value);
+      final left = observe(() => source.value);
+      final right = observe(() => source.value);
+      var join = observe(() => left.value + right.value);
 
       final sw = Stopwatch()..start();
       for (var i = 0; i < layers; i++) {
         final prevJoin = join;
-        left = LxComputed(() => prevJoin.value);
-        right = LxComputed(() => prevJoin.value);
-        join = LxComputed(() => left.value + right.value);
+        final nextLeft = observe(() => prevJoin.value);
+        final nextRight = observe(() => prevJoin.value);
+        join = observe(() => nextLeft.value + nextRight.value);
       }
       sw.stop();
       print(
-          'Diamond Graph Setup: Created $layers diamond layers in ${sw.elapsedMilliseconds}ms');
+        'Diamond Graph Setup: Created $layers diamond layers in ${sw.elapsedMilliseconds}ms',
+      );
 
       // Initial value
       expect(join.value, 0);
@@ -73,10 +86,15 @@ void main() {
       sw.stop();
 
       print(
-          'Diamond Graph Update: Propagated change through $layers layers in ${sw.elapsedMilliseconds}ms');
+        'Diamond Graph Update: Propagated change through $layers layers in ${sw.elapsedMilliseconds}ms',
+      );
       print('Recompute notifications: $recomputeCount');
 
-      expect(result, isNonNegative);
+      expect(result, (BigInt.one << (layers + 1)).toDouble());
+      expect(recomputeCount, 1);
+      for (final node in nodes.reversed) {
+        node.close();
+      }
       source.close();
     });
 
@@ -86,14 +104,16 @@ void main() {
       final sources = List.generate(sourceCount, (_) => 0.lx);
 
       final sw = Stopwatch()..start();
-      final sum =
-          LxComputed(() => sources.fold<int>(0, (acc, lx) => acc + lx.value));
+      final sum = LxComputed(
+        () => sources.fold<int>(0, (acc, lx) => acc + lx.value),
+      );
       final initialValue = sum.value;
       sw.stop();
 
       expect(initialValue, 0);
       print(
-          'Fan-In Setup: Initial computation with $sourceCount sources in ${sw.elapsedMilliseconds}ms');
+        'Fan-In Setup: Initial computation with $sourceCount sources in ${sw.elapsedMilliseconds}ms',
+      );
 
       // Update a single source
       sw.reset();
@@ -103,7 +123,8 @@ void main() {
       sw.stop();
       expect(resultAfterSingle, 100);
       print(
-          'Fan-In Single Update: Propagated single source change in ${sw.elapsedMilliseconds}ms');
+        'Fan-In Single Update: Propagated single source change in ${sw.elapsedMilliseconds}ms',
+      );
 
       for (final s in sources) {
         s.close();

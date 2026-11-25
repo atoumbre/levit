@@ -3,16 +3,19 @@ import 'package:test/test.dart';
 
 class TestRejectMiddleware extends LevitReactiveMiddleware {
   @override
-  LxOnSet? get onSet => (next, reactive, change) => (value) {};
+  LxOnSet? get onSet =>
+      (next, reactive, change) => (value) {};
   @override
   LxOnBatch? get onBatch =>
-      (next, change) => () => throw StateError('Batch rejected');
+      (next, change) =>
+          () => throw StateError('Batch rejected');
 }
 
 class TestSimpleMiddleware extends LevitReactiveMiddleware {
   final List<LevitReactiveChange> changes = [];
   @override
-  LxOnSet? get onSet => (next, reactive, change) => (value) {
+  LxOnSet? get onSet =>
+      (next, reactive, change) => (value) {
         next(value);
         changes.add(change);
       };
@@ -22,7 +25,7 @@ void main() {
   test('Lx convenience methods', () {
     final count = 0.lx;
     expect(count(), equals(0));
-    expect(count(5), equals(5));
+    expect((count.value = 5), equals(5));
     expect(count.value, equals(5));
 
     count.updateValue((v) => v * 2);

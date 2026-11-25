@@ -41,19 +41,22 @@ class FakeWebSocketChannel implements WebSocketChannel {
 
   @override
   StreamChannel<S> transform<S>(
-      StreamChannelTransformer<S, dynamic> transformer) {
+    StreamChannelTransformer<S, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
   @override
   StreamChannel<dynamic> transformStream(
-      StreamTransformer<dynamic, dynamic> transformer) {
+    StreamTransformer<dynamic, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
   @override
   StreamChannel<dynamic> transformSink(
-      StreamSinkTransformer<dynamic, dynamic> transformer) {
+    StreamSinkTransformer<dynamic, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
@@ -133,12 +136,15 @@ void main() {
 
   test('handleConnection adds client and sends snapshot', () async {
     final socket = FakeWebSocketChannel();
-    engine.addNode(NodeModel(
+    engine.addNode(
+      NodeModel(
         id: '1',
         type: 'rect',
         pos: const Vec2(0, 0),
         sz: const Vec2(10, 10),
-        col: 0));
+        col: 0,
+      ),
+    );
 
     server.handleConnection(socket, 'protocol');
 
@@ -158,12 +164,12 @@ void main() {
     final msg = jsonEncode({
       'type': 'node_create',
       'node': NodeModel(
-              id: 'stream_test',
-              type: 'rect',
-              pos: const Vec2(100, 100),
-              sz: const Vec2(100, 100),
-              col: 0xFF00FF00)
-          .toJson()
+        id: 'stream_test',
+        type: 'rect',
+        pos: const Vec2(100, 100),
+        sz: const Vec2(100, 100),
+        col: 0xFF00FF00,
+      ).toJson(),
     });
 
     client.simulateIncoming(msg);
@@ -184,17 +190,20 @@ void main() {
 
     // Client 1 moves a node
     // First ensure node exists
-    engine.addNode(NodeModel(
+    engine.addNode(
+      NodeModel(
         id: 'node1',
         type: 'rect',
         pos: const Vec2(0, 0),
         sz: const Vec2(10, 10),
-        col: 0));
+        col: 0,
+      ),
+    );
 
     final moveMsg = jsonEncode({
       'type': 'bulk_move',
       'ids': ['node1'],
-      'delta': {'x': 100.0, 'y': 100.0}
+      'delta': {'x': 100.0, 'y': 100.0},
     });
 
     // Simulate incoming message
@@ -218,12 +227,12 @@ void main() {
     final createMsg = jsonEncode({
       'type': 'node_create',
       'node': NodeModel(
-              id: 'new',
-              type: 'circle',
-              pos: const Vec2(10, 10),
-              sz: const Vec2(10, 10),
-              col: 0)
-          .toJson()
+        id: 'new',
+        type: 'circle',
+        pos: const Vec2(10, 10),
+        sz: const Vec2(10, 10),
+        col: 0,
+      ).toJson(),
     });
 
     server.processMessage(client, createMsg);
@@ -233,18 +242,21 @@ void main() {
   test('processMessage handles bulk_update', () {
     final client = FakeWebSocketChannel();
     server.handleConnection(client, null);
-    engine.addNode(NodeModel(
+    engine.addNode(
+      NodeModel(
         id: 'node1',
         type: 'rect',
         pos: const Vec2(0, 0),
         sz: const Vec2(10, 10),
-        col: 0));
+        col: 0,
+      ),
+    );
 
     final msg = jsonEncode({
       'type': 'bulk_update',
       'positions': {
-        'node1': {'x': 50.0, 'y': 50.0}
-      }
+        'node1': {'x': 50.0, 'y': 50.0},
+      },
     });
     server.processMessage(client, msg);
     expect(engine.nodes.first.position.value.x, 50.0);
@@ -253,16 +265,19 @@ void main() {
   test('processMessage handles bulk_color', () {
     final client = FakeWebSocketChannel();
     server.handleConnection(client, null);
-    engine.addNode(NodeModel(
+    engine.addNode(
+      NodeModel(
         id: 'node1',
         type: 'rect',
         pos: const Vec2(0, 0),
         sz: const Vec2(10, 10),
-        col: 0));
+        col: 0,
+      ),
+    );
 
     final msg = jsonEncode({
       'type': 'bulk_color',
-      'colors': {'node1': 0xFF00FF00}
+      'colors': {'node1': 0xFF00FF00},
     });
     server.processMessage(client, msg);
     expect(engine.nodes.first.color.value, 0xFF00FF00);
@@ -274,7 +289,7 @@ void main() {
 
     final msg = jsonEncode({
       'type': 'presence_update',
-      'cursor': {'x': 10.0, 'y': 10.0}
+      'cursor': {'x': 10.0, 'y': 10.0},
     });
     // Just ensure no crash, presence is ephemeral on server (just broadcast)
     server.processMessage(client, msg);
@@ -283,7 +298,9 @@ void main() {
   test('processMessage handles invalid json gracefully', () {
     final client = FakeWebSocketChannel();
     expect(
-        () => server.processMessage(client, 'invalid json'), returnsNormally);
+      () => server.processMessage(client, 'invalid json'),
+      returnsNormally,
+    );
     // Prints 'Invalid message: ...'
   });
 
@@ -304,8 +321,9 @@ void main() {
     final adapter = FakeServerAdapter();
     await Levit.delete<ServerController>(force: true);
     server = Levit.put(
-        () => ServerController(autoStart: false, adapter: adapter),
-        permanent: true);
+      () => ServerController(autoStart: false, adapter: adapter),
+      permanent: true,
+    );
 
     // Force empty logic verification
     server.engine.nodes.clear();

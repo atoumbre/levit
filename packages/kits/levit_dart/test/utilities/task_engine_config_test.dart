@@ -45,8 +45,11 @@ void main() {
 
       engine.config(maxConcurrent: 2);
       await Future.delayed(Duration.zero);
-      expect(runningCount, 2,
-          reason: '2 tasks should run after updating maxConcurrent');
+      expect(
+        runningCount,
+        2,
+        reason: '2 tasks should run after updating maxConcurrent',
+      );
 
       engine.config(maxConcurrent: 3);
       await Future.delayed(Duration.zero);
@@ -111,37 +114,34 @@ void main() {
       expect(cache2.storage.containsKey('t2'), isTrue);
     });
 
-    test('private sentinel onTaskError unset is callable (coverage)', () {
+    test('unset error handlers accept errors without throwing', () {
       final classMirror = reflectClass(LevitTaskEngine);
       final lib = classMirror.owner as LibraryMirror;
       final symbol = MirrorSystem.getSymbol('_onTaskErrorUnset', lib);
 
       expect(
-        () => classMirror.invoke(
-          symbol,
-          [StateError('noop'), StackTrace.current],
-        ),
+        () => classMirror.invoke(symbol, [
+          StateError('noop'),
+          StackTrace.current,
+        ]),
         returnsNormally,
       );
     });
 
-    test('private sentinel onTaskEvent unset is callable (coverage)', () {
+    test('unset event handlers accept task events without throwing', () {
       final classMirror = reflectClass(LevitTaskEngine);
       final lib = classMirror.owner as LibraryMirror;
       final symbol = MirrorSystem.getSymbol('_onTaskEventUnset', lib);
 
       expect(
-        () => classMirror.invoke(
-          symbol,
-          [
-            LevitTaskEvent(
-              type: LevitTaskEventType.started,
-              taskId: 'noop',
-              priority: TaskPriority.normal,
-              maxRetries: 0,
-            ),
-          ],
-        ),
+        () => classMirror.invoke(symbol, [
+          LevitTaskEvent(
+            type: LevitTaskEventType.started,
+            taskId: 'noop',
+            priority: TaskPriority.normal,
+            maxRetries: 0,
+          ),
+        ]),
         returnsNormally,
       );
     });

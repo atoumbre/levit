@@ -1,0 +1,10 @@
+Computing fixes in levit_devtools...
+Applying fixes...
+
+lib/levit_devtools.dart
+  curly_braces_in_flow_control_structures - 6 fixes
+
+test/relay_test.dart
+  curly_braces_in_flow_control_structures - 1 fix
+
+7 fixes made in 2 files.

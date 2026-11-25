@@ -3,10 +3,7 @@ part of '../levit_dart_core.dart';
 /// A lifecycle boundary that owns arbitrary cleanup resources.
 abstract interface class LevitResourceOwner {
   /// Registers [resource] for deterministic cleanup and returns it.
-  T own<T>(T resource);
-
-  /// Compatibility alias for [own].
-  T autoDispose<T>(T resource);
+  T own<T>(T resource, {FutureOr<void> Function(T resource)? dispose});
 
   /// Whether cleanup has completed.
   bool get isDisposed;
@@ -20,12 +17,51 @@ abstract interface class LevitResourceOwner {
 /// Apply this mixin to a [LevitScopeDisposable] when a non-controller resource
 /// needs the same ownership semantics as [LevitController].
 mixin LevitResourceOwnership on LevitScopeDisposable
-    implements LevitResourceOwner {
+    implements LevitResourceOwner, LevitDrainable, LevitExecutionBoundary {
   bool _resourceClosing = false;
   bool _resourceDisposed = false;
   final List<Object> _ownedResources = <Object>[];
+  final Map<Object, FutureOr<void> Function()> _disposers = Map.identity();
+  final List<LevitDisposalFailure> _requestFailures = [];
+  final Set<Future<void>> _capturedInitializations = {};
+  Future<void>? _resourceDrainFuture;
   final Completer<void> _resourceDisposedCompleter = Completer<void>();
   Future<void>? _resourceCloseFuture;
+  static final Object _initializationZone = Object();
+
+  R _runInitialization<R>(R Function() initialize) {
+    final execution = _OwnerInitialization(this);
+    try {
+      final result = runZoned(
+        initialize,
+        zoneValues: {
+          _initializationZone: [
+            ...?Zone.current[_initializationZone]
+                as List<_OwnerInitialization>?,
+            execution,
+          ],
+        },
+      );
+      if (result is Future) {
+        unawaited(
+          result.then<void>(
+            (_) {
+              execution.active = false;
+            },
+            onError: (Object _, StackTrace __) {
+              execution.active = false;
+            },
+          ),
+        );
+      } else {
+        execution.active = false;
+      }
+      return result;
+    } catch (_) {
+      execution.active = false;
+      rethrow;
+    }
+  }
 
   /// A diagnostic owner path applied to otherwise unnamed reactive resources.
   @protected
@@ -45,7 +81,7 @@ mixin LevitResourceOwnership on LevitScopeDisposable
   Iterable<Object> get ownedResources => _ownedResources;
 
   @override
-  T own<T>(T resource) {
+  T own<T>(T resource, {FutureOr<void> Function(T resource)? dispose}) {
     if (_resourceClosing || _resourceDisposed) {
       throw StateError(
         '${runtimeType.toString()} cannot own resources after closing.',
@@ -54,10 +90,19 @@ mixin LevitResourceOwnership on LevitScopeDisposable
     if (resource == null) return resource;
 
     final object = resource as Object;
-    final alreadyOwned =
-        _ownedResources.any((candidate) => identical(candidate, object));
+    if (dispose == null && !Levit._canDisposeItem(object)) {
+      throw ArgumentError.value(
+        resource,
+        'resource',
+        'Supply an explicit dispose callback for this resource type.',
+      );
+    }
+    final alreadyOwned = _ownedResources.any(
+      (candidate) => identical(candidate, object),
+    );
     if (!alreadyOwned) {
       _ownedResources.add(object);
+      if (dispose != null) _disposers[object] = () => dispose(resource);
     }
 
     if (object is LxReactive && object.ownerId == null) {
@@ -66,8 +111,36 @@ mixin LevitResourceOwnership on LevitScopeDisposable
     return resource;
   }
 
-  @override
-  T autoDispose<T>(T resource) => own(resource);
+  // Only the initialization capture mechanism may adopt resources after
+  // cancellation. Its tracked future keeps the owner alive until adoption ends.
+  void _adoptCaptured(LxReactive resource) {
+    if (_resourceDisposed) {
+      throw StateError('Initialization outlived its owner.');
+    }
+    if (!_ownedResources.any((existing) => identical(existing, resource))) {
+      _ownedResources.add(resource);
+      resource.ownerId ??= resourceOwnerPath;
+    }
+  }
+
+  void _trackCapturedInitialization(Future<void> operation) {
+    late final Future<void> tracked;
+    tracked = operation
+        .then<void>(
+          (_) {},
+          onError: (Object error, StackTrace stack) {
+            _requestFailures.add(
+              LevitDisposalFailure(
+                resource: this,
+                error: error,
+                stackTrace: stack,
+              ),
+            );
+          },
+        )
+        .whenComplete(() => _capturedInitializations.remove(tracked));
+    _capturedInitializations.add(tracked);
+  }
 
   /// Reconciles already-owned reactive diagnostics after scope attachment.
   @protected
@@ -80,41 +153,172 @@ mixin LevitResourceOwnership on LevitScopeDisposable
     }
   }
 
+  /// Runs after closing begins and before any owned resources are released.
+  /// Override to await work that still uses those resources. Always delegate
+  /// to super. Do not await this owner's disposal from work being drained.
+  @protected
+  @mustCallSuper
+  FutureOr<void> onBeforeClose() {}
+
   @override
   @mustCallSuper
   FutureOr<void> onClose() {
+    assertCanDispose();
     return _resourceCloseFuture ??= _closeOwnedResources();
+  }
+
+  /// Rejects cleanup from a callback owned by this resource boundary.
+  @protected
+  void assertCanDispose() {
+    final initializing =
+        Zone.current[_initializationZone] as List<_OwnerInitialization>?;
+    if (initializing?.any(
+          (execution) => execution.active && identical(execution.owner, this),
+        ) ??
+        false) {
+      throw StateError(
+        'Initialization cannot dispose its own owner; request cancellation instead.',
+      );
+    }
+    for (final resource in _ownedResources) {
+      if (resource is LevitExecutionBoundary) resource.assertCanDispose();
+      if (resource is LxResource) resource.assertCanClose();
+    }
+    if (_ownedResources.any(LxExecutionContext.isExecuting)) {
+      throw StateError(
+        'Owned work cannot dispose its own owner; request cancellation instead.',
+      );
+    }
+  }
+
+  @override
+  void requestCancel() {
+    if (_resourceClosing) return;
+    _resourceClosing = true;
+    for (final resource in _ownedResources.toList()) {
+      try {
+        if (resource is LxAsyncResource) resource.requestCancel();
+        if (resource is LevitDrainable) resource.requestCancel();
+        if (resource is Timer) resource.cancel();
+      } catch (error, stackTrace) {
+        _requestFailures.add(
+          LevitDisposalFailure(
+            resource: resource,
+            error: error,
+            stackTrace: stackTrace,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Future<void> drain() {
+    assertCanDispose();
+    requestCancel();
+    return _resourceDrainFuture ??= _drainOwnedWork();
+  }
+
+  Future<void> _drainOwnedWork() async {
+    while (_capturedInitializations.isNotEmpty) {
+      await Future.wait(_capturedInitializations.toList());
+    }
+    final failures = <LevitDisposalFailure>[..._requestFailures];
+    for (final resource in _ownedResources.toList()) {
+      // Capture runs during constructors; only cancel newly adopted producers
+      // once initialization has completed and their fields are initialized.
+      try {
+        if (resource is LxAsyncResource) resource.requestCancel();
+        if (resource is LevitDrainable) resource.requestCancel();
+      } catch (error, stackTrace) {
+        failures.add(
+          LevitDisposalFailure(
+            resource: resource,
+            error: error,
+            stackTrace: stackTrace,
+          ),
+        );
+      }
+    }
+    Future<void> attempt(
+      Object resource,
+      FutureOr<void> Function() operation,
+    ) async {
+      try {
+        await operation();
+      } on LevitDisposalException catch (error) {
+        failures.addAll(error.failures);
+      } catch (error, stackTrace) {
+        failures.add(
+          LevitDisposalFailure(
+            resource: resource,
+            error: error,
+            stackTrace: stackTrace,
+          ),
+        );
+      }
+    }
+
+    await attempt(this, onBeforeClose);
+    for (final resource in _ownedResources.reversed.toList()) {
+      if (resource is LxAsyncResource) await attempt(resource, resource.drain);
+      if (resource is LevitDrainable) await attempt(resource, resource.drain);
+    }
+    if (failures.isNotEmpty) throw LevitDisposalException.aggregate(failures);
   }
 
   Future<void> _closeOwnedResources() async {
     if (_resourceDisposed) return;
-    _resourceClosing = true;
     final failures = <LevitDisposalFailure>[];
-
-    for (final resource in _ownedResources.reversed.toList(growable: false)) {
-      try {
-        final result = Levit._levitDisposeItem(resource);
-        if (result is Future) {
-          await result;
-        }
-      } catch (error, stackTrace) {
-        failures.add(LevitDisposalFailure(
-          resource: resource,
+    try {
+      await drain();
+    } on LevitDisposalException catch (error) {
+      failures.addAll(error.failures);
+    } catch (error, stackTrace) {
+      failures.add(
+        LevitDisposalFailure(
+          resource: this,
           error: error,
           stackTrace: stackTrace,
-        ));
+        ),
+      );
+    }
+    for (final resource in _ownedResources.reversed.toList(growable: false)) {
+      try {
+        final disposer = _disposers[resource];
+        await (disposer != null
+            ? disposer()
+            : Levit._levitDisposeItem(resource));
+      } on LevitDisposalException catch (error) {
+        failures.addAll(error.failures);
+      } catch (error, stackTrace) {
+        if (!failures.any(
+          (failure) =>
+              identical(failure.resource, resource) &&
+              identical(failure.error, error),
+        )) {
+          failures.add(
+            LevitDisposalFailure(
+              resource: resource,
+              error: error,
+              stackTrace: stackTrace,
+            ),
+          );
+        }
       }
     }
     _ownedResources.clear();
+    _disposers.clear();
     _resourceDisposed = true;
-    if (!_resourceDisposedCompleter.isCompleted) {
-      _resourceDisposedCompleter.complete();
-    }
-
-    if (failures.isNotEmpty) {
-      throw LevitDisposalException(failures);
-    }
+    _resourceDisposedCompleter.complete();
+    if (failures.isNotEmpty) throw LevitDisposalException.aggregate(failures);
   }
+}
+
+final class _OwnerInitialization {
+  _OwnerInitialization(this.owner);
+  final LevitResourceOwnership owner;
+  bool active = true;
 }
 
 /// A base class for business logic components.
@@ -123,7 +327,7 @@ mixin LevitResourceOwnership on LevitScopeDisposable
 /// automated resource cleanup and integration with the dependency injection system.
 ///
 /// Implementers should override [onInit] for setup and [onClose] for cleanup.
-/// Use [autoDispose] to simplify resource management.
+/// Use [own] to simplify resource management.
 ///
 /// // Example usage:
 /// ```dart
@@ -132,21 +336,22 @@ mixin LevitResourceOwnership on LevitScopeDisposable
 ///
 ///   @override
 ///   void onInit() {
-///     autoDispose(count); // Cleanup on close
+///     super.onInit();
+///     own(count); // Cleanup on close
 ///   }
 /// }
 /// ```
 ///
-/// Prefer [LxWorker] + [autoDispose] for reload / reaction side effects instead
+/// Prefer [LxWorker] + [own] for reload / reaction side effects instead
 /// of raw `.stream.listen`:
 ///
 /// ```dart
-/// autoDispose(LxWorker(contextVar, (_) async {
+/// own(LxWorker(contextVar, (_) async {
 ///   await reload();
 /// }));
 /// ```
 ///
-/// [LxWorker] is an [LxReactive], so [autoDispose] closes it with the controller.
+/// [LxWorker] is an [LxReactive], so [own] closes it with the controller.
 ///
 /// Lifecycle:
 /// 1.  **Construction**: Instance created.
@@ -156,9 +361,6 @@ mixin LevitResourceOwnership on LevitScopeDisposable
 abstract class LevitController extends LevitScopeDisposable
     with LevitResourceOwnership {
   bool _initialized = false;
-
-  /// Whether [onInit] has been executed.
-  bool get initialized => _initialized;
 
   /// Whether the controller has been disposed and closed.
   bool get isClosed => isClosing || isDisposed;
@@ -216,30 +418,13 @@ abstract class LevitController extends LevitScopeDisposable
     }
   }
 
-  /// Registers [object] for automatic cleanup when the controller closes.
-  ///
-  /// Supports:
-  /// *   [LxReactive] (closes the reactive)
-  /// *   [StreamSubscription] (cancels subscription)
-  /// *   [Timer] (cancels timer)
-  /// *   [Sink] (closes sink)
-  /// *   Anything with a `dispose()`, `close()`, or `cancel()` method.
-  ///
-  /// Returns the [object] to allow inline use during initialization.
-  ///
-  /// // Example usage:
-  /// ```dart
-  /// late final sub = autoDispose(stream.listen((_) {}));
-  /// ```
-  T autoDispose<T>(T object) => own(object);
-
   /// Executes [action] and suppresses its result if this controller closes first.
   ///
   /// This is a cooperative lifecycle guard: it does not cancel the underlying
   /// operation, but it prevents stale post-await code from using a result after
-  /// disposal when [cancelOnClose] is `true`.
+  /// disposal when [discardResultOnClose] is `true`.
   ///
-  /// If [cancelOnClose] is `true` and the controller is already closed, this
+  /// If [discardResultOnClose] is `true` and the controller is already closed, this
   /// method returns `null` without invoking [action].
   ///
   /// If [onError] is provided, it is called before re-throwing any error from [action].
@@ -249,14 +434,14 @@ abstract class LevitController extends LevitScopeDisposable
   /// Throws any error thrown by [action].
   Future<T?> runGuardedAsync<T>(
     FutureOr<T> Function() action, {
-    bool cancelOnClose = true,
+    bool discardResultOnClose = true,
     void Function(Object error, StackTrace stackTrace)? onError,
   }) async {
-    if (cancelOnClose && isClosed) return null;
+    if (discardResultOnClose && isClosed) return null;
 
     try {
       final result = await action();
-      if (cancelOnClose && isClosed) return null;
+      if (discardResultOnClose && isClosed) return null;
       return result;
     } catch (e, s) {
       onError?.call(e, s);
@@ -267,7 +452,7 @@ abstract class LevitController extends LevitScopeDisposable
   /// Called immediately after the controller is initialized.
   ///
   /// Override to perform setup logic like starting API calls or setting up listeners.
-  /// Use [autoDispose] here to ensure resources are tracked.
+  /// Use [own] here to ensure resources are tracked.
   @override
   @mustCallSuper
   void onInit() {
@@ -276,7 +461,7 @@ abstract class LevitController extends LevitScopeDisposable
 
   /// Called when the controller is removed from memory.
   ///
-  /// Releases all resources registered via [autoDispose].
+  /// Releases all resources registered via [own].
   /// Override to perform additional custom cleanup.
   @override
   @mustCallSuper

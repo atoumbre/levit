@@ -45,10 +45,16 @@ void main() {
     print('Final value: $lastValue');
     print('Glitch detected: $glitchDetected');
 
-    expect(listenerCallCount, updates,
-        reason: 'Should receive one notification per update (no initial)');
-    expect(lastValue, updates + chainLength - 1,
-        reason: 'Final value should be correct');
+    expect(
+      listenerCallCount,
+      updates,
+      reason: 'Should receive one notification per update (no initial)',
+    );
+    expect(
+      lastValue,
+      updates + chainLength - 1,
+      reason: 'Final value should be correct',
+    );
     expect(glitchDetected, isFalse, reason: 'System should be glitch-free');
 
     endNode.removeListener(checkGlitch);

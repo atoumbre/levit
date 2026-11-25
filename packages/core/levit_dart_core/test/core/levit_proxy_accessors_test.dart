@@ -2,7 +2,7 @@ import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('Levit Proxy Accessors Coverage', () {
+  group('Levit facade delegates reactive configuration and operations', () {
     test('Levit.captureStackTrace getter/setter', () {
       final original = Levit.captureStackTrace;
       Levit.captureStackTrace = !original;
@@ -54,11 +54,7 @@ void main() {
     });
 
     test('Levit.runWithContext proxies', () {
-      final context = LxListenerContext(
-        type: 'test',
-        id: 1,
-        data: null,
-      );
+      final context = LxListenerContext(type: 'test', id: 1, data: null);
       final result = Levit.runWithContext(context, () => 'done');
       expect(result, 'done');
     });

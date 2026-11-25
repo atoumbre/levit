@@ -14,69 +14,78 @@ class MockMiddleware extends LevitReactiveMiddleware {
 }
 
 void main() {
-  group('levit_flutter_core Final Gaps', () {
+  group('Async view errors and reactive widget lifecycle', () {
     setUpAll(() {
       LevitReactiveMiddleware.add(MockMiddleware());
     });
 
-    testWidgets('LAsyncView UnimplementedError coverage', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: LAsyncView<int>(
-            resolver: (context) => Future.value(1),
+    testWidgets(
+      'LAsyncView throws when neither builder nor buildView is supplied',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LAsyncView<int>(resolver: (context) => Future.value(1)),
           ),
-        ),
-      );
-      await tester.pump();
-      expect(tester.takeException(), isA<UnimplementedError>());
-    });
+        );
+        await tester.pump();
+        expect(tester.takeException(), isA<UnimplementedError>());
+      },
+    );
 
-    testWidgets('LAsyncView default error coverage', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: LAsyncView<int>(
-            resolver: (context) => Future.error('fail'),
-            builder: (context, val) => Text('$val'),
+    testWidgets(
+      'LAsyncView displays resolver failures with its default error builder',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LAsyncView<int>(
+              resolver: (context) => Future.error('fail'),
+              builder: (context, val) => Text('$val'),
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Error: fail'), findsOneWidget);
-    });
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Error: fail'), findsOneWidget);
+      },
+    );
 
-    testWidgets('LWatchStatus context and lifecycle coverage', (tester) async {
-      final x = LxVar<LxStatus<int>>(LxIdle());
+    testWidgets(
+      'LStatusBuilder renders success after an idle state and unmounts',
+      (tester) async {
+        final x = LxVar<LxStatus<int>>(LxIdle());
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: LStatusBuilder<int>(
-            x,
-            onSuccess: (val) => Text('Val: $val'),
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LStatusBuilder<int>(x, onSuccess: (val) => Text('Val: $val')),
           ),
-        ),
-      );
+        );
 
-      // Hits mount context (383, 389-393 in watch.dart)
+        // Hits mount context (383, 389-393 in watch.dart)
 
-      x.value = LxSuccess(42);
-      await tester.pump();
-      expect(find.text('Val: 42'), findsOneWidget);
+        x.value = LxSuccess(42);
+        await tester.pump();
+        expect(find.text('Val: 42'), findsOneWidget);
 
-      // Trigger unmount context (376 in watch.dart)
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
+        // Trigger unmount context (376 in watch.dart)
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
 
-    testWidgets('LWatchStatus default error coverage', (tester) async {
-      final x = LxVar<LxStatus<int>>(LxError('err', StackTrace.empty));
-      await tester.pumpWidget(
-        MaterialApp(
-          home: LStatusBuilder<int>(x, onSuccess: (v) => Text('$v')),
-        ),
-      );
-      expect(find.textContaining('Error: err'), findsOneWidget);
-    });
+    testWidgets(
+      'LStatusBuilder displays errors with its default error builder',
+      (tester) async {
+        final x = LxVar<LxStatus<int>>(LxError('err', StackTrace.empty));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LStatusBuilder<int>(x, onSuccess: (v) => Text('$v')),
+          ),
+        );
+        expect(find.textContaining('Error: err'), findsOneWidget);
+      },
+    );
 
-    testWidgets('LWatch addReactive coverage', (tester) async {
+    testWidgets('LWatch mounts with graph-observing middleware', (
+      tester,
+    ) async {
       final x = 0.lx;
       await tester.pumpWidget(
         MaterialApp(

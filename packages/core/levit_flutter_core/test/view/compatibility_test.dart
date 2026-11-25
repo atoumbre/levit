@@ -60,11 +60,13 @@ void main() {
       final controller = TestController();
       Levit.put(() => controller); // Register globally for LView lookup
 
-      await tester.pumpWidget(MaterialApp(
-        home: LView<TestController>(
-          builder: (context, c) => Text('Composition: ${c.count.value}'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LView<TestController>(
+            builder: (context, c) => Text('Composition: ${c.count.value}'),
+          ),
         ),
-      ));
+      );
 
       expect(find.text('Composition: 1'), findsOneWidget);
 
@@ -73,16 +75,14 @@ void main() {
       await tester.pump();
       expect(find.text('Composition: 2'), findsOneWidget);
 
-      Levit.reset();
+      await Levit.reset();
     });
 
     testWidgets('LView supports Extension', (tester) async {
       final controller = TestController();
       Levit.put(() => controller);
 
-      await tester.pumpWidget(const MaterialApp(
-        home: ExtendedLView(),
-      ));
+      await tester.pumpWidget(const MaterialApp(home: ExtendedLView()));
 
       expect(find.text('Extended: 1'), findsOneWidget);
 
@@ -90,43 +90,46 @@ void main() {
       await tester.pump();
       expect(find.text('Extended: 2'), findsOneWidget);
 
-      Levit.reset();
+      await Levit.reset();
     });
 
     testWidgets('LScopedView supports Composition', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: LScopedView<TestController>(
-          dependencyFactory: (scope) =>
-              scope.put<TestController>(() => TestController()),
-          builder: (context, c) => Text('ScopedComposition: ${c.count.value}'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LScopedView<TestController>(
+            dependencyFactory: (scope) =>
+                scope.put<TestController>(() => TestController()),
+            builder: (context, c) =>
+                Text('ScopedComposition: ${c.count.value}'),
+          ),
         ),
-      ));
+      );
 
       expect(find.text('ScopedComposition: 1'), findsOneWidget);
     });
 
     testWidgets('LScopedView supports Extension', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: ExtendedLScopedView(),
-      ));
+      await tester.pumpWidget(const MaterialApp(home: ExtendedLScopedView()));
 
       expect(find.text('ExtendedScoped: 1'), findsOneWidget);
     });
 
     testWidgets('LAsyncScope + LView supports Composition', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: LAsyncScope(
-          dependencyFactory: (scope) async {
-            await Future.delayed(const Duration(milliseconds: 10));
-            scope.put(() => TestController());
-          },
-          loading: (_) => const Text('Loading...'),
-          child: LView<TestController>(
-            builder: (context, c) =>
-                Text('AsyncScopeComposition: ${c.count.value}'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LAsyncScope(
+            dependencyFactory: (scope) async {
+              await Future.delayed(const Duration(milliseconds: 10));
+              scope.put(() => TestController());
+            },
+            loading: (_) => const Text('Loading...'),
+            child: LView<TestController>(
+              builder: (context, c) =>
+                  Text('AsyncScopeComposition: ${c.count.value}'),
+            ),
           ),
         ),
-      ));
+      );
 
       expect(find.text('Loading...'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 20));
@@ -134,9 +137,9 @@ void main() {
     });
 
     testWidgets('LAsyncScope + LView supports Extension', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: const ExtendedLAsyncScopeView(),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(home: const ExtendedLAsyncScopeView()),
+      );
 
       expect(find.text('Loading...'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 20));

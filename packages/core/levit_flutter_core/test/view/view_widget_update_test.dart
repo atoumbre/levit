@@ -13,27 +13,29 @@ void main() {
     final controller2 = TestController('Two');
 
     // We'll use a stateful parent to trigger updates
-    await tester.pumpWidget(MaterialApp(
-      home: StatefulBuilder(
-        builder: (context, setState) {
-          return Column(
-            children: [
-              LView<TestController>(
-                // Resolver that captures local state to simulate change
-                resolver: (context) => (tester.takeException() == null)
-                    ? controller1
-                    : controller2, // This is a bit hacky, let's just use a key change or parent state
-                builder: (context, c) => Text(c.label),
-              ),
-              ElevatedButton(
-                onPressed: () => setState(() {}),
-                child: const Text('Update'),
-              ),
-            ],
-          );
-        },
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              children: [
+                LView<TestController>(
+                  // Resolver that captures local state to simulate change
+                  resolver: (context) => (tester.takeException() == null)
+                      ? controller1
+                      : controller2, // This is a bit hacky, let's just use a key change or parent state
+                  builder: (context, c) => Text(c.label),
+                ),
+                ElevatedButton(
+                  onPressed: () => setState(() {}),
+                  child: const Text('Update'),
+                ),
+              ],
+            );
+          },
+        ),
       ),
-    ));
+    );
 
     // Actually, LView is stateful. To trigger didUpdateWidget, we need to rebuild the parent
     // AND have the LView widget itself be "new" but at the same location.
@@ -58,8 +60,9 @@ void main() {
     expect(find.text('Two'), findsOneWidget);
   });
 
-  testWidgets('LView does not re-resolve controller without args',
-      (tester) async {
+  testWidgets('LView does not re-resolve controller without args', (
+    tester,
+  ) async {
     final controller1 = TestController('One');
     final controller2 = TestController('Two');
 
@@ -99,13 +102,15 @@ void main() {
     final firstText = tester.widget<Text>(find.byType(Text)).data!;
 
     await tester.pumpWidget(buildStage(2));
+    await tester.pumpAndSettle();
     final secondText = tester.widget<Text>(find.byType(Text)).data!;
 
     expect(secondText, isNot(equals(firstText)));
   });
 
-  testWidgets('LAsyncView re-resolves when inherited scope changes',
-      (tester) async {
+  testWidgets('LAsyncView re-resolves when inherited scope changes', (
+    tester,
+  ) async {
     Widget buildStage(int arg) {
       return MaterialApp(
         home: LScope(

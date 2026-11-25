@@ -36,17 +36,19 @@ class _NoopReactiveMiddleware extends LevitReactiveMiddleware {
 }
 
 (List<LevitReactiveMiddleware>, Map<Object, LevitReactiveMiddleware>)
-    _getRegistryViaMirrors() {
+_getRegistryViaMirrors() {
   final classMirror = reflectClass(LevitReactiveMiddleware);
   final lib = classMirror.owner as LibraryMirror;
 
   final middlewaresSymbol = MirrorSystem.getSymbol('_middlewares', lib);
   final byTokenSymbol = MirrorSystem.getSymbol('_middlewaresByToken', lib);
 
-  final middlewares = classMirror.getField(middlewaresSymbol).reflectee
-      as List<LevitReactiveMiddleware>;
-  final byToken = classMirror.getField(byTokenSymbol).reflectee
-      as Map<Object, LevitReactiveMiddleware>;
+  final middlewares =
+      classMirror.getField(middlewaresSymbol).reflectee
+          as List<LevitReactiveMiddleware>;
+  final byToken =
+      classMirror.getField(byTokenSymbol).reflectee
+          as Map<Object, LevitReactiveMiddleware>;
 
   return (middlewares, byToken);
 }

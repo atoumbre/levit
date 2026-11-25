@@ -50,7 +50,9 @@ class HeadlessBenchmarkRunner {
     } finally {
       try {
         await impl.teardown();
-      } catch (e) {
+      } catch (e, stack) {
+        success = false;
+        error = [if (error != null) error, 'Teardown: $e\n$stack'].join('\n');
         print('Error tearing down ${benchmark.name}: $e');
       }
     }
@@ -60,6 +62,10 @@ class HeadlessBenchmarkRunner {
       benchmarkName: benchmark.name,
       classification: benchmark.classification,
       comparisonNote: benchmark.comparisonNote,
+      implementationLabel: benchmark.implementationLabel(framework),
+      measurement: benchmark.isUI
+          ? 'Widget-test pump wall time (not device rendering)'
+          : 'Completed logic work (wall time)',
       samplesMicros: success ? samples : const [],
       warmupIterations: warmupIterations,
       success: success,
@@ -82,11 +88,13 @@ class HeadlessBenchmarkRunner {
       await impl.setup();
 
       // Mount the widget
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Builder(builder: (context) => impl.build(context)),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(builder: (context) => impl.build(context)),
+          ),
         ),
-      ));
+      );
 
       // Allow layout/paint to settle
       await tester.pumpAndSettle();
@@ -106,17 +114,22 @@ class HeadlessBenchmarkRunner {
         await impl.verify();
         samples.add(stopwatch.elapsedMicroseconds);
       }
-
-      // Unmount
-      await tester.pumpWidget(const SizedBox.shrink());
     } catch (e, stack) {
       success = false;
       error = '$e\n$stack';
       print('Error running ${benchmark.name} for ${framework.label}: $e');
     } finally {
       try {
+        await tester.pumpWidget(const SizedBox.shrink());
+      } catch (e, stack) {
+        success = false;
+        error = [if (error != null) error, 'Unmount: $e\n$stack'].join('\n');
+      }
+      try {
         await impl.teardown();
-      } catch (e) {
+      } catch (e, stack) {
+        success = false;
+        error = [if (error != null) error, 'Teardown: $e\n$stack'].join('\n');
         print('Error tearing down ${benchmark.name}: $e');
       }
     }
@@ -126,6 +139,10 @@ class HeadlessBenchmarkRunner {
       benchmarkName: benchmark.name,
       classification: benchmark.classification,
       comparisonNote: benchmark.comparisonNote,
+      implementationLabel: benchmark.implementationLabel(framework),
+      measurement: benchmark.isUI
+          ? 'Widget-test pump wall time (not device rendering)'
+          : 'Completed logic work (wall time)',
       samplesMicros: success ? samples : const [],
       warmupIterations: warmupIterations,
       success: success,

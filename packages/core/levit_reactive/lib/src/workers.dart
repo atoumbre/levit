@@ -77,257 +77,213 @@ class LxWorkerStat {
 /// // Log every change
 /// final worker = LxWorker(count, (v) => print('Changed: $v'));
 /// ```
-class LxWorker<T> extends LxBase<LxWorkerStat> {
-  void _updateStat(LxWorkerStat Function(LxWorkerStat val) fn) {
-    if (isDisposed) return;
-    _setValueInternal(fn(value));
-  }
-
-  /// The reactive source being monitored.
-  final LxReactive<T> source;
-
-  /// The callback to execute whenever the source notifies a change.
-  final FutureOr<void> Function(T value) callback;
-
-  final Function(Object error, StackTrace stackTrace)? _onError;
-  final Function(Object error, StackTrace stackTrace)? _onProcessingError;
+class LxWorker<T> extends LxBase<LxWorkerStat>
+    with _LxAsyncLifecycle<LxWorkerStat> {
+  /// The observed value. This worker borrows its source.
+  final LxReadable<T> source;
+  final FutureOr<void> Function(T value, LxExecutionContext context) _callback;
+  final void Function(Object error, StackTrace stackTrace)? _onError;
+  final void Function(Object error, StackTrace stackTrace)? _onProcessingError;
   final bool? _enableMonitoring;
 
-  /// Admission policy for asynchronous callback executions.
+  /// Latest requests cooperative cancellation of earlier callbacks.
+  /// Exhaust-latest runs one callback and retains one trailing value.
   final LxAsyncConcurrency concurrency;
-
-  StreamSubscription? _subscription;
+  StreamSubscription<T>? _subscription;
   void Function()? _removeListener;
   bool _executionRunning = false;
   bool _trailingExecutionRequested = false;
   late T _trailingValue;
 
-  /// Returns `true` if this watcher is capturing performance metrics.
   bool get isMonitoringEnabled => _enableMonitoring ?? Lx.enableWatchMonitoring;
 
-  /// Creates a new watcher instance.
+  /// Observes [source], tracking asynchronous callback completion.
   LxWorker(
     this.source,
-    this.callback, {
-    Function(Object error, StackTrace stackTrace)? onError,
-    Function(Object error, StackTrace stackTrace)? onProcessingError,
+    FutureOr<void> Function(T value) callback, {
+    void Function(Object error, StackTrace stackTrace)? onError,
+    void Function(Object error, StackTrace stackTrace)? onProcessingError,
     bool? enableMonitoring,
     String? name,
     this.concurrency = LxAsyncConcurrency.latest,
-  })  : _onError = onError,
-        _onProcessingError = onProcessingError,
-        _enableMonitoring = enableMonitoring,
-        super(const LxWorkerStat(), name: name) {
+  }) : _callback = ((value, _) => callback(value)),
+       _onError = onError,
+       _onProcessingError = onProcessingError,
+       _enableMonitoring = enableMonitoring,
+       super(const LxWorkerStat(), name: name) {
+    _init();
+  }
+
+  /// Observes [source] with an explicit per-execution cancellation context.
+  LxWorker.withContext(
+    this.source,
+    this._callback, {
+    void Function(Object error, StackTrace stackTrace)? onError,
+    void Function(Object error, StackTrace stackTrace)? onProcessingError,
+    bool? enableMonitoring,
+    String? name,
+    this.concurrency = LxAsyncConcurrency.latest,
+  }) : _onError = onError,
+       _onProcessingError = onProcessingError,
+       _enableMonitoring = enableMonitoring,
+       super(const LxWorkerStat(), name: name) {
     _init();
   }
 
   void _init() {
-    late void Function(T value) executeCallback;
-
-    void finishExecution() {
-      if (concurrency != LxAsyncConcurrency.exhaustLatest) return;
-      _executionRunning = false;
-      if (!_trailingExecutionRequested || isDisposed) return;
-
-      _trailingExecutionRequested = false;
-      final value = _trailingValue;
-      executeCallback(value);
-    }
-
-    void requestExecution(T value) {
-      if (concurrency == LxAsyncConcurrency.exhaustLatest &&
-          _executionRunning) {
-        _trailingValue = value;
-        _trailingExecutionRequested = true;
-        return;
-      }
-      executeCallback(value);
-    }
-
-    executeCallback = (T value) {
-      final monitoring = isMonitoringEnabled;
-      final start = monitoring ? DateTime.now() : null;
-      if (concurrency == LxAsyncConcurrency.exhaustLatest) {
-        _executionRunning = true;
-      }
-
-      try {
-        final result = callback(value);
-
-        if (result is Future) {
-          if (monitoring &&
-              !isDisposed &&
-              (!this.value.isAsync || !this.value.isProcessing)) {
-            _updateStat((s) => s.copyWith(isAsync: true, isProcessing: true));
-          }
-
-          unawaited(
-            result.then<void>((_) {
-              if (monitoring && !isDisposed) {
-                final end = DateTime.now();
-                final duration = end.difference(start!);
-                _updateStat((s) => s.copyWith(
-                      runCount: s.runCount + 1,
-                      lastDuration: duration,
-                      totalDuration: s.totalDuration + duration,
-                      lastRun: end,
-                      isProcessing: false,
-                      error: null,
-                    ));
-              }
-            }, onError: (Object e, StackTrace s) {
-              _onProcessingError?.call(e, s);
-              if (monitoring && !isDisposed) {
-                final end = DateTime.now();
-                final duration = end.difference(start!);
-                _updateStat((stat) => stat.copyWith(
-                      runCount: stat.runCount + 1,
-                      lastDuration: duration,
-                      totalDuration: stat.totalDuration + duration,
-                      lastRun: end,
-                      isProcessing: false,
-                      error: e,
-                    ));
-              }
-            }).whenComplete(finishExecution),
-          );
-        } else {
-          if (monitoring) {
-            final end = DateTime.now();
-            final duration = end.difference(start!);
-            _updateStat((s) => s.copyWith(
-                  runCount: s.runCount + 1,
-                  lastDuration: duration,
-                  totalDuration: s.totalDuration + duration,
-                  lastRun: end,
-                  isAsync: false,
-                  isProcessing: false,
-                  error: null,
-                ));
-          }
-          finishExecution();
-        }
-      } catch (e, s) {
-        _onProcessingError?.call(e, s);
-
-        if (monitoring) {
-          final end = DateTime.now();
-          final duration = end.difference(start!);
-          _updateStat((s) => s.copyWith(
-                runCount: s.runCount + 1,
-                lastDuration: duration,
-                totalDuration: s.totalDuration + duration,
-                lastRun: end,
-                isProcessing: false,
-                error: e,
-              ));
-        }
-
-        finishExecution();
-        if (_onProcessingError == null) rethrow;
-      }
-    };
-
     if (_onError == null) {
-      void listener() => requestExecution(source.value);
+      void listener() => _requestExecution(source.value);
       source.addListener(listener);
       _removeListener = () => source.removeListener(listener);
     } else {
       _subscription = source.stream.listen(
-        requestExecution,
+        _requestExecution,
         onError: _onError,
       );
     }
   }
 
+  void _requestExecution(T value) {
+    if (_workCancelled || isDisposed) return;
+    if (concurrency == LxAsyncConcurrency.exhaustLatest && _executionRunning) {
+      _trailingExecutionRequested = true;
+      _trailingValue = value;
+      return;
+    }
+    final context = _newExecution(
+      cancelPrevious: concurrency == LxAsyncConcurrency.latest,
+    );
+    _executionRunning = true;
+    final monitoring = isMonitoringEnabled;
+    final clock = monitoring ? (Stopwatch()..start()) : null;
+    void finish({Object? error, bool asynchronous = false}) {
+      _executionContexts.remove(context);
+      if (monitoring && !isDisposed && !_workCancelled) {
+        final duration = clock!.elapsed;
+        _setValueInternal(
+          LxWorkerStat(
+            runCount: this.value.runCount + 1,
+            lastDuration: duration,
+            totalDuration: this.value.totalDuration + duration,
+            lastRun: DateTime.now(),
+            error: error,
+            isAsync: asynchronous,
+            isProcessing: _executionContexts.isNotEmpty,
+          ),
+        );
+      }
+      _executionRunning = false;
+      if (_trailingExecutionRequested && !_workCancelled && !isDisposed) {
+        _trailingExecutionRequested = false;
+        _requestExecution(_trailingValue);
+      }
+    }
+
+    try {
+      final result = context._run(() => _callback(value, context));
+      if (result is Future) {
+        if (monitoring && !isDisposed && !_workCancelled) {
+          _setValueInternal(
+            this.value.copyWith(isAsync: true, isProcessing: true),
+          );
+        }
+        _trackWork(
+          result.then<void>(
+            (_) => finish(asynchronous: true),
+            onError: (Object error, StackTrace stack) {
+              finish(error: error, asynchronous: true);
+              if (error is! LxCancelledException) {
+                _onProcessingError?.call(error, stack);
+              }
+            },
+          ),
+          context,
+        );
+      } else {
+        finish();
+      }
+    } catch (error, stack) {
+      finish(error: error);
+      if (_onProcessingError != null) {
+        _onProcessingError(error, stack);
+      } else if (error is! LxCancelledException) {
+        rethrow;
+      }
+    }
+  }
+
   @override
-  void close() {
+  void requestCancel() {
+    if (_workCancelled) return;
+    super.requestCancel();
     _trailingExecutionRequested = false;
     _removeListener?.call();
-    _subscription?.cancel();
-    super.close();
+    _removeListener = null;
+    final cancellation = _subscription?.cancel();
+    _subscription = null;
+    if (cancellation != null) _trackWork(cancellation);
   }
 
   /// Triggers [callback] when a boolean [source] becomes `true`.
   static LxWorker<bool> watchTrue(
-    LxReactive<bool> source,
-    void Function() callback, {
+    LxReadable<bool> source,
+    FutureOr<void> Function() callback, {
     Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
-    return LxWorker<bool>(
-      source,
-      (value) {
-        if (value) callback();
-      },
-      onProcessingError: onProcessingError,
-    );
+    return LxWorker<bool>(source, (value) {
+      if (value) return callback();
+    }, onProcessingError: onProcessingError);
   }
 
   /// Triggers [callback] when a boolean [source] becomes `false`.
   static LxWorker<bool> watchFalse(
-    LxReactive<bool> source,
-    void Function() callback, {
+    LxReadable<bool> source,
+    FutureOr<void> Function() callback, {
     Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
-    return LxWorker<bool>(
-      source,
-      (value) {
-        if (!value) callback();
-      },
-      onProcessingError: onProcessingError,
-    );
+    return LxWorker<bool>(source, (value) {
+      if (!value) return callback();
+    }, onProcessingError: onProcessingError);
   }
 
   /// Triggers [callback] when [source] equals [targetValue].
   static LxWorker<T> watchValue<T>(
-    LxReactive<T> source,
+    LxReadable<T> source,
     T targetValue,
-    void Function() callback, {
+    FutureOr<void> Function() callback, {
     Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
-    return LxWorker<T>(
-      source,
-      (value) {
-        if (value == targetValue) callback();
-      },
-      onProcessingError: onProcessingError,
-    );
+    return LxWorker<T>(source, (value) {
+      if (value == targetValue) return callback();
+    }, onProcessingError: onProcessingError);
   }
 
   /// Triggers [callback] only when [source] transitions from `false` to `true`.
   static LxWorker<bool> onRising(
-    LxReactive<bool> source,
-    void Function() callback, {
+    LxReadable<bool> source,
+    FutureOr<void> Function() callback, {
     Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
     var previous = source.value;
-    return LxWorker<bool>(
-      source,
-      (value) {
-        final didRise = !previous && value;
-        previous = value;
-        if (didRise) callback();
-      },
-      onProcessingError: onProcessingError,
-    );
+    return LxWorker<bool>(source, (value) {
+      final didRise = !previous && value;
+      previous = value;
+      if (didRise) return callback();
+    }, onProcessingError: onProcessingError);
   }
 
   /// Triggers [callback] only when [source] transitions from `true` to `false`.
   static LxWorker<bool> onFalling(
-    LxReactive<bool> source,
-    void Function() callback, {
+    LxReadable<bool> source,
+    FutureOr<void> Function() callback, {
     Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
     var previous = source.value;
-    return LxWorker<bool>(
-      source,
-      (value) {
-        final didFall = previous && !value;
-        previous = value;
-        if (didFall) callback();
-      },
-      onProcessingError: onProcessingError,
-    );
+    return LxWorker<bool>(source, (value) {
+      final didFall = previous && !value;
+      previous = value;
+      if (didFall) return callback();
+    }, onProcessingError: onProcessingError);
   }
 
   /// Triggers [callback] when [source] emits a value distinct from the previous one.
@@ -335,144 +291,93 @@ class LxWorker<T> extends LxBase<LxWorkerStat> {
   /// Useful when values may be re-notified without changing
   /// (for example via manual refresh calls).
   static LxWorker<T> onChangeDistinct<T>(
-    LxReactive<T> source,
-    void Function(T value) callback, {
+    LxReadable<T> source,
+    FutureOr<void> Function(T value) callback, {
     Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
     var previous = source.value;
-    return LxWorker<T>(
-      source,
-      (value) {
-        if (value == previous) return;
-        previous = value;
-        callback(value);
-      },
-      onProcessingError: onProcessingError,
-    );
+    return LxWorker<T>(source, (value) {
+      if (value == previous) return null;
+      previous = value;
+      return callback(value);
+    }, onProcessingError: onProcessingError);
   }
 
   /// Triggers [callback] after [duration] has passed without new source updates.
   static LxWorker<T> debounce<T>(
-    LxReactive<T> source,
+    LxReadable<T> source,
     Duration duration,
-    void Function(T value) callback, {
+    FutureOr<void> Function(T value) callback, {
     Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
-    Timer? timer;
-    return _LxManagedWorker<T>(
+    return LxWorker<T>.withContext(
       source,
-      (value) {
-        timer?.cancel();
-        timer = Timer(duration, () {
-          try {
-            callback(value);
-          } catch (e, st) {
-            if (onProcessingError != null) {
-              onProcessingError(e, st);
-            } else {
-              Zone.current.handleUncaughtError(e, st);
-            }
-          }
-        });
+      (value, context) async {
+        final ready = Completer<void>();
+        final timer = Timer(duration, ready.complete);
+        unawaited(
+          context.cancelled.then((_) {
+            timer.cancel();
+            if (!ready.isCompleted) ready.complete();
+          }),
+        );
+        await ready.future;
+        if (!context.isCancelled) await callback(value);
       },
-      onProcessingError: onProcessingError,
-      onClose: () {
-        timer?.cancel();
-        timer = null;
-      },
+      onProcessingError: onProcessingError ?? Zone.current.handleUncaughtError,
     );
   }
 
-  /// Triggers [callback] immediately, then ignores updates for [duration].
+  /// Runs immediately and ignores updates during the throttle interval.
   static LxWorker<T> throttle<T>(
-    LxReactive<T> source,
+    LxReadable<T> source,
     Duration duration,
-    void Function(T value) callback, {
-    Function(Object error, StackTrace stackTrace)? onProcessingError,
+    FutureOr<void> Function(T value) callback, {
+    void Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
-    Timer? timer;
-    var isThrottled = false;
-    return _LxManagedWorker<T>(
+    final clock = Stopwatch()..start();
+    Duration? last;
+    return LxWorker<T>(
       source,
       (value) {
-        if (isThrottled) return;
-        isThrottled = true;
-        try {
-          callback(value);
-        } catch (e, st) {
-          if (onProcessingError != null) {
-            onProcessingError(e, st);
-          } else {
-            Zone.current.handleUncaughtError(e, st);
-          }
-        }
-        timer?.cancel();
-        timer = Timer(duration, () {
-          isThrottled = false;
-        });
+        final now = clock.elapsed;
+        if (last != null && now - last! < duration) return null;
+        last = now;
+        return callback(value);
       },
-      onProcessingError: onProcessingError,
-      onClose: () {
-        timer?.cancel();
-        timer = null;
-        isThrottled = false;
-      },
+      onProcessingError: onProcessingError ?? Zone.current.handleUncaughtError,
     );
   }
 
   /// Triggers callbacks based on status changes of an async [source].
   static LxWorker<LxStatus<T>> watchStatus<T>(
-    LxReactive<LxStatus<T>> source, {
-    void Function()? onIdle,
-    void Function()? onWaiting,
-    void Function(T value)? onSuccess,
-    void Function(Object error)? onError,
+    LxReadable<LxStatus<T>> source, {
+    FutureOr<void> Function()? onIdle,
+    FutureOr<void> Function()? onWaiting,
+    FutureOr<void> Function(T value)? onSuccess,
+    FutureOr<void> Function(Object error)? onError,
     Function(Object error, StackTrace stackTrace)? onProcessingError,
   }) {
-    return LxWorker<LxStatus<T>>(
-      source,
-      (status) {
-        if (status is LxIdle<T>) {
-          return onIdle?.call();
-        } else if (status is LxWaiting<T>) {
-          return onWaiting?.call();
-        } else if (status is LxSuccess<T>) {
-          return onSuccess?.call(status.value);
-        } else if (status is LxError<T>) {
-          return onError?.call(status.error);
-        }
-      },
-      onProcessingError: onProcessingError,
-    );
+    return LxWorker<LxStatus<T>>(source, (status) {
+      if (status is LxIdle<T>) {
+        return onIdle?.call();
+      } else if (status is LxWaiting<T>) {
+        return onWaiting?.call();
+      } else if (status is LxSuccess<T>) {
+        return onSuccess?.call(status.value);
+      } else if (status is LxError<T>) {
+        return onError?.call(status.error);
+      }
+    }, onProcessingError: onProcessingError);
   }
 }
 
 /// Extensions for creating watchers from any reactive source.
-extension LxReactiveWatchExtensions<T> on LxReactive<T> {
+extension LxReactiveWatchExtensions<T> on LxReadable<T> {
   /// Attaches a listener to this reactive value.
   ///
   /// Returns an [LxWorker] which can be used to control the subscription.
-  LxWorker<T> listen(void Function(T value) callback) {
+  LxWorker<T> listen(FutureOr<void> Function(T value) callback) {
     return LxWorker<T>(this, callback);
-  }
-}
-
-class _LxManagedWorker<T> extends LxWorker<T> {
-  final void Function()? _onClose;
-
-  _LxManagedWorker(
-    super.source,
-    super.callback, {
-    super.onError,
-    super.onProcessingError,
-    super.enableMonitoring,
-    super.name,
-    void Function()? onClose,
-  }) : _onClose = onClose;
-
-  @override
-  void close() {
-    _onClose?.call();
-    super.close();
   }
 }

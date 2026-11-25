@@ -7,13 +7,13 @@ void main() {
     Levit.enableAutoLinking();
   });
 
-  tearDown(() {
-    Levit.reset(force: true);
+  tearDown(() async {
+    await Levit.reset(force: true);
     Levit.disableAutoLinking();
   });
 
-  group('Auto-linking capture list coverage', () {
-    test('captures reactives in controller and auto-disposes', () {
+  group('Reactive ownership during controller initialization', () {
+    test('captures reactives in controller and auto-disposes', () async {
       final controller = TestController();
       Levit.put(() => controller);
 
@@ -26,26 +26,29 @@ void main() {
       expect(controller.doubled.value, 10);
 
       // Delete controller - should auto-dispose reactives
-      Levit.delete<TestController>(force: true);
+      await Levit.delete<TestController>(force: true);
     });
 
-    test('nested controller contexts create chained capture lists', () {
-      final parentController = ParentController();
-      final childController = ChildController();
+    test(
+      'separately registered controllers own their initialized values',
+      () async {
+        final parentController = ParentController();
+        final childController = ChildController();
 
-      Levit.put(() => parentController);
-      Levit.put(() => childController);
+        Levit.put(() => parentController);
+        Levit.put(() => childController);
 
-      // Both controllers should have their reactives
-      expect(parentController.parentValue.value, 0);
-      expect(childController.childValue.value, 0);
+        // Both controllers should have their reactives
+        expect(parentController.parentValue.value, 0);
+        expect(childController.childValue.value, 0);
 
-      // Cleanup
-      Levit.delete<ParentController>(force: true);
-      Levit.delete<ChildController>(force: true);
-    });
+        // Cleanup
+        await Levit.delete<ParentController>(force: true);
+        await Levit.delete<ChildController>(force: true);
+      },
+    );
 
-    test('capture list length operations work correctly', () {
+    test('capture list length operations work correctly', () async {
       final controller = MultiReactiveController();
       Levit.put(() => controller);
 
@@ -54,10 +57,10 @@ void main() {
       expect(controller.values.length, 5);
 
       // Cleanup
-      Levit.delete<MultiReactiveController>(force: true);
+      await Levit.delete<MultiReactiveController>(force: true);
     });
 
-    test('capture list index operations work correctly', () {
+    test('capture list index operations work correctly', () async {
       final controller = IndexTestController();
       Levit.put(() => controller);
 
@@ -67,65 +70,57 @@ void main() {
       expect(controller.getValueAt(2), 2);
 
       // Cleanup
-      Levit.delete<IndexTestController>(force: true);
+      await Levit.delete<IndexTestController>(force: true);
     });
 
-    test('explicitly exercises all capture list methods for 100% coverage', () {
-      final controller = InterceptController();
-      Levit.put(() => controller);
+    test(
+      'captured reactives support length, indexing, replacement, and append',
+      () async {
+        final controller = InterceptController();
+        Levit.put(() => controller);
 
-      final list = controller.captureList;
-      expect(list, isNotNull);
-      if (list != null) {
-        // Exercise length
-        expect(list.length, isPositive);
-        list.length = list.length; // setter
+        final list = controller.captureList;
+        expect(list, isNotNull);
+        if (list != null) {
+          // Exercise length
+          expect(list.length, isPositive);
+          list.length = list.length; // setter
 
-        // Exercise operator[]
-        final first = list[0];
-        expect(first, isNotNull);
-
-        // Exercise operator[]=
-        list[0] = first;
-
-        // Exercise add (already covered, but for completeness)
-        final r = 0.lx;
-        list.add(r);
-        r.close();
-      }
-
-      Levit.delete<InterceptController>(force: true);
-    });
-
-    test('nested runCaptured creates chained capture list that forwards ops',
-        () {
-      final created = <LxReactive>{};
-
-      runCapturedForTesting(() {
-        runCapturedForTesting(() {
-          final list =
-              Zone.current[autoLinkCaptureKeyForTesting] as List<LxReactive>;
-
-          // Create a reactive to ensure the list has elements.
-          created.add(0.lx);
-
-          // These operations hit ListBase overrides on _ChainedCaptureList.
-          expect(list.length, greaterThanOrEqualTo(0));
-          list.length = list.length;
-
+          // Exercise operator[]
           final first = list[0];
+          expect(first, isNotNull);
+
+          // Exercise operator[]=
           list[0] = first;
 
-          final extra = 1.lx;
-          created.add(extra);
-          list.add(extra);
-        }, 'inner');
-      }, 'outer');
+          // Exercise add (already covered, but for completeness)
+          final r = 0.lx;
+          list.add(r);
+          await r.close();
+        }
 
-      for (final reactive in created) {
-        reactive.close();
-      }
-    });
+        await Levit.delete<InterceptController>(force: true);
+      },
+    );
+
+    test(
+      'a nested capture isolates its allocations and restores the caller',
+      () async {
+        late LxInt first, nested, last;
+        runCapturedForTesting(() {
+          final outer =
+              Zone.current[autoLinkCaptureKeyForTesting] as List<LxReactive>;
+          first = 1.lx;
+          runCapturedForTesting(() {
+            nested = 2.lx;
+            expect(Zone.current[autoLinkCaptureKeyForTesting], [nested]);
+          }, 'inner');
+          last = 3.lx;
+          expect(outer, [first, last]);
+        }, 'outer');
+        await Future.wait([first.close(), nested.close(), last.close()]);
+      },
+    );
   });
 }
 

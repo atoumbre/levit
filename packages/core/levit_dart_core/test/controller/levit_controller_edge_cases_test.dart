@@ -51,7 +51,7 @@ void main() {
 
 class TestController extends LevitController {
   void addCustomReactive(LxReactive rx) {
-    autoDispose(rx);
+    own(rx);
   }
 }
 
@@ -68,7 +68,7 @@ class CustomReactive implements LxReactive<int> {
   set value(int v) {}
 
   @override
-  void close() {}
+  Future<void> close() async {}
 
   @override
   void refresh() {}
@@ -93,7 +93,7 @@ class ThrowingReactive implements LxReactive<int> {
   int get value => 0;
 
   @override
-  void close() {
+  Future<void> close() async {
     if (throwOnClose) {
       throw StateError('close fail');
     }

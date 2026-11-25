@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:test/test.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 
-class MockTransport implements LevitTransport {
+class MockTransport extends LevitTransport {
   final List<MonitorEvent> sentEvents = [];
   bool isClosed = false;
   final StreamController<void> _connectController =
@@ -28,7 +28,7 @@ class MockTransport implements LevitTransport {
   }
 }
 
-class FailingTransport implements LevitTransport {
+class FailingTransport extends LevitTransport {
   @override
   void send(MonitorEvent event) {
     throw Exception('Send failed');
@@ -43,26 +43,26 @@ class FailingTransport implements LevitTransport {
 
 void main() {
   MonitorEvent createEvent() => ScopeCreateEvent(
-        sessionId: 's1',
-        scopeId: 1,
-        scopeName: 'test',
-        parentScopeId: null,
-      );
+    sessionId: 's1',
+    scopeId: 1,
+    scopeName: 'test',
+    parentScopeId: null,
+  );
 
   group('MultiTransport', () {
-    test('broadcasts events to all transports', () {
+    test('broadcasts events to all transports', () async {
       final t1 = MockTransport();
       final t2 = MockTransport();
       final multi = MultiTransport([t1, t2]);
       final event = createEvent();
 
-      multi.send(event);
+      await multi.send(event);
 
-      expect(t1.sentEvents, contains(event));
-      expect(t2.sentEvents, contains(event));
+      expect(t1.sentEvents.map((event) => event.seq), contains(event.seq));
+      expect(t2.sentEvents.map((event) => event.seq), contains(event.seq));
     });
 
-    test('suppresses errors from failing transports', () {
+    test('reports errors after attempting every transport', () async {
       final t1 = MockTransport();
       final t2 = FailingTransport(); // Should fail
       final t3 = MockTransport();
@@ -70,10 +70,13 @@ void main() {
       final event = createEvent();
 
       // Should not throw
-      multi.send(event);
+      await expectLater(
+        multi.send(event),
+        throwsA(isA<LevitMonitorException>()),
+      );
 
-      expect(t1.sentEvents, contains(event));
-      expect(t3.sentEvents, contains(event));
+      expect(t1.sentEvents.map((event) => event.seq), contains(event.seq));
+      expect(t3.sentEvents.map((event) => event.seq), contains(event.seq));
     });
 
     test('closes all transports', () async {

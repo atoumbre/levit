@@ -1,0 +1,9 @@
+{
+  "checkedAt": "2026-11-14T04:28:00.612257-05:00",
+  "macOSSession": "CGSSessionScreenIsLocked=Yes",
+  "completedNativeReports": 0,
+  "requested": 24,
+  "currentCase": "Measuring performance-reference-profile-off-1",
+  "workloadsChanged": false,
+  "outcome": "First reference process timed out after 300 seconds; driver stopped."
+}

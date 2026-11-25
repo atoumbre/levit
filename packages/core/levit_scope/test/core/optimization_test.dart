@@ -28,51 +28,57 @@ void main() {
       expect(scope.find<String>(), 'Original');
     });
 
-    test('Shadowing parent dependency invalidates resolution cache (lazyPut)',
-        () {
-      // 1. Parent has 'A'
-      levit.put<String>(() => 'Parent Value');
+    test(
+      'Shadowing parent dependency invalidates resolution cache (lazyPut)',
+      () {
+        // 1. Parent has 'A'
+        levit.put<String>(() => 'Parent Value');
 
-      // 2. Child resolves 'A' from Parent (populates cache)
-      expect(scope.find<String>(), 'Parent Value');
+        // 2. Child resolves 'A' from Parent (populates cache)
+        expect(scope.find<String>(), 'Parent Value');
 
-      // 3. Child registers its own 'A' (shadowing)
-      // This should hit the cache removal line in lazyPut
-      scope.lazyPut<String>(() => 'Child Value');
+        // 3. Child registers its own 'A' (shadowing)
+        // This should hit the cache removal line in lazyPut
+        scope.lazyPut<String>(() => 'Child Value');
 
-      // 4. Verify Child resolves its own
-      expect(scope.find<String>(), 'Child Value');
-    });
-
-    test('Shadowing parent dependency invalidates resolution cache (create)',
-        () {
-      levit.put<String>(() => 'Parent Value');
-      expect(scope.find<String>(), 'Parent Value'); // Populates cache
-
-      // Shadow with create
-      scope.lazyPut<String>(() => 'Child Value', isFactory: true);
-      expect(scope.find<String>(), 'Child Value');
-    });
+        // 4. Verify Child resolves its own
+        expect(scope.find<String>(), 'Child Value');
+      },
+    );
 
     test(
-        'Shadowing parent dependency invalidates resolution cache (lazyPutAsync)',
-        () async {
-      levit.put<String>(() => 'Parent Value');
-      expect(await scope.findAsync<String>(), 'Parent Value');
+      'Shadowing parent dependency invalidates resolution cache (create)',
+      () {
+        levit.put<String>(() => 'Parent Value');
+        expect(scope.find<String>(), 'Parent Value'); // Populates cache
 
-      scope.lazyPutAsync<String>(() async => 'Child Value');
-      expect(await scope.findAsync<String>(), 'Child Value');
-    });
+        // Shadow with create
+        scope.lazyPut<String>(() => 'Child Value', isFactory: true);
+        expect(scope.find<String>(), 'Child Value');
+      },
+    );
 
     test(
-        'Shadowing parent dependency invalidates resolution cache (createAsync)',
-        () async {
-      levit.put<String>(() => 'Parent Value');
-      expect(await scope.findAsync<String>(), 'Parent Value');
+      'Shadowing parent dependency invalidates resolution cache (lazyPutAsync)',
+      () async {
+        levit.put<String>(() => 'Parent Value');
+        expect(await scope.findAsync<String>(), 'Parent Value');
 
-      scope.lazyPutAsync<String>(() async => 'Child Value', isFactory: true);
-      expect(await scope.findAsync<String>(), 'Child Value');
-    });
+        scope.lazyPutAsync<String>(() async => 'Child Value');
+        expect(await scope.findAsync<String>(), 'Child Value');
+      },
+    );
+
+    test(
+      'Shadowing parent dependency invalidates resolution cache (createAsync)',
+      () async {
+        levit.put<String>(() => 'Parent Value');
+        expect(await scope.findAsync<String>(), 'Parent Value');
+
+        scope.lazyPutAsync<String>(() async => 'Child Value', isFactory: true);
+        expect(await scope.findAsync<String>(), 'Child Value');
+      },
+    );
 
     test('Shadowing parent dependency invalidates resolution cache (put)', () {
       levit.put<String>(() => 'Parent Value');
@@ -85,7 +91,9 @@ void main() {
     test('Reset invalidates cache', () {
       levit.put<String>(() => 'Parent Value');
       expect(
-          scope.find<String>(), 'Parent Value'); // Cache: String -> via Levit
+        scope.find<String>(),
+        'Parent Value',
+      ); // Cache: String -> via Levit
 
       // We want to hit reset's cache clean.
       // But reset only clears keys present in registry?
@@ -238,7 +246,7 @@ void main() {
       // 9. Profit.
     });
 
-    test('Delete hits cache optimization', () {
+    test('Delete hits cache optimization', () async {
       // 1. Parent Y
       levit.put<int>(() => 99);
 
@@ -252,10 +260,10 @@ void main() {
       // cache is not empty (contains Y).
       // X is in registry.
       // Should hit the optimized remove block.
-      scope.delete<String>();
+      await scope.delete<String>();
     });
 
-    test('Reset hits cache optimization', () {
+    test('Reset hits cache optimization', () async {
       // 1. Parent Y
       levit.put<int>(() => 99);
       expect(scope.find<int>(), 99); // Cache has Y
@@ -267,7 +275,7 @@ void main() {
       // It iterates X.
       // Cache is not empty.
       // Should hit block.
-      scope.reset();
+      await scope.reset();
     });
   });
 }

@@ -8,14 +8,16 @@ void main() {
       print('[Description] Tests LStatusBuilder state switching performance.');
       final status = LxFuture(Future.value(0));
 
-      await tester.pumpWidget(MaterialApp(
-        home: LStatusBuilder(
-          status,
-          onSuccess: (data) => Text('Success: $data'),
-          onWaiting: () => const Text('Waiting'),
-          onError: (error, _) => Text('Error: $error'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LStatusBuilder(
+            status,
+            onSuccess: (data) => Text('Success: $data'),
+            onWaiting: (status) => const Text('Waiting'),
+            onError: (status) => Text('Error: ${status.error}'),
+          ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
       expect(find.text('Success: 0'), findsOneWidget);
@@ -33,31 +35,37 @@ void main() {
       sw.stop();
 
       print(
-          'LStatusBuilder State Switch: $transitions transitions in ${sw.elapsedMilliseconds}ms');
+        'LStatusBuilder State Switch: $transitions transitions in ${sw.elapsedMilliseconds}ms',
+      );
 
       status.close();
     });
 
     testWidgets('Flood - 500 LStatusBuilder widgets', (tester) async {
       print(
-          '[Description] Tests many LStatusBuilder widgets in a single frame.');
+        '[Description] Tests many LStatusBuilder widgets in a single frame.',
+      );
       const widgetCount = 500;
-      final statuses =
-          List.generate(widgetCount, (_) => LxFuture(Future.value(0)));
+      final statuses = List.generate(
+        widgetCount,
+        (_) => LxFuture(Future.value(0)),
+      );
 
-      await tester.pumpWidget(MaterialApp(
-        home: ListView.builder(
-          itemCount: widgetCount,
-          itemBuilder: (context, index) {
-            return LStatusBuilder(
-              statuses[index],
-              onSuccess: (data) => Text('S$index'),
-              onWaiting: () => const Text('Waiting'),
-              onError: (error, _) => const Text('Error'),
-            );
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ListView.builder(
+            itemCount: widgetCount,
+            itemBuilder: (context, index) {
+              return LStatusBuilder(
+                statuses[index],
+                onSuccess: (data) => Text('S$index'),
+                onWaiting: (status) => const Text('Waiting'),
+                onError: (status) => const Text('Error'),
+              );
+            },
+          ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
@@ -70,7 +78,8 @@ void main() {
       sw.stop();
 
       print(
-          'LStatusBuilder Flood: $widgetCount widgets updated in ${sw.elapsedMilliseconds}ms');
+        'LStatusBuilder Flood: $widgetCount widgets updated in ${sw.elapsedMilliseconds}ms',
+      );
 
       for (final s in statuses) {
         s.close();

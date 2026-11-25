@@ -1,0 +1,2414 @@
+{
+  "order": [
+    "01-before",
+    "02-after",
+    "03-after",
+    "04-before"
+  ],
+  "note": "Two independent processes per revision; raw within-run samples are not independent trials.",
+  "cases": 240,
+  "samples": 12000,
+  "frames": 4000,
+  "rows": [
+    {
+      "benchmark": "Rapid State Mutation",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 12852.5,
+        "02-after": 13145.0,
+        "03-after": 12812.5,
+        "04-before": 12911.5
+      },
+      "runP95": {
+        "01-before": 13227,
+        "02-after": 13601,
+        "03-after": 13096,
+        "04-before": 13930
+      },
+      "beforeMedianOfRunMedians": 12882.0,
+      "afterMedianOfRunMedians": 12978.75,
+      "changePercent": 0.7510479739170961,
+      "pairedChangePercent": [
+        2.2758218245477524,
+        -0.7667583162297209
+      ]
+    },
+    {
+      "benchmark": "Rapid State Mutation",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 13987.5,
+        "02-after": 13945.0,
+        "03-after": 14341.0,
+        "04-before": 13909.5
+      },
+      "runP95": {
+        "01-before": 14245,
+        "02-after": 14382,
+        "03-after": 14513,
+        "04-before": 14151
+      },
+      "beforeMedianOfRunMedians": 13948.5,
+      "afterMedianOfRunMedians": 14143.0,
+      "changePercent": 1.3944151700899798,
+      "pairedChangePercent": [
+        -0.30384271671134444,
+        3.102196340630514
+      ]
+    },
+    {
+      "benchmark": "Rapid State Mutation",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 20612.5,
+        "02-after": 20002.0,
+        "03-after": 20076.5,
+        "04-before": 20457.5
+      },
+      "runP95": {
+        "01-before": 20903,
+        "02-after": 20456,
+        "03-after": 20531,
+        "04-before": 20651
+      },
+      "beforeMedianOfRunMedians": 20535.0,
+      "afterMedianOfRunMedians": 20039.25,
+      "changePercent": -2.4141709276844447,
+      "pairedChangePercent": [
+        -2.9617950272892712,
+        -1.862397653672243
+      ]
+    },
+    {
+      "benchmark": "Rapid State Mutation",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 82054.0,
+        "02-after": 83578.5,
+        "03-after": 82441.0,
+        "04-before": 81556.5
+      },
+      "runP95": {
+        "01-before": 95646,
+        "02-after": 96885,
+        "03-after": 92599,
+        "04-before": 90940
+      },
+      "beforeMedianOfRunMedians": 81805.25,
+      "afterMedianOfRunMedians": 83009.75,
+      "changePercent": 1.472399387569867,
+      "pairedChangePercent": [
+        1.8579228313062135,
+        1.084524225536887
+      ]
+    },
+    {
+      "benchmark": "Rapid State Mutation",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 110719.0,
+        "02-after": 112534.5,
+        "03-after": 110712.0,
+        "04-before": 109507.0
+      },
+      "runP95": {
+        "01-before": 115516,
+        "02-after": 116271,
+        "03-after": 116109,
+        "04-before": 114966
+      },
+      "beforeMedianOfRunMedians": 110113.0,
+      "afterMedianOfRunMedians": 111623.25,
+      "changePercent": 1.3715455940715549,
+      "pairedChangePercent": [
+        1.6397366305692884,
+        1.1003862766763683
+      ]
+    },
+    {
+      "benchmark": "Diamond Graph (Observed Updates)",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 1360.5,
+        "02-after": 1323.0,
+        "03-after": 907.5,
+        "04-before": 1410.5
+      },
+      "runP95": {
+        "01-before": 2815,
+        "02-after": 2856,
+        "03-after": 2335,
+        "04-before": 2474
+      },
+      "beforeMedianOfRunMedians": 1385.5,
+      "afterMedianOfRunMedians": 1115.25,
+      "changePercent": -19.50559364850235,
+      "pairedChangePercent": [
+        -2.756339581036382,
+        -35.66111308046792
+      ]
+    },
+    {
+      "benchmark": "Diamond Graph (Observed Updates)",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 122343.0,
+        "02-after": 116178.5,
+        "03-after": 116635.0,
+        "04-before": 123116.5
+      },
+      "runP95": {
+        "01-before": 127776,
+        "02-after": 124678,
+        "03-after": 126319,
+        "04-before": 139062
+      },
+      "beforeMedianOfRunMedians": 122729.75,
+      "afterMedianOfRunMedians": 116406.75,
+      "changePercent": -5.151970080603929,
+      "pairedChangePercent": [
+        -5.038702663822203,
+        -5.26452587589803
+      ]
+    },
+    {
+      "benchmark": "Diamond Graph (Observed Updates)",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 5813.5,
+        "02-after": 5514.0,
+        "03-after": 5493.5,
+        "04-before": 5203.0
+      },
+      "runP95": {
+        "01-before": 6228,
+        "02-after": 5923,
+        "03-after": 5927,
+        "04-before": 5687
+      },
+      "beforeMedianOfRunMedians": 5508.25,
+      "afterMedianOfRunMedians": 5503.75,
+      "changePercent": -0.08169563836064597,
+      "pairedChangePercent": [
+        -5.151801840543557,
+        5.5833173169325345
+      ]
+    },
+    {
+      "benchmark": "Diamond Graph (Observed Updates)",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 9570.5,
+        "02-after": 9938.0,
+        "03-after": 10046.0,
+        "04-before": 9823.5
+      },
+      "runP95": {
+        "01-before": 12476,
+        "02-after": 11910,
+        "03-after": 11497,
+        "04-before": 12560
+      },
+      "beforeMedianOfRunMedians": 9697.0,
+      "afterMedianOfRunMedians": 9992.0,
+      "changePercent": 3.042177993193773,
+      "pairedChangePercent": [
+        3.839924768820846,
+        2.264976841248023
+      ]
+    },
+    {
+      "benchmark": "Diamond Graph (Observed Updates)",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 1559.0,
+        "02-after": 1935.5,
+        "03-after": 2147.0,
+        "04-before": 686.0
+      },
+      "runP95": {
+        "01-before": 3309,
+        "02-after": 3544,
+        "03-after": 3246,
+        "04-before": 808
+      },
+      "beforeMedianOfRunMedians": 1122.5,
+      "afterMedianOfRunMedians": 2041.25,
+      "changePercent": 81.84855233853006,
+      "pairedChangePercent": [
+        24.150096215522776,
+        212.9737609329446
+      ]
+    },
+    {
+      "benchmark": "Fan Out Update",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 70.5,
+        "02-after": 81.0,
+        "03-after": 90.5,
+        "04-before": 87.0
+      },
+      "runP95": {
+        "01-before": 172,
+        "02-after": 170,
+        "03-after": 139,
+        "04-before": 560
+      },
+      "beforeMedianOfRunMedians": 78.75,
+      "afterMedianOfRunMedians": 85.75,
+      "changePercent": 8.888888888888879,
+      "pairedChangePercent": [
+        14.893617021276606,
+        4.022988505747116
+      ]
+    },
+    {
+      "benchmark": "Fan Out Update",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 697.5,
+        "02-after": 730.5,
+        "03-after": 752.0,
+        "04-before": 209.0
+      },
+      "runP95": {
+        "01-before": 1056,
+        "02-after": 1114,
+        "03-after": 955,
+        "04-before": 421
+      },
+      "beforeMedianOfRunMedians": 453.25,
+      "afterMedianOfRunMedians": 741.25,
+      "changePercent": 63.54109211252068,
+      "pairedChangePercent": [
+        4.731182795698929,
+        259.8086124401914
+      ]
+    },
+    {
+      "benchmark": "Fan Out Update",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 1732.5,
+        "02-after": 1223.5,
+        "03-after": 968.5,
+        "04-before": 551.5
+      },
+      "runP95": {
+        "01-before": 3298,
+        "02-after": 2088,
+        "03-after": 2374,
+        "04-before": 953
+      },
+      "beforeMedianOfRunMedians": 1142.0,
+      "afterMedianOfRunMedians": 1096.0,
+      "changePercent": -4.0280210157618175,
+      "pairedChangePercent": [
+        -29.379509379509383,
+        75.61196736174071
+      ]
+    },
+    {
+      "benchmark": "Fan Out Update",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 60.5,
+        "02-after": 52.0,
+        "03-after": 50.0,
+        "04-before": 54.5
+      },
+      "runP95": {
+        "01-before": 91,
+        "02-after": 94,
+        "03-after": 82,
+        "04-before": 130
+      },
+      "beforeMedianOfRunMedians": 57.5,
+      "afterMedianOfRunMedians": 51.0,
+      "changePercent": -11.304347826086957,
+      "pairedChangePercent": [
+        -14.049586776859503,
+        -8.25688073394495
+      ]
+    },
+    {
+      "benchmark": "Fan Out Update",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 636.5,
+        "02-after": 451.0,
+        "03-after": 759.5,
+        "04-before": 1053.0
+      },
+      "runP95": {
+        "01-before": 1667,
+        "02-after": 771,
+        "03-after": 958,
+        "04-before": 2803
+      },
+      "beforeMedianOfRunMedians": 844.75,
+      "afterMedianOfRunMedians": 605.25,
+      "changePercent": -28.351583308671202,
+      "pairedChangePercent": [
+        -29.143754909662213,
+        -27.872744539411208
+      ]
+    },
+    {
+      "benchmark": "Fan In Update",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 124.0,
+        "02-after": 94.0,
+        "03-after": 153.5,
+        "04-before": 65.5
+      },
+      "runP95": {
+        "01-before": 204,
+        "02-after": 169,
+        "03-after": 216,
+        "04-before": 160
+      },
+      "beforeMedianOfRunMedians": 94.75,
+      "afterMedianOfRunMedians": 123.75,
+      "changePercent": 30.606860158311356,
+      "pairedChangePercent": [
+        -24.193548387096776,
+        134.35114503816794
+      ]
+    },
+    {
+      "benchmark": "Fan In Update",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 735.5,
+        "02-after": 240.5,
+        "03-after": 945.5,
+        "04-before": 914.5
+      },
+      "runP95": {
+        "01-before": 1089,
+        "02-after": 687,
+        "03-after": 1370,
+        "04-before": 2035
+      },
+      "beforeMedianOfRunMedians": 825.0,
+      "afterMedianOfRunMedians": 593.0,
+      "changePercent": -28.121212121212125,
+      "pairedChangePercent": [
+        -67.3011556764106,
+        3.3898305084745672
+      ]
+    },
+    {
+      "benchmark": "Fan In Update",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 38.0,
+        "02-after": 25.0,
+        "03-after": 50.5,
+        "04-before": 28.0
+      },
+      "runP95": {
+        "01-before": 66,
+        "02-after": 71,
+        "03-after": 70,
+        "04-before": 80
+      },
+      "beforeMedianOfRunMedians": 33.0,
+      "afterMedianOfRunMedians": 37.75,
+      "changePercent": 14.393939393939403,
+      "pairedChangePercent": [
+        -34.210526315789465,
+        80.35714285714286
+      ]
+    },
+    {
+      "benchmark": "Fan In Update",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 388.5,
+        "02-after": 72.5,
+        "03-after": 85.5,
+        "04-before": 144.0
+      },
+      "runP95": {
+        "01-before": 608,
+        "02-after": 376,
+        "03-after": 421,
+        "04-before": 401
+      },
+      "beforeMedianOfRunMedians": 266.25,
+      "afterMedianOfRunMedians": 79.0,
+      "changePercent": -70.32863849765259,
+      "pairedChangePercent": [
+        -81.33848133848134,
+        -40.625
+      ]
+    },
+    {
+      "benchmark": "Fan In Update",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 77.0,
+        "02-after": 28.0,
+        "03-after": 43.5,
+        "04-before": 91.0
+      },
+      "runP95": {
+        "01-before": 150,
+        "02-after": 48,
+        "03-after": 98,
+        "04-before": 146
+      },
+      "beforeMedianOfRunMedians": 84.0,
+      "afterMedianOfRunMedians": 35.75,
+      "changePercent": -57.44047619047619,
+      "pairedChangePercent": [
+        -63.63636363636363,
+        -52.19780219780219
+      ]
+    },
+    {
+      "benchmark": "Async Computed",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 3387.0,
+        "02-after": 2794.5,
+        "03-after": 4359.0,
+        "04-before": 3609.5
+      },
+      "runP95": {
+        "01-before": 5083,
+        "02-after": 6359,
+        "03-after": 4825,
+        "04-before": 7548
+      },
+      "beforeMedianOfRunMedians": 3498.25,
+      "afterMedianOfRunMedians": 3576.75,
+      "changePercent": 2.243979132423357,
+      "pairedChangePercent": [
+        -17.493356953055805,
+        20.764648843330093
+      ]
+    },
+    {
+      "benchmark": "Async Computed",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 3353.0,
+        "02-after": 2889.5,
+        "03-after": 3693.0,
+        "04-before": 1741.5
+      },
+      "runP95": {
+        "01-before": 6082,
+        "02-after": 5818,
+        "03-after": 6397,
+        "04-before": 4256
+      },
+      "beforeMedianOfRunMedians": 2547.25,
+      "afterMedianOfRunMedians": 3291.25,
+      "changePercent": 29.207969378741772,
+      "pairedChangePercent": [
+        -13.823441694005368,
+        112.05857019810507
+      ]
+    },
+    {
+      "benchmark": "Async Computed",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 3588.5,
+        "02-after": 3227.0,
+        "03-after": 4661.5,
+        "04-before": 2106.5
+      },
+      "runP95": {
+        "01-before": 6613,
+        "02-after": 7047,
+        "03-after": 6530,
+        "04-before": 3162
+      },
+      "beforeMedianOfRunMedians": 2847.5,
+      "afterMedianOfRunMedians": 3944.25,
+      "changePercent": 38.516242317822645,
+      "pairedChangePercent": [
+        -10.073847011286052,
+        121.29124139568002
+      ]
+    },
+    {
+      "benchmark": "Async Computed",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 4046.5,
+        "02-after": 2342.5,
+        "03-after": 4659.5,
+        "04-before": 2929.5
+      },
+      "runP95": {
+        "01-before": 5143,
+        "02-after": 6669,
+        "03-after": 6835,
+        "04-before": 4459
+      },
+      "beforeMedianOfRunMedians": 3488.0,
+      "afterMedianOfRunMedians": 3501.0,
+      "changePercent": 0.3727064220183429,
+      "pairedChangePercent": [
+        -42.11046583467194,
+        59.054446151220354
+      ]
+    },
+    {
+      "benchmark": "Async Computed",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 4286.5,
+        "02-after": 3836.0,
+        "03-after": 4322.0,
+        "04-before": 3714.5
+      },
+      "runP95": {
+        "01-before": 4834,
+        "02-after": 4739,
+        "03-after": 4899,
+        "04-before": 4475
+      },
+      "beforeMedianOfRunMedians": 4000.5,
+      "afterMedianOfRunMedians": 4079.0,
+      "changePercent": 1.962254718160228,
+      "pairedChangePercent": [
+        -10.509739881021819,
+        16.35482568313367
+      ]
+    },
+    {
+      "benchmark": "Batch vs Un-batched",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 231.0,
+        "02-after": 236.0,
+        "03-after": 375.0,
+        "04-before": 122.0
+      },
+      "runP95": {
+        "01-before": 625,
+        "02-after": 702,
+        "03-after": 629,
+        "04-before": 161
+      },
+      "beforeMedianOfRunMedians": 176.5,
+      "afterMedianOfRunMedians": 305.5,
+      "changePercent": 73.08781869688386,
+      "pairedChangePercent": [
+        2.164502164502169,
+        207.37704918032787
+      ]
+    },
+    {
+      "benchmark": "Batch vs Un-batched",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 84.5,
+        "02-after": 86.0,
+        "03-after": 136.0,
+        "04-before": 75.5
+      },
+      "runP95": {
+        "01-before": 247,
+        "02-after": 224,
+        "03-after": 202,
+        "04-before": 268
+      },
+      "beforeMedianOfRunMedians": 80.0,
+      "afterMedianOfRunMedians": 111.0,
+      "changePercent": 38.74999999999999,
+      "pairedChangePercent": [
+        1.775147928994092,
+        80.13245033112584
+      ]
+    },
+    {
+      "benchmark": "Batch vs Un-batched",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 73.5,
+        "02-after": 105.0,
+        "03-after": 128.5,
+        "04-before": 50.0
+      },
+      "runP95": {
+        "01-before": 181,
+        "02-after": 342,
+        "03-after": 246,
+        "04-before": 104
+      },
+      "beforeMedianOfRunMedians": 61.75,
+      "afterMedianOfRunMedians": 116.75,
+      "changePercent": 89.06882591093117,
+      "pairedChangePercent": [
+        42.85714285714286,
+        156.99999999999997
+      ]
+    },
+    {
+      "benchmark": "Batch vs Un-batched",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 138.0,
+        "02-after": 96.0,
+        "03-after": 129.5,
+        "04-before": 45.5
+      },
+      "runP95": {
+        "01-before": 208,
+        "02-after": 229,
+        "03-after": 205,
+        "04-before": 72
+      },
+      "beforeMedianOfRunMedians": 91.75,
+      "afterMedianOfRunMedians": 112.75,
+      "changePercent": 22.8882833787466,
+      "pairedChangePercent": [
+        -30.434782608695656,
+        184.6153846153846
+      ]
+    },
+    {
+      "benchmark": "Batch vs Un-batched",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 889.5,
+        "02-after": 661.0,
+        "03-after": 677.5,
+        "04-before": 304.5
+      },
+      "runP95": {
+        "01-before": 1728,
+        "02-after": 1870,
+        "03-after": 1665,
+        "04-before": 610
+      },
+      "beforeMedianOfRunMedians": 597.0,
+      "afterMedianOfRunMedians": 669.25,
+      "changePercent": 12.102177554438853,
+      "pairedChangePercent": [
+        -25.688589094997194,
+        122.49589490968802
+      ]
+    },
+    {
+      "benchmark": "Warm Root DI Lookup",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 99.0,
+        "02-after": 62.0,
+        "03-after": 86.0,
+        "04-before": 43.0
+      },
+      "runP95": {
+        "01-before": 195,
+        "02-after": 103,
+        "03-after": 179,
+        "04-before": 77
+      },
+      "beforeMedianOfRunMedians": 71.0,
+      "afterMedianOfRunMedians": 74.0,
+      "changePercent": 4.225352112676051,
+      "pairedChangePercent": [
+        -37.37373737373737,
+        100.0
+      ]
+    },
+    {
+      "benchmark": "Warm Root DI Lookup",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 2003.5,
+        "02-after": 1555.0,
+        "03-after": 2344.5,
+        "04-before": 1306.5
+      },
+      "runP95": {
+        "01-before": 2540,
+        "02-after": 4020,
+        "03-after": 5090,
+        "04-before": 2441
+      },
+      "beforeMedianOfRunMedians": 1655.0,
+      "afterMedianOfRunMedians": 1949.75,
+      "changePercent": 17.809667673716014,
+      "pairedChangePercent": [
+        -22.385824806588474,
+        79.44890929965558
+      ]
+    },
+    {
+      "benchmark": "Warm Root DI Lookup",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 31.0,
+        "02-after": 36.0,
+        "03-after": 71.0,
+        "04-before": 32.0
+      },
+      "runP95": {
+        "01-before": 55,
+        "02-after": 148,
+        "03-after": 118,
+        "04-before": 269
+      },
+      "beforeMedianOfRunMedians": 31.5,
+      "afterMedianOfRunMedians": 53.5,
+      "changePercent": 69.84126984126983,
+      "pairedChangePercent": [
+        16.129032258064523,
+        121.875
+      ]
+    },
+    {
+      "benchmark": "Warm Root DI Lookup",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 74.0,
+        "02-after": 144.5,
+        "03-after": 209.5,
+        "04-before": 124.0
+      },
+      "runP95": {
+        "01-before": 268,
+        "02-after": 365,
+        "03-after": 433,
+        "04-before": 369
+      },
+      "beforeMedianOfRunMedians": 99.0,
+      "afterMedianOfRunMedians": 177.0,
+      "changePercent": 78.78787878787878,
+      "pairedChangePercent": [
+        95.27027027027026,
+        68.9516129032258
+      ]
+    },
+    {
+      "benchmark": "Warm Root DI Lookup",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 58.5,
+        "02-after": 71.0,
+        "03-after": 86.0,
+        "04-before": 38.0
+      },
+      "runP95": {
+        "01-before": 99,
+        "02-after": 142,
+        "03-after": 113,
+        "04-before": 117
+      },
+      "beforeMedianOfRunMedians": 48.25,
+      "afterMedianOfRunMedians": 78.5,
+      "changePercent": 62.69430051813472,
+      "pairedChangePercent": [
+        21.36752136752136,
+        126.3157894736842
+      ]
+    },
+    {
+      "benchmark": "Computed Chain (Deep Propagation)",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 66828.5,
+        "02-after": 73170.5,
+        "03-after": 74553.0,
+        "04-before": 74337.0
+      },
+      "runP95": {
+        "01-before": 71790,
+        "02-after": 76294,
+        "03-after": 76887,
+        "04-before": 75996
+      },
+      "beforeMedianOfRunMedians": 70582.75,
+      "afterMedianOfRunMedians": 73861.75,
+      "changePercent": 4.6456110026883435,
+      "pairedChangePercent": [
+        9.489963114539446,
+        0.29056862665968186
+      ]
+    },
+    {
+      "benchmark": "Computed Chain (Deep Propagation)",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 48212.5,
+        "02-after": 49120.5,
+        "03-after": 48126.5,
+        "04-before": 50494.5
+      },
+      "runP95": {
+        "01-before": 50099,
+        "02-after": 50777,
+        "03-after": 54008,
+        "04-before": 52718
+      },
+      "beforeMedianOfRunMedians": 49353.5,
+      "afterMedianOfRunMedians": 48623.5,
+      "changePercent": -1.4791250873798178,
+      "pairedChangePercent": [
+        1.8833290121856416,
+        -4.689619661547296
+      ]
+    },
+    {
+      "benchmark": "Computed Chain (Deep Propagation)",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 456081.0,
+        "02-after": 464500.5,
+        "03-after": 457588.5,
+        "04-before": 481596.5
+      },
+      "runP95": {
+        "01-before": 474538,
+        "02-after": 477177,
+        "03-after": 478310,
+        "04-before": 562000
+      },
+      "beforeMedianOfRunMedians": 468838.75,
+      "afterMedianOfRunMedians": 461044.5,
+      "changePercent": -1.6624585745098952,
+      "pairedChangePercent": [
+        1.8460536615206413,
+        -4.985086062710176
+      ]
+    },
+    {
+      "benchmark": "Computed Chain (Deep Propagation)",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 30184.5,
+        "02-after": 31186.0,
+        "03-after": 30900.5,
+        "04-before": 31280.0
+      },
+      "runP95": {
+        "01-before": 32570,
+        "02-after": 32641,
+        "03-after": 32698,
+        "04-before": 33489
+      },
+      "beforeMedianOfRunMedians": 30732.25,
+      "afterMedianOfRunMedians": 31043.25,
+      "changePercent": 1.0119662569450627,
+      "pairedChangePercent": [
+        3.317928075667975,
+        -1.2132352941176427
+      ]
+    },
+    {
+      "benchmark": "Computed Chain (Deep Propagation)",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 26448.5,
+        "02-after": 31779.5,
+        "03-after": 29129.0,
+        "04-before": 27071.5
+      },
+      "runP95": {
+        "01-before": 29720,
+        "02-after": 32874,
+        "03-after": 30517,
+        "04-before": 31230
+      },
+      "beforeMedianOfRunMedians": 26760.0,
+      "afterMedianOfRunMedians": 30454.25,
+      "changePercent": 13.805119581464865,
+      "pairedChangePercent": [
+        20.156152522827387,
+        7.600243798829021
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6993.5,
+        "02-after": 6651.0,
+        "03-after": 6884.0,
+        "04-before": 6831.5
+      },
+      "runP95": {
+        "01-before": 8593,
+        "02-after": 8857,
+        "03-after": 7781,
+        "04-before": 7474
+      },
+      "beforeMedianOfRunMedians": 6912.5,
+      "afterMedianOfRunMedians": 6767.5,
+      "changePercent": -2.097649186256778,
+      "pairedChangePercent": [
+        -4.897404732966326,
+        0.768498865549283
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "bloc",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 2275.5,
+        "02-after": 2231.0,
+        "03-after": 1588.0,
+        "04-before": 955.5
+      },
+      "runP95": {
+        "01-before": 2988,
+        "02-after": 3637,
+        "03-after": 2651,
+        "04-before": 1314
+      },
+      "beforeMedianOfRunMedians": 1615.5,
+      "afterMedianOfRunMedians": 1909.5,
+      "changePercent": 18.198700092850515,
+      "pairedChangePercent": [
+        -1.955614150736107,
+        66.1957090528519
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "bloc",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1545.0,
+        "02-after": 1289.0,
+        "03-after": 1340.5,
+        "04-before": 751.0
+      },
+      "runP95": {
+        "01-before": 2166,
+        "02-after": 2235,
+        "03-after": 2035,
+        "04-before": 1136
+      },
+      "beforeMedianOfRunMedians": 1148.0,
+      "afterMedianOfRunMedians": 1314.75,
+      "changePercent": 14.525261324041816,
+      "pairedChangePercent": [
+        -16.569579288025892,
+        78.4953395472703
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 7018.5,
+        "02-after": 6875.5,
+        "03-after": 6896.5,
+        "04-before": 7099.0
+      },
+      "runP95": {
+        "01-before": 8925,
+        "02-after": 8818,
+        "03-after": 8123,
+        "04-before": 8245
+      },
+      "beforeMedianOfRunMedians": 7058.75,
+      "afterMedianOfRunMedians": 6886.0,
+      "changePercent": -2.4473171595537413,
+      "pairedChangePercent": [
+        -2.037472394386264,
+        -2.8525144386533308
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "riverpod",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 1787.5,
+        "02-after": 951.5,
+        "03-after": 1638.0,
+        "04-before": 1166.0
+      },
+      "runP95": {
+        "01-before": 2802,
+        "02-after": 2983,
+        "03-after": 2583,
+        "04-before": 2165
+      },
+      "beforeMedianOfRunMedians": 1476.75,
+      "afterMedianOfRunMedians": 1294.75,
+      "changePercent": -12.324360927712885,
+      "pairedChangePercent": [
+        -46.769230769230774,
+        40.48027444253859
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "riverpod",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1421.5,
+        "02-after": 930.5,
+        "03-after": 1516.0,
+        "04-before": 716.0
+      },
+      "runP95": {
+        "01-before": 2085,
+        "02-after": 1815,
+        "03-after": 2095,
+        "04-before": 1807
+      },
+      "beforeMedianOfRunMedians": 1068.75,
+      "afterMedianOfRunMedians": 1223.25,
+      "changePercent": 14.456140350877188,
+      "pairedChangePercent": [
+        -34.54097784030953,
+        111.731843575419
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6811.0,
+        "02-after": 6864.5,
+        "03-after": 6678.0,
+        "04-before": 6800.5
+      },
+      "runP95": {
+        "01-before": 8086,
+        "02-after": 7591,
+        "03-after": 8251,
+        "04-before": 8985
+      },
+      "beforeMedianOfRunMedians": 6805.75,
+      "afterMedianOfRunMedians": 6771.25,
+      "changePercent": -0.50692429195901,
+      "pairedChangePercent": [
+        0.7854940537366017,
+        -1.8013381369016979
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "vanilla",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 1887.0,
+        "02-after": 644.0,
+        "03-after": 1750.5,
+        "04-before": 1461.0
+      },
+      "runP95": {
+        "01-before": 3050,
+        "02-after": 1432,
+        "03-after": 2616,
+        "04-before": 3153
+      },
+      "beforeMedianOfRunMedians": 1674.0,
+      "afterMedianOfRunMedians": 1197.25,
+      "changePercent": -28.479689366786143,
+      "pairedChangePercent": [
+        -65.87175410704822,
+        19.815195071868573
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "vanilla",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1624.5,
+        "02-after": 639.0,
+        "03-after": 1408.0,
+        "04-before": 1009.5
+      },
+      "runP95": {
+        "01-before": 2303,
+        "02-after": 1004,
+        "03-after": 2081,
+        "04-before": 1907
+      },
+      "beforeMedianOfRunMedians": 1317.0,
+      "afterMedianOfRunMedians": 1023.5,
+      "changePercent": -22.28549734244495,
+      "pairedChangePercent": [
+        -60.664819944598335,
+        39.474987617632486
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6843.0,
+        "02-after": 6849.5,
+        "03-after": 7033.5,
+        "04-before": 6838.0
+      },
+      "runP95": {
+        "01-before": 8373,
+        "02-after": 8277,
+        "03-after": 7853,
+        "04-before": 7849
+      },
+      "beforeMedianOfRunMedians": 6840.5,
+      "afterMedianOfRunMedians": 6941.5,
+      "changePercent": 1.4765002558292606,
+      "pairedChangePercent": [
+        0.09498757854742301,
+        2.8590231061713878
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "levit",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 2040.5,
+        "02-after": 1058.5,
+        "03-after": 903.0,
+        "04-before": 643.0
+      },
+      "runP95": {
+        "01-before": 2744,
+        "02-after": 2651,
+        "03-after": 2354,
+        "04-before": 1916
+      },
+      "beforeMedianOfRunMedians": 1341.75,
+      "afterMedianOfRunMedians": 980.75,
+      "changePercent": -26.905161170113658,
+      "pairedChangePercent": [
+        -48.12545944621416,
+        40.43545878693624
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "levit",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1762.5,
+        "02-after": 1035.0,
+        "03-after": 878.5,
+        "04-before": 631.5
+      },
+      "runP95": {
+        "01-before": 2320,
+        "02-after": 1776,
+        "03-after": 1943,
+        "04-before": 1077
+      },
+      "beforeMedianOfRunMedians": 1197.0,
+      "afterMedianOfRunMedians": 956.75,
+      "changePercent": -20.071010860484538,
+      "pairedChangePercent": [
+        -41.276595744680854,
+        39.1132224861441
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6822.0,
+        "02-after": 6866.0,
+        "03-after": 6870.5,
+        "04-before": 6970.5
+      },
+      "runP95": {
+        "01-before": 8355,
+        "02-after": 9241,
+        "03-after": 8021,
+        "04-before": 8815
+      },
+      "beforeMedianOfRunMedians": 6896.25,
+      "afterMedianOfRunMedians": 6868.25,
+      "changePercent": -0.40601776327714445,
+      "pairedChangePercent": [
+        0.6449721489299343,
+        -1.4346173158309994
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "getx",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 1081.0,
+        "02-after": 1011.0,
+        "03-after": 1962.0,
+        "04-before": 700.0
+      },
+      "runP95": {
+        "01-before": 2576,
+        "02-after": 2308,
+        "03-after": 3170,
+        "04-before": 2503
+      },
+      "beforeMedianOfRunMedians": 890.5,
+      "afterMedianOfRunMedians": 1486.5,
+      "changePercent": 66.92869174620999,
+      "pairedChangePercent": [
+        -6.475485661424607,
+        180.2857142857143
+      ]
+    },
+    {
+      "benchmark": "Virtualized List: Visible Row Update (UI)",
+      "framework": "getx",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1053.0,
+        "02-after": 985.0,
+        "03-after": 1720.5,
+        "04-before": 681.0
+      },
+      "runP95": {
+        "01-before": 2001,
+        "02-after": 2105,
+        "03-after": 2401,
+        "04-before": 1849
+      },
+      "beforeMedianOfRunMedians": 867.0,
+      "afterMedianOfRunMedians": 1352.75,
+      "changePercent": 56.02652825836216,
+      "pairedChangePercent": [
+        -6.457739791073125,
+        152.64317180616743
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6919.0,
+        "02-after": 6948.0,
+        "03-after": 6952.5,
+        "04-before": 6913.0
+      },
+      "runP95": {
+        "01-before": 7991,
+        "02-after": 7816,
+        "03-after": 8410,
+        "04-before": 8382
+      },
+      "beforeMedianOfRunMedians": 6916.0,
+      "afterMedianOfRunMedians": 6950.25,
+      "changePercent": 0.49522845575478147,
+      "pairedChangePercent": [
+        0.4191357132533602,
+        0.5713872414291998
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "riverpod",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 1546.0,
+        "02-after": 1288.5,
+        "03-after": 1026.5,
+        "04-before": 999.5
+      },
+      "runP95": {
+        "01-before": 2166,
+        "02-after": 2296,
+        "03-after": 2137,
+        "04-before": 1397
+      },
+      "beforeMedianOfRunMedians": 1272.75,
+      "afterMedianOfRunMedians": 1157.5,
+      "changePercent": -9.055195442938524,
+      "pairedChangePercent": [
+        -16.65588615782665,
+        2.701350675337677
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "riverpod",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1625.5,
+        "02-after": 1098.5,
+        "03-after": 1012.0,
+        "04-before": 945.5
+      },
+      "runP95": {
+        "01-before": 2202,
+        "02-after": 2189,
+        "03-after": 2107,
+        "04-before": 1642
+      },
+      "beforeMedianOfRunMedians": 1285.5,
+      "afterMedianOfRunMedians": 1055.25,
+      "changePercent": -17.91131855309218,
+      "pairedChangePercent": [
+        -32.420793601968626,
+        7.0333157059756735
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6787.5,
+        "02-after": 6855.5,
+        "03-after": 6890.0,
+        "04-before": 6842.5
+      },
+      "runP95": {
+        "01-before": 8238,
+        "02-after": 8334,
+        "03-after": 7710,
+        "04-before": 8400
+      },
+      "beforeMedianOfRunMedians": 6815.0,
+      "afterMedianOfRunMedians": 6872.75,
+      "changePercent": 0.8473954512105752,
+      "pairedChangePercent": [
+        1.0018416206261538,
+        0.6941907197661745
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "vanilla",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 1252.0,
+        "02-after": 962.0,
+        "03-after": 1141.5,
+        "04-before": 825.5
+      },
+      "runP95": {
+        "01-before": 2089,
+        "02-after": 1966,
+        "03-after": 1634,
+        "04-before": 2057
+      },
+      "beforeMedianOfRunMedians": 1038.75,
+      "afterMedianOfRunMedians": 1051.75,
+      "changePercent": 1.2515042117930308,
+      "pairedChangePercent": [
+        -23.162939297124595,
+        38.279830405814664
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "vanilla",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1612.5,
+        "02-after": 1041.5,
+        "03-after": 1464.0,
+        "04-before": 954.0
+      },
+      "runP95": {
+        "01-before": 2292,
+        "02-after": 2273,
+        "03-after": 1928,
+        "04-before": 1979
+      },
+      "beforeMedianOfRunMedians": 1283.25,
+      "afterMedianOfRunMedians": 1252.75,
+      "changePercent": -2.376777712838496,
+      "pairedChangePercent": [
+        -35.4108527131783,
+        53.45911949685536
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6902.0,
+        "02-after": 6815.0,
+        "03-after": 7117.5,
+        "04-before": 6852.5
+      },
+      "runP95": {
+        "01-before": 8175,
+        "02-after": 7781,
+        "03-after": 8054,
+        "04-before": 8777
+      },
+      "beforeMedianOfRunMedians": 6877.25,
+      "afterMedianOfRunMedians": 6966.25,
+      "changePercent": 1.2941219237340595,
+      "pairedChangePercent": [
+        -1.2605042016806678,
+        3.8672017511856893
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "levit",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 1241.5,
+        "02-after": 1378.5,
+        "03-after": 1340.0,
+        "04-before": 943.0
+      },
+      "runP95": {
+        "01-before": 1662,
+        "02-after": 2049,
+        "03-after": 1775,
+        "04-before": 1916
+      },
+      "beforeMedianOfRunMedians": 1092.25,
+      "afterMedianOfRunMedians": 1359.25,
+      "changePercent": 24.44495307850767,
+      "pairedChangePercent": [
+        11.035038260169161,
+        42.09968186638389
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "levit",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1672.0,
+        "02-after": 1540.5,
+        "03-after": 1606.5,
+        "04-before": 950.5
+      },
+      "runP95": {
+        "01-before": 2306,
+        "02-after": 2210,
+        "03-after": 2203,
+        "04-before": 2669
+      },
+      "beforeMedianOfRunMedians": 1311.25,
+      "afterMedianOfRunMedians": 1573.5,
+      "changePercent": 19.999999999999996,
+      "pairedChangePercent": [
+        -7.864832535885169,
+        69.0163072067333
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6975.5,
+        "02-after": 6882.5,
+        "03-after": 7100.5,
+        "04-before": 7012.0
+      },
+      "runP95": {
+        "01-before": 8087,
+        "02-after": 7845,
+        "03-after": 8229,
+        "04-before": 8165
+      },
+      "beforeMedianOfRunMedians": 6993.75,
+      "afterMedianOfRunMedians": 6991.5,
+      "changePercent": -0.032171581769435686,
+      "pairedChangePercent": [
+        -1.3332377607339962,
+        1.2621220764403862
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "getx",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 1037.5,
+        "02-after": 781.0,
+        "03-after": 1053.5,
+        "04-before": 1045.5
+      },
+      "runP95": {
+        "01-before": 1452,
+        "02-after": 1799,
+        "03-after": 1685,
+        "04-before": 2003
+      },
+      "beforeMedianOfRunMedians": 1041.5,
+      "afterMedianOfRunMedians": 917.25,
+      "changePercent": -11.929908785405663,
+      "pairedChangePercent": [
+        -24.72289156626506,
+        0.765184122429452
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "getx",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1380.0,
+        "02-after": 952.5,
+        "03-after": 1466.5,
+        "04-before": 1144.0
+      },
+      "runP95": {
+        "01-before": 2032,
+        "02-after": 1841,
+        "03-after": 2106,
+        "04-before": 2169
+      },
+      "beforeMedianOfRunMedians": 1262.0,
+      "afterMedianOfRunMedians": 1209.5,
+      "changePercent": -4.16006339144216,
+      "pairedChangePercent": [
+        -30.978260869565222,
+        28.190559440559436
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 7138.5,
+        "02-after": 6961.5,
+        "03-after": 6987.5,
+        "04-before": 6908.0
+      },
+      "runP95": {
+        "01-before": 8259,
+        "02-after": 8046,
+        "03-after": 8164,
+        "04-before": 7809
+      },
+      "beforeMedianOfRunMedians": 7023.25,
+      "afterMedianOfRunMedians": 6974.5,
+      "changePercent": -0.6941230911615026,
+      "pairedChangePercent": [
+        -2.479512502626602,
+        1.1508396062536175
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "bloc",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 848.5,
+        "02-after": 1055.0,
+        "03-after": 1383.0,
+        "04-before": 978.5
+      },
+      "runP95": {
+        "01-before": 1170,
+        "02-after": 1960,
+        "03-after": 1809,
+        "04-before": 1908
+      },
+      "beforeMedianOfRunMedians": 913.5,
+      "afterMedianOfRunMedians": 1219.0,
+      "changePercent": 33.44280240831965,
+      "pairedChangePercent": [
+        24.337065409546256,
+        41.33878385283598
+      ]
+    },
+    {
+      "benchmark": "Nested Leaf Rebuild (UI)",
+      "framework": "bloc",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1085.0,
+        "02-after": 1238.5,
+        "03-after": 1762.0,
+        "04-before": 1076.5
+      },
+      "runP95": {
+        "01-before": 1568,
+        "02-after": 2221,
+        "03-after": 2178,
+        "04-before": 2383
+      },
+      "beforeMedianOfRunMedians": 1080.75,
+      "afterMedianOfRunMedians": 1500.25,
+      "changePercent": 38.815637288919724,
+      "pairedChangePercent": [
+        14.147465437788021,
+        63.67858801672086
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6992.0,
+        "02-after": 7016.5,
+        "03-after": 7032.0,
+        "04-before": 7027.5
+      },
+      "runP95": {
+        "01-before": 13448,
+        "02-after": 8901,
+        "03-after": 12873,
+        "04-before": 11566
+      },
+      "beforeMedianOfRunMedians": 7009.75,
+      "afterMedianOfRunMedians": 7024.25,
+      "changePercent": 0.20685473804344934,
+      "pairedChangePercent": [
+        0.35040045766590033,
+        0.06403415154749847
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "vanilla",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 4869.0,
+        "02-after": 3940.0,
+        "03-after": 4251.5,
+        "04-before": 4124.0
+      },
+      "runP95": {
+        "01-before": 6724,
+        "02-after": 5732,
+        "03-after": 6304,
+        "04-before": 6252
+      },
+      "beforeMedianOfRunMedians": 4496.5,
+      "afterMedianOfRunMedians": 4095.75,
+      "changePercent": -8.912487490270216,
+      "pairedChangePercent": [
+        -19.079893201889508,
+        3.091658583899126
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "vanilla",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1353.5,
+        "02-after": 1190.0,
+        "03-after": 1251.0,
+        "04-before": 1271.5
+      },
+      "runP95": {
+        "01-before": 1762,
+        "02-after": 1534,
+        "03-after": 1625,
+        "04-before": 1523
+      },
+      "beforeMedianOfRunMedians": 1312.5,
+      "afterMedianOfRunMedians": 1220.5,
+      "changePercent": -7.0095238095238095,
+      "pairedChangePercent": [
+        -12.07979312892501,
+        -1.6122689736531637
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6981.0,
+        "02-after": 7065.5,
+        "03-after": 6980.5,
+        "04-before": 7036.5
+      },
+      "runP95": {
+        "01-before": 10784,
+        "02-after": 12139,
+        "03-after": 11569,
+        "04-before": 10365
+      },
+      "beforeMedianOfRunMedians": 7008.75,
+      "afterMedianOfRunMedians": 7023.0,
+      "changePercent": 0.20331728196896215,
+      "pairedChangePercent": [
+        1.2104283054003684,
+        -0.7958502096212627
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "levit",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 4111.0,
+        "02-after": 4339.0,
+        "03-after": 4403.0,
+        "04-before": 3482.5
+      },
+      "runP95": {
+        "01-before": 5972,
+        "02-after": 6652,
+        "03-after": 6851,
+        "04-before": 5250
+      },
+      "beforeMedianOfRunMedians": 3796.75,
+      "afterMedianOfRunMedians": 4371.0,
+      "changePercent": 15.124777770461574,
+      "pairedChangePercent": [
+        5.546095840428111,
+        26.43216080402011
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "levit",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1215.5,
+        "02-after": 1326.0,
+        "03-after": 1332.5,
+        "04-before": 1114.5
+      },
+      "runP95": {
+        "01-before": 1561,
+        "02-after": 1604,
+        "03-after": 1720,
+        "04-before": 1300
+      },
+      "beforeMedianOfRunMedians": 1165.0,
+      "afterMedianOfRunMedians": 1329.25,
+      "changePercent": 14.098712446351925,
+      "pairedChangePercent": [
+        9.090909090909083,
+        19.560340960071777
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6902.5,
+        "02-after": 6835.0,
+        "03-after": 6973.0,
+        "04-before": 7038.0
+      },
+      "runP95": {
+        "01-before": 11846,
+        "02-after": 8861,
+        "03-after": 9862,
+        "04-before": 8457
+      },
+      "beforeMedianOfRunMedians": 6970.25,
+      "afterMedianOfRunMedians": 6904.0,
+      "changePercent": -0.9504680606864935,
+      "pairedChangePercent": [
+        -0.9779065555957978,
+        -0.9235578289286783
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "getx",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 4106.5,
+        "02-after": 4156.0,
+        "03-after": 4132.5,
+        "04-before": 4047.5
+      },
+      "runP95": {
+        "01-before": 7422,
+        "02-after": 6166,
+        "03-after": 6294,
+        "04-before": 5638
+      },
+      "beforeMedianOfRunMedians": 4077.0,
+      "afterMedianOfRunMedians": 4144.25,
+      "changePercent": 1.649497179298498,
+      "pairedChangePercent": [
+        1.205406063557768,
+        2.100061766522554
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "getx",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1262.0,
+        "02-after": 1280.0,
+        "03-after": 1216.5,
+        "04-before": 1226.0
+      },
+      "runP95": {
+        "01-before": 1580,
+        "02-after": 1599,
+        "03-after": 1439,
+        "04-before": 1445
+      },
+      "beforeMedianOfRunMedians": 1244.0,
+      "afterMedianOfRunMedians": 1248.25,
+      "changePercent": 0.3416398713826263,
+      "pairedChangePercent": [
+        1.4263074484944571,
+        -0.7748776508972322
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6995.0,
+        "02-after": 6998.0,
+        "03-after": 11700.0,
+        "04-before": 7185.0
+      },
+      "runP95": {
+        "01-before": 12588,
+        "02-after": 8334,
+        "03-after": 17761,
+        "04-before": 11425
+      },
+      "beforeMedianOfRunMedians": 7090.0,
+      "afterMedianOfRunMedians": 9349.0,
+      "changePercent": 31.86177715091678,
+      "pairedChangePercent": [
+        0.042887776983557835,
+        62.839248434238
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "bloc",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 4265.5,
+        "02-after": 3691.0,
+        "03-after": 6362.0,
+        "04-before": 3929.0
+      },
+      "runP95": {
+        "01-before": 6241,
+        "02-after": 5111,
+        "03-after": 9583,
+        "04-before": 6123
+      },
+      "beforeMedianOfRunMedians": 4097.25,
+      "afterMedianOfRunMedians": 5026.5,
+      "changePercent": 22.67984623833059,
+      "pairedChangePercent": [
+        -13.468526550228576,
+        61.92415372868414
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "bloc",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1321.5,
+        "02-after": 1080.0,
+        "03-after": 990.5,
+        "04-before": 1144.0
+      },
+      "runP95": {
+        "01-before": 1607,
+        "02-after": 1459,
+        "03-after": 1646,
+        "04-before": 1588
+      },
+      "beforeMedianOfRunMedians": 1232.75,
+      "afterMedianOfRunMedians": 1035.25,
+      "changePercent": -16.021091056580815,
+      "pairedChangePercent": [
+        -18.274687854710557,
+        -13.417832167832167
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 7197.5,
+        "02-after": 6832.5,
+        "03-after": 6916.0,
+        "04-before": 6796.0
+      },
+      "runP95": {
+        "01-before": 12143,
+        "02-after": 10794,
+        "03-after": 9575,
+        "04-before": 12515
+      },
+      "beforeMedianOfRunMedians": 6996.75,
+      "afterMedianOfRunMedians": 6874.25,
+      "changePercent": -1.7508128774073706,
+      "pairedChangePercent": [
+        -5.07120527961098,
+        1.7657445556209517
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "riverpod",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 4600.0,
+        "02-after": 4385.5,
+        "03-after": 4652.5,
+        "04-before": 3982.5
+      },
+      "runP95": {
+        "01-before": 8437,
+        "02-after": 6534,
+        "03-after": 6318,
+        "04-before": 6688
+      },
+      "beforeMedianOfRunMedians": 4291.25,
+      "afterMedianOfRunMedians": 4519.0,
+      "changePercent": 5.307311389455283,
+      "pairedChangePercent": [
+        -4.663043478260864,
+        16.82360326428123
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "riverpod",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1281.5,
+        "02-after": 1335.5,
+        "03-after": 1270.5,
+        "04-before": 1212.5
+      },
+      "runP95": {
+        "01-before": 1544,
+        "02-after": 1592,
+        "03-after": 1496,
+        "04-before": 1623
+      },
+      "beforeMedianOfRunMedians": 1247.0,
+      "afterMedianOfRunMedians": 1303.0,
+      "changePercent": 4.490777866880524,
+      "pairedChangePercent": [
+        4.213811939133838,
+        4.783505154639167
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6953.0,
+        "02-after": 6838.5,
+        "03-after": 6973.5,
+        "04-before": 6927.0
+      },
+      "runP95": {
+        "01-before": 7851,
+        "02-after": 8121,
+        "03-after": 7532,
+        "04-before": 8365
+      },
+      "beforeMedianOfRunMedians": 6940.0,
+      "afterMedianOfRunMedians": 6906.0,
+      "changePercent": -0.4899135446685854,
+      "pairedChangePercent": [
+        -1.6467711779088123,
+        0.6712862711130363
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "levit",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 840.5,
+        "02-after": 551.5,
+        "03-after": 677.5,
+        "04-before": 645.5
+      },
+      "runP95": {
+        "01-before": 1303,
+        "02-after": 1077,
+        "03-after": 1256,
+        "04-before": 1322
+      },
+      "beforeMedianOfRunMedians": 743.0,
+      "afterMedianOfRunMedians": 614.5,
+      "changePercent": -17.29475100942126,
+      "pairedChangePercent": [
+        -34.38429506246282,
+        4.957397366382654
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "levit",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1544.5,
+        "02-after": 977.0,
+        "03-after": 1158.5,
+        "04-before": 1059.0
+      },
+      "runP95": {
+        "01-before": 2152,
+        "02-after": 1886,
+        "03-after": 2283,
+        "04-before": 1974
+      },
+      "beforeMedianOfRunMedians": 1301.75,
+      "afterMedianOfRunMedians": 1067.75,
+      "changePercent": -17.975801805262147,
+      "pairedChangePercent": [
+        -36.74328261573324,
+        9.39565627950898
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 7045.5,
+        "02-after": 6894.0,
+        "03-after": 6882.5,
+        "04-before": 6981.0
+      },
+      "runP95": {
+        "01-before": 7797,
+        "02-after": 7924,
+        "03-after": 7431,
+        "04-before": 7978
+      },
+      "beforeMedianOfRunMedians": 7013.25,
+      "afterMedianOfRunMedians": 6888.25,
+      "changePercent": -1.7823405696360428,
+      "pairedChangePercent": [
+        -2.150308707685755,
+        -1.4109726400229228
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "getx",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 678.5,
+        "02-after": 442.5,
+        "03-after": 682.5,
+        "04-before": 478.0
+      },
+      "runP95": {
+        "01-before": 1280,
+        "02-after": 841,
+        "03-after": 1124,
+        "04-before": 1163
+      },
+      "beforeMedianOfRunMedians": 578.25,
+      "afterMedianOfRunMedians": 562.5,
+      "changePercent": -2.7237354085603127,
+      "pairedChangePercent": [
+        -34.78260869565217,
+        42.78242677824269
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "getx",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1159.0,
+        "02-after": 739.0,
+        "03-after": 1324.5,
+        "04-before": 850.5
+      },
+      "runP95": {
+        "01-before": 2174,
+        "02-after": 1850,
+        "03-after": 2063,
+        "04-before": 1809
+      },
+      "beforeMedianOfRunMedians": 1004.75,
+      "afterMedianOfRunMedians": 1031.75,
+      "changePercent": 2.687235630753926,
+      "pairedChangePercent": [
+        -36.2381363244176,
+        55.73192239858906
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 7112.0,
+        "02-after": 6951.5,
+        "03-after": 6833.0,
+        "04-before": 6773.5
+      },
+      "runP95": {
+        "01-before": 7913,
+        "02-after": 8064,
+        "03-after": 7941,
+        "04-before": 8146
+      },
+      "beforeMedianOfRunMedians": 6942.75,
+      "afterMedianOfRunMedians": 6892.25,
+      "changePercent": -0.7273774801051403,
+      "pairedChangePercent": [
+        -2.256749156355453,
+        0.878423267144024
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "bloc",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 939.0,
+        "02-after": 639.5,
+        "03-after": 755.0,
+        "04-before": 652.5
+      },
+      "runP95": {
+        "01-before": 1284,
+        "02-after": 1357,
+        "03-after": 1264,
+        "04-before": 1656
+      },
+      "beforeMedianOfRunMedians": 795.75,
+      "afterMedianOfRunMedians": 697.25,
+      "changePercent": -12.378259503612943,
+      "pairedChangePercent": [
+        -31.895633652822152,
+        15.708812260536398
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "bloc",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1748.0,
+        "02-after": 1092.5,
+        "03-after": 1407.5,
+        "04-before": 1086.0
+      },
+      "runP95": {
+        "01-before": 2219,
+        "02-after": 1850,
+        "03-after": 2429,
+        "04-before": 1980
+      },
+      "beforeMedianOfRunMedians": 1417.0,
+      "afterMedianOfRunMedians": 1250.0,
+      "changePercent": -11.785462244177836,
+      "pairedChangePercent": [
+        -37.5,
+        29.60405156537753
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6933.0,
+        "02-after": 6909.0,
+        "03-after": 6955.5,
+        "04-before": 6913.5
+      },
+      "runP95": {
+        "01-before": 7827,
+        "02-after": 8080,
+        "03-after": 8232,
+        "04-before": 9124
+      },
+      "beforeMedianOfRunMedians": 6923.25,
+      "afterMedianOfRunMedians": 6932.25,
+      "changePercent": 0.12999675008125156,
+      "pairedChangePercent": [
+        -0.3461704889658135,
+        0.6075070514211411
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "riverpod",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 685.0,
+        "02-after": 804.5,
+        "03-after": 875.5,
+        "04-before": 504.0
+      },
+      "runP95": {
+        "01-before": 952,
+        "02-after": 1447,
+        "03-after": 1105,
+        "04-before": 1574
+      },
+      "beforeMedianOfRunMedians": 594.5,
+      "afterMedianOfRunMedians": 840.0,
+      "changePercent": 41.29520605550883,
+      "pairedChangePercent": [
+        17.445255474452548,
+        73.71031746031747
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "riverpod",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1181.5,
+        "02-after": 1347.0,
+        "03-after": 1664.5,
+        "04-before": 842.0
+      },
+      "runP95": {
+        "01-before": 2010,
+        "02-after": 2360,
+        "03-after": 2248,
+        "04-before": 2011
+      },
+      "beforeMedianOfRunMedians": 1011.75,
+      "afterMedianOfRunMedians": 1505.75,
+      "changePercent": 48.8262910798122,
+      "pairedChangePercent": [
+        14.007617435463393,
+        97.68408551068883
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 7056.0,
+        "02-after": 7040.0,
+        "03-after": 6900.5,
+        "04-before": 6787.5
+      },
+      "runP95": {
+        "01-before": 7979,
+        "02-after": 7994,
+        "03-after": 7693,
+        "04-before": 8116
+      },
+      "beforeMedianOfRunMedians": 6921.75,
+      "afterMedianOfRunMedians": 6970.25,
+      "changePercent": 0.7006898544443141,
+      "pairedChangePercent": [
+        -0.22675736961451642,
+        1.6648250460405078
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "vanilla",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 895.5,
+        "02-after": 1005.0,
+        "03-after": 796.5,
+        "04-before": 618.5
+      },
+      "runP95": {
+        "01-before": 1169,
+        "02-after": 1463,
+        "03-after": 1124,
+        "04-before": 1467
+      },
+      "beforeMedianOfRunMedians": 757.0,
+      "afterMedianOfRunMedians": 900.75,
+      "changePercent": 18.9894319682959,
+      "pairedChangePercent": [
+        12.227805695142369,
+        28.779304769603886
+      ]
+    },
+    {
+      "benchmark": "Progress Bar State Update (UI)",
+      "framework": "vanilla",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1743.5,
+        "02-after": 1606.5,
+        "03-after": 1335.0,
+        "04-before": 1112.0
+      },
+      "runP95": {
+        "01-before": 2265,
+        "02-after": 2555,
+        "03-after": 2024,
+        "04-before": 1774
+      },
+      "beforeMedianOfRunMedians": 1427.75,
+      "afterMedianOfRunMedians": 1470.75,
+      "changePercent": 3.0117317457537984,
+      "pairedChangePercent": [
+        -7.857757384571262,
+        20.05395683453237
+      ]
+    }
+  ]
+}

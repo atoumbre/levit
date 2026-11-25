@@ -3,11 +3,11 @@ import 'package:levit_monitor/levit_monitor.dart';
 
 void main() {
   MonitorEvent createEvent([String sid = 's1']) => ScopeCreateEvent(
-        sessionId: sid,
-        scopeId: 1,
-        scopeName: 'test',
-        parentScopeId: null,
-      );
+    sessionId: sid,
+    scopeId: 1,
+    scopeName: 'test',
+    parentScopeId: null,
+  );
 
   group('StateSnapshot Event Cache', () {
     test('stores applied events', () {
@@ -19,7 +19,10 @@ void main() {
       state.applyEvent(e2);
 
       expect(state.events, hasLength(2));
-      expect(state.events, containsAllInOrder([e1, e2]));
+      expect(
+        state.events.map((event) => event.seq),
+        containsAllInOrder([e1.seq, e2.seq]),
+      );
     });
 
     test('respects maxEvents limit', () {
@@ -32,11 +35,14 @@ void main() {
 
       expect(state.events, hasLength(3));
       // Should contain last 3 events
-      expect(state.events, containsAllInOrder(events.sublist(2)));
+      expect(
+        state.events.map((event) => event.seq),
+        containsAllInOrder(events.sublist(2).map((event) => event.seq)),
+      );
     });
 
     test('ignores SnapshotEvent for cache', () {
-      final state = StateSnapshot();
+      final state = StateSnapshot(maxEvents: 10);
       final snapshot = SnapshotEvent(sessionId: 's1', state: {});
 
       state.applyEvent(snapshot);
@@ -45,7 +51,7 @@ void main() {
     });
 
     test('clears cache on restore', () {
-      final state = StateSnapshot();
+      final state = StateSnapshot(maxEvents: 10);
       state.applyEvent(createEvent());
       expect(state.events, isNotEmpty);
 
@@ -58,7 +64,7 @@ void main() {
 
     test('handles batch events in cache', () {
       // Just verifying they are cached like any other event
-      final _ = StateSnapshot();
+      final _ = StateSnapshot(maxEvents: 10);
       // We don't need a valid batch for this test, just the type check
       // But we need to construct it validly if applyEvent processes it
       // Actually applyEvent will process it, so let's use a dummy batch event

@@ -10,12 +10,15 @@ void main() {
     expect(c1.value, 12);
   });
 
-  test('LxComputed staticDeps coverage (Active)', () {
-    final v = 0.lx;
-    final c = LxComputed(() => v.value + 1, staticDeps: true);
-    c.addListener(() {});
-    expect(c.value, 1);
-    v.value = 10;
-    expect(c.value, 11);
-  });
+  test(
+    'active static computed values update when their dependency changes',
+    () {
+      final v = 0.lx;
+      final c = LxComputed(() => v.value + 1, staticDeps: true);
+      c.addListener(() {});
+      expect(c.value, 1);
+      v.value = 10;
+      expect(c.value, 11);
+    },
+  );
 }

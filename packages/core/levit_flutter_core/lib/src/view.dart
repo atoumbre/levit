@@ -1,5 +1,22 @@
 part of '../levit_flutter_core.dart';
 
+T? _resolveStore<T>(BuildContext context, LevitStore<T> store, bool localOnly) {
+  try {
+    return store.findIn(
+      LScope.of(context) ?? Ls.currentScope,
+      localOnly: localOnly,
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
+Future<T> _resolveAsyncStore<T>(
+  BuildContext context,
+  LevitAsyncStore<T> store,
+  bool localOnly,
+) => store.findIn(LScope.of(context) ?? Ls.currentScope, localOnly: localOnly);
+
 /// A widget that consumes a [LevitController] and builds UI.
 ///
 /// [LView] combines finding a controller and building a reactive widget tree.
@@ -48,7 +65,8 @@ class LView<T> extends StatefulWidget {
   /// method; do not wrap the whole tree in another [LWatch].
   final bool autoWatch;
 
-  /// Optional dependency keys for re-resolution.
+  /// Explicit keys for re-resolution. Resolver identity alone does not trigger
+  /// another lookup; changing these keys or the bound scope does.
   final List<Object?>? args;
 
   /// Creates a view with a dependency factory and a builder.
@@ -61,10 +79,11 @@ class LView<T> extends StatefulWidget {
     this.args,
   });
 
-  /// Syntax sugar for consuming a [LevitStore].
+  /// Consumes a store, inheriting ancestor state unless [localOnly] is true.
   factory LView.store(
     LevitStore<T> state, {
     Key? key,
+    bool localOnly = false,
     required Widget Function(BuildContext context, T controller) builder,
     Widget Function(BuildContext context)? orElse,
     bool autoWatch = true,
@@ -72,29 +91,7 @@ class LView<T> extends StatefulWidget {
   }) {
     return LView<T>(
       key: key,
-      resolver: (context) => context.levit.findOrNull<T>(key: state),
-      builder: builder,
-      orElse: orElse,
-      autoWatch: autoWatch,
-      args: args,
-    );
-  }
-
-  /// Registers and consumes a dependency of type [T].
-  factory LView.put(
-    T Function() create, {
-    Key? key,
-    String? tag,
-    bool permanent = false,
-    required Widget Function(BuildContext context, T controller) builder,
-    Widget Function(BuildContext context)? orElse,
-    bool autoWatch = true,
-    List<Object?>? args,
-  }) {
-    return LView<T>(
-      key: key,
-      resolver: (context) =>
-          context.levit.put<T>(create, tag: tag, permanent: permanent),
+      resolver: (context) => _resolveStore(context, state, localOnly),
       builder: builder,
       orElse: orElse,
       autoWatch: autoWatch,
@@ -106,10 +103,7 @@ class LView<T> extends StatefulWidget {
   ///
   /// Subclasses can override this instead of providing a [builder].
   @protected
-  Widget buildView(
-    BuildContext context,
-    T controller,
-  ) {
+  Widget buildView(BuildContext context, T controller) {
     final b = builder;
     if (b != null) {
       return b(context, controller);
@@ -211,7 +205,8 @@ class LAsyncView<T> extends StatefulWidget {
   /// Builder for the error state.
   final Widget Function(BuildContext context, Object error)? error;
 
-  /// Optional dependency keys for re-resolution.
+  /// Explicit keys for re-resolution. Resolver identity alone does not trigger
+  /// another lookup; changing these keys or the bound scope does.
   final List<Object?>? args;
 
   /// Creates an async view.
@@ -225,53 +220,25 @@ class LAsyncView<T> extends StatefulWidget {
     this.args,
   });
 
-  /// Syntax sugar for consuming a [LevitAsyncStore].
+  /// Consumes an async store, inheriting ancestor state unless [localOnly] is true.
   factory LAsyncView.store(
     LevitAsyncStore<T> store, {
     Key? key,
+    bool localOnly = false,
     required Widget Function(BuildContext context, T controller) builder,
     bool autoWatch = true,
     Widget Function(BuildContext context)? loading,
     Widget Function(BuildContext context, Object error)? error,
     List<Object?>? args,
-  }) =>
-      LAsyncView<T>(
-        key: key,
-        resolver: (context) => context.levit.findAsync<T>(key: store),
-        builder: builder,
-        autoWatch: autoWatch,
-        loading: loading,
-        error: error,
-        args: args,
-      );
-
-  /// Registers an async dependency of type [T] and consumes it.
-  factory LAsyncView.put(
-    Future<T> Function() create, {
-    Key? key,
-    String? tag,
-    bool permanent = false,
-    bool isFactory = false,
-    required Widget Function(BuildContext context, T controller) builder,
-    bool autoWatch = true,
-    Widget Function(BuildContext context)? loading,
-    Widget Function(BuildContext context, Object error)? error,
-    List<Object?>? args,
-  }) {
-    return LAsyncView<T>(
-      key: key,
-      resolver: (context) async {
-        context.levit.lazyPutAsync<T>(create,
-            tag: tag, permanent: permanent, isFactory: isFactory);
-        return context.levit.findAsync<T>(tag: tag);
-      },
-      builder: builder,
-      autoWatch: autoWatch,
-      loading: loading,
-      error: error,
-      args: args,
-    );
-  }
+  }) => LAsyncView<T>(
+    key: key,
+    resolver: (context) => _resolveAsyncStore(context, store, localOnly),
+    builder: builder,
+    autoWatch: autoWatch,
+    loading: loading,
+    error: error,
+    args: args,
+  );
 
   /// Builds the view content for the given [controller].
   @protected
@@ -322,27 +289,8 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
   void didUpdateWidget(LAsyncView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    bool shouldUpdate = false;
-    if (widget.args != null || oldWidget.args != null) {
-      // Explicit args override resolver identity checks.
-      shouldUpdate = !_argsMatch(widget.args, oldWidget.args);
-    } else {
-      // Resolver identity is used when explicit args are not provided.
-      shouldUpdate = widget.resolver != oldWidget.resolver;
-    }
-
-    if (shouldUpdate) {
-      if (kDebugMode) {
-        if (widget.resolver.runtimeType.toString().contains('Closure') ||
-            widget.resolver.runtimeType.toString().contains('=>')) {
-          debugPrint(
-              'WARNING: [LAsyncView] resolver is an anonymous closure. This causes re-fetching on every build.\n'
-              'Consider using a method reference or explicitly passing `args` to control updates.');
-        }
-      }
-      setState(() {
-        future = _resolveFuture();
-      });
+    if (!_argsMatch(widget.args, oldWidget.args)) {
+      future = _resolveFuture();
     }
   }
 
@@ -375,7 +323,9 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
           }
 
           return LScope.runBridged(
-              context, () => widget.buildView(context, controller));
+            context,
+            () => widget.buildView(context, controller),
+          );
         }
 
         return widget.buildLoading(context);

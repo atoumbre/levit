@@ -2,7 +2,7 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('LxStatus Extension Coverage', () {
+  group('Reactive listener extensions and status callbacks', () {
     test('LxVarExtensions.listen creates LxWorker', () {
       final rx = 0.lx;
       var callCount = 0;

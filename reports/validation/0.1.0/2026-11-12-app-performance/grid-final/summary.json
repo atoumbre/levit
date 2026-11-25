@@ -1,0 +1,374 @@
+{
+  "order": [
+    "01-before",
+    "02-after",
+    "03-after",
+    "04-before"
+  ],
+  "note": "Two independent processes per revision; raw within-run samples are not independent trials.",
+  "cases": 20,
+  "samples": 1000,
+  "frames": 1000,
+  "rows": [
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "vanilla",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6572.5,
+        "02-after": 8951.0,
+        "03-after": 8697.5,
+        "04-before": 8396.0
+      },
+      "runP95": {
+        "01-before": 12372,
+        "02-after": 17250,
+        "03-after": 17053,
+        "04-before": 16030
+      },
+      "beforeMedianOfRunMedians": 7484.25,
+      "afterMedianOfRunMedians": 8824.25,
+      "changePercent": 17.904265624478064,
+      "pairedChangePercent": [
+        36.18866489159376,
+        3.5909957122439273
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "vanilla",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 3337.0,
+        "02-after": 4381.5,
+        "03-after": 4669.5,
+        "04-before": 4890.5
+      },
+      "runP95": {
+        "01-before": 5897,
+        "02-after": 8680,
+        "03-after": 10048,
+        "04-before": 8966
+      },
+      "beforeMedianOfRunMedians": 4113.75,
+      "afterMedianOfRunMedians": 4525.5,
+      "changePercent": 10.009115770282584,
+      "pairedChangePercent": [
+        31.300569373688948,
+        -4.518965340967185
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "vanilla",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1039.5,
+        "02-after": 1024.5,
+        "03-after": 994.5,
+        "04-before": 910.5
+      },
+      "runP95": {
+        "01-before": 1517,
+        "02-after": 1580,
+        "03-after": 1488,
+        "04-before": 1586
+      },
+      "beforeMedianOfRunMedians": 975.0,
+      "afterMedianOfRunMedians": 1009.5,
+      "changePercent": 3.5384615384615348,
+      "pairedChangePercent": [
+        -1.443001443001446,
+        9.225700164744644
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "levit",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 6117.5,
+        "02-after": 12229.0,
+        "03-after": 6546.5,
+        "04-before": 13932.0
+      },
+      "runP95": {
+        "01-before": 14449,
+        "02-after": 16824,
+        "03-after": 14541,
+        "04-before": 16884
+      },
+      "beforeMedianOfRunMedians": 10024.75,
+      "afterMedianOfRunMedians": 9387.75,
+      "changePercent": -6.354273173894609,
+      "pairedChangePercent": [
+        99.90192071924807,
+        -53.011053689348266
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "levit",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 4242.0,
+        "02-after": 6739.0,
+        "03-after": 4289.0,
+        "04-before": 6371.5
+      },
+      "runP95": {
+        "01-before": 6002,
+        "02-after": 9532,
+        "03-after": 6184,
+        "04-before": 9469
+      },
+      "beforeMedianOfRunMedians": 5306.75,
+      "afterMedianOfRunMedians": 5514.0,
+      "changePercent": 3.905403495548132,
+      "pairedChangePercent": [
+        58.86374351720887,
+        -32.68461115906772
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "levit",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1222.0,
+        "02-after": 973.0,
+        "03-after": 1168.5,
+        "04-before": 1532.0
+      },
+      "runP95": {
+        "01-before": 1619,
+        "02-after": 2032,
+        "03-after": 1738,
+        "04-before": 1990
+      },
+      "beforeMedianOfRunMedians": 1377.0,
+      "afterMedianOfRunMedians": 1070.75,
+      "changePercent": -22.240377632534493,
+      "pairedChangePercent": [
+        -20.376432078559738,
+        -23.72715404699739
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "getx",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 7111.0,
+        "02-after": 6240.0,
+        "03-after": 10939.0,
+        "04-before": 5915.0
+      },
+      "runP95": {
+        "01-before": 14603,
+        "02-after": 12299,
+        "03-after": 15715,
+        "04-before": 9205
+      },
+      "beforeMedianOfRunMedians": 6513.0,
+      "afterMedianOfRunMedians": 8589.5,
+      "changePercent": 31.882389068017815,
+      "pairedChangePercent": [
+        -12.24862888482633,
+        84.93660185967877
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "getx",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 4613.5,
+        "02-after": 3343.5,
+        "03-after": 5515.0,
+        "04-before": 4209.5
+      },
+      "runP95": {
+        "01-before": 7313,
+        "02-after": 4741,
+        "03-after": 9796,
+        "04-before": 5434
+      },
+      "beforeMedianOfRunMedians": 4411.5,
+      "afterMedianOfRunMedians": 4429.25,
+      "changePercent": 0.4023574747818115,
+      "pairedChangePercent": [
+        -27.527907228785086,
+        31.01318446371304
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "getx",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1318.0,
+        "02-after": 1065.0,
+        "03-after": 1347.5,
+        "04-before": 1159.5
+      },
+      "runP95": {
+        "01-before": 1676,
+        "02-after": 1266,
+        "03-after": 1940,
+        "04-before": 1538
+      },
+      "beforeMedianOfRunMedians": 1238.75,
+      "afterMedianOfRunMedians": 1206.25,
+      "changePercent": -2.623612512613527,
+      "pairedChangePercent": [
+        -19.195751138088013,
+        16.213885295385943
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "bloc",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 7001.0,
+        "02-after": 12928.5,
+        "03-after": 11551.5,
+        "04-before": 11631.0
+      },
+      "runP95": {
+        "01-before": 17245,
+        "02-after": 17377,
+        "03-after": 15870,
+        "04-before": 16584
+      },
+      "beforeMedianOfRunMedians": 9316.0,
+      "afterMedianOfRunMedians": 12240.0,
+      "changePercent": 31.386861313868607,
+      "pairedChangePercent": [
+        84.6664762176832,
+        -0.6835181841630122
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "bloc",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 3454.5,
+        "02-after": 7436.5,
+        "03-after": 5914.5,
+        "04-before": 5599.5
+      },
+      "runP95": {
+        "01-before": 7657,
+        "02-after": 9861,
+        "03-after": 9362,
+        "04-before": 9458
+      },
+      "beforeMedianOfRunMedians": 4527.0,
+      "afterMedianOfRunMedians": 6675.5,
+      "changePercent": 47.45968632648554,
+      "pairedChangePercent": [
+        115.26993776233896,
+        5.625502276989014
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "bloc",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1170.0,
+        "02-after": 982.0,
+        "03-after": 1480.5,
+        "04-before": 1261.0
+      },
+      "runP95": {
+        "01-before": 2369,
+        "02-after": 1829,
+        "03-after": 1892,
+        "04-before": 1662
+      },
+      "beforeMedianOfRunMedians": 1215.5,
+      "afterMedianOfRunMedians": 1231.25,
+      "changePercent": 1.2957630604689463,
+      "pairedChangePercent": [
+        -16.068376068376068,
+        17.406819984139577
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "riverpod",
+      "metric": "wallUs",
+      "runP50": {
+        "01-before": 10040.5,
+        "02-after": 6555.5,
+        "03-after": 13059.0,
+        "04-before": 9664.0
+      },
+      "runP95": {
+        "01-before": 15937,
+        "02-after": 15624,
+        "03-after": 15724,
+        "04-before": 16058
+      },
+      "beforeMedianOfRunMedians": 9852.25,
+      "afterMedianOfRunMedians": 9807.25,
+      "changePercent": -0.4567484584739545,
+      "pairedChangePercent": [
+        -34.709426821373434,
+        35.130380794701985
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "riverpod",
+      "metric": "buildUs",
+      "runP50": {
+        "01-before": 5438.0,
+        "02-after": 4088.0,
+        "03-after": 5211.5,
+        "04-before": 5593.0
+      },
+      "runP95": {
+        "01-before": 8598,
+        "02-after": 8631,
+        "03-after": 8787,
+        "04-before": 9565
+      },
+      "beforeMedianOfRunMedians": 5515.5,
+      "afterMedianOfRunMedians": 4649.75,
+      "changePercent": -15.696673012419549,
+      "pairedChangePercent": [
+        -24.825303420375132,
+        -6.821026282853571
+      ]
+    },
+    {
+      "benchmark": "Dynamic Grid Churn (UI)",
+      "framework": "riverpod",
+      "metric": "rasterUs",
+      "runP50": {
+        "01-before": 1431.5,
+        "02-after": 1184.0,
+        "03-after": 1380.0,
+        "04-before": 1248.5
+      },
+      "runP95": {
+        "01-before": 1933,
+        "02-after": 1893,
+        "03-after": 1756,
+        "04-before": 2050
+      },
+      "beforeMedianOfRunMedians": 1340.0,
+      "afterMedianOfRunMedians": 1282.0,
+      "changePercent": -4.328358208955219,
+      "pairedChangePercent": [
+        -17.289556409360806,
+        10.5326391670004
+      ]
+    }
+  ]
+}

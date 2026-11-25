@@ -1,0 +1,156 @@
+[
+  {
+    "name": "benchmarks",
+    "version": "1.0.0+1",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/benchmarks",
+    "type": 3
+  },
+  {
+    "name": "levit",
+    "version": "0.0.12",
+    "private": false,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit",
+    "type": 0
+  },
+  {
+    "name": "levit_dart",
+    "version": "0.0.12",
+    "private": false,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit_dart",
+    "type": 0
+  },
+  {
+    "name": "levit_dart_core",
+    "version": "0.0.12",
+    "private": false,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_dart_core",
+    "type": 0
+  },
+  {
+    "name": "levit_devtools",
+    "version": "0.1.0",
+    "private": false,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/tools/levit_devtools",
+    "type": 0
+  },
+  {
+    "name": "levit_devtools_ui",
+    "version": "0.1.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/tools/levit_devtools_ui",
+    "type": 3
+  },
+  {
+    "name": "levit_example_async_catalog",
+    "version": "0.1.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/examples/async_catalog",
+    "type": 3
+  },
+  {
+    "name": "levit_example_route_scopes",
+    "version": "0.1.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/examples/route_scopes",
+    "type": 3
+  },
+  {
+    "name": "levit_example_scope_playground",
+    "version": "0.1.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/examples/scope_playground",
+    "type": 3
+  },
+  {
+    "name": "levit_example_task_board",
+    "version": "0.1.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/examples/task_board",
+    "type": 3
+  },
+  {
+    "name": "levit_flutter",
+    "version": "0.0.12",
+    "private": false,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit_flutter",
+    "type": 1
+  },
+  {
+    "name": "levit_flutter_core",
+    "version": "0.0.12",
+    "private": false,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core",
+    "type": 1
+  },
+  {
+    "name": "levit_flutter_core_example",
+    "version": "1.0.0+1",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/example",
+    "type": 3
+  },
+  {
+    "name": "levit_flutter_example",
+    "version": "0.1.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit_flutter/example",
+    "type": 3
+  },
+  {
+    "name": "levit_lints",
+    "version": "0.0.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/tools/levit_lints",
+    "type": 0
+  },
+  {
+    "name": "levit_monitor",
+    "version": "0.0.12",
+    "private": false,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor",
+    "type": 0
+  },
+  {
+    "name": "levit_reactive",
+    "version": "0.0.12",
+    "private": false,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive",
+    "type": 0
+  },
+  {
+    "name": "levit_scope",
+    "version": "0.0.12",
+    "private": false,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_scope",
+    "type": 0
+  },
+  {
+    "name": "levit_stress_tests",
+    "version": "0.0.1",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/stress_tests",
+    "type": 3
+  },
+  {
+    "name": "nexus_studio_app",
+    "version": "0.1.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/examples/nexus_studio/app",
+    "type": 3
+  },
+  {
+    "name": "nexus_studio_server",
+    "version": "1.0.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/examples/nexus_studio/server",
+    "type": 0
+  },
+  {
+    "name": "nexus_studio_shared",
+    "version": "1.0.0",
+    "private": true,
+    "location": "/Users/atoumbre/SoftiLab/levit-svg/examples/nexus_studio/shared",
+    "type": 0
+  }
+]

@@ -5,8 +5,8 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 import '../helpers.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('LView Shorthands', () {
@@ -48,8 +48,9 @@ void main() {
   });
 
   group('LScopedView Shorthands', () {
-    testWidgets('LScopedView.controller manages local scope and registration',
-        (tester) async {
+    testWidgets('LScopedView.controller manages local scope and registration', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: LScopedView<TestController>(
@@ -66,8 +67,9 @@ void main() {
       expect(() => Levit.find<TestController>(), throwsA(isA<Exception>()));
     });
 
-    testWidgets('LAsyncScope + LView manages async scope registration',
-        (tester) async {
+    testWidgets('LAsyncScope + LView manages async scope registration', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: LAsyncScope(

@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 
 void main() {
+  Levit.enableAutoLinking();
   runApp(
-    LScope.put(
-      () => RouteJournalController(),
-      child: const RouteScopesApp(),
-    ),
+    LScope.put(() => RouteJournalController(), child: const RouteScopesApp()),
   );
 }
 
@@ -39,7 +37,7 @@ class RouteJournalController extends LevitController {
   @override
   void onInit() {
     super.onInit();
-    autoDispose(entries);
+    own(entries);
     log('App ready');
   }
 
@@ -66,7 +64,7 @@ class RouteCounterController extends LevitController {
   @override
   void onInit() {
     super.onInit();
-    autoDispose(count);
+    own(count);
   }
 
   void increment() {
@@ -74,9 +72,9 @@ class RouteCounterController extends LevitController {
   }
 
   @override
-  void onClose() {
+  Future<void> onClose() async {
     onClosed();
-    super.onClose();
+    await super.onClose();
   }
 }
 
@@ -209,9 +207,7 @@ class AsyncProfileRoute extends StatelessWidget {
           counter: controller.count,
           onIncrement: () {
             controller.increment();
-            journal.log(
-              'Async profile counter -> ${controller.count.value}',
-            );
+            journal.log('Async profile counter -> ${controller.count.value}');
           },
           primaryAction: FilledButton(
             onPressed: () {
@@ -347,8 +343,9 @@ class _RouteScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: accentColor.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(20),
-                  border:
-                      Border.all(color: accentColor.withValues(alpha: 0.25)),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.25),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,14 +408,11 @@ class _VisibilityChip extends StatelessWidget {
     return LBuilder<LRouteVisibility>(
       visibility,
       (value) => Chip(
-        avatar: Icon(
-          switch (value) {
-            LRouteVisibility.current => Icons.visibility,
-            LRouteVisibility.covered => Icons.layers,
-            LRouteVisibility.inactive => Icons.visibility_off,
-          },
-          size: 18,
-        ),
+        avatar: Icon(switch (value) {
+          LRouteVisibility.current => Icons.visibility,
+          LRouteVisibility.covered => Icons.layers,
+          LRouteVisibility.inactive => Icons.visibility_off,
+        }, size: 18),
         label: Text('Visibility: ${value.name}'),
       ),
     );
@@ -440,21 +434,18 @@ class _JournalPanel extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: LBuilder<List<String>>(
-          journal.entries,
-          (entries) {
-            final snapshot = List<String>.of(entries, growable: false);
-            if (snapshot.isEmpty) {
-              return const Center(child: Text('No route events yet.'));
-            }
+        child: LBuilder<List<String>>(journal.entries, (entries) {
+          final snapshot = List<String>.of(entries, growable: false);
+          if (snapshot.isEmpty) {
+            return const Center(child: Text('No route events yet.'));
+          }
 
-            return ListView.separated(
-              itemCount: snapshot.length,
-              itemBuilder: (context, index) => Text(snapshot[index]),
-              separatorBuilder: (context, index) => const Divider(height: 12),
-            );
-          },
-        ),
+          return ListView.separated(
+            itemCount: snapshot.length,
+            itemBuilder: (context, index) => Text(snapshot[index]),
+            separatorBuilder: (context, index) => const Divider(height: 12),
+          );
+        }),
       ),
     );
   }
@@ -490,9 +481,9 @@ class _RouteLifecycleReporterState extends State<_RouteLifecycleReporter> {
     _worker = LxWorker<LRouteVisibility>(nextSource, (value) {
       if (!mounted || value == _lastLogged) return;
       _lastLogged = value;
-      context.levit
-          .find<RouteJournalController>()
-          .log('${widget.routeLabel}: ${value.name}');
+      context.levit.find<RouteJournalController>().log(
+        '${widget.routeLabel}: ${value.name}',
+      );
     });
   }
 

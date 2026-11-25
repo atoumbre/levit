@@ -19,29 +19,33 @@ void main() {
       middleware.disable();
     });
 
-    test('captures scope creation as ScopeCreateEvent', () async {
+    test('captures scope creation', () async {
       // Create a root scope
       final rootScope = LevitScope.root('test_root');
       await Future.delayed(Duration.zero);
 
-      final events = transport.events.whereType<ScopeCreateEvent>();
+      final events = transport.events.where(
+        (event) => event.toJson()['type'] == 'scope_create',
+      );
       expect(events, isNotEmpty);
 
-      final event = events.firstWhere((e) => e.scopeName == 'test_root');
-      expect(event.parentScopeId, isNull);
+      final event = events.firstWhere(
+        (e) => e.toJson()['scopeName'] == 'test_root',
+      );
+      expect(event.toJson()['parentScopeId'], isNull);
 
       // Create a child scope
       final _ = rootScope.createScope('child_scope');
       await Future.delayed(Duration.zero);
 
       final childEvents = transport.events
-          .whereType<ScopeCreateEvent>()
-          .where((e) => e.scopeName == 'child_scope');
+          .where((event) => event.toJson()['type'] == 'scope_create')
+          .where((e) => e.toJson()['scopeName'] == 'child_scope');
       expect(childEvents, isNotEmpty);
-      expect(childEvents.first.parentScopeId, equals(rootScope.id));
+      expect(childEvents.first.toJson()['parentScopeId'], equals(rootScope.id));
     });
 
-    test('captures scope disposal as ScopeDisposeEvent', () async {
+    test('captures scope disposal', () async {
       final scope = LevitScope.root('disposable_scope');
       await Future.delayed(Duration.zero);
 
@@ -49,15 +53,18 @@ void main() {
       await Future.delayed(Duration.zero);
 
       final createEvent = transport.events
-          .whereType<ScopeCreateEvent>()
-          .firstWhere((e) => e.scopeName == 'disposable_scope');
+          .where((event) => event.toJson()['type'] == 'scope_create')
+          .firstWhere((e) => e.toJson()['scopeName'] == 'disposable_scope');
 
-      final disposeEvents = transport.events.whereType<ScopeDisposeEvent>();
+      final disposeEvents = transport.events.where(
+        (event) => event.toJson()['type'] == 'scope_dispose',
+      );
       expect(disposeEvents, isNotEmpty);
 
-      final event =
-          disposeEvents.firstWhere((e) => e.scopeId == createEvent.scopeId);
-      expect(event.scopeName, equals('disposable_scope'));
+      final event = disposeEvents.firstWhere(
+        (e) => e.toJson()['scopeId'] == createEvent.toJson()['scopeId'],
+      );
+      expect(event.toJson()['scopeName'], equals('disposable_scope'));
     });
   });
 }

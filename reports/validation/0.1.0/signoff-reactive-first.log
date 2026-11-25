@@ -1,0 +1,64 @@
+00:00 +0: loading test/core/cleanup_failure_acceptance_test.dart
+00:00 +0: middleware failure before=true still drains the binding
+00:00 +0 -1: middleware failure before=true still drains the binding [E]
+  Expected: throws <Instance of 'LxCleanupException'> with `all failures`: equals [StateError:Bad state: middleware, StateError:Bad state: binding] unordered
+    Actual: <Instance of 'Future<void>'>
+     Which: threw StateError:<Bad state: middleware>
+            stack test/core/cleanup_failure_acceptance_test.dart 28:9   main.<fn>.<fn>
+                  test/core/cleanup_failure_acceptance_test.dart 10:64  DisposeHook.onDispose.<fn>.<fn>
+                  package:levit_reactive/src/core.dart 879:68           LxBase.close
+                  test/core/cleanup_failure_acceptance_test.dart 31:29  main.<fn>
+                  
+            which is not an instance of 'LxCleanupException'
+  
+  package:test_api  OutstandingWork.complete
+  
+  Expected: true
+    Actual: <false>
+  
+  package:matcher                                      expect
+  test/core/cleanup_failure_acceptance_test.dart 38:7  main.<fn>
+  
+00:00 +0 -1: middleware failure before=false still drains the binding
+00:00 +0 -2: middleware failure before=false still drains the binding [E]
+  Expected: throws <Instance of 'LxCleanupException'> with `all failures`: equals [StateError:Bad state: middleware, StateError:Bad state: binding] unordered
+    Actual: <Instance of 'Future<void>'>
+     Which: threw StateError:<Bad state: middleware>
+            stack test/core/cleanup_failure_acceptance_test.dart 28:9   main.<fn>.<fn>
+                  test/core/cleanup_failure_acceptance_test.dart 10:64  DisposeHook.onDispose.<fn>.<fn>
+                  package:levit_reactive/src/core.dart 879:68           LxBase.close
+                  test/core/cleanup_failure_acceptance_test.dart 31:29  main.<fn>
+                  
+            which is not an instance of 'LxCleanupException'
+  
+  package:test_api  OutstandingWork.complete
+  
+  Expected: false
+    Actual: <true>
+  
+  package:matcher                                      expect
+  test/core/cleanup_failure_acceptance_test.dart 41:7  main.<fn>
+  
+00:00 +0 -2: async resource reports both observation and producer cleanup failures
+00:00 +0 -3: async resource reports both observation and producer cleanup failures [E]
+  Expected: throws <Instance of 'LxCleanupException'> with `all failures`: equals [StateError:Bad state: producer, StateError:Bad state: observation] unordered
+    Actual: <Instance of 'Future<void>'>
+     Which: threw StateError:<Bad state: observation>
+            stack test/core/cleanup_failure_acceptance_test.dart 59:7     main.<fn>.<fn>
+                  test/core/cleanup_failure_acceptance_test.dart 10:64    DisposeHook.onDispose.<fn>.<fn>
+                  package:levit_reactive/src/core.dart 879:68             LxBase.close
+                  package:levit_reactive/src/async_lifecycle.dart 146:29  _LxAsyncLifecycle.close
+                  test/core/cleanup_failure_acceptance_test.dart 61:27    main.<fn>
+                  
+            which is not an instance of 'LxCleanupException'
+  
+  test/core/cleanup_failure_acceptance_test.dart 66:5  main.<fn>
+  
+00:00 +0 -3: worker rejects self-drain and cancellation remains cooperative
+00:00 +1 -3: unbind drains errors and unobserved upstream errors reach the zone
+00:00 +2 -3: cleanup errors flatten, deduplicate and retain immutable detail
+00:00 +3 -3: future previous success preserves explicit nullable presence
+00:00 +4 -3: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

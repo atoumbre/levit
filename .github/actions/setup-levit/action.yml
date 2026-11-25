@@ -6,6 +6,10 @@ inputs:
     description: Flutter release channel
     required: false
     default: stable
+  flutter-version:
+    description: Validated 0.1.0 release toolchain (includes Dart 3.12.2)
+    required: false
+    default: '3.44.8'
   bootstrap:
     description: Run dart pub get and melos bootstrap
     required: false
@@ -24,6 +28,7 @@ runs:
       uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
       with:
         channel: ${{ inputs.channel }}
+        flutter-version: ${{ inputs.flutter-version }}
         cache: true
         pub-cache: true
         # No pubspec.lock files in this monorepo; key on manifests via caller suffix.

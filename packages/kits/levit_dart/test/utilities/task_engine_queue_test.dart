@@ -39,13 +39,19 @@ void main() {
     }, id: 'active');
 
     var cancelled = false;
-    final queuedFuture = engine.schedule((_) async => 'queued',
-        id: 'queued', onCancel: () => cancelled = true);
+    final queuedFuture = engine.schedule(
+      (_) async => 'queued',
+      id: 'queued',
+      onCancel: () => cancelled = true,
+    );
 
     await Future<void>.delayed(Duration.zero);
     engine.cancel('queued');
 
-    expect(await queuedFuture, isNull);
+    await expectLater(
+      queuedFuture,
+      throwsA(isA<LevitTaskCancelledException>()),
+    );
     expect(cancelled, isTrue);
 
     blocker.complete();
@@ -76,11 +82,14 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     engine.cancelAll();
 
-    expect(await queued1, isNull);
-    expect(await queued2, isNull);
+    await expectLater(queued1, throwsA(isA<LevitTaskCancelledException>()));
+    await expectLater(queued2, throwsA(isA<LevitTaskCancelledException>()));
     expect(cancels, containsAll(<String>['q1', 'q2']));
 
     blocker.complete();
-    expect(await activeFuture, isNull);
+    await expectLater(
+      activeFuture,
+      throwsA(isA<LevitTaskCancelledException>()),
+    );
   });
 }

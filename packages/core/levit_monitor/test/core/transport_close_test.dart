@@ -3,19 +3,21 @@ import 'package:test/test.dart';
 
 void main() {
   group('LevitTransport default close()', () {
-    test('close() default implementation does nothing and does not throw',
-        () async {
-      final transport = MinimalTransport();
+    test(
+      'close() default implementation does nothing and does not throw',
+      () async {
+        final transport = MinimalTransport();
 
-      // Call close - should not throw
-      await expectLater(transport.close(), completes);
+        // Call close - should not throw
+        await expectLater(transport.close(), completes);
 
-      // Can be called multiple times
-      await transport.close();
-      await transport.close();
+        // Can be called multiple times
+        await transport.close();
+        await transport.close();
 
-      expect(true, true);
-    });
+        expect(true, true);
+      },
+    );
   });
 }
 

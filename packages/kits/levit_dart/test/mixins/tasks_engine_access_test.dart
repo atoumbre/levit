@@ -8,31 +8,35 @@ class TestReactiveTasksController extends LevitController
 
 void main() {
   group('LevitTasksMixin tasksEngine access', () {
-    test('lazy-inits engine before onInit for manual test construction',
-        () async {
-      final controller = TestTasksController();
+    test(
+      'lazy-inits engine before onInit for manual test construction',
+      () async {
+        final controller = TestTasksController();
 
-      final result = await controller.tasksEngine.schedule((_) async => 'ok');
+        final result = await controller.tasksEngine.schedule((_) async => 'ok');
 
-      expect(result, 'ok');
-      await controller.onClose();
-    });
+        expect(result, 'ok');
+        await controller.onClose();
+      },
+    );
 
-    test('onInit reconfigures an engine created before initialization',
-        () async {
-      final controller = TestTasksController();
-      final engine = controller.tasksEngine;
-      expect(engine.ownerPath, '?');
+    test(
+      'onInit reconfigures an engine created before initialization',
+      () async {
+        final controller = TestTasksController();
+        final engine = controller.tasksEngine;
+        expect(engine.ownerPath, '?');
 
-      controller.didAttachToScope(LevitScope.root('test'), key: 'test');
-      controller.onInit();
+        controller.didAttachToScope(LevitScope.root('test'), key: 'test');
+        controller.onInit();
 
-      expect(controller.tasksEngine, same(engine));
-      expect(engine.ownerPath, controller.ownerPath);
-      expect(engine.maxConcurrent, controller.maxConcurrentTasks);
+        expect(controller.tasksEngine, same(engine));
+        expect(engine.ownerPath, controller.ownerPath);
+        expect(engine.maxConcurrent, controller.maxConcurrentTasks);
 
-      await controller.onClose();
-    });
+        await controller.onClose();
+      },
+    );
 
     test('throws a clear error after the controller is closed', () async {
       final controller = TestTasksController();
@@ -53,15 +57,17 @@ void main() {
   });
 
   group('LevitReactiveTasksMixin tasksEngine access', () {
-    test('lazy-inits engine before onInit for manual test construction',
-        () async {
-      final controller = TestReactiveTasksController();
+    test(
+      'lazy-inits engine before onInit for manual test construction',
+      () async {
+        final controller = TestReactiveTasksController();
 
-      final result = await controller.tasksEngine.schedule((_) async => 42);
+        final result = await controller.tasksEngine.schedule((_) async => 42);
 
-      expect(result, 42);
-      await controller.onClose();
-    });
+        expect(result, 42);
+        await controller.onClose();
+      },
+    );
 
     test('lazy-inits isBusy and totalProgress before onInit', () async {
       final controller = TestReactiveTasksController();
@@ -72,22 +78,26 @@ void main() {
       await controller.onClose();
     });
 
-    test('onInit reconfigures an engine created before initialization',
-        () async {
-      final controller = TestReactiveTasksController();
-      final engine = controller.tasksEngine;
-      expect(engine.ownerPath, '?');
+    test(
+      'onInit reconfigures an engine created before initialization',
+      () async {
+        final controller = TestReactiveTasksController();
+        final engine = controller.tasksEngine;
+        expect(engine.ownerPath, '?');
 
-      controller.didAttachToScope(LevitScope.root('reactive_test'),
-          key: 'test');
-      controller.onInit();
+        controller.didAttachToScope(
+          LevitScope.root('reactive_test'),
+          key: 'test',
+        );
+        controller.onInit();
 
-      expect(controller.tasksEngine, same(engine));
-      expect(engine.ownerPath, controller.ownerPath);
-      expect(engine.maxConcurrent, controller.maxConcurrentTasks);
+        expect(controller.tasksEngine, same(engine));
+        expect(engine.ownerPath, controller.ownerPath);
+        expect(engine.maxConcurrent, controller.maxConcurrentTasks);
 
-      await controller.onClose();
-    });
+        await controller.onClose();
+      },
+    );
 
     test('throws a clear error after the controller is closed', () async {
       final controller = TestReactiveTasksController();

@@ -1,0 +1,6 @@
+{
+  "runtime": "../comparison-7/runtime-source.json",
+  "fixture": "benchmarks/lib/profile_runtime.dart",
+  "fixtureSha256": "032e0fdf1b922c1be0d94884c25dc36eff2756ae126404590b25438942454bd2",
+  "note": "Candidate profile predates final middleware-error handling and lazy pending-initialization/cancellation/progress bookkeeping."
+}

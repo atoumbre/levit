@@ -6,24 +6,34 @@ import 'package:nexus_studio_app/controllers.dart';
 import 'package:nexus_studio_shared/shared.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-void main({
+Future<void> main({
   bool enableDevTools = kDebugMode,
   WebSocketChannel Function(Uri uri)? devToolsChannelBuilder,
   WebSocketChannel Function(Uri uri)? projectChannelBuilder,
-}) {
+}) async {
   WidgetsFlutterBinding.ensureInitialized();
+  Levit.enableAutoLinking();
 
   // Connect to LevitDevTools in debug mode
   if (kDebugMode && enableDevTools) {
     final transport = WebSocketTransport.connect(
-      'ws://localhost:9200/ws',
+      const String.fromEnvironment(
+        'LEVIT_INSPECTOR_URL',
+        defaultValue: 'ws://127.0.0.1:9200/ws',
+      ),
       appId: 'nexus-studio',
       channelBuilder: devToolsChannelBuilder,
       onError: (e) => debugPrint(
-          '⚠️ DevTool Server not available. Running without monitoring.'),
+        '⚠️ DevTool Server not available. Running without monitoring.',
+      ),
     );
 
-    LevitMonitor.attach(transport: transport);
+    await LevitMonitor.attach(
+      transport: transport,
+      historyCapacity: 1000,
+      includeStackTrace: true,
+      enableWorkerStatistics: true,
+    );
   }
 
   debugPrint('🚀 Registering Core Controllers...');
@@ -67,7 +77,7 @@ class EditorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pc = Levit.find<ProjectController>();
+    final pc = context.levit.find<ProjectController>();
 
     return Scaffold(
       body: Row(
@@ -190,7 +200,7 @@ class NodeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pc = Levit.find<ProjectController>();
+    final pc = context.levit.find<ProjectController>();
 
     // 1. Outer Scope: Position & Size (Layout)
     // Only rebuilds when node moves or resizes.
@@ -267,7 +277,7 @@ class PropertySidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pc = Levit.find<ProjectController>();
+    final pc = context.levit.find<ProjectController>();
 
     return Container(
       width: 280,
@@ -342,19 +352,10 @@ class _ColorButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pc = Levit.find<ProjectController>();
+    final pc = context.levit.find<ProjectController>();
     return GestureDetector(
       key: ValueKey('color_$value'),
-      onTap: () {
-        Lx.batch(() {
-          for (final node in pc.engine.nodes) {
-            if (pc.selectedIds.contains(node.id)) {
-              node.color.value = value;
-            }
-          }
-        });
-        pc.syncColors();
-      },
+      onTap: () => pc.colorSelection(value),
       child: Container(
         width: 48,
         height: 48,
@@ -453,7 +454,7 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pc = Levit.find<ProjectController>();
+    final pc = context.levit.find<ProjectController>();
     final auth = Levit.find<AuthController>();
 
     return Positioned(
@@ -495,8 +496,10 @@ class _TopBar extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon:
-                          const Icon(Icons.crop_square, color: Colors.white70),
+                      icon: const Icon(
+                        Icons.crop_square,
+                        color: Colors.white70,
+                      ),
                       tooltip: 'Add Square',
                       onPressed: () => pc.addNode('rect'),
                     ),
@@ -611,14 +614,16 @@ class _TopBar extends StatelessWidget {
                     pc.sessionTimer,
                     onSuccess: (time) => Text(
                       'Session: $time',
-                      style:
-                          const TextStyle(color: Colors.white54, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
                     ),
-                    onWaiting: () => const Text(
+                    onWaiting: (status) => const Text(
                       'Session: --:--',
                       style: TextStyle(color: Colors.white54, fontSize: 12),
                     ),
-                    onIdle: () => const SizedBox.shrink(),
+                    onIdle: (status) => const SizedBox.shrink(),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton.icon(
@@ -799,9 +804,9 @@ class StatsController extends LevitController {
   }
 
   @override
-  void onClose() {
+  Future<void> onClose() async {
     debugPrint('StatsController Closed');
-    super.onClose();
+    await super.onClose();
   }
 }
 

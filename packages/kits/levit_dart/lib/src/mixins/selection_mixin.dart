@@ -18,7 +18,7 @@ mixin LevitSelectionMixin<T> on LevitController {
   @override
   void onInit() {
     super.onInit();
-    autoDispose(selectedItems);
+    own(selectedItems);
   }
 
   /// Selects an [item].

@@ -1,3 +1,15 @@
+## 0.1.0-beta.1
+
+- Keep reactives created by nested dependency builders and initializers with their own registration during disposal and failed construction.
+
+- Coordinate the breaking ownership, refresh and tooling release. Requires Dart
+  3.12+ and Flutter 3.44+ where applicable; see MIGRATION_0.1.0.md in the repository.
+
+## 0.0.12
+
+- Add `onBeforeClose` for awaited preparation before LIFO resource disposal.
+- Add explicit `localOnly` store lookups while preserving inherited recipes by default.
+- Updated internal runtime constraints to `^0.0.12`.
 
 ## 0.0.11
 

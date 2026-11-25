@@ -1,0 +1,1874 @@
+[
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "notify_10000",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        143.0,
+        139.5
+      ],
+      "before": [
+        142.0,
+        140.5
+      ],
+      "reference": [
+        144.5,
+        138.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 141.25,
+      "before": 141.25,
+      "reference": 141.5
+    },
+    "changeVs": {
+      "before": 0.0,
+      "reference": -0.17667844522968323
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.7042253521126751,
+        -0.7117437722419906
+      ],
+      "reference": [
+        -1.038062283737029,
+        0.7220216606498298
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "notify_10000",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        132.0,
+        130.0
+      ],
+      "before": [
+        131.5,
+        130.5
+      ],
+      "reference": [
+        133.0,
+        128.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 131.0,
+      "before": 131.0,
+      "reference": 130.75
+    },
+    "changeVs": {
+      "before": 0.0,
+      "reference": 0.19120458891013214
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.3802281368821214,
+        -0.3831417624521105
+      ],
+      "reference": [
+        -0.7518796992481258,
+        1.1673151750972721
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "fanout_128_x_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        801.0,
+        764.5
+      ],
+      "before": [
+        1265.0,
+        1201.0
+      ],
+      "reference": [
+        3272.5,
+        3019.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 782.75,
+      "before": 1233.0,
+      "reference": 3146.0
+    },
+    "changeVs": {
+      "before": -36.51662611516626,
+      "reference": -75.11919898283534
+    },
+    "pairedChangesVs": {
+      "before": [
+        -36.6798418972332,
+        -36.344712739383844
+      ],
+      "reference": [
+        -75.52330022918258,
+        -74.68123861566485
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "fanout_128_x_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        786.0,
+        749.5
+      ],
+      "before": [
+        1239.5,
+        1182.0
+      ],
+      "reference": [
+        3174.0,
+        2970.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 767.75,
+      "before": 1210.75,
+      "reference": 3072.0
+    },
+    "changeVs": {
+      "before": -36.58889118315094,
+      "reference": -75.00813802083334
+    },
+    "pairedChangesVs": {
+      "before": [
+        -36.58733360225897,
+        -36.59052453468698
+      ],
+      "reference": [
+        -75.23629489603024,
+        -74.76430976430977
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "scope_lifetime_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        242.0,
+        245.5
+      ],
+      "before": [
+        247.0,
+        238.0
+      ],
+      "reference": [
+        248.0,
+        247.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 243.75,
+      "before": 242.5,
+      "reference": 247.5
+    },
+    "changeVs": {
+      "before": 0.5154639175257714,
+      "reference": -1.5151515151515138
+    },
+    "pairedChangesVs": {
+      "before": [
+        -2.0242914979757054,
+        3.1512605042016917
+      ],
+      "reference": [
+        -2.4193548387096753,
+        -0.6072874493927127
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "scope_lifetime_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        230.0,
+        233.5
+      ],
+      "before": [
+        232.5,
+        227.0
+      ],
+      "reference": [
+        234.0,
+        234.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 231.75,
+      "before": 229.75,
+      "reference": 234.25
+    },
+    "changeVs": {
+      "before": 0.8705114254624613,
+      "reference": -1.067235859124871
+    },
+    "pairedChangesVs": {
+      "before": [
+        -1.0752688172043001,
+        2.8634361233480066
+      ],
+      "reference": [
+        -1.7094017094017144,
+        -0.4264392324093813
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "tasks_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        173.0,
+        171.0
+      ],
+      "before": [
+        173.0,
+        170.5
+      ],
+      "reference": [
+        169.0,
+        163.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 172.0,
+      "before": 171.75,
+      "reference": 166.0
+    },
+    "changeVs": {
+      "before": 0.14556040756914523,
+      "reference": 3.6144578313253017
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.0,
+        0.2932551319648091
+      ],
+      "reference": [
+        2.3668639053254337,
+        4.907975460122693
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "tasks_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        161.0,
+        160.0
+      ],
+      "before": [
+        163.0,
+        159.5
+      ],
+      "reference": [
+        156.5,
+        153.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 160.5,
+      "before": 161.25,
+      "reference": 154.75
+    },
+    "changeVs": {
+      "before": -0.46511627906976605,
+      "reference": 3.7156704361873905
+    },
+    "pairedChangesVs": {
+      "before": [
+        -1.2269938650306789,
+        0.31347962382444194
+      ],
+      "reference": [
+        2.8753993610223683,
+        4.575163398692816
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        8323.0,
+        8334.5
+      ],
+      "before": [
+        8316.0,
+        8321.5
+      ],
+      "reference": [
+        8333.0,
+        8323.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 8328.75,
+      "before": 8318.75,
+      "reference": 8328.25
+    },
+    "changeVs": {
+      "before": 0.1202103681442468,
+      "reference": 0.006003662233955431
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.08417508417508657,
+        0.15622183500569875
+      ],
+      "reference": [
+        -0.12000480019200843,
+        0.13215594401394526
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "metric": "buildUs",
+    "processMediansUs": {
+      "candidate": [
+        1644.5,
+        1297.5
+      ],
+      "before": [
+        1584.5,
+        1466.5
+      ],
+      "reference": [
+        1622.5,
+        1254.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 1471.0,
+      "before": 1525.5,
+      "reference": 1438.5
+    },
+    "changeVs": {
+      "before": -3.572599147820388,
+      "reference": 2.2592978797358443
+    },
+    "pairedChangesVs": {
+      "before": [
+        3.7866834963711016,
+        -11.52403682236618
+      ],
+      "reference": [
+        1.3559322033898313,
+        3.427660422479084
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "metric": "rasterUs",
+    "processMediansUs": {
+      "candidate": [
+        463.5,
+        338.5
+      ],
+      "before": [
+        415.5,
+        418.0
+      ],
+      "reference": [
+        421.0,
+        305.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 401.0,
+      "before": 416.75,
+      "reference": 363.25
+    },
+    "changeVs": {
+      "before": -3.7792441511697694,
+      "reference": 10.392291810048171
+    },
+    "pairedChangesVs": {
+      "before": [
+        11.55234657039712,
+        -19.01913875598086
+      ],
+      "reference": [
+        10.09501187648456,
+        10.801963993453345
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "metric": "totalUs",
+    "processMediansUs": {
+      "candidate": [
+        2284.0,
+        1775.5
+      ],
+      "before": [
+        2193.0,
+        2034.5
+      ],
+      "reference": [
+        2197.5,
+        1731.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 2029.75,
+      "before": 2113.75,
+      "reference": 1964.5
+    },
+    "changeVs": {
+      "before": -3.9739798935541137,
+      "reference": 3.3214558411809536
+    },
+    "pairedChangesVs": {
+      "before": [
+        4.149566803465565,
+        -12.730400589825507
+      ],
+      "reference": [
+        3.9362912400455086,
+        2.541149292520939
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "notify_10000",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        44587.0,
+        43791.5
+      ],
+      "before": [
+        44239.0,
+        43490.0
+      ],
+      "reference": [
+        45957.0,
+        48950.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 44189.25,
+      "before": 43864.5,
+      "reference": 47453.75
+    },
+    "changeVs": {
+      "before": 0.7403481174982129,
+      "reference": -6.879329873824513
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.7866362259544735,
+        0.6932628190388535
+      ],
+      "reference": [
+        -2.9810475009247828,
+        -10.53921818980399
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "notify_10000",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        44417.5,
+        43747.0
+      ],
+      "before": [
+        44191.0,
+        43437.0
+      ],
+      "reference": [
+        4117.0,
+        4538.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 44082.25,
+      "before": 43814.0,
+      "reference": 4327.5
+    },
+    "changeVs": {
+      "before": 0.6122472269137758,
+      "reference": 918.6539572501443
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.5125478038514597,
+        0.7136772797384783
+      ],
+      "reference": [
+        978.8802526111245,
+        864.0149845747026
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "fanout_128_x_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        59658.0,
+        57037.5
+      ],
+      "before": [
+        56913.0,
+        56230.5
+      ],
+      "reference": [
+        63449.0,
+        66125.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 58347.75,
+      "before": 56571.75,
+      "reference": 64787.25
+    },
+    "changeVs": {
+      "before": 3.139376102029723,
+      "reference": -9.939455679937026
+    },
+    "pairedChangesVs": {
+      "before": [
+        4.8231511254019255,
+        1.4351641902526246
+      ],
+      "reference": [
+        -5.974877460637673,
+        -13.743563375702262
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "fanout_128_x_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        59619.0,
+        56996.5
+      ],
+      "before": [
+        56866.0,
+        56184.0
+      ],
+      "reference": [
+        11113.5,
+        11552.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 58307.75,
+      "before": 56525.0,
+      "reference": 11332.75
+    },
+    "changeVs": {
+      "before": 3.1539141972578566,
+      "reference": 414.50662901767004
+    },
+    "pairedChangesVs": {
+      "before": [
+        4.841205641332258,
+        1.4461412501779902
+      ],
+      "reference": [
+        436.45566203266293,
+        393.3907548476454
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "scope_lifetime_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        4710.5,
+        3886.5
+      ],
+      "before": [
+        4568.0,
+        4011.5
+      ],
+      "reference": [
+        4074.0,
+        4027.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 4298.5,
+      "before": 4289.75,
+      "reference": 4050.75
+    },
+    "changeVs": {
+      "before": 0.20397459059384726,
+      "reference": 6.116151330000608
+    },
+    "pairedChangesVs": {
+      "before": [
+        3.1195271453590134,
+        -3.116041381029544
+      ],
+      "reference": [
+        15.623465881197829,
+        -3.500931098696458
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "scope_lifetime_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        4665.5,
+        3862.5
+      ],
+      "before": [
+        4540.5,
+        3997.5
+      ],
+      "reference": [
+        1147.5,
+        1132.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 4264.0,
+      "before": 4269.0,
+      "reference": 1140.0
+    },
+    "changeVs": {
+      "before": -0.11712344811430908,
+      "reference": 274.03508771929825
+    },
+    "pairedChangesVs": {
+      "before": [
+        2.7530007708402193,
+        -3.3771106941838602
+      ],
+      "reference": [
+        306.57952069716777,
+        241.05960264900662
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "tasks_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        169.0,
+        161.0
+      ],
+      "before": [
+        164.0,
+        166.0
+      ],
+      "reference": [
+        169.0,
+        167.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 165.0,
+      "before": 165.0,
+      "reference": 168.0
+    },
+    "changeVs": {
+      "before": 0.0,
+      "reference": -1.7857142857142905
+    },
+    "pairedChangesVs": {
+      "before": [
+        3.0487804878048808,
+        -3.0120481927710885
+      ],
+      "reference": [
+        0.0,
+        -3.59281437125748
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "tasks_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        163.5,
+        156.0
+      ],
+      "before": [
+        160.0,
+        161.0
+      ],
+      "reference": [
+        164.0,
+        162.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 159.75,
+      "before": 160.5,
+      "reference": 163.0
+    },
+    "changeVs": {
+      "before": -0.4672897196261627,
+      "reference": -1.9938650306748462
+    },
+    "pairedChangesVs": {
+      "before": [
+        2.187500000000009,
+        -3.105590062111796
+      ],
+      "reference": [
+        -0.3048780487804881,
+        -3.703703703703709
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        8328.5,
+        8303.5
+      ],
+      "before": [
+        8324.0,
+        8314.0
+      ],
+      "reference": [
+        8318.0,
+        8315.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 8316.0,
+      "before": 8319.0,
+      "reference": 8316.75
+    },
+    "changeVs": {
+      "before": -0.036062026685901305,
+      "reference": -0.009017945711964348
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.0540605478135614,
+        -0.12629299975943642
+      ],
+      "reference": [
+        0.1262322673719618,
+        -0.14430882087667074
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "metric": "buildUs",
+    "processMediansUs": {
+      "candidate": [
+        1458.5,
+        1314.5
+      ],
+      "before": [
+        1285.0,
+        1423.5
+      ],
+      "reference": [
+        1540.5,
+        1490.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 1386.5,
+      "before": 1354.25,
+      "reference": 1515.25
+    },
+    "changeVs": {
+      "before": 2.3813919143437223,
+      "reference": -8.496947698399604
+    },
+    "pairedChangesVs": {
+      "before": [
+        13.501945525291825,
+        -7.657182999648748
+      ],
+      "reference": [
+        -5.322947095098995,
+        -11.77852348993289
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "metric": "rasterUs",
+    "processMediansUs": {
+      "candidate": [
+        386.0,
+        315.0
+      ],
+      "before": [
+        302.5,
+        328.5
+      ],
+      "reference": [
+        428.0,
+        393.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 350.5,
+      "before": 315.5,
+      "reference": 410.5
+    },
+    "changeVs": {
+      "before": 11.093502377179076,
+      "reference": -14.616321559074297
+    },
+    "pairedChangesVs": {
+      "before": [
+        27.60330578512398,
+        -4.109589041095896
+      ],
+      "reference": [
+        -9.813084112149529,
+        -19.84732824427481
+      ]
+    }
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "metric": "totalUs",
+    "processMediansUs": {
+      "candidate": [
+        2030.5,
+        1806.0
+      ],
+      "before": [
+        1780.0,
+        1903.5
+      ],
+      "reference": [
+        2169.5,
+        2073.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 1918.25,
+      "before": 1841.75,
+      "reference": 2121.5
+    },
+    "changeVs": {
+      "before": 4.153658205511057,
+      "reference": -9.580485505538539
+    },
+    "pairedChangesVs": {
+      "before": [
+        14.073033707865168,
+        -5.122143420015757
+      ],
+      "reference": [
+        -6.407006222631939,
+        -12.900892211237036
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "notify_10000",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        142.5,
+        134.0
+      ],
+      "before": [
+        139.0,
+        133.0
+      ],
+      "reference": [
+        142.0,
+        135.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 138.25,
+      "before": 136.0,
+      "reference": 138.5
+    },
+    "changeVs": {
+      "before": 1.6544117647058876,
+      "reference": -0.18050541516245744
+    },
+    "pairedChangesVs": {
+      "before": [
+        2.517985611510798,
+        0.7518796992481258
+      ],
+      "reference": [
+        0.35211267605634866,
+        -0.7407407407407418
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "notify_10000",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        132.0,
+        125.0
+      ],
+      "before": [
+        129.0,
+        124.0
+      ],
+      "reference": [
+        132.0,
+        127.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 128.5,
+      "before": 126.5,
+      "reference": 129.5
+    },
+    "changeVs": {
+      "before": 1.5810276679841806,
+      "reference": -0.7722007722007707
+    },
+    "pairedChangesVs": {
+      "before": [
+        2.3255813953488413,
+        0.8064516129032251
+      ],
+      "reference": [
+        0.0,
+        -1.5748031496062964
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "fanout_128_x_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        752.5,
+        730.0
+      ],
+      "before": [
+        1240.0,
+        1124.0
+      ],
+      "reference": [
+        3059.5,
+        2759.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 741.25,
+      "before": 1182.0,
+      "reference": 2909.25
+    },
+    "changeVs": {
+      "before": -37.28849407783418,
+      "reference": -74.52092463693391
+    },
+    "pairedChangesVs": {
+      "before": [
+        -39.31451612903226,
+        -35.053380782918154
+      ],
+      "reference": [
+        -75.4044778558588,
+        -73.54113809351215
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "fanout_128_x_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        737.0,
+        718.0
+      ],
+      "before": [
+        1210.5,
+        1112.5
+      ],
+      "reference": [
+        2990.5,
+        2752.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 727.5,
+      "before": 1161.5,
+      "reference": 2871.25
+    },
+    "changeVs": {
+      "before": -37.36547567800258,
+      "reference": -74.66260339573356
+    },
+    "pairedChangesVs": {
+      "before": [
+        -39.11606774060306,
+        -35.46067415730337
+      ],
+      "reference": [
+        -75.35529175723124,
+        -73.90988372093024
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "scope_lifetime_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        245.0,
+        240.0
+      ],
+      "before": [
+        241.0,
+        241.0
+      ],
+      "reference": [
+        249.5,
+        240.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 242.5,
+      "before": 241.0,
+      "reference": 244.75
+    },
+    "changeVs": {
+      "before": 0.6224066390041472,
+      "reference": -0.9193054136874323
+    },
+    "pairedChangesVs": {
+      "before": [
+        1.6597510373443924,
+        -0.4149377593360981
+      ],
+      "reference": [
+        -1.8036072144288595,
+        0.0
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "scope_lifetime_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        234.0,
+        229.0
+      ],
+      "before": [
+        230.0,
+        230.0
+      ],
+      "reference": [
+        236.0,
+        229.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 231.5,
+      "before": 230.0,
+      "reference": 232.5
+    },
+    "changeVs": {
+      "before": 0.6521739130434856,
+      "reference": -0.4301075268817178
+    },
+    "pairedChangesVs": {
+      "before": [
+        1.7391304347825987,
+        -0.43478260869564966
+      ],
+      "reference": [
+        -0.8474576271186418,
+        0.0
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "tasks_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        175.0,
+        173.0
+      ],
+      "before": [
+        174.0,
+        170.5
+      ],
+      "reference": [
+        162.5,
+        156.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 174.0,
+      "before": 172.25,
+      "reference": 159.25
+    },
+    "changeVs": {
+      "before": 1.0159651669085612,
+      "reference": 9.262166405023553
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.5747126436781658,
+        1.4662756598240456
+      ],
+      "reference": [
+        7.692307692307687,
+        10.897435897435903
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "tasks_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        164.0,
+        163.0
+      ],
+      "before": [
+        163.5,
+        161.0
+      ],
+      "reference": [
+        153.0,
+        147.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 163.5,
+      "before": 162.25,
+      "reference": 150.25
+    },
+    "changeVs": {
+      "before": 0.7704160246533087,
+      "reference": 8.818635607321124
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.3058103975535076,
+        1.2422360248447228
+      ],
+      "reference": [
+        7.189542483660127,
+        10.508474576271176
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        8321.0,
+        8313.5
+      ],
+      "before": [
+        8340.0,
+        8321.5
+      ],
+      "reference": [
+        8304.0,
+        8311.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 8317.25,
+      "before": 8330.75,
+      "reference": 8307.75
+    },
+    "changeVs": {
+      "before": -0.16205023557303022,
+      "reference": 0.11435105774728616
+    },
+    "pairedChangesVs": {
+      "before": [
+        -0.22781774580336034,
+        -0.09613651384966504
+      ],
+      "reference": [
+        0.2047206165703308,
+        0.024063045178368547
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "metric": "buildUs",
+    "processMediansUs": {
+      "candidate": [
+        1475.5,
+        1267.0
+      ],
+      "before": [
+        1504.0,
+        1881.5
+      ],
+      "reference": [
+        1718.0,
+        1753.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 1371.25,
+      "before": 1692.75,
+      "reference": 1735.5
+    },
+    "changeVs": {
+      "before": -18.992763255058343,
+      "reference": -20.988187842120432
+    },
+    "pairedChangesVs": {
+      "before": [
+        -1.8949468085106336,
+        -32.66011161307467
+      ],
+      "reference": [
+        -14.115250291036086,
+        -27.72390188248717
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "metric": "rasterUs",
+    "processMediansUs": {
+      "candidate": [
+        409.5,
+        283.0
+      ],
+      "before": [
+        422.5,
+        382.5
+      ],
+      "reference": [
+        423.0,
+        363.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 346.25,
+      "before": 402.5,
+      "reference": 393.0
+    },
+    "changeVs": {
+      "before": -13.975155279503104,
+      "reference": -11.895674300254456
+    },
+    "pairedChangesVs": {
+      "before": [
+        -3.076923076923077,
+        -26.013071895424833
+      ],
+      "reference": [
+        -3.1914893617021267,
+        -22.03856749311295
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "metric": "totalUs",
+    "processMediansUs": {
+      "candidate": [
+        2083.0,
+        1684.5
+      ],
+      "before": [
+        2116.0,
+        2488.5
+      ],
+      "reference": [
+        2315.5,
+        2327.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 1883.75,
+      "before": 2302.25,
+      "reference": 2321.5
+    },
+    "changeVs": {
+      "before": -18.177869475513088,
+      "reference": -18.85634288175748
+    },
+    "pairedChangesVs": {
+      "before": [
+        -1.5595463137996202,
+        -32.308619650391805
+      ],
+      "reference": [
+        -10.041027855754692,
+        -27.62620837808808
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "notify_10000",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        45311.0,
+        45418.0
+      ],
+      "before": [
+        45520.0,
+        42630.0
+      ],
+      "reference": [
+        47029.0,
+        43212.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 45364.5,
+      "before": 44075.0,
+      "reference": 45120.5
+    },
+    "changeVs": {
+      "before": 2.9256948383437287,
+      "reference": 0.5407741492226448
+    },
+    "pairedChangesVs": {
+      "before": [
+        -0.4591388400702945,
+        6.539995308468205
+      ],
+      "reference": [
+        -3.6530651300261563,
+        5.105063408312516
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "notify_10000",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        45268.5,
+        45369.0
+      ],
+      "before": [
+        45447.0,
+        42593.0
+      ],
+      "reference": [
+        4969.0,
+        4737.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 45318.75,
+      "before": 44020.0,
+      "reference": 4853.0
+    },
+    "changeVs": {
+      "before": 2.9503634711494753,
+      "reference": 833.8295899443643
+    },
+    "pairedChangesVs": {
+      "before": [
+        -0.3927651990230374,
+        6.5175028760594556
+      ],
+      "reference": [
+        811.0183135439727,
+        857.7580747308423
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "fanout_128_x_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        59355.5,
+        58339.0
+      ],
+      "before": [
+        59429.5,
+        57605.0
+      ],
+      "reference": [
+        64343.5,
+        59353.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 58847.25,
+      "before": 58517.25,
+      "reference": 61848.25
+    },
+    "changeVs": {
+      "before": 0.5639362752009047,
+      "reference": -4.852198728339118
+    },
+    "pairedChangesVs": {
+      "before": [
+        -0.12451728518665384,
+        1.2741949483551673
+      ],
+      "reference": [
+        -7.752142796086625,
+        -1.7084224891749322
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "fanout_128_x_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        59307.0,
+        58298.0
+      ],
+      "before": [
+        59385.5,
+        57358.0
+      ],
+      "reference": [
+        12528.0,
+        10785.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 58802.5,
+      "before": 58371.75,
+      "reference": 11656.5
+    },
+    "changeVs": {
+      "before": 0.7379425835271292,
+      "reference": 404.4610303264273
+    },
+    "pairedChangesVs": {
+      "before": [
+        -0.13218715006187987,
+        1.6388298057812278
+      ],
+      "reference": [
+        373.3955938697318,
+        440.5470560964302
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "scope_lifetime_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        4490.5,
+        4220.0
+      ],
+      "before": [
+        4457.0,
+        3971.5
+      ],
+      "reference": [
+        4254.5,
+        4121.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 4355.25,
+      "before": 4214.25,
+      "reference": 4188.0
+    },
+    "changeVs": {
+      "before": 3.3457910660259937,
+      "reference": 3.9935530085959847
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.7516266547004768,
+        6.257081707163548
+      ],
+      "reference": [
+        5.547067810553541,
+        2.3899065874074976
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "scope_lifetime_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        4445.5,
+        4197.5
+      ],
+      "before": [
+        4411.0,
+        3952.5
+      ],
+      "reference": [
+        1260.5,
+        1210.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 4321.5,
+      "before": 4181.75,
+      "reference": 1235.5
+    },
+    "changeVs": {
+      "before": 3.3419023136246784,
+      "reference": 249.77741804937273
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.7821355701654875,
+        6.198608475648326
+      ],
+      "reference": [
+        252.67750892502977,
+        246.7575382073523
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "tasks_100",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        162.0,
+        162.0
+      ],
+      "before": [
+        162.0,
+        154.0
+      ],
+      "reference": [
+        165.5,
+        155.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 162.0,
+      "before": 158.0,
+      "reference": 160.25
+    },
+    "changeVs": {
+      "before": 2.5316455696202445,
+      "reference": 1.0920436817472678
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.0,
+        5.1948051948051965
+      ],
+      "reference": [
+        -2.114803625377648,
+        4.516129032258065
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "tasks_100",
+    "metric": "body",
+    "processMediansUs": {
+      "candidate": [
+        157.5,
+        156.5
+      ],
+      "before": [
+        157.0,
+        150.0
+      ],
+      "reference": [
+        160.5,
+        151.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 157.0,
+      "before": 153.5,
+      "reference": 155.75
+    },
+    "changeVs": {
+      "before": 2.28013029315961,
+      "reference": 0.8025682182985605
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.31847133757962887,
+        4.333333333333322
+      ],
+      "reference": [
+        -1.869158878504673,
+        3.6423841059602724
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "metric": "total",
+    "processMediansUs": {
+      "candidate": [
+        8314.5,
+        8315.0
+      ],
+      "before": [
+        8308.5,
+        8324.0
+      ],
+      "reference": [
+        8314.0,
+        8293.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 8314.75,
+      "before": 8316.25,
+      "reference": 8303.75
+    },
+    "changeVs": {
+      "before": -0.018036975800395094,
+      "reference": 0.13247026945657492
+    },
+    "pairedChangesVs": {
+      "before": [
+        0.07221520129987447,
+        -0.1081210956271006
+      ],
+      "reference": [
+        0.006013952369499087,
+        0.2592391632000979
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "metric": "buildUs",
+    "processMediansUs": {
+      "candidate": [
+        1412.0,
+        1378.0
+      ],
+      "before": [
+        1453.5,
+        1864.0
+      ],
+      "reference": [
+        1441.5,
+        1452.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 1395.0,
+      "before": 1658.75,
+      "reference": 1447.0
+    },
+    "changeVs": {
+      "before": -15.900527505651851,
+      "reference": -3.5936420179682127
+    },
+    "pairedChangesVs": {
+      "before": [
+        -2.8551771585827335,
+        -26.07296137339056
+      ],
+      "reference": [
+        -2.0464793617759325,
+        -5.129087779690189
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "metric": "rasterUs",
+    "processMediansUs": {
+      "candidate": [
+        380.0,
+        364.5
+      ],
+      "before": [
+        383.0,
+        400.5
+      ],
+      "reference": [
+        380.5,
+        346.0
+      ]
+    },
+    "medianUs": {
+      "candidate": 372.25,
+      "before": 391.75,
+      "reference": 363.25
+    },
+    "changeVs": {
+      "before": -4.977664326738996,
+      "reference": 2.4776324845148023
+    },
+    "pairedChangesVs": {
+      "before": [
+        -0.7832898172323799,
+        -8.98876404494382
+      ],
+      "reference": [
+        -0.13140604467805073,
+        5.346820809248554
+      ]
+    }
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "metric": "totalUs",
+    "processMediansUs": {
+      "candidate": [
+        1907.5,
+        1914.5
+      ],
+      "before": [
+        1989.5,
+        2454.0
+      ],
+      "reference": [
+        1996.5,
+        1957.5
+      ]
+    },
+    "medianUs": {
+      "candidate": 1911.0,
+      "before": 2221.75,
+      "reference": 1977.0
+    },
+    "changeVs": {
+      "before": -13.986722178462918,
+      "reference": -3.3383915022761723
+    },
+    "pairedChangesVs": {
+      "before": [
+        -4.121638602663991,
+        -21.984515077424614
+      ],
+      "reference": [
+        -4.457801152016028,
+        -2.196679438058746
+      ]
+    }
+  }
+]

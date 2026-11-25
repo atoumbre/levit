@@ -10,19 +10,21 @@ void main() {
   testWidgets('LAsyncScope + LView supports autoWatch: false', (tester) async {
     final controller = TestController();
 
-    await tester.pumpWidget(MaterialApp(
-      home: LAsyncScope(
-        dependencyFactory: (scope) async {
-          await Future.delayed(const Duration(milliseconds: 10));
-          scope.put(() => controller);
-        },
-        loading: (_) => const Text('Loading...'),
-        child: LView<TestController>(
-          autoWatch: false,
-          builder: (context, c) => Text('Count: ${c.count.value}'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LAsyncScope(
+          dependencyFactory: (scope) async {
+            await Future.delayed(const Duration(milliseconds: 10));
+            scope.put(() => controller);
+          },
+          loading: (_) => const Text('Loading...'),
+          child: LView<TestController>(
+            autoWatch: false,
+            builder: (context, c) => Text('Count: ${c.count.value}'),
+          ),
         ),
       ),
-    ));
+    );
 
     // Wait for async init
     await tester.pump(const Duration(milliseconds: 20));

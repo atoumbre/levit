@@ -1,0 +1,233 @@
+00:00 +0: loading test/middleware/scope_dispose_middleware_test.dart
+00:00 +0: test/middleware/scope_dispose_middleware_test.dart: scope.dispose and middleware callback
+00:00 +1: test/middleware/scope_dispose_middleware_test.dart: scope.dispose and middleware callback
+00:00 +2: test/core/scope_cache_flattening_test.dart: Resolution cache flattening (4-level scope)
+00:00 +3: test/core/scope_key_string_test.dart: LevitScopeKey.toString uses debug string format
+00:00 +4: test/core/sync_async_test.dart: sync find() throws clear error on uninitialized async dependency
+00:00 +5: test/core/hooks_test.dart: Levit Hooks LevitScopeMiddleware.onCreate works
+00:00 +6: test/core/hooks_test.dart: Levit Hooks Multiple observers run in order
+00:00 +7: test/core/hooks_test.dart: Levit Hooks removeMiddleware works
+00:00 +8: test/core/scope_cache_fallback_test.dart: Resolution cache fallback find(type) clears stale parent cache when cached parent throws
+00:00 +9: test/core/scope_cache_fallback_test.dart: Resolution cache fallback find(tag) falls back when cached scope throws
+00:00 +10: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope calls onInit before didAttachToScope
+00:00 +11: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope calls onInit before didAttachToScope
+00:00 +12: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope calls onInit before didAttachToScope
+00:00 +13: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope calls onInit before didAttachToScope
+00:00 +14: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope calls onInit before didAttachToScope
+00:00 +15: test/core/scope_cache_fallback_test.dart: Resolution cache fallback findAsync(tag) falls back when cached scope recurses
+00:00 +16: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope called on synchronous put
+00:00 +17: test/core/scope_cache_fallback_test.dart: Resolution cache fallback findAsync(tag) propagates cached ancestor construction failure
+00:00 +18: test/core/scope_cache_fallback_test.dart: Resolution cache fallback findAsync(tag) propagates cached ancestor construction failure
+00:00 +19: test/core/scope_cache_fallback_test.dart: Resolution cache fallback findAsync(tag) propagates cached ancestor construction failure
+00:00 +20: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope called on put (simulated async)
+00:00 +21: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope called on put (simulated async)
+00:00 +22: test/core/scope_cache_fallback_test.dart: Resolution cache fallback findOrNullAsync(tag) clears stale parent cache when cached parent throws
+00:00 +23: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope called on lazyPutAsync instantiation
+00:00 +24: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope called on putFactoryAsync instantiation
+00:00 +25: test/core/lifecycle_hook_test.dart: LevitScopeDisposable.didAttachToScope called on _findLocal lazy instantiation (sync)
+00:00 +26: test/core/awaited_lifetime_contract_test.dart: singleton creation and cleanup both belong to disposal
+00:00 +27: test/core/awaited_lifetime_contract_test.dart: singleton creation and cleanup both belong to disposal
+00:00 +28: test/core/awaited_lifetime_contract_test.dart: owned children close before parent dependencies; borrowed children survive
+00:00 +29: test/core/awaited_lifetime_contract_test.dart: disposed waits while active and through asynchronous cleanup
+00:00 +30: test/core/awaited_lifetime_contract_test.dart: factory permanence is explicit and early release happens once
+00:00 +31: test/core/awaited_lifetime_contract_test.dart: external initialization awaiting a late singleton cannot deadlock disposal
+00:00 +32: test/core/lazy_put_async_already_instantiated_test.dart: lazyPutAsync coverage for already instantiated dependency
+00:00 +33: test/core/ls_run_zone_test.dart: Ls.run executes in scope zone
+00:00 +34: test/core/scope_lazy_put_async_disposed_test.dart: lazyPutAsync disposed during init throws and closes instance
+00:00 +35: test/core/optimization_test.dart: DI Optimization & Cache Invalidation lazyPut invalidates cache on re-registration
+00:00 +36: test/core/optimization_test.dart: DI Optimization & Cache Invalidation Shadowing parent dependency invalidates resolution cache (lazyPut)
+00:00 +37: test/core/optimization_test.dart: DI Optimization & Cache Invalidation Shadowing parent dependency invalidates resolution cache (create)
+00:00 +38: test/core/advanced_di_test.dart: SimpleDI Advanced Features lazyPut ignores if already instantiated
+00:00 +39: test/core/advanced_di_test.dart: SimpleDI Advanced Features lazyPut ignores if already instantiated
+00:00 +40: test/core/advanced_di_test.dart: SimpleDI Advanced Features lazyPut ignores if already instantiated
+00:00 +41: test/core/simple_di_test.dart: levit.put() registers and returns instance
+00:00 +42: test/core/simple_di_test.dart: levit.put() registers and returns instance
+00:00 +43: test/core/simple_di_test.dart: levit.put() registers and returns instance
+00:00 +44: test/core/simple_di_test.dart: levit.put() registers and returns instance
+00:00 +45: test/core/simple_di_test.dart: levit.put() registers and returns instance
+00:00 +46: test/core/simple_di_test.dart: levit.put() registers and returns instance
+00:00 +47: test/core/simple_di_test.dart: levit.put() registers and returns instance
+00:00 +48: test/core/simple_di_test.dart: levit.put() registers and returns instance
+00:00 +49: test/core/advanced_di_test.dart: SimpleDI Advanced Features putFactoryAsync (Async Factory) returns new instance each time
+00:00 +50: test/core/optimization_test.dart: DI Optimization & Cache Invalidation Reset hits cache optimization
+00:00 +51: test/core/simple_di_test.dart: levit.put() instance is retrievable via find
+00:00 +52: test/core/middleware_registration_idempotency_test.dart: LevitScope middleware registration idempotency adding same middleware instance twice is idempotent
+00:00 +53: test/core/middleware_registration_idempotency_test.dart: LevitScope middleware registration idempotency adding same middleware instance twice is idempotent
+00:00 +54: test/core/simple_di_test.dart: levit.put() calls onInit on LevitScopeDisposable
+00:00 +55: test/core/advanced_di_test.dart: SimpleDI Advanced Features Overwriting an existing lazy binding hits internal check
+00:00 +56: test/core/middleware_registration_idempotency_test.dart: LevitScope middleware registration idempotency token-based registration replaces previous middleware
+00:00 +57: test/core/simple_di_test.dart: levit.put() with tag registers separate instances
+00:00 +58: test/core/simple_di_test.dart: levit.put() with tag registers separate instances
+00:00 +59: test/core/simple_di_test.dart: levit.put() with tag registers separate instances
+00:00 +60: test/core/simple_di_test.dart: levit.put() with tag registers separate instances
+00:00 +61: test/core/advanced_di_test.dart: SimpleDI Advanced Features findOrNull returns null when missing
+00:00 +62: test/core/simple_di_test.dart: levit.put() requires awaited deletion before replacement
+00:00 +63: test/core/advanced_di_test.dart: SimpleDI Advanced Features findOrNull instantiates lazy
+00:00 +64: test/core/simple_di_test.dart: levit.lazyPut() does not instantiate immediately
+00:00 +65: test/core/advanced_di_test.dart: SimpleDI Advanced Features isInstantiated checks correctly
+00:00 +66: test/core/advanced_di_test.dart: SimpleDI Advanced Features isInstantiated checks correctly
+00:00 +67: test/core/simple_di_test.dart: levit.lazyPut() calls onInit on first find
+00:00 +68: test/core/advanced_di_test.dart: SimpleDI Advanced Features find throws when not found
+00:00 +69: test/core/advanced_di_test.dart: SimpleDI Advanced Features find throws when not found
+00:00 +70: test/core/simple_di_test.dart: levit.find() throws if not registered
+00:00 +71: test/core/advanced_di_test.dart: SimpleDI Advanced Features findAsync throws when not found
+00:00 +72: test/core/advanced_di_test.dart: SimpleDI Advanced Features findAsync throws when not found
+00:00 +73: test/core/simple_di_test.dart: levit.find() throws with tag in message
+00:00 +74: test/core/advanced_di_test.dart: SimpleDI Advanced Features delete returns false if not found
+00:00 +75: test/core/advanced_di_test.dart: SimpleDI Advanced Features registeredKeys returns list
+00:00 +76: test/core/advanced_di_test.dart: SimpleDI Advanced Features registeredKeys returns list
+00:00 +77: test/core/advanced_di_test.dart: SimpleDI Advanced Features reset respects permanent flag
+00:00 +78: test/core/advanced_di_test.dart: SimpleDI Advanced Features reset respects permanent flag
+00:00 +79: test/core/advanced_di_test.dart: SimpleDI Advanced Features reset respects permanent flag
+00:00 +80: test/core/advanced_di_test.dart: SimpleDI Advanced Features reset respects permanent flag
+00:00 +81: test/core/advanced_di_test.dart: SimpleDI Advanced Features reset respects permanent flag
+00:00 +82: test/core/simple_di_test.dart: levit.delete() force overrides permanent flag
+00:00 +83: test/core/advanced_di_test.dart: LevitScope Advanced Features finds from parent scope
+00:00 +84: test/core/simple_di_test.dart: levit.delete() deletes correct tagged instance
+00:00 +85: test/core/simple_di_test.dart: levit.delete() deletes correct tagged instance
+00:00 +86: test/core/advanced_di_test.dart: LevitScope Advanced Features findOrNull falls back correctly
+00:00 +87: test/core/simple_di_test.dart: levit.reset() clears all instances
+00:00 +88: test/core/simple_di_test.dart: levit.reset() clears all instances
+00:00 +89: test/core/simple_di_test.dart: levit.reset() clears all instances
+00:00 +90: test/core/advanced_di_test.dart: LevitScope Advanced Features delete local only
+00:00 +91: test/core/advanced_di_test.dart: LevitScope Advanced Features delete local only
+00:00 +92: test/core/advanced_di_test.dart: LevitScope Advanced Features delete local only
+00:00 +93: test/core/simple_di_test.dart: levit.reset() force clears permanent instances
+00:00 +94: test/core/advanced_di_test.dart: LevitScope Advanced Features put in scope overrides parent
+00:00 +95: test/core/advanced_di_test.dart: LevitScope Advanced Features put in scope overrides parent
+00:00 +96: test/core/advanced_di_test.dart: LevitScope Advanced Features put in scope overrides parent
+00:00 +97: test/core/simple_di_test.dart: Registration status isInstantiated returns false for lazyPut before find
+00:00 +98: test/core/advanced_di_test.dart: LevitScope Advanced Features putFactory in scope works
+00:00 +99: test/core/simple_di_test.dart: Registration status isInstantiated returns true after find
+00:00 +100: test/core/simple_di_test.dart: Registration status isInstantiated returns true after find
+00:00 +101: test/core/simple_di_test.dart: Registration status isInstantiated returns true after find
+00:00 +102: test/core/advanced_di_test.dart: LevitScope Advanced Features resolution cache hits
+00:00 +103: test/core/simple_di_test.dart: LevitScopeDisposable default onInit does nothing
+00:00 +104: test/core/advanced_di_test.dart: LevitScope Advanced Features resolution cache hits from parent
+00:00 +105: test/core/simple_di_test.dart: LevitScopeDisposable default onClose does nothing
+00:00 +106: test/core/advanced_di_test.dart: LevitScope Advanced Features resolution cache hits from global
+00:00 +107: test/core/advanced_di_test.dart: LevitScope Advanced Features resolution cache hits from global
+00:00 +108: test/core/simple_di_test.dart: Extensions ToBuilder creates a builder function
+00:00 +109: test/core/advanced_di_test.dart: LevitScope Advanced Features findAsync handles nullable values (unreachable default branch)
+00:00 +110: test/core/advanced_di_test.dart: LevitScope Advanced Features findOrNull finds cached local
+00:00 +111: test/core/observation_contract_test.dart: optional lookup returns only missing registrations as absent
+00:00 +112: test/core/scope_cache_overflow_test.dart: Cache Overflow (Logic > 500 items)
+00:00 +113: test/core/observation_contract_test.dart: snapshots are immutable, show ancestry and pending work, omit values
+00:00 +114: test/core/scope_disposal_invariants_test.dart: LevitScope disposal invariants reset(force: true) then dispose closes dependency exactly once
+00:00 +115: test/core/middleware_chain_test.dart: LevitScopeMiddlewareChain cannot be instantiated (private constructor)
+00:00 +116: test/core/scope_disposal_invariants_test.dart: LevitScope disposal invariants child disposal does not leak to parent and does not affect parent ownership
+00:00 +117: test/core/scope_disposal_invariants_test.dart: LevitScope disposal invariants child disposal does not leak to parent and does not affect parent ownership
+00:00 +118: test/core/scope_disposal_invariants_test.dart: LevitScope disposal invariants scope override isolation keeps parent instance intact after child disposal
+00:00 +119: test/core/observer_test.dart: LevitScopeMiddleware onRegister is called for put
+00:00 +120: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases LevitScope.put requires explicit awaited replacement
+00:00 +121: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases LevitScope.put requires explicit awaited replacement
+00:00 +122: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases LevitScope.put requires explicit awaited replacement
+00:00 +123: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases LevitScope.put requires explicit awaited replacement
+00:00 +124: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases LevitScope.put requires explicit awaited replacement
+00:00 +125: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases LevitScope.put requires explicit awaited replacement
+00:00 +126: test/core/observer_test.dart: LevitScopeMiddleware onRegister is called with correct scope name for child scopes
+00:00 +127: test/core/observer_test.dart: LevitScopeMiddleware onRegister is called with correct scope name for child scopes
+00:00 +128: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases LevitScope.findOrNull recursion fallbacks
+00:00 +129: test/core/observer_test.dart: LevitScopeMiddleware onResolve is called for find on lazy instance
+00:00 +130: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases SimpleDI.findAsync throws proper error message
+00:00 +131: test/core/observer_test.dart: LevitScopeMiddleware onResolve is called for each factory find
+00:00 +132: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases levit.findAsync works with sync factory
+00:00 +133: test/core/observer_test.dart: LevitScopeMiddleware onResolve is called for findAsync on lazy async instance
+00:00 +134: test/core/di_error_handling_test.dart: DI Error Handling & Scope Edge Cases LevitScope.find handles sync factory
+00:00 +135: test/core/observer_test.dart: LevitScopeMiddleware onResolve is called for findAsync on async factory
+00:00 +136: test/core/observer_test.dart: LevitScopeMiddleware onDelete is called for delete
+00:00 +137: test/core/observer_test.dart: LevitScopeMiddleware onDelete is called for reset
+00:01 +138: test/core/init_hook_test.dart: Levit Init Hooks LevitScopeMiddleware.onDependencyInit works
+00:01 +139: test/core/init_hook_test.dart: Levit Init Hooks LevitScopeMiddleware.onDependencyInit works
+00:01 +140: test/core/observer_test.dart: LevitScopeMiddleware multiple observers all observers are notified
+00:01 +141: test/core/observer_test.dart: LevitScopeMiddleware DefaultObserver Coverage default methods perform no-op without error
+00:01 +142: test/core/factory_ownership_contract_test.dart: registering scope owns factory results in reverse order
+00:01 +143: test/core/async_disposal_and_alias_test.dart: awaited scope disposal disposal diagnostics preserve singular and plural failures
+00:01 +144: test/core/factory_ownership_contract_test.dart: delete waits for pending async creation and rejects its result
+00:01 +145: test/core/async_disposal_and_alias_test.dart: awaited scope disposal awaits direct LevitDisposable and is idempotent
+00:01 +146: test/core/async_disposal_and_alias_test.dart: awaited scope disposal awaits direct LevitDisposable and is idempotent
+00:01 +147: test/core/async_disposal_and_alias_test.dart: awaited scope disposal awaits direct LevitDisposable and is idempotent
+00:01 +148: test/core/async_disposal_and_alias_test.dart: awaited scope disposal awaits direct LevitDisposable and is idempotent
+00:01 +149: test/core/factory_ownership_contract_test.dart: async factory replacement requires awaited deletion
+00:01 +150: test/core/async_disposal_and_alias_test.dart: awaited scope disposal disposes in reverse order and aggregates every failure
+00:01 +151: test/core/async_disposal_and_alias_test.dart: awaited scope disposal disposes in reverse order and aggregates every failure
+00:01 +152: test/core/factory_ownership_contract_test.dart: cleanup failures aggregate and registration ordering remains LIFO
+00:01 +153: test/core/factory_ownership_contract_test.dart: cleanup failures aggregate and registration ordering remains LIFO
+00:01 +154: test/core/async_disposal_and_alias_test.dart: bindExisting supports lazy async singleton aliases
+00:01 +155: test/core/factory_ownership_contract_test.dart: pending failures and concurrent teardown do not lose cleanup failures
+00:01 +156: test/core/factory_ownership_contract_test.dart: pending failures and concurrent teardown do not lose cleanup failures
+00:01 +157: test/core/async_disposal_and_alias_test.dart: bindExisting global accessor binds within the active scope
+00:01 +158: test/core/async_disposal_and_alias_test.dart: bindExisting rejects factory and missing-source aliases
+00:01 +159: test/core/async_disposal_and_alias_test.dart: bindExisting rejects key collisions and alias registration replacement
+00:01 +160: test/core/middleware_ordering_contract_test.dart: LevitScope middleware ordering contract register hooks run in deterministic registration order
+00:01 +161: test/core/scope_cache_resolution_test.dart: findOrNull and findAsync hit resolution cache
+00:01 +162: test/core/scope_cache_resolution_test.dart: findOrNull and findAsync hit resolution cache
+00:01 +163: test/core/ls_methods_proxy_test.dart: Ls methods proxy to active scope
+00:01 +164: test/core/ls_registered_metadata_test.dart: Ls.registeredCount and registeredKeys
+00:01 +165: test/core/scope_duplicate_name_warning_test.dart: createScope prints warning if child shares ancestor name
+00:01 +166: test/core/scope_cache_management_test.dart: LevitScope Cache Management clears resolution cache on delete and reset
+00:01 +167: test/core/ls_lazy_put_proxy_test.dart: Ls.lazyPut proxies
+00:01 +168: test/core/scope_resolution_error_test.dart: find and findAsync error paths
+00:01 +169: test/core/scope_test.dart: LevitScope Basic Registration put registers in scope
+00:01 +170: test/core/scope_cache_test.dart: Levit Scope Cache Coverage Correctly caches resolutions across deep nested scopes
+00:01 +171: test/core/ls_create_scope_test.dart: Ls.createScope returns a new scope
+00:01 +172: test/core/ls_create_scope_test.dart: Ls.createScope returns a new scope
+00:01 +173: test/core/scope_test.dart: LevitScope Basic Registration putFactory registers factory in scope
+00:01 +174: test/core/scope_cache_concurrent_test.dart: Cache Overwrite (Concurrent findAsync)
+00:01 +175: test/core/scope_cache_concurrent_test.dart: Cache Overwrite (Concurrent findAsync)
+00:01 +176: test/core/scope_cache_concurrent_test.dart: Cache Overwrite (Concurrent findAsync)
+00:01 +177: test/core/scope_cache_concurrent_test.dart: Cache Overwrite (Concurrent findAsync)
+00:01 +178: test/core/scope_cache_concurrent_test.dart: Cache Overwrite (Concurrent findAsync)
+00:01 +179: test/core/scope_test.dart: LevitScope Parent Fallback find throws if not found anywhere
+00:01 +180: test/core/scope_test.dart: LevitScope Local Override scope can override parent dependency
+00:01 +181: test/core/scope_test.dart: LevitScope Local Override override works with findOrNull
+00:01 +182: test/core/scope_test.dart: LevitScope Scope Reset reset clears scope only, not parent
+00:01 +183: test/core/scope_test.dart: LevitScope Scope Reset reset calls onClose on scope services
+00:01 +184: test/core/scope_test.dart: LevitScope Scope Reset reset does not affect parent services
+00:01 +185: test/core/scope_test.dart: LevitScope Nested Scopes nested scope falls back to parent scope
+00:01 +186: test/core/scope_test.dart: LevitScope Nested Scopes nested scope can override parent scope
+00:01 +187: test/core/scope_test.dart: LevitScope Nested Scopes child reset does not affect parent scope
+00:01 +188: test/core/scope_test.dart: LevitScope Deletion delete removes from scope
+00:01 +189: test/core/scope_test.dart: LevitScope Deletion delete calls onClose
+00:01 +190: test/core/scope_test.dart: LevitScope isRegistered isRegisteredLocally checks only local
+00:01 +191: test/core/scope_test.dart: LevitScope isRegistered isRegistered checks local and parents
+00:01 +192: test/core/scope_test.dart: LevitScope toString shows scope name and count
+00:01 +193: test/core/async_di_test.dart: put (simulated async) registers async service manually
+00:01 +194: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +195: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +196: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +197: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +198: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +199: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +200: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +201: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +202: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +203: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +204: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +205: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +206: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +207: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +208: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +209: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +210: test/core/race_condition_test.dart: Race Condition Coverage Simultaneous async lookups hit _pendingInit cache
+00:01 +211: test/core/async_di_test.dart: findOrNull returns instance if registered
+00:01 +212: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Root Scope Basic Operations
+00:01 +213: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Root Scope Basic Operations
+00:01 +214: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Root Scope Basic Operations
+00:01 +215: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Root Scope Basic Operations
+00:01 +216: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Root Scope Basic Operations
+00:01 +217: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Root Scope Basic Operations
+00:01 +218: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Root Scope Basic Operations
+00:01 +219: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Scope Hierarchy Resolution
+00:01 +220: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Nested Scopes
+00:01 +221: test/extensions/async_extensions_test.dart: Levit Put Builder Async Extensions Future<T> Function().levitLazyPutAsync registers lazy async builder
+00:01 +222: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Async Methods in Scopes
+00:01 +223: test/extensions/async_extensions_test.dart: Levit Put Builder Async Extensions Future<T> Function().levitPutFactoryAsync registers async factory
+00:01 +224: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Scope Cleanup
+00:01 +225: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy SimpleDI Delegation Check
+00:01 +226: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Async Resolution Cache
+00:01 +227: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy Deep Scope Cache Path Compression
+00:01 +228: test/core/scope_hierarchy_test.dart: Unified Scope Hierarchy lazyPut with isFactory
+00:01 +229: test/extensions/put_extensions_test.dart: Levit Put Builder Extensions T Function().levitPut registers builder
+00:01 +230: test/extensions/put_extensions_test.dart: Levit Put Builder Extensions T Function().levitLazyPut registers lazy builder
+00:01 +231: All tests passed!

@@ -27,7 +27,7 @@ enum LxStreamCompletionPolicy {
 /// // UI automatically rebuilds on new events
 /// LWatch(() => Text('${counter.value.data}'));
 /// ```
-class LxStream<T> extends _LxAsyncVal<T> {
+class LxStream<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
   StreamController<T>? _valueController;
   StreamSubscription<T>? _activeSubscription;
   Stream<T> Function()? _streamFactory;
@@ -111,7 +111,9 @@ class LxStream<T> extends _LxAsyncVal<T> {
   }
 
   void _checkPendingBind() {
-    if (_streamFactory != null &&
+    if (!_workCancelled &&
+        !isDisposed &&
+        _streamFactory != null &&
         _activeSubscription == null &&
         !_sourceCompleted) {
       _bind(_streamFactory!());
@@ -122,19 +124,20 @@ class LxStream<T> extends _LxAsyncVal<T> {
     final epoch = ++_bindEpoch;
     _sourceCompleted = false;
 
-    _activeSubscription?.cancel();
+    // _checkPendingBind only admits a bind after the old subscription has
+    // been detached by _cleanup (which tracks its asynchronous cancellation).
     _activeSubscription = stream.listen(
       (data) {
-        if (_bindEpoch != epoch || isDisposed) return;
+        if (_bindEpoch != epoch || isDisposed || _workCancelled) return;
         _setValueInternal(LxSuccess<T>(data));
         _valueController?.add(data);
       },
       onError: (Object error, StackTrace stackTrace) {
-        if (_bindEpoch != epoch || isDisposed) return;
-        _setValueInternal(LxError<T>(error, stackTrace, _value.lastValue));
+        if (_bindEpoch != epoch || isDisposed || _workCancelled) return;
+        _setValueInternal(LxError<T>.fromPrevious(error, stackTrace, _value));
       },
       onDone: () {
-        if (_bindEpoch != epoch || isDisposed) return;
+        if (_bindEpoch != epoch || isDisposed || _workCancelled) return;
         _activeSubscription = null;
         if (completionPolicy == LxStreamCompletionPolicy.close) {
           close();
@@ -143,7 +146,7 @@ class LxStream<T> extends _LxAsyncVal<T> {
 
         _sourceCompleted = true;
         if (_value is LxWaiting<T>) {
-          _setValueInternal(LxIdle<T>(_value.lastValue));
+          _setValueInternal(LxIdle<T>.fromPrevious(_value));
         }
       },
     );
@@ -180,10 +183,11 @@ class LxStream<T> extends _LxAsyncVal<T> {
 
   /// Re-executes the stream operation and registers a new [factory] for future re-activations.
   void restartDeferred(Stream<T> Function() factory) {
+    if (_workCancelled || isDisposed) throw StateError('Stream is closing.');
     _cleanup();
     _sourceCompleted = false;
     _assignFactory(factory);
-    _setValueInternal(LxWaiting<T>(_value.lastValue));
+    _setValueInternal(LxWaiting<T>.fromPrevious(_value));
 
     // If already active, immediately start bound stream.
     if (hasListener) {
@@ -193,19 +197,22 @@ class LxStream<T> extends _LxAsyncVal<T> {
 
   void _cleanup() {
     _bindEpoch++;
-    _activeSubscription?.cancel();
+    final cancellation = _activeSubscription?.cancel();
+    if (cancellation != null) _trackWork(cancellation);
     _activeSubscription = null;
   }
 
   @override
-  void close() {
+  void requestCancel() {
+    if (_workCancelled) return;
+    super.requestCancel();
     _cleanup();
     _sourceCompleted = true;
     _streamFactory = null;
     _hasBoundSource = false;
-    _valueController?.close();
+    final closing = _valueController?.close();
+    if (closing != null) _trackWork(closing);
     _valueController = null;
-    super.close();
   }
 
   @override
@@ -243,7 +250,9 @@ class LxStream<T> extends _LxAsyncVal<T> {
 
   /// Folds the stream into a single [LxFuture] result.
   LxFuture<R> fold<R>(
-      R initialValue, R Function(R previous, T element) combine) {
+    R initialValue,
+    R Function(R previous, T element) combine,
+  ) {
     return LxFuture<R>.from(() => valueStream.fold(initialValue, combine));
   }
 }
@@ -266,11 +275,16 @@ class LxStream<T> extends _LxAsyncVal<T> {
 ///   };
 /// });
 /// ```
-class LxFuture<T> extends _LxAsyncVal<T> {
+class LxFuture<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
   /// Executes [future] immediately and tracks its status.
-  LxFuture(Future<T> future, {T? initial})
-      : super(_LxAsyncVal.initialStatus<T>(initial),
-            onListen: null, onCancel: null) {
+  LxFuture(Future<T> future, {T? initial, LxStatus<T>? previous})
+    : super(
+        previous == null
+            ? _LxAsyncVal.initialStatus<T>(initial)
+            : LxWaiting<T>.fromPrevious(previous),
+        onListen: null,
+        onCancel: null,
+      ) {
     _run(future);
   }
 
@@ -281,28 +295,38 @@ class LxFuture<T> extends _LxAsyncVal<T> {
 
   /// Creates an [LxFuture] in an [LxIdle] state.
   LxFuture.idle({T? initial})
-      : super(_LxAsyncVal.initialStatus<T>(initial, idle: true),
-            onListen: null, onCancel: null);
+    : super(
+        _LxAsyncVal.initialStatus<T>(initial, idle: true),
+        onListen: null,
+        onCancel: null,
+      );
 
   Future<T>? _activeFuture;
 
   void _run(Future<T> future, {bool isRefresh = false}) {
+    if (_workCancelled || isDisposed) throw StateError('Future is closing.');
     _activeFuture = future;
-    final lastKnown = _value.lastValue;
+    final previous = _value;
 
     if (isRefresh || _value is! LxSuccess<T>) {
-      _setValueInternal(LxWaiting<T>(lastKnown));
+      _setValueInternal(LxWaiting<T>.fromPrevious(previous));
     }
 
-    future.then((val) {
-      if (_activeFuture == future && !isDisposed) {
-        _setValueInternal(LxSuccess<T>(val));
-      }
-    }).catchError((Object error, StackTrace stackTrace) {
-      if (_activeFuture == future && !isDisposed) {
-        _setValueInternal(LxError<T>(error, stackTrace, lastKnown));
-      }
-    });
+    _trackWork(
+      future
+          .then<void>((val) {
+            if (_activeFuture == future && !isDisposed && !_workCancelled) {
+              _setValueInternal(LxSuccess<T>(val));
+            }
+          })
+          .catchError((Object error, StackTrace stackTrace) {
+            if (_activeFuture == future && !isDisposed && !_workCancelled) {
+              _setValueInternal(
+                LxError<T>.fromPrevious(error, stackTrace, previous),
+              );
+            }
+          }),
+    );
   }
 
   /// Returns the current [LxStatus] of the operation.
@@ -331,9 +355,11 @@ class LxFuture<T> extends _LxAsyncVal<T> {
 
 /// Internal base class for async reactive values.
 abstract class _LxAsyncVal<T> extends LxBase<LxStatus<T>> {
-  _LxAsyncVal(LxStatus<T> initialValue,
-      {required void Function()? onListen, required void Function()? onCancel})
-      : super(initialValue, onListen: onListen, onCancel: onCancel);
+  _LxAsyncVal(
+    LxStatus<T> initialValue, {
+    required void Function()? onListen,
+    required void Function()? onCancel,
+  }) : super(initialValue, onListen: onListen, onCancel: onCancel);
 
   static LxStatus<T> initialStatus<T>(T? initial, {bool idle = false}) {
     if (initial != null) return LxSuccess<T>(initial);
@@ -342,7 +368,8 @@ abstract class _LxAsyncVal<T> extends LxBase<LxStatus<T>> {
 
   /// Transforms the status sequence into a new [LxStream].
   LxStream<R> transform<R>(
-      Stream<R> Function(Stream<LxStatus<T>> stream) transformer) {
+    Stream<R> Function(Stream<LxStatus<T>> stream) transformer,
+  ) {
     return LxStream<R>.defer(() => transformer(stream));
   }
 }

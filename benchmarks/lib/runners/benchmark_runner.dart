@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/scheduler.dart';
 import '../benchmark_engine.dart';
+import '../measured_frames.dart';
 
 class BenchmarkRunner {
   static const int defaultIterations = 50;
@@ -22,6 +23,8 @@ class BenchmarkRunner {
     final samples = <int>[];
     bool success = true;
     String? error;
+    MeasuredFrames? frames;
+    List<Map<String, int>> frameTimings = const [];
 
     try {
       print('Running ${benchmark.name} for ${framework.label}...');
@@ -35,6 +38,8 @@ class BenchmarkRunner {
         // Mount the widget once for the session (or per iteration? Per session is better for "update" benchmarks)
         // For these benchmarks (list update), we want to measure the update on an already mounted widget.
         await mountWidget((context) => impl.build(context));
+        frames = MeasuredFrames(iterations);
+        SchedulerBinding.instance.addTimingsCallback(frames.receive);
 
         // Allow layout/paint to settle
         await Future.delayed(const Duration(milliseconds: 200));
@@ -52,15 +57,17 @@ class BenchmarkRunner {
           final stopwatch = Stopwatch()..start();
           await impl.run(); // Triggers setState/notifyListeners
 
-          await _waitForFrame(); // Wait for rasterization/build
+          await _waitForFrame(); // Build completion; raster timing is separate.
           stopwatch.stop();
+          frames.measure(
+            WidgetsBinding.instance.platformDispatcher.frameData.frameNumber,
+          );
 
           await impl.verify();
           samples.add(stopwatch.elapsedMicroseconds);
         }
-
-        // Unmount
-        await mountWidget((context) => const SizedBox.shrink());
+        await frames.complete.timeout(const Duration(seconds: 5));
+        frameTimings = frames.samples;
       } else {
         for (int i = 0; i < warmupIterations; i++) {
           await impl.run();
@@ -81,9 +88,22 @@ class BenchmarkRunner {
       error = '$e\n$stack';
       print('Error running ${benchmark.name} for ${framework.label}: $e');
     } finally {
+      if (frames != null) {
+        SchedulerBinding.instance.removeTimingsCallback(frames.receive);
+      }
+      if (benchmark.isUI && mountWidget != null) {
+        try {
+          await mountWidget((context) => const SizedBox.shrink());
+        } catch (e, stack) {
+          success = false;
+          error = [if (error != null) error, 'Unmount: $e\n$stack'].join('\n');
+        }
+      }
       try {
         await impl.teardown();
-      } catch (e) {
+      } catch (e, stack) {
+        success = false;
+        error = [if (error != null) error, 'Teardown: $e\n$stack'].join('\n');
         print('Error tearing down ${benchmark.name}: $e');
       }
     }
@@ -93,6 +113,11 @@ class BenchmarkRunner {
       benchmarkName: benchmark.name,
       classification: benchmark.classification,
       comparisonNote: benchmark.comparisonNote,
+      implementationLabel: benchmark.implementationLabel(framework),
+      measurement: benchmark.isUI
+          ? 'Update to frame end (wall time, includes frame wait; excludes raster completion)'
+          : 'Completed logic work (wall time)',
+      frameTimings: success ? frameTimings : const [],
       samplesMicros: success ? samples : const [],
       warmupIterations: warmupIterations,
       success: success,
@@ -100,22 +125,14 @@ class BenchmarkRunner {
     );
   }
 
-  Future<void> _waitForFrame() {
-    final completer = Completer<void>();
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      completer.complete();
-    });
-    return completer.future;
-  }
+  Future<void> _waitForFrame() =>
+      SchedulerBinding.instance.endOfFrame.timeout(const Duration(seconds: 5));
 
   /// Runs all frameworks for a given benchmark.
   Stream<BenchmarkResult> runAllFrameworks(Benchmark benchmark) async* {
     final frameworks = [...Framework.values];
     final offset = benchmark.name.length % frameworks.length;
-    final rotated = [
-      ...frameworks.skip(offset),
-      ...frameworks.take(offset),
-    ];
+    final rotated = [...frameworks.skip(offset), ...frameworks.take(offset)];
 
     for (final fw in rotated) {
       if (benchmark.isUI && fw == Framework.riverpod) {

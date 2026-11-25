@@ -18,6 +18,8 @@ part 'src/mixins/time_mixin.dart';
 part 'src/mixins/selection_mixin.dart';
 part 'src/mixins/execution_loop_mixin.dart';
 part 'src/utilities/task_engine_models.dart';
+part 'src/utilities/task_group.dart';
+part 'src/utilities/async_map.dart';
 part 'src/utilities/task_engine_cache.dart';
 part 'src/utilities/task_engine_queue.dart';
 part 'src/utilities/levit_task_engine.dart';

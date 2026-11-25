@@ -14,33 +14,22 @@ part of '../levit_reactive.dart';
 /// ```
 class LxVar<T> extends LxBase<T> with _LxMutable<T> {
   /// Creates a reactive variable with an [initial] value.
-  LxVar(super.initial,
-      {super.onListen,
-      super.onCancel,
-      super.name,
-      super.isSensitive,
-      super.equals});
+  LxVar(
+    super.initial, {
+    super.onListen,
+    super.onCancel,
+    super.name,
+    super.isSensitive,
+    super.equals,
+  });
 
   /// Updates the value and triggers notifications if the value changed.
   set value(T val) => _setValueInternal(val);
 
-  /// Updates and retrieves the value using call syntax.
-  ///
-  /// If called with an argument, it updates the value.
-  /// If called without arguments, it returns the current value.
-  ///
-  /// // Example usage:
-  /// ```dart
-  /// count(5); // Update
-  /// print(count()); // Read
-  /// ```
+  /// Reads the current value without modifying it, including nullable values.
+  /// Use the [value] setter for writes.
   @override
-  T call([T? v]) {
-    if (v is T) {
-      value = v;
-    }
-    return value;
-  }
+  T call() => value;
 
   /// Transforms the stream of changes using [transformer].
   ///
@@ -62,12 +51,14 @@ class LxVar<T> extends LxBase<T> with _LxMutable<T> {
 /// binding APIs.
 class LxState<T> extends LxBase<T> {
   /// Creates a state container with an [initial] value.
-  LxState(super.initial,
-      {super.onListen,
-      super.onCancel,
-      super.name,
-      super.isSensitive,
-      super.equals});
+  LxState(
+    super.initial, {
+    super.onListen,
+    super.onCancel,
+    super.name,
+    super.isSensitive,
+    super.equals,
+  });
 
   /// Emits a new [state].
   ///
@@ -90,7 +81,7 @@ class LxState<T> extends LxBase<T> {
   ///
   /// Useful for exposing public API from a controller while keeping the
   /// mutation logic private.
-  LxReactive<T> get asReactive => this;
+  LxReadable<T> get asReactive => this;
 }
 
 /// A reactive boolean with specialized toggling methods.
@@ -99,7 +90,7 @@ class LxState<T> extends LxBase<T> {
 class LxBool extends LxVar<bool> {
   /// Creates a reactive boolean. [initial] defaults to `false`.
   LxBool([super.initial = false, String? name, bool isSensitive = false])
-      : super(name: name, isSensitive: isSensitive);
+    : super(name: name, isSensitive: isSensitive);
 
   /// Toggles the current value.
   void toggle() => value = !value;

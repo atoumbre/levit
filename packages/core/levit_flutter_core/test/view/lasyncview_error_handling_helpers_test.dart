@@ -4,11 +4,15 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
   testWidgets('LAsyncView error handling and build helpers', (tester) async {
-    await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(
+      MaterialApp(
         home: LAsyncView<String>(
-            resolver: (context) async => throw Exception('View Error'),
-            builder: (context, value) => Text(value),
-            error: (context, err) => Text('Custom Error: $err'))));
+          resolver: (context) async => throw Exception('View Error'),
+          builder: (context, value) => Text(value),
+          error: (context, err) => Text('Custom Error: $err'),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.textContaining('Custom Error'), findsOneWidget);
   });

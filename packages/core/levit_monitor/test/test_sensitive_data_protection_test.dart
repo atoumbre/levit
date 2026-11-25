@@ -2,7 +2,7 @@ import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
 
-class MockTransport implements LevitTransport {
+class MockTransport extends LevitTransport {
   final List<MonitorEvent> events = [];
 
   @override
@@ -21,26 +21,29 @@ void main() {
   group('Sensitive Data Protection', () {
     late MockTransport transport;
 
-    setUp(() {
+    setUp(() async {
       transport = MockTransport();
-      LevitMonitor.attach(transport: transport);
+      await LevitMonitor.attach(transport: transport);
       LevitMonitor.setObfuscator(null); // Reset to default
     });
 
-    tearDown(() {
-      LevitMonitor.detach();
+    tearDown(() async {
+      await LevitMonitor.detach();
       Levit.reset(force: true);
     });
 
     test('default obfuscation masks sensitive data with ***', () async {
-      final password =
-          'my-secret-password'.lxVar(named: 'password', isSensitive: true);
+      final password = 'my-secret-password'.lxVar(
+        named: 'password',
+        isSensitive: true,
+      );
 
       // Allow events to reach transport
       await Future.delayed(const Duration(milliseconds: 10));
 
-      final initEvent = transport.events
-          .firstWhere((e) => e is ReactiveInitEvent) as ReactiveInitEvent;
+      final initEvent = transport.events.firstWhere(
+        (e) => e.toJson()['type'] == 'reactive_init',
+      );
       expect(initEvent.toJson()['initialValue'], '***');
       expect(initEvent.toJson()['isSensitive'], true);
 
@@ -49,8 +52,9 @@ void main() {
       // Allow events to reach transport
       await Future.delayed(const Duration(milliseconds: 10));
 
-      final changeEvent = transport.events
-          .firstWhere((e) => e is ReactiveChangeEvent) as ReactiveChangeEvent;
+      final changeEvent = transport.events.firstWhere(
+        (e) => e.toJson()['type'] == 'state_change',
+      );
       expect(changeEvent.toJson()['oldValue'], '***');
       expect(changeEvent.toJson()['newValue'], '***');
     });
@@ -62,8 +66,9 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 10));
 
-      final initEvent = transport.events
-          .firstWhere((e) => e is ReactiveInitEvent) as ReactiveInitEvent;
+      final initEvent = transport.events.firstWhere(
+        (e) => e.toJson()['type'] == 'reactive_init',
+      );
       expect(initEvent.toJson()['initialValue'], 'HIDDEN(7)');
     });
 
@@ -72,8 +77,9 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 10));
 
-      final initEvent = transport.events
-          .firstWhere((e) => e is ReactiveInitEvent) as ReactiveInitEvent;
+      final initEvent = transport.events.firstWhere(
+        (e) => e.toJson()['type'] == 'reactive_init',
+      );
       expect(initEvent.toJson()['initialValue'], '0');
       expect(initEvent.toJson()['isSensitive'], false);
 
@@ -81,8 +87,9 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 10));
 
-      final changeEvent = transport.events
-          .firstWhere((e) => e is ReactiveChangeEvent) as ReactiveChangeEvent;
+      final changeEvent = transport.events.firstWhere(
+        (e) => e.toJson()['type'] == 'state_change',
+      );
       expect(changeEvent.toJson()['newValue'], '1');
     });
 
@@ -97,36 +104,42 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 10));
 
-      final batchEvent = transport.events
-          .firstWhere((e) => e is ReactiveBatchEvent) as ReactiveBatchEvent;
+      final batchEvent = transport.events.firstWhere(
+        (e) => e.toJson()['type'] == 'batch',
+      );
       final entries = batchEvent.toJson()['entries'] as List;
 
-      final sEntry = entries.firstWhere((e) =>
-          e['name'] == 'sensitive' ||
-          e['reactiveId'] == sensitive.id.toString());
-      final nEntry = entries.firstWhere((e) =>
-          e['name'] == 'normal' || e['reactiveId'] == normal.id.toString());
+      final sEntry = entries.firstWhere(
+        (e) =>
+            e['name'] == 'sensitive' ||
+            e['reactiveId'] == sensitive.id.toString(),
+      );
+      final nEntry = entries.firstWhere(
+        (e) => e['name'] == 'normal' || e['reactiveId'] == normal.id.toString(),
+      );
 
       expect(sEntry['newValue'], '***');
       expect(nEntry['newValue'], 'new-public');
     });
 
-    test('StateSnapshot stores obfuscated values for sensitive variables',
-        () async {
-      final secret = 'ssh'.lxVar(isSensitive: true);
-      secret.value = 'updated-ssh';
+    test(
+      'StateSnapshot stores obfuscated values for sensitive variables',
+      () async {
+        final secret = 'ssh'.lxVar(isSensitive: true);
+        secret.value = 'updated-ssh';
 
-      // Allow events to reach transport
-      await Future.delayed(const Duration(milliseconds: 10));
+        // Allow events to reach transport
+        await Future.delayed(const Duration(milliseconds: 10));
 
-      final stateSnapshot = StateSnapshot();
-      for (final event in transport.events) {
-        stateSnapshot.applyEvent(event);
-      }
+        final stateSnapshot = StateSnapshot();
+        for (final event in transport.events) {
+          stateSnapshot.applyEvent(event);
+        }
 
-      final reactiveModel = stateSnapshot.variables[secret.id];
-      expect(reactiveModel?.value, '***');
-      expect(reactiveModel?.isSensitive, true);
-    });
+        final reactiveModel = stateSnapshot.variables[secret.id];
+        expect(reactiveModel?.value, '***');
+        expect(reactiveModel?.isSensitive, true);
+      },
+    );
   });
 }

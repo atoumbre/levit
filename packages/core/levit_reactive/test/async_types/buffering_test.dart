@@ -19,23 +19,31 @@ void main() {
       future.restart(nextCompleter.future);
 
       expect(future.status, isA<LxWaiting<int>>());
-      expect(future.lastValue, 42,
-          reason: 'Waiting status should carry last successful value');
+      expect(
+        future.lastValue,
+        42,
+        reason: 'Waiting status should carry last successful value',
+      );
 
       nextCompleter.completeError('oops');
       await Future.delayed(Duration.zero);
 
       expect(future.status, isA<LxError<int>>());
-      expect(future.lastValue, 42,
-          reason: 'Error status should carry last successful value');
+      expect(
+        future.lastValue,
+        42,
+        reason: 'Error status should carry last successful value',
+      );
     });
 
     test('LxStream preserves lastValue on error', () async {
       final controller = StreamController<int>.broadcast();
       final stream = LxStream(controller.stream);
 
-      stream.valueStream
-          .listen((_) {}, onError: (_) {}); // Trigger subscription
+      stream.valueStream.listen(
+        (_) {},
+        onError: (_) {},
+      ); // Trigger subscription
 
       controller.add(1);
       await Future.delayed(Duration.zero);
@@ -45,8 +53,11 @@ void main() {
       await Future.delayed(Duration.zero);
 
       expect(stream.status, isA<LxError<int>>());
-      expect(stream.lastValue, 1,
-          reason: 'Stream error should preserve last value');
+      expect(
+        stream.lastValue,
+        1,
+        reason: 'Stream error should preserve last value',
+      );
 
       controller.add(2);
       await Future.delayed(Duration.zero);

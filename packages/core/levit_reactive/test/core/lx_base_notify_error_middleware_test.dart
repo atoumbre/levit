@@ -13,7 +13,7 @@ class ErrorCaptureMiddleware extends LevitReactiveMiddleware {
 }
 
 void main() {
-  test('LxBase _notifyListeners error middleware coverage', () {
+  test('listener failures reach middleware with the originating reactive', () {
     final middleware = ErrorCaptureMiddleware();
     Lx.addMiddleware(middleware);
 

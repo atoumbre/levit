@@ -48,8 +48,11 @@ void main() {
         expect(notifyCount, 0, reason: 'Should not notify during nested batch');
       });
 
-      expect(notifyCount, 1,
-          reason: 'Should notify exactly once after outer batch');
+      expect(
+        notifyCount,
+        1,
+        reason: 'Should notify exactly once after outer batch',
+      );
     });
     test('Deeply nested batches work and notify once at the outermost end', () {
       final a = 0.lx;
@@ -74,22 +77,24 @@ void main() {
       expect(a.value, 4);
     });
 
-    test('Errors in batch still trigger notifications for successful updates',
-        () {
-      final a = 0.lx;
-      int notifyCount = 0;
-      a.addListener(() => notifyCount++);
+    test(
+      'Errors in batch still trigger notifications for successful updates',
+      () {
+        final a = 0.lx;
+        int notifyCount = 0;
+        a.addListener(() => notifyCount++);
 
-      try {
-        Lx.batch(() {
-          a.value = 1;
-          throw Exception('fail');
-        });
-      } catch (_) {}
+        try {
+          Lx.batch(() {
+            a.value = 1;
+            throw Exception('fail');
+          });
+        } catch (_) {}
 
-      expect(a.value, 1);
-      expect(notifyCount, 1, reason: 'Should notify even if batch errored');
-    });
+        expect(a.value, 1);
+        expect(notifyCount, 1, reason: 'Should notify even if batch errored');
+      },
+    );
 
     test('Lx.batch returns value from callback', () {
       final a = 0.lx;
@@ -171,34 +176,36 @@ void main() {
       sum.close();
     });
 
-    test('LxComputed notifies after batch with multiple dependency changes',
-        () async {
-      final x = 0.lx;
-      final y = 0.lx;
+    test(
+      'LxComputed notifies after batch with multiple dependency changes',
+      () async {
+        final x = 0.lx;
+        final y = 0.lx;
 
-      final product = LxComputed(() => x.value * y.value);
-      int notifyCount = 0;
-      product.addListener(() => notifyCount++);
-      await Future.microtask(() {}); // Wait for listener to activate
+        final product = LxComputed(() => x.value * y.value);
+        int notifyCount = 0;
+        product.addListener(() => notifyCount++);
+        await Future.microtask(() {}); // Wait for listener to activate
 
-      // Initial access to set up dependency tracking
-      expect(product.value, 0);
+        // Initial access to set up dependency tracking
+        expect(product.value, 0);
 
-      Lx.batch(() {
-        x.value = 5;
-        y.value = 6;
-        x.value = 7; // Multiple changes to same var
-      });
+        Lx.batch(() {
+          x.value = 5;
+          y.value = 6;
+          x.value = 7; // Multiple changes to same var
+        });
 
-      // Wait for stream events to propagate
-      await Future.delayed(Duration(milliseconds: 10));
+        // Wait for stream events to propagate
+        await Future.delayed(Duration(milliseconds: 10));
 
-      expect(product.value, 42); // 7 * 6
-      // Note: listener count depends on implementation (may be >1 due to stream events)
-      expect(notifyCount, greaterThanOrEqualTo(1));
+        expect(product.value, 42); // 7 * 6
+        // Note: listener count depends on implementation (may be >1 due to stream events)
+        expect(notifyCount, greaterThanOrEqualTo(1));
 
-      product.close();
-    });
+        product.close();
+      },
+    );
 
     test('Chained LxComputed updates correctly after batch', () async {
       final base = 1.lx;
@@ -227,37 +234,38 @@ void main() {
 
   group('Batch async behavior (documentation test)', () {
     test(
-        'Async code after await is NOT batched - demonstrates sync-only behavior',
-        () async {
-      final a = 0.lx;
-      final b = 0.lx;
-      int aNotifyCount = 0;
-      int bNotifyCount = 0;
+      'Async code after await is NOT batched - demonstrates sync-only behavior',
+      () async {
+        final a = 0.lx;
+        final b = 0.lx;
+        int aNotifyCount = 0;
+        int bNotifyCount = 0;
 
-      a.addListener(() => aNotifyCount++);
-      b.addListener(() => bNotifyCount++);
+        a.addListener(() => aNotifyCount++);
+        b.addListener(() => bNotifyCount++);
 
-      // This demonstrates the anti-pattern mentioned in docs
-      // The batch completes synchronously, so `b.value = 2` after await
-      // is NOT batched
-      Lx.batch(() async {
-        a.value = 1; // This IS batched
-        await Future.delayed(const Duration(milliseconds: 10));
-        b.value = 2; // This is NOT batched - batch already completed!
-      });
+        // This demonstrates the anti-pattern mentioned in docs
+        // The batch completes synchronously, so `b.value = 2` after await
+        // is NOT batched
+        Lx.batch(() async {
+          a.value = 1; // This IS batched
+          await Future.delayed(const Duration(milliseconds: 10));
+          b.value = 2; // This is NOT batched - batch already completed!
+        });
 
-      // Immediately after Lx.batch returns (synchronously):
-      // - `a` should have been updated and batch should have notified once
-      expect(a.value, 1);
-      expect(aNotifyCount, 1);
+        // Immediately after Lx.batch returns (synchronously):
+        // - `a` should have been updated and batch should have notified once
+        expect(a.value, 1);
+        expect(aNotifyCount, 1);
 
-      // Wait for the async operation to complete
-      await Future.delayed(const Duration(milliseconds: 50));
+        // Wait for the async operation to complete
+        await Future.delayed(const Duration(milliseconds: 50));
 
-      // Now `b` has been updated OUTSIDE the batch
-      expect(b.value, 2);
-      expect(bNotifyCount, 1); // `b` notified independently, not batched
-    });
+        // Now `b` has been updated OUTSIDE the batch
+        expect(b.value, 2);
+        expect(bNotifyCount, 1); // `b` notified independently, not batched
+      },
+    );
 
     test('Synchronous batch completes before async callbacks', () async {
       final values = <String>[];

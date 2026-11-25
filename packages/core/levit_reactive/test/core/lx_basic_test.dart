@@ -75,7 +75,7 @@ void main() {
     test('call() updates/returns value', () {
       final count = LxInt(0);
       expect(count(), equals(0));
-      expect(count(5), equals(5));
+      expect((count.value = 5), equals(5));
       expect(count.value, equals(5));
     });
 
@@ -141,7 +141,7 @@ void main() {
     });
   });
 
-  group('edge cases for coverage', () {
+  group('External stream binding', () {
     test('bind forwards values from external stream', () async {
       final controller = StreamController<int>.broadcast();
       final lx = LxInt(0);
@@ -181,7 +181,7 @@ void main() {
     });
   });
 
-  group('LxStream Coverage Gaps', () {
+  group('Stream status transformation and folding', () {
     test('transform applies closure to status stream', () async {
       final controller = StreamController<int>();
       final lxStream = LxStream(controller.stream);
@@ -196,9 +196,7 @@ void main() {
 
       expectLater(
         transformed.valueStream,
-        emitsInOrder([
-          startsWith('Status: LxSuccess'),
-        ]),
+        emitsInOrder([startsWith('Status: LxSuccess')]),
       );
 
       controller.add(1);
@@ -232,7 +230,7 @@ void main() {
     });
   });
 
-  group('LxIdle Coverage', () {
+  group('Idle status value equality', () {
     test('LxIdle equality and hashCode', () {
       final idle1 = LxIdle<int>(0);
       final idle2 = LxIdle<int>(0);
@@ -245,15 +243,15 @@ void main() {
     });
   });
 
-  group('LxBase Internal Coverage', () {
-    test('LxBase _checkActive coverage', () {
+  group('Reactive listener and disposal state', () {
+    test('adding a listener tolerates removal of an unknown listener', () {
       final rx = 0.lx;
       // Trigger _checkActive via listener addition/removal
       rx.addListener(() {});
       rx.removeListener(() {});
     });
 
-    test('LxBase isDisposed coverage', () {
+    test('closing a reactive sets isDisposed', () {
       final rx = 0.lx;
       expect(rx.isDisposed, isFalse);
       rx.close();

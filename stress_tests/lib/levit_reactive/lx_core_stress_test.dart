@@ -5,7 +5,8 @@ void main() {
   group('Stress Test: Lx Core', () {
     test('Bulk Update - 1M rapid updates to a single Lx', () {
       print(
-          '[Description] Measures throughput of rapid value updates on a single Lx<int>.');
+        '[Description] Measures throughput of rapid value updates on a single Lx<int>.',
+      );
       final count = 0.lx;
       const iterations = 1000000;
 
@@ -17,7 +18,8 @@ void main() {
 
       final opsPerMs = iterations / sw.elapsedMilliseconds;
       print(
-          'Performed $iterations updates in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)');
+        'Performed $iterations updates in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)',
+      );
 
       count.close();
     });
@@ -44,7 +46,8 @@ void main() {
 
     test('Listener Add/Remove Churn - 50k add/remove cycles', () {
       print(
-          '[Description] Tests efficiency of listener management under churn.');
+        '[Description] Tests efficiency of listener management under churn.',
+      );
       final source = 0.lx;
       const cycles = 50000;
 
@@ -59,7 +62,8 @@ void main() {
 
       final opsPerMs = (cycles * 2) / sw.elapsedMilliseconds;
       print(
-          'Performed ${cycles * 2} add/remove ops in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)');
+        'Performed ${cycles * 2} add/remove ops in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)',
+      );
 
       source.close();
     });

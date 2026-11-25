@@ -1,0 +1,38 @@
+{
+  "matchedDashboardFilesIncludingLock": 36,
+  "releaseWorkloadSha256": "cf15fc3ae24a56709aeb1b2b27fc44930b8cb39b52a02b741a667c400f087d25",
+  "beforeAndCandidateLockSha256": "3bb78ba0d8876bdfac1534235735e8a0de5da9bc6a0331fbe1db52a81447a996",
+  "referenceNonLevitVersionsAndSourcesMatched": true,
+  "sources": {
+    "reference": {
+      "Profile": {
+        "host": "a9e54b0f5bf3b1f0d82d10891b8fe2d2ad45821f48b6b45610e9302859279c7e",
+        "dartAot": "2580e23a850952e07bc1260e038f259f0207f182791def7c9a195f1842360829"
+      },
+      "Release": {
+        "host": "80750a6d243425e71d5e13b68ef6a1fd3049769c6267f4c6eca63a3d8c0c0c6d",
+        "dartAot": "afea8725dc110fb40a31ad2b04aafe03dc304afaf6cf9e3b22765e37e2547b68"
+      }
+    },
+    "before": {
+      "Profile": {
+        "host": "6f8a7067d30e374c0655b4310d2d6d42b8811263db9561d56586c36ee032df02",
+        "dartAot": "a937b12695ce51ca267db6249fc35d7b38f8cf8569da675b4c92f3d95e458f03"
+      },
+      "Release": {
+        "host": "c224912c2c17e7edd54d59531c3f389354ca65d6c3e159ed6fee3254eb0ce2a1",
+        "dartAot": "d9a9b6d9a085dea025398f4d359b3c9b5e692aa32a22028b21145f77cbbeab2f"
+      }
+    },
+    "candidate": {
+      "Profile": {
+        "host": "ec3e458b4508e8dd0dbbd3cf09c6e97002fc2e149dc03de201bc3f1f3fe730ae",
+        "dartAot": "dcba4de7cdb3ba429d2953fffbf198d90b9c1f93915cbc377ef792a5cde31393"
+      },
+      "Release": {
+        "host": "56ce755487daa9c7be36e4a39e366d02cfa56dbaab25ef43e39cfd377ee8254d",
+        "dartAot": "fc96aa069f331547a2a7ffb0340a00289d12e277e5b2a5e8326e452902bac7f4"
+      }
+    }
+  }
+}

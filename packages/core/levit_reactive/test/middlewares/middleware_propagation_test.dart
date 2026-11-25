@@ -12,45 +12,46 @@ class _TrackingMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
-        return (value) {
-          // Check propagation flag at RUNTIME (inside closure)
-          if (change.isPropagationStopped) {
-            next(value);
-            return;
-          }
+    return (value) {
+      // Check propagation flag at RUNTIME (inside closure)
+      if (change.isPropagationStopped) {
+        next(value);
+        return;
+      }
 
-          beforeCount++;
-          if (shouldStopBefore) {
-            change.stopPropagation();
-            // If we stop propagation, we usually mean "stop the chain".
-            // To allow core to run, we must call next(), but flag is set.
-            // Downstream middlewares check flag and pass-through.
-          }
+      beforeCount++;
+      if (shouldStopBefore) {
+        change.stopPropagation();
+        // If we stop propagation, we usually mean "stop the chain".
+        // To allow core to run, we must call next(), but flag is set.
+        // Downstream middlewares check flag and pass-through.
+      }
 
-          try {
-            next(value);
-          } finally {
-            // After hook
-            // Check propagation again? If stopped during unwind?
-            // Note: wrapper unwind means we are AFTER inner middlewares returned.
-            // If inner middleware stopped propagation, we should see it?
-            // But if we stopped it ourselves in 'before', it is still stopped.
-            // Legacy: 'onAfter' ran even if 'stopPropagation' called?
-            // Test says: mw1 runs after (since it processed).
+      try {
+        next(value);
+      } finally {
+        // After hook
+        // Check propagation again? If stopped during unwind?
+        // Note: wrapper unwind means we are AFTER inner middlewares returned.
+        // If inner middleware stopped propagation, we should see it?
+        // But if we stopped it ourselves in 'before', it is still stopped.
+        // Legacy: 'onAfter' ran even if 'stopPropagation' called?
+        // Test says: mw1 runs after (since it processed).
 
-            // Wait, if change.isPropagationStopped is true, do we run After?
-            // Logic: if WE set pass-through initially (at start of method), we return 'next' and don't count.
-            // If we are here, we passed 'before' check.
-            // So we run 'after'.
+        // Wait, if change.isPropagationStopped is true, do we run After?
+        // Logic: if WE set pass-through initially (at start of method), we return 'next' and don't count.
+        // If we are here, we passed 'before' check.
+        // So we run 'after'.
 
-            afterCount++;
-            if (shouldStopAfter) change.stopPropagation();
-          }
-        };
-      };
+        afterCount++;
+        if (shouldStopAfter) change.stopPropagation();
+      }
+    };
+  };
 
   @override
-  LxOnBatch? get onBatch => (next, change) => next;
+  LxOnBatch? get onBatch =>
+      (next, change) => next;
 
   void reset() {
     beforeCount = 0;
@@ -95,17 +96,26 @@ void main() {
       // MW1 runs
       expect(mw1.beforeCount, equals(1));
       // MW2 should be skipped (pass-through)
-      expect(mw2.beforeCount, equals(0),
-          reason: 'MW2 before should be skipped');
+      expect(
+        mw2.beforeCount,
+        equals(0),
+        reason: 'MW2 before should be skipped',
+      );
 
       // Value still updates (core reached)
       expect(count.value, equals(1));
 
       // After hooks:
-      expect(mw1.afterCount, equals(1),
-          reason: 'MW1 after should run since it processed');
-      expect(mw2.afterCount, equals(0),
-          reason: 'MW2 after should be skipped because passed through');
+      expect(
+        mw1.afterCount,
+        equals(1),
+        reason: 'MW1 after should run since it processed',
+      );
+      expect(
+        mw2.afterCount,
+        equals(0),
+        reason: 'MW2 after should be skipped because passed through',
+      );
     });
 
     test('stopPropagation in onSet (after) affects upstream in unwind', () {

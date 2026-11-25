@@ -7,12 +7,7 @@ void main() {
     final watchKey = GlobalKey();
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: LWatch(
-          () => Container(),
-          key: watchKey,
-        ),
-      ),
+      MaterialApp(home: LWatch(() => Container(), key: watchKey)),
     );
 
     // Get the element associated with LWatch

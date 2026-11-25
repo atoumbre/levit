@@ -1,0 +1,31 @@
+Running isolated measurements
+Measuring performance-reference-profile-off-1
+Traceback (most recent call last):
+  File "/Users/atoumbre/SoftiLab/levit-svg/benchmarks/tool/compare_release_performance.py", line 124, in <module>
+    main()
+    ~~~~^^
+  File "/Users/atoumbre/SoftiLab/levit-svg/benchmarks/tool/compare_release_performance.py", line 42, in main
+    result = subprocess.run([str(app)], capture_output=True, text=True, timeout=300,
+                            env=dict(os.environ, LEVIT_PERFORMANCE_RUN="1", LEVIT_DIAGNOSTICS=diagnostics))
+  File "/opt/homebrew/Cellar/python@3.13/3.13.3_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 556, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.3_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 1222, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.3_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 2126, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.3_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 1266, in _check_timeout
+    raise TimeoutExpired(
+    ...<2 lines>...
+            stderr=b''.join(stderr_seq) if stderr_seq else None)
+subprocess.TimeoutExpired: Command '['/private/tmp/levit-performance-539f130-q8vb_rc4/benchmarks/build/macos/Build/Products/Profile/benchmarks.app/Contents/MacOS/benchmarks']' timed out after 300 seconds
+Traceback (most recent call last):
+  File "/private/tmp/levit-redesign-measure.py", line 16, in <module>
+    subprocess.run([sys.executable,'benchmarks/tool/compare_release_performance.py','/private/tmp/levit-performance-539f130-q8vb_rc4',str(ev/'native'),'/private/tmp/levit-redesign-before'],cwd=root,check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.3_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/opt/homebrew/opt/python@3.13/bin/python3.13', 'benchmarks/tool/compare_release_performance.py', '/private/tmp/levit-performance-539f130-q8vb_rc4', '/Users/atoumbre/SoftiLab/levit-svg/reports/validation/0.1.0/collection-redesign/native', '/private/tmp/levit-redesign-before']' returned non-zero exit status 1.

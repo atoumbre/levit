@@ -1,0 +1,55 @@
+melos bootstrap
+  └> /private/var/folders/zw/tvf3hyfd3c571fqfbtsff0ph0000gn/T/levit-m8-snapshot-57mla2gi
+
+Note: this may take a while in large workspaces such as this one.
+Running "flutter pub get --offline" in workspace packages...
+  ✓ levit_dart
+    └> packages/kits/levit_dart
+  ✓ levit_example_async_catalog
+    └> examples/async_catalog
+  ✓ levit_example_route_scopes
+    └> examples/route_scopes
+  ✓ levit_dart_core
+    └> packages/core/levit_dart_core
+  ✓ levit
+    └> packages/kits/levit
+  ✓ levit_devtools
+    └> packages/tools/levit_devtools
+  ✓ levit_devtools_ui
+    └> packages/tools/levit_devtools_ui
+  ✓ levit_example_scope_playground
+    └> examples/scope_playground
+  ✓ levit_lints
+    └> packages/tools/levit_lints
+  ✓ levit_example_task_board
+    └> examples/task_board
+  ✓ levit_monitor
+    └> packages/core/levit_monitor
+  ✓ levit_reactive
+    └> packages/core/levit_reactive
+  ✓ levit_flutter_core
+    └> packages/core/levit_flutter_core
+  ✓ levit_flutter_core_example
+    └> packages/core/levit_flutter_core/example
+  ✓ levit_flutter
+    └> packages/kits/levit_flutter
+  ✓ levit_flutter_example
+    └> packages/kits/levit_flutter/example
+  ✓ levit_scope
+    └> packages/core/levit_scope
+  ✓ nexus_studio_server
+    └> examples/nexus_studio/server
+  ✓ nexus_studio_shared
+    └> examples/nexus_studio/shared
+  ✓ nexus_studio_app
+    └> examples/nexus_studio/app
+  ✓ levit_stress_tests
+    └> stress_tests
+  ✓ benchmarks
+    └> benchmarks
+  > SUCCESS
+
+Generating IntelliJ IDE files...
+  > SUCCESS
+
+ -> 22 packages bootstrapped

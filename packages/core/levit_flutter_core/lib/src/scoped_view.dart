@@ -43,6 +43,7 @@ class LScopedView<T> extends LView<T> {
   factory LScopedView.store(
     LevitStore<T> state, {
     Key? key,
+    bool localOnly = false,
     LScopeDependencyFactory? dependencyFactory,
     required Widget Function(BuildContext context, T controller) builder,
     Widget Function(BuildContext context)? orElse,
@@ -53,7 +54,7 @@ class LScopedView<T> extends LView<T> {
     return LScopedView<T>(
       key: key,
       dependencyFactory: dependencyFactory,
-      resolver: (context) => context.levit.findOrNull<T>(key: state),
+      resolver: (context) => _resolveStore(context, state, localOnly),
       builder: builder,
       orElse: orElse,
       autoWatch: autoWatch,
@@ -122,7 +123,9 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
             return LWatch(() => widget.buildView(context, controller));
           }
           return LScope.runBridged(
-              context, () => widget.buildView(context, controller));
+            context,
+            () => widget.buildView(context, controller),
+          );
         },
       ),
     );
@@ -164,6 +167,7 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
   factory LScopedAsyncView.store(
     LevitAsyncStore<T> store, {
     Key? key,
+    bool localOnly = false,
     LScopeDependencyFactory? dependencyFactory,
     required Widget Function(BuildContext context, T controller) builder,
     bool autoWatch = true,
@@ -175,7 +179,7 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
     return LScopedAsyncView<T>(
       key: key,
       dependencyFactory: dependencyFactory,
-      resolver: (context) => context.levit.findAsync<T>(key: store),
+      resolver: (context) => _resolveAsyncStore(context, store, localOnly),
       builder: builder,
       autoWatch: autoWatch,
       loading: loading,

@@ -1,0 +1,319 @@
+00:00 +0: loading test/middleware/monitor_mixed_delivery_test.dart
+00:00 +0: test/middleware/monitor_mixed_delivery_test.dart: synchronous sends preserve order around asynchronous sends and close
+00:00 +1: test/middleware/monitor_close_has_listener_test.dart: close drains the admitted send before closing its transport
+00:00 +2: test/middleware/scope_progress_dedup_test.dart: terminal disposal replaces empty progress only after real cleanup
+00:00 +3: test/middleware/scope_progress_dedup_test.dart: only identical progress is suppressed; ownership and cleanup changes survive
+00:00 +4: test/middleware/monitor_close_test.dart: LevitMonitorMiddleware close() close() cleans up resources properly
+00:00 +5: test/middleware/monitor_close_test.dart: LevitMonitorMiddleware close() close() cleans up resources properly
+00:00 +6: test/middleware/monitor_close_test.dart: LevitMonitorMiddleware close() close() cleans up resources properly
+00:00 +7: test/middleware/monitor_close_test.dart: LevitMonitorMiddleware close() close() cleans up resources properly
+00:00 +8: test/middleware/monitor_close_test.dart: LevitMonitorMiddleware close() close() cleans up resources properly
+00:00 +9: test/middleware/monitor_close_test.dart: LevitMonitorMiddleware close() close() cleans up resources properly
+00:00 +10: test/middleware/monitor_close_test.dart: LevitMonitorMiddleware close() close() cleans up resources properly
+00:00 +11: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware captures reactive registration
+00:00 +12: test/middleware/monitor_close_test.dart: LevitMonitorMiddleware close() close() can be called multiple times safely
+00:00 +13: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware captures state changes
+00:00 +14: test/middleware/monitor_onconnect_cleanup_test.dart: onConnect does not emit after disable
+00:00 +15: test/middleware/monitor_onconnect_cleanup_test.dart: onConnect does not emit after disable
+00:00 +16: test/middleware/monitor_onconnect_cleanup_test.dart: onConnect does not emit after disable
+00:00 +17: test/middleware/monitor_onconnect_cleanup_test.dart: onConnect does not emit after disable
+00:00 +18: test/middleware/monitor_onconnect_cleanup_test.dart: onConnect does not emit after disable
+00:00 +19: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware captures batch events (async)
+00:00 +20: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware captures batch events (async)
+00:00 +21: test/snapshot/shadow_state_batch_test.dart: StateSnapshot should handle ReactiveBatchEvent
+00:00 +22: test/snapshot/shadow_state_batch_test.dart: StateSnapshot should handle ReactiveBatchEvent
+00:00 +23: test/snapshot/shadow_state_batch_test.dart: StateSnapshot should handle ReactiveBatchEvent
+00:00 +24: test/snapshot/shadow_state_batch_test.dart: StateSnapshot should handle ReactiveBatchEvent
+00:00 +25: test/snapshot/shadow_state_batch_test.dart: StateSnapshot should handle ReactiveBatchEvent
+00:00 +26: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware captures graph change events
+00:00 +27: test/snapshot/shadow_state_batch_test.dart: StateSnapshot batch keeps sensitive values obfuscated
+00:00 +28: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware captures reactive dispose events
+00:00 +29: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +30: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +31: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +32: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +33: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +34: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +35: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +36: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +36: test/snapshot/shadow_state_disposal_test.dart: StateSnapshot Coverage Apply Scope Events
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 SCOPE CREATE: child#1 (Parent: 0)
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 SCOPE DISPOSE: child#1
+└───────────────────────────────────────────────────────────────────────────────
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 LISTENER ADD: [anon] (Context: null)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 Listener removed: null (Context: null)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+00:00 +37: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +38: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +39: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +40: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +41: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +42: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +43: test/middleware/monitor_middleware_test.dart: LevitMonitorMiddleware onDependencyInit captures instance information
+00:00 +44: test/snapshot/debug_shadow_state_test.dart: Debug Scope Remove
+00:00 +45: test/snapshot/debug_shadow_state_test.dart: Debug Scope Remove
+After create: (1)
+00:00 +46: test/snapshot/debug_shadow_state_test.dart: Debug Scope Remove
+After dispose: ()
+00:00 +47: test/test_sensitive_data_protection_test.dart: Sensitive Data Protection default obfuscation masks sensitive data with ***
+00:00 +48: test/test_sensitive_data_protection_test.dart: Sensitive Data Protection custom obfuscator is respected
+00:00 +49: test/core/bootstrap_contract_test.dart: documented bootstrap and monitor filtering pattern
+00:00 +50: test/test_sensitive_data_protection_test.dart: Sensitive Data Protection non-sensitive data is not obfuscated
+00:00 +51: test/test_sensitive_data_protection_test.dart: Sensitive Data Protection non-sensitive data is not obfuscated
+00:00 +52: test/core/monitor_failure_acceptance_test.dart: monitor validates bounds and rejects updates after close
+00:00 +53: test/core/monitor_failure_acceptance_test.dart: monitor validates bounds and rejects updates after close
+00:00 +54: test/core/monitor_failure_acceptance_test.dart: monitor validates bounds and rejects updates after close
+00:00 +55: test/core/monitor_failure_acceptance_test.dart: monitor validates bounds and rejects updates after close
+00:00 +56: test/test_sensitive_data_protection_test.dart: Sensitive Data Protection batch updates respect sensitivity per variable
+00:00 +57: test/core/identity_test.dart: Auto-linking registers controller ID
+00:00 +58: test/core/identity_test.dart: Auto-linking registers controller ID
+00:00 +59: test/core/identity_test.dart: Auto-linking registers controller ID
+Owner ID: 0:TestController
+00:00 +60: test/test_sensitive_data_protection_test.dart: Sensitive Data Protection StateSnapshot stores obfuscated values for sensitive variables
+00:00 +61: test/core/monitor_failure_acceptance_test.dart: snapshots bound task owners, restore trees, and redact metadata transitions
+00:00 +62: test/core/monitor_failure_acceptance_test.dart: frozen events keep console severity and configured overrides
+00:00 +63: test/core/monitor_emits_log_events_test.dart: LevitMonitor logging LevitMonitor.log emits LogEvent with correct severity
+00:00 +64: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +65: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +66: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +67: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +68: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +69: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +70: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +71: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +72: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +73: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +74: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +75: test/core/envelope_copy_contract_test.dart: envelopes detach and freeze nested JSON without changing wire data
+00:00 +76: test/core/monitor_emits_log_events_test.dart: LevitMonitor logging LevitMonitor.logLevel retrieves current configured log level
+00:00 +77: test/core/envelope_copy_contract_test.dart: custom JSON conversion and dynamically typed maps stay compatible
+00:00 +78: test/core/event_test.dart: MonitorEvent Hierarchy ReactiveChangeEvent serializes common and specific fields
+00:00 +79: test/core/event_test.dart: MonitorEvent Hierarchy ReactiveChangeEvent serializes common and specific fields
+00:00 +80: test/core/event_test.dart: MonitorEvent Hierarchy ReactiveChangeEvent serializes common and specific fields
+00:00 +81: test/core/event_test.dart: MonitorEvent Hierarchy ReactiveBatchEvent serializes all entries
+00:00 +82: test/core/event_test.dart: MonitorEvent Hierarchy DependencyRegisterEvent serializes DI metadata
+00:00 +83: test/core/event_test.dart: MonitorEvent Hierarchy _stringify handles null and unprintable objects
+00:00 +84: test/core/event_test.dart: MonitorEvent Hierarchy ReactiveInitEvent with null value
+00:00 +85: test/core/event_test.dart: MonitorEvent Hierarchy ReactiveDisposeEvent serialization
+00:00 +86: test/core/event_test.dart: MonitorEvent Hierarchy ReactiveGraphChangeEvent serialization
+00:00 +87: test/core/detach_cleanup_test.dart: LevitMonitor.detach closes active transport
+00:00 +88: test/core/detach_cleanup_test.dart: LevitMonitor.detach closes active transport
+00:00 +89: test/core/detach_cleanup_test.dart: LevitMonitor.detach closes active transport
+00:00 +90: test/core/detach_cleanup_test.dart: LevitMonitor.detach closes active transport
+00:00 +91: test/core/detach_cleanup_test.dart: LevitMonitor.detach closes active transport
+00:00 +92: test/core/detach_cleanup_test.dart: LevitMonitor.detach closes active transport
+00:00 +93: test/core/detach_cleanup_test.dart: LevitMonitor.detach closes active transport
+00:00 +94: test/core/detach_cleanup_test.dart: LevitMonitor.attach closes previous transport
+00:00 +95: test/core/monitor_error_test.dart: LevitMonitor Error Tracking Captures ReactiveErrorEvent when listener throws
+00:00 +96: test/core/event_capture_hot_path_test.dart: scalar capture preserves wire data, redaction and custom events
+00:00 +97: test/core/event_capture_hot_path_test.dart: scalar capture preserves wire data, redaction and custom events
+00:00 +98: test/core/event_capture_hot_path_test.dart: scalar capture preserves wire data, redaction and custom events
+00:00 +99: test/core/monitor_filter_test.dart: LevitMonitor Filtering filter getter and setter coverage
+00:00 +100: test/core/event_capture_hot_path_test.dart: capture builder seals retained fields and freezes at assignment
+00:00 +101: test/core/monitor_filter_test.dart: LevitMonitor Filtering shouldProcess coverage
+00:00 +102: test/core/monitor_filter_test.dart: LevitMonitor Filtering shouldProcess coverage
+00:00 +103: test/core/awaited_monitor_contract_test.dart: capture freezes redaction and nested payloads before queues and history
+00:00 +104: test/core/awaited_monitor_contract_test.dart: capture freezes redaction and nested payloads before queues and history
+00:00 +105: test/core/awaited_monitor_contract_test.dart: capture freezes redaction and nested payloads before queues and history
+00:00 +106: test/core/awaited_monitor_contract_test.dart: capture freezes redaction and nested payloads before queues and history
+00:00 +107: test/core/awaited_monitor_contract_test.dart: history defaults off and bounded queues report dropped events
+00:00 +108: test/core/awaited_monitor_contract_test.dart: replacement and detach await accepted sends and transport cleanup
+00:00 +109: test/core/awaited_monitor_contract_test.dart: failures propagate after all sinks close
+00:00 +110: test/core/awaited_monitor_contract_test.dart: transport replacement installs the new sink after failed old cleanup
+00:00 +111: test/core/awaited_monitor_contract_test.dart: update attribution and optional task adapter do not retain owned work
+00:00 +112: test/core/awaited_monitor_contract_test.dart: worker statistics are opt in and restored on detach
+00:00 +113: test/core/awaited_monitor_contract_test.dart: scope progress identifies pending initialization and unfinished cleanup
+00:00 +114: test/core/monitor_comprehensive_test.dart: LevitMonitor Comprehensive attach with multiple transports and MultiTransport coverage
+00:00 +115: test/core/transport_close_test.dart: LevitTransport default close() close() default implementation does nothing and does not throw
+00:00 +116: test/core/monitor_comprehensive_test.dart: LevitMonitor Comprehensive MultiTransport close error coverage
+00:00 +117: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+00:00 +118: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+00:00 +119: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+00:00 +120: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+00:00 +121: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+00:00 +122: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+00:00 +123: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+00:00 +124: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+Waiting for events...
+00:00 +125: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+00:00 +126: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+Received 8 events:
+  - Category: snapshot, Type: snapshot, Key/Name: null
+  - Category: state, Type: reactive_init, Key/Name: null
+  - Category: state, Type: reactive_metadata, Key/Name: test_sig
+  - Category: state, Type: state_change, Key/Name: test_sig
+  - Category: di, Type: scope_create, Key/Name: null
+  - Category: di, Type: di_instance_create, Key/Name: _TestService_test_tag
+  - Category: di, Type: scope_progress, Key/Name: null
+  - Category: di, Type: di_register, Key/Name: _TestService_test_tag
+00:00 +127: test/transports/websocket_integration_test.dart: LevitMonitorMiddleware broadcasts DI and State events to WebSocket
+00:00 +128: test/transports/file_transport_test.dart: FileTransport writes DependencyRegisterEvent to file with category
+00:00 +129: test/transports/file_transport_test.dart: FileTransport writes DependencyRegisterEvent to file with category
+00:00 +130: test/transports/file_transport_test.dart: FileTransport writes DependencyRegisterEvent to file with category
+00:00 +131: test/transports/websocket_transport_test.dart: WebSocketTransport handles message acknowledgment from server
+00:00 +131: test/transports/console_transport_event_logging_test.dart: ConsoleTransport Coverage handles all monitor events
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 GRAPH: null dependencies changed
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 DI CREATE: test
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 DI INIT: test
+└───────────────────────────────────────────────────────────────────────────────
+00:00 +132: test/transports/websocket_transport_test.dart: WebSocketTransport handles message acknowledgment from server
+00:00 +132: test/transports/console_transport_event_logging_test.dart: ConsoleTransport Coverage handles all monitor events with overrides
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 GRAPH: null dependencies changed[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 DI CREATE: test[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 DI INIT: test[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+00:00 +133: test/transports/websocket_transport_test.dart: WebSocketTransport handles message acknowledgment from server
+00:00 +133: test/transports/console_transport_formats_listener_events_test.dart: ConsoleTransport formats listener events ConsoleTransport formats listener events
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 LISTENER ADD: test_var (Context: LxContext(type: Test, id: 1, data: {a: 1}))
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 Listener removed: test_var (Context: Test)
+└───────────────────────────────────────────────────────────────────────────────
+00:00 +134: test/transports/file_transport_test.dart: FileTransport writes ReactiveChangeEvent to file with category
+00:00 +135: test/transports/file_transport_test.dart: FileTransport writes ReactiveChangeEvent to file with category
+00:00 +135: test/transports/console_transport_formats_listener_events_test.dart: ConsoleTransport formats listener events ConsoleTransport log levels for listener events
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 LISTENER ADD: [anon] (Context: null)
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 Listener removed: null (Context: null)
+└───────────────────────────────────────────────────────────────────────────────
+00:00 +136: test/transports/file_transport_test.dart: FileTransport writes ReactiveChangeEvent to file with category
+00:01 +137: test/transports/file_transport_test.dart: FileTransport writes ReactiveChangeEvent to file with category
+00:01 +138: test/transports/file_transport_test.dart: FileTransport writes ReactiveChangeEvent to file with category
+00:01 +139: test/transports/websocket_cleanup_acceptance_test.dart: bounds validate before connecting
+00:01 +140: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +141: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +142: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +143: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +144: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +145: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +146: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +147: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +148: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +149: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +150: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +151: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +152: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +153: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +154: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +155: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +156: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +157: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +158: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +159: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +159: test/transports/console_transport_test.dart: ConsoleTransport formats LogEvent properly with error and stack trace
+LOG: an error occurred
+Error: Bad state: bad state
+Stack: 
+stack frame 1
+00:01 +160: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +161: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +161: test/transports/console_transport_test.dart: ConsoleTransport LogEvent trace and debug levels are mapped correctly
+[38;5;244m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;244m│  LOG: trace[0m
+[38;5;244m└───────────────────────────────────────────────────────────────────────────────[0m
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 LOG: debug
+└───────────────────────────────────────────────────────────────────────────────
+00:01 +162: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +163: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +164: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +164: test/transports/console_transport_test.dart: ConsoleTransport obfuscates sensitive values in logged messages
+INIT: password <LxVar<String>> = ***
+VAL: password <String> -> ***
+00:01 +165: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +166: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +167: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +168: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +169: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +170: test/transports/file_transport_test.dart: FileTransport writes LogEvent to file with correct category
+00:01 +171: test/transports/console_transport_comprehensive_formatting_test.dart: ConsoleTransport formats all events without crashing
+00:01 +172: test/transports/console_transport_comprehensive_formatting_test.dart: ConsoleTransport formats all events without crashing
+00:01 +173: test/transports/console_transport_comprehensive_formatting_test.dart: ConsoleTransport formats all events without crashing
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 INIT: test_rx <LxInt> = 0
+└───────────────────────────────────────────────────────────────────────────────
+[38;5;244m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;244m│  VAL: test_rx <int> -> 1[0m
+[38;5;244m└───────────────────────────────────────────────────────────────────────────────[0m
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 BATCH: 1 (0 changes)
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 DISPOSE: test_rx
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 GRAPH: test_rx dependencies changed
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 LISTENER ADD: test_rx (Context: null)
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 Listener removed: test_rx (Context: null)
+└───────────────────────────────────────────────────────────────────────────────
+[38;5;196m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;196m│ ⛔ ERROR: test_rx - err[0m
+[38;5;196m└───────────────────────────────────────────────────────────────────────────────[0m
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 SCOPE CREATE: s#1 (Parent: null)
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 SCOPE DISPOSE: s#1
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 Snapshot sent (0 items)
+└───────────────────────────────────────────────────────────────────────────────
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 DI REGISTER: k in s#1 (src)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 DI RESOLVE: k in s#1 (src)
+└───────────────────────────────────────────────────────────────────────────────
+[38;5;12m┌───────────────────────────────────────────────────────────────────────────────[0m
+[38;5;12m│ 💡 DI DELETE: k from s#1 (src)[0m
+[38;5;12m└───────────────────────────────────────────────────────────────────────────────[0m
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 DI CREATE: k
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 🐛 DI INIT: k
+└───────────────────────────────────────────────────────────────────────────────
+00:01 +174: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +175: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +176: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +177: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +178: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +179: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +180: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +181: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +182: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +183: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +184: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +185: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +186: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +187: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +188: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +189: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:01 +190: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles invalid URL connection failure by scheduling reconnect
+00:02 +191: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Triggers onReady callback when ready future completes
+00:02 +192: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handles ready future error and triggers onError callback
+00:02 +193: test/transports/websocket_fault_test.dart: WebSocketTransport Fault Handling Handling disconnect during send triggers reconnect
+00:03 +194: All tests passed!

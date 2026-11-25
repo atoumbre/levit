@@ -2,14 +2,14 @@ import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUp(() {
+  setUp(() async {
     Levit.enableAutoLinking();
-    Levit.reset(force: true);
+    await Levit.reset(force: true);
   });
 
-  tearDown(() {
+  tearDown(() async {
     Levit.disableAutoLinking();
-    Levit.reset(force: true);
+    await Levit.reset(force: true);
   });
 
   group('LevitStore', () {
@@ -47,7 +47,7 @@ void main() {
       expect(store.find(), 0);
     });
 
-    test('captures and disposes implicit orphans (New Behavior)', () {
+    test('captures and disposes implicit orphans (New Behavior)', () async {
       late LxReactive orphan;
 
       final store = LevitStore((ref) {
@@ -58,30 +58,36 @@ void main() {
       store.find();
 
       expect((orphan as LevitReactiveNotifier).isDisposed, false);
-      expect(orphan.ownerId, isNotNull,
-          reason: "Orphan should be captured/tagged");
+      expect(
+        orphan.ownerId,
+        isNotNull,
+        reason: "Orphan should be captured/tagged",
+      );
 
       // Close store
-      store.delete(force: true);
+      await store.delete(force: true);
 
-      expect((orphan as LevitReactiveNotifier).isDisposed, true,
-          reason:
-              "Orphan should be disposed on store close due to restored Zone capture");
+      expect(
+        (orphan as LevitReactiveNotifier).isDisposed,
+        true,
+        reason:
+            "Orphan should be disposed on store close due to restored Zone capture",
+      );
     });
 
-    test('AutoDispose works manually', () {
+    test('AutoDispose works manually', () async {
       bool disposed = false;
       final disposable = LevitDisposableCallback(() {
         disposed = true;
       });
 
       final store = LevitStore((ref) {
-        ref.autoDispose(disposable);
+        ref.own(disposable);
         return 0;
       });
 
       store.find();
-      store.delete(force: true);
+      await store.delete(force: true);
       expect(disposed, true);
     });
 
@@ -122,19 +128,21 @@ void main() {
       expect(await result.v3, 'asyncVal');
     });
 
-    test('findAsyncIn does not dispose existing instance on concurrent calls',
-        () async {
-      final scope = LevitScope.root('race_store');
-      int closed = 0;
-      final store = LevitStore((ref) => _TestController(() => closed++));
+    test(
+      'findAsyncIn does not dispose existing instance on concurrent calls',
+      () async {
+        final scope = LevitScope.root('race_store');
+        int closed = 0;
+        final store = LevitStore((ref) => _TestController(() => closed++));
 
-      final f1 = store.findAsyncIn(scope);
-      final f2 = store.findAsyncIn(scope);
-      final results = await Future.wait([f1, f2]);
+        final f1 = store.findAsyncIn(scope);
+        final f2 = store.findAsyncIn(scope);
+        final results = await Future.wait([f1, f2]);
 
-      expect(identical(results[0], results[1]), isTrue);
-      expect(closed, 0);
-    });
+        expect(identical(results[0], results[1]), isTrue);
+        expect(closed, 0);
+      },
+    );
 
     test('builder error disposes captured reactives', () {
       late LxVar<int> orphan;
@@ -211,8 +219,8 @@ class _TestController extends LevitController {
   _TestController(this._onClose);
 
   @override
-  void onClose() {
+  Future<void> onClose() async {
     _onClose();
-    super.onClose();
+    await super.onClose();
   }
 }

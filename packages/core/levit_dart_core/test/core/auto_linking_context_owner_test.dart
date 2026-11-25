@@ -3,9 +3,9 @@ import 'package:test/test.dart';
 
 void main() {
   group('Auto-Linking Context Owner', () {
-    tearDown(() {
+    tearDown(() async {
       Levit.disableAutoLinking();
-      Ls.reset(force: true);
+      await Ls.reset(force: true);
     });
 
     test('Context-based owner linking', () {

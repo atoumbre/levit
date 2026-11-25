@@ -1,3 +1,17 @@
+## 0.1.0-beta.1
+
+- Await attachment/replacement, flush and detach; aggregate delivery/cleanup failures.
+- Freeze redacted envelopes before bounded queues/history; default history and worker statistics off.
+- Add reconnect snapshots, delivery acknowledgements and drop accounting.
+- Keep browser imports free of IO; move FileTransport to levit_monitor_io.dart.
+- Add scope progress, reactive metadata, optional write stacks and application task adapter.
+- Integrate the optional standalone levit_devtools local inspector.
+
+## 0.0.12
+
+- **Breaking:** attaching monitoring no longer enables auto-linking implicitly.
+- Verify monitoring preserves explicit bootstrap configuration.
+- Updated internal runtime constraints to `^0.0.12`.
 
 ## 0.0.11
 

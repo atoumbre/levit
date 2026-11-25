@@ -27,25 +27,32 @@ It does not define new runtime semantics; it packages the Dart stack behind one 
 
 ```yaml
 dependencies:
-  levit: ^latest
+  levit: ^0.1.0-beta.1
 ```
 
 ```dart
 import 'package:levit/levit.dart';
 
+class CounterController extends LevitController {
+  final count = 0.lx;
+  @override
+  void onInit() {
+    super.onInit();
+    own(count);
+  }
+  void increment() => count.value++;
+}
+
 Future<void> main() async {
   final scope = Levit.createScope('app');
 
-  scope.run(() {
-    final count = Levit.put(() => 0.lx, tag: 'count');
-    final worker = LxWorker(count, (value) => print('count=$value'));
-
-    count(1);
-
-    worker.close();
-  });
-
-  await scope.dispose();
+  try {
+    final controller = scope.put(() => CounterController());
+    controller.increment();
+    print(controller.count.value);
+  } finally {
+    await scope.dispose();
+  }
 }
 ```
 
@@ -54,3 +61,8 @@ Future<void> main() async {
 - Zero-surprise aggregation: one import, unchanged underlying APIs.
 - Clear boundaries: pure Dart only, no Flutter dependency.
 - Production default for shared domain and backend layers.
+
+See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md) before upgrading.
+
+Continue with [ownership-first onboarding](../../../docs/ONBOARDING.md) and
+[advanced helpers](../../../docs/ADVANCED.md). Requires Dart 3.12+.

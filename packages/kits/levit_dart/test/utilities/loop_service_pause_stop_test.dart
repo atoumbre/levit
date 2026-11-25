@@ -2,50 +2,57 @@ import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('registerService replaces existing service and tracks permanence', () {
-    final engine = LevitLoopEngine();
-    final first = _TestService();
-    final second = _TestService();
+  test(
+    'registerService replaces existing service and tracks permanence',
+    () async {
+      final engine = LevitLoopEngine();
+      final first = _TestService();
+      final second = _TestService();
 
-    engine.registerService('svc', first, permanent: true);
-    engine.registerService('svc', second);
+      engine.registerService('svc', first, permanent: true);
+      await engine.stopService('svc');
+      engine.registerService('svc', second);
 
-    expect(first.stopCount, 1);
+      expect(first.stopCount, 1);
 
-    engine.pauseAllServices();
-    engine.resumeAllServices();
+      engine.pauseAllServices();
+      engine.resumeAllServices();
 
-    expect(second.pauseCount, 1);
-    expect(second.resumeCount, 1);
+      expect(second.pauseCount, 1);
+      expect(second.resumeCount, 1);
 
-    engine.dispose();
-    expect(second.stopCount, 1);
-  });
+      await engine.dispose();
+      expect(second.stopCount, 1);
+    },
+  );
 
-  test('pauseAllServices and resumeAllServices respect permanent services', () {
-    final engine = LevitLoopEngine();
-    final permanent = _TestService();
-    final regular = _TestService();
+  test(
+    'pauseAllServices and resumeAllServices respect permanent services',
+    () async {
+      final engine = LevitLoopEngine();
+      final permanent = _TestService();
+      final regular = _TestService();
 
-    engine.registerService('permanent', permanent, permanent: true);
-    engine.registerService('regular', regular);
+      engine.registerService('permanent', permanent, permanent: true);
+      engine.registerService('regular', regular);
 
-    engine.pauseAllServices();
-    engine.resumeAllServices();
+      engine.pauseAllServices();
+      engine.resumeAllServices();
 
-    expect(permanent.pauseCount, 0);
-    expect(permanent.resumeCount, 0);
-    expect(regular.pauseCount, 1);
-    expect(regular.resumeCount, 1);
+      expect(permanent.pauseCount, 0);
+      expect(permanent.resumeCount, 0);
+      expect(regular.pauseCount, 1);
+      expect(regular.resumeCount, 1);
 
-    engine.pauseAllServices(force: true);
-    engine.resumeAllServices(force: true);
+      engine.pauseAllServices(force: true);
+      engine.resumeAllServices(force: true);
 
-    expect(permanent.pauseCount, 1);
-    expect(permanent.resumeCount, 1);
+      expect(permanent.pauseCount, 1);
+      expect(permanent.resumeCount, 1);
 
-    engine.dispose();
-  });
+      await engine.dispose();
+    },
+  );
 }
 
 class _TestService implements StoppableService {
@@ -66,5 +73,5 @@ class _TestService implements StoppableService {
   void start() {}
 
   @override
-  void stop() => stopCount++;
+  Future<void> stop() async => stopCount++;
 }

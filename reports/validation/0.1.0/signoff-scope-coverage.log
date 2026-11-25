@@ -1,0 +1,22 @@
+Scanning for packages in: packages...
+Excluding example projects (use --include-examples to include).
+Filtering to packages: levit_scope
+Per-package timeout: 600s
+Coverage threshold: 100.00%
+Found 1 packages: levit_scope
+
+[levit_scope] Running tests and generating coverage...
+[levit_scope] Detected dart:mirrors in tests; using dart test.
+[levit_scope] Done. (100.0%)
+
+=================================================================
+LEVIT COVERAGE REPORT
+=================================================================
+| Package              | Lines Covered | Total Lines | Coverage |
+|----------------------|---------------|-------------|----------|
+| levit_scope          |           661 |         661 |  100.00% |
+-----------------------------------------------------------------
+| GLOBAL               |           661 |         661 |  100.00% |
+=================================================================
+
+Skipped report file generation (use --generate-report to enable)

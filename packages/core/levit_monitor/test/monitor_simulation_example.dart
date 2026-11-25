@@ -75,9 +75,7 @@ class LocationController extends LevitController {
         final p1 = wayPoints[i];
         final p2 = wayPoints[i + 1];
 
-        total += sqrt(
-          pow(p2.$1 - p1.$1, 2) + pow(p2.$2 - p1.$2, 2),
-        );
+        total += sqrt(pow(p2.$1 - p1.$1, 2) + pow(p2.$2 - p1.$2, 2));
       }
 
       // print('Computed distance: $total');
@@ -90,7 +88,7 @@ class LocationController extends LevitController {
     ///
     /// The `.listen()` shorthand creates an LxWorker that is explicitly
     /// registered and automatically disposed with the controller lifecycle.
-    autoDispose(
+    own(
       location
           .transform((s) => s.sampleTime(const Duration(seconds: 1)))
           .listen((_) => addWayPoint())
@@ -101,9 +99,7 @@ class LocationController extends LevitController {
 
 Future<void> main(List<String> args) async {
   // Attach Levit Monitor for live debugging
-  LevitMonitor.attach(
-    transport: ConsoleTransport(),
-  );
+  await LevitMonitor.attach(transport: ConsoleTransport());
 
   print('Starting simulation...');
 

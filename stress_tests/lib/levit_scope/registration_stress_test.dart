@@ -7,12 +7,12 @@ class _Service {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('Stress Test: DI Registration', () {
-    test('Bulk Put/Find - 500k services', () {
+    test('Bulk Put/Find - 500k services', () async {
       print('[Description] Tests mass registration and lookup performance.');
       const count = 500000;
 
@@ -32,10 +32,10 @@ void main() {
       swFind.stop();
       print('Resolved $count services in ${swFind.elapsedMilliseconds}ms');
 
-      Levit.reset(force: true);
+      await Levit.reset(force: true);
     });
 
-    test('Lazy Instantiation Burst - 50k lazy services', () {
+    test('Lazy Instantiation Burst - 50k lazy services', () async {
       print('[Description] Tests lazy instantiation triggered all at once.');
       const count = 50000;
 
@@ -53,15 +53,18 @@ void main() {
 
       print('Instantiated $count lazy services in ${sw.elapsedMilliseconds}ms');
 
-      Levit.reset(force: true);
+      await Levit.reset(force: true);
     });
 
-    test('Factory Create Churn - 100k factory instances', () {
+    test('Factory Create Churn - 100k factory instances', () async {
       print('[Description] Tests factory pattern performance.');
       const count = 100000;
 
-      Levit.lazyPut<_Service>(() => _Service(0),
-          tag: 'factory', isFactory: true);
+      Levit.lazyPut<_Service>(
+        () => _Service(0),
+        tag: 'factory',
+        isFactory: true,
+      );
 
       final sw = Stopwatch()..start();
       for (var i = 0; i < count; i++) {
@@ -71,9 +74,10 @@ void main() {
 
       final opsPerMs = count / sw.elapsedMilliseconds;
       print(
-          'Created $count factory instances in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)');
+        'Created $count factory instances in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)',
+      );
 
-      Levit.reset(force: true);
+      await Levit.reset(force: true);
     });
   });
 }

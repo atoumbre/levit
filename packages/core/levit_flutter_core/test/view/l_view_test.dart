@@ -17,30 +17,35 @@ class ThrowingView extends LView<int> {
 }
 
 void main() {
-  group('LView Coverage', () {
-    testWidgets('LView subclasses and buildView (Lines 42-48)', (tester) async {
-      await tester.pumpWidget(
-        const Directionality(
-          textDirection: TextDirection.ltr,
-          child: CustomView(),
-        ),
-      );
-      expect(tester.takeException(), isNotNull);
-
-      await tester.pumpWidget(
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: LScope(
-            dependencyFactory: (s) => s.put<int>(() => 42),
-            child: const CustomView(),
+  group('View builders and scoped dependency resolution', () {
+    testWidgets(
+      'LView subclasses render the dependency resolved from their scope',
+      (tester) async {
+        await tester.pumpWidget(
+          const Directionality(
+            textDirection: TextDirection.ltr,
+            child: CustomView(),
           ),
-        ),
-      );
+        );
+        expect(tester.takeException(), isNotNull);
 
-      expect(find.text('Computed: 42'), findsOneWidget);
-    });
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: LScope(
+              dependencyFactory: (s) => s.put<int>(() => 42),
+              child: const CustomView(),
+            ),
+          ),
+        );
 
-    testWidgets('LView UnimplementedError (Line 48)', (tester) async {
+        expect(find.text('Computed: 42'), findsOneWidget);
+      },
+    );
+
+    testWidgets('LView throws when neither builder nor buildView is supplied', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
@@ -54,8 +59,9 @@ void main() {
       expect(tester.takeException(), isUnimplementedError);
     });
 
-    testWidgets('LScopedView updates and args (Lines 235, 256)',
-        (tester) async {
+    testWidgets('LScopedView recreates its dependency when arguments change', (
+      tester,
+    ) async {
       int initCount = 0;
 
       Widget buildSView(int argsValue) {
@@ -85,8 +91,9 @@ void main() {
       expect(find.text('Val: 2'), findsOneWidget);
     });
 
-    testWidgets('LAsyncView fallback paths (Lines 126, 137, 161)',
-        (tester) async {
+    testWidgets('LAsyncView replaces loading content with the resolved value', (
+      tester,
+    ) async {
       final completer = Completer<String>();
       await tester.runAsync(() async {
         await tester.pumpWidget(

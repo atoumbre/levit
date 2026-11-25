@@ -14,15 +14,13 @@ void main() {
 const _ownerStub = r'''
 abstract class LevitResourceOwner {
   T own<T>(T resource) => resource;
-  T autoDispose<T>(T resource) => resource;
 }
 
 abstract class LevitController implements LevitResourceOwner {
   @override
   T own<T>(T resource) => resource;
-  @override
-  T autoDispose<T>(T resource) => resource;
   void onInit() {}
+  void onBeforeClose() {}
   void onClose() {}
 }
 ''';
@@ -190,6 +188,23 @@ class Controller extends LevitController {
     ]);
   }
 
+  Future<void> test_missingBeforeCloseSuperCall() async {
+    final source =
+        '''
+$_ownerStub
+class Controller extends LevitController {
+  @override
+  void onBeforeClose() {}
+}
+''';
+    await assertDiagnostics(source, [
+      lint(
+        source.indexOf('onBeforeClose()', source.indexOf('class Controller')),
+        'onBeforeClose'.length,
+      ),
+    ]);
+  }
+
   Future<void> test_superCallsInBlockAndExpressionBodies() async {
     await assertNoDiagnostics('''
 $_ownerStub
@@ -203,6 +218,9 @@ class Controller extends LevitController {
   @override
   void onClose() => super.onClose();
 
+  @override
+  void onBeforeClose() => super.onBeforeClose();
+
   void helper() {}
 }
 ''');
@@ -212,6 +230,7 @@ class Controller extends LevitController {
     await assertNoDiagnostics('''
 class Plain {
   void onInit() {}
+  void onBeforeClose() {}
   void onClose() {}
 }
 ''');
@@ -255,7 +274,7 @@ $_ownerStub
 class Controller extends LevitController {
   void start(Stream<int> values) {
     own(values.listen((_) {}));
-    autoDispose(Timer(Duration.zero, () {}));
+    own(Timer(Duration.zero, () {}));
   }
 }
 ''');

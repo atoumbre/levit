@@ -1,0 +1,379 @@
+### Profile workload latency
+
+| Diagnostics | Workload | Reference ms | Before fixes ms | Candidate ms | vs reference | vs before |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Off | 10,000 observed writes | 0.192 | 0.196 | 0.262 | +36.3% | +33.9% |
+| Off | 128 computed consumers × 100 writes | 3.119 | 3.057 | 3.085 | -1.1% | +0.9% |
+| Off | 100 scope lifetimes | 0.250 | 0.354 | 0.342 | +36.9% | -3.3% |
+| Off | 100 leaf tasks | 0.160 | 0.478 | 0.258 | +61.2% | -46.2% |
+| Off | Virtualized 1,000-row list: frame wall time | 8.316 | 8.309 | 8.304 | -0.1% | -0.1% |
+| On | 10,000 observed writes | 43.215 | 125.817 | 84.958 | +96.6% | -32.5% |
+| On | 128 computed consumers × 100 writes | 58.940 | 168.541 | 112.275 | +90.5% | -33.4% |
+| On | 100 scope lifetimes | 3.874 | 23.296 | 14.491 | +274.0% | -37.8% |
+| On | 100 leaf tasks | 0.164 | 0.486 | 0.267 | +62.7% | -45.0% |
+| On | Virtualized 1,000-row list: frame wall time | 8.284 | 8.310 | 8.319 | +0.4% | +0.1% |
+
+### Release workload latency
+
+| Diagnostics | Workload | Reference ms | Before fixes ms | Candidate ms | vs reference | vs before |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Off | 10,000 observed writes | 0.171 | 0.148 | 0.191 | +11.7% | +29.1% |
+| Off | 128 computed consumers × 100 writes | 2.846 | 2.953 | 2.904 | +2.0% | -1.6% |
+| Off | 100 scope lifetimes | 0.239 | 0.359 | 0.357 | +49.4% | -0.6% |
+| Off | 100 leaf tasks | 0.157 | 0.479 | 0.256 | +63.0% | -46.7% |
+| Off | Virtualized 1,000-row list: frame wall time | 8.329 | 8.323 | 8.328 | -0.0% | +0.1% |
+| On | 10,000 observed writes | 44.010 | 121.671 | 82.815 | +88.2% | -31.9% |
+| On | 128 computed consumers × 100 writes | 59.985 | 159.425 | 109.900 | +83.2% | -31.1% |
+| On | 100 scope lifetimes | 3.860 | 22.958 | 14.630 | +279.0% | -36.3% |
+| On | 100 leaf tasks | 0.157 | 0.476 | 0.266 | +70.1% | -44.1% |
+| On | Virtualized 1,000-row list: frame wall time | 8.318 | 8.325 | 8.317 | -0.0% | -0.1% |
+
+### Flutter engine timings
+
+Pooled medians / nearest-rank p95, milliseconds; 360 matched frames per row.
+
+| Mode | Diagnostics | Revision | Build median / p95 | Raster median / p95 |
+| --- | --- | --- | ---: | ---: |
+| profile | Off | reference | 1.704 / 3.023 | 0.394 / 0.545 |
+| profile | Off | before | 1.681 / 2.650 | 0.387 / 0.576 |
+| profile | Off | candidate | 1.882 / 2.436 | 0.412 / 0.589 |
+| profile | On | reference | 1.982 / 2.378 | 0.420 / 0.580 |
+| profile | On | before | 1.812 / 2.366 | 0.406 / 0.569 |
+| profile | On | candidate | 1.860 / 2.425 | 0.429 / 0.515 |
+| release | Off | reference | 1.739 / 2.379 | 0.371 / 0.529 |
+| release | Off | before | 1.710 / 2.349 | 0.402 / 0.567 |
+| release | Off | candidate | 1.659 / 2.299 | 0.407 / 0.544 |
+| release | On | reference | 1.927 / 2.339 | 0.392 / 0.532 |
+| release | On | before | 1.855 / 2.390 | 0.374 / 0.491 |
+| release | On | candidate | 1.917 / 2.436 | 0.400 / 0.513 |
+{
+  "eventCounts": [
+    {
+      "label": "reference",
+      "workload": "notify_10000",
+      "eventsPerIteration": [
+        10000.057142857142
+      ]
+    },
+    {
+      "label": "reference",
+      "workload": "fanout_128_x_100",
+      "eventsPerIteration": [
+        12914.628571428571
+      ]
+    },
+    {
+      "label": "reference",
+      "workload": "scope_lifetime_100",
+      "eventsPerIteration": [
+        803.6571428571428
+      ]
+    },
+    {
+      "label": "reference",
+      "workload": "tasks_100",
+      "eventsPerIteration": [
+        0.0
+      ]
+    },
+    {
+      "label": "reference",
+      "workload": "list_1000_frame",
+      "eventsPerIteration": [
+        1.0
+      ]
+    },
+    {
+      "label": "before",
+      "workload": "notify_10000",
+      "eventsPerIteration": [
+        10000.057142857142
+      ]
+    },
+    {
+      "label": "before",
+      "workload": "fanout_128_x_100",
+      "eventsPerIteration": [
+        12914.628571428571
+      ]
+    },
+    {
+      "label": "before",
+      "workload": "scope_lifetime_100",
+      "eventsPerIteration": [
+        1200.0
+      ]
+    },
+    {
+      "label": "before",
+      "workload": "tasks_100",
+      "eventsPerIteration": [
+        0.0
+      ]
+    },
+    {
+      "label": "before",
+      "workload": "list_1000_frame",
+      "eventsPerIteration": [
+        1.0
+      ]
+    },
+    {
+      "label": "candidate",
+      "workload": "notify_10000",
+      "eventsPerIteration": [
+        10000.057142857142
+      ]
+    },
+    {
+      "label": "candidate",
+      "workload": "fanout_128_x_100",
+      "eventsPerIteration": [
+        12914.628571428571
+      ]
+    },
+    {
+      "label": "candidate",
+      "workload": "scope_lifetime_100",
+      "eventsPerIteration": [
+        1200.0
+      ]
+    },
+    {
+      "label": "candidate",
+      "workload": "tasks_100",
+      "eventsPerIteration": [
+        0.0
+      ]
+    },
+    {
+      "label": "candidate",
+      "workload": "list_1000_frame",
+      "eventsPerIteration": [
+        1.0
+      ]
+    }
+  ],
+  "frames": [
+    {
+      "mode": "profile",
+      "diagnostics": false,
+      "label": "reference",
+      "frames": 360,
+      "buildMedianUs": 1704.5,
+      "buildP95Us": 3023,
+      "rasterMedianUs": 394.0,
+      "rasterP95Us": 545,
+      "buildRoundMediansUs": [
+        1836.0,
+        1920.5,
+        1674.5,
+        1486.0,
+        1749.5,
+        1192.5
+      ]
+    },
+    {
+      "mode": "profile",
+      "diagnostics": false,
+      "label": "before",
+      "frames": 360,
+      "buildMedianUs": 1681.5,
+      "buildP95Us": 2650,
+      "rasterMedianUs": 387.0,
+      "rasterP95Us": 576,
+      "buildRoundMediansUs": [
+        1993.5,
+        1988.5,
+        1593.0,
+        1324.0,
+        1687.0,
+        1630.5
+      ]
+    },
+    {
+      "mode": "profile",
+      "diagnostics": false,
+      "label": "candidate",
+      "frames": 360,
+      "buildMedianUs": 1882.0,
+      "buildP95Us": 2436,
+      "rasterMedianUs": 412.0,
+      "rasterP95Us": 589,
+      "buildRoundMediansUs": [
+        2107.0,
+        2091.5,
+        1978.0,
+        1399.5,
+        1761.5,
+        1874.0
+      ]
+    },
+    {
+      "mode": "profile",
+      "diagnostics": true,
+      "label": "reference",
+      "frames": 360,
+      "buildMedianUs": 1981.5,
+      "buildP95Us": 2378,
+      "rasterMedianUs": 420.0,
+      "rasterP95Us": 580,
+      "buildRoundMediansUs": [
+        2037.5,
+        2098.0,
+        2116.5,
+        2002.5,
+        1390.5,
+        1871.0
+      ]
+    },
+    {
+      "mode": "profile",
+      "diagnostics": true,
+      "label": "before",
+      "frames": 360,
+      "buildMedianUs": 1812.5,
+      "buildP95Us": 2366,
+      "rasterMedianUs": 406.0,
+      "rasterP95Us": 569,
+      "buildRoundMediansUs": [
+        2059.5,
+        1978.5,
+        1866.5,
+        1722.0,
+        1825.0,
+        1546.5
+      ]
+    },
+    {
+      "mode": "profile",
+      "diagnostics": true,
+      "label": "candidate",
+      "frames": 360,
+      "buildMedianUs": 1860.0,
+      "buildP95Us": 2425,
+      "rasterMedianUs": 429.0,
+      "rasterP95Us": 515,
+      "buildRoundMediansUs": [
+        1902.5,
+        1713.0,
+        1701.0,
+        1981.5,
+        2188.5,
+        2076.0
+      ]
+    },
+    {
+      "mode": "release",
+      "diagnostics": false,
+      "label": "reference",
+      "frames": 360,
+      "buildMedianUs": 1739.0,
+      "buildP95Us": 2379,
+      "rasterMedianUs": 371.0,
+      "rasterP95Us": 529,
+      "buildRoundMediansUs": [
+        2046.5,
+        1986.5,
+        1435.5,
+        1390.0,
+        1921.0,
+        1691.5
+      ]
+    },
+    {
+      "mode": "release",
+      "diagnostics": false,
+      "label": "before",
+      "frames": 360,
+      "buildMedianUs": 1710.0,
+      "buildP95Us": 2349,
+      "rasterMedianUs": 402.0,
+      "rasterP95Us": 567,
+      "buildRoundMediansUs": [
+        1882.5,
+        1555.5,
+        1989.0,
+        1386.5,
+        1755.0,
+        2007.0
+      ]
+    },
+    {
+      "mode": "release",
+      "diagnostics": false,
+      "label": "candidate",
+      "frames": 360,
+      "buildMedianUs": 1659.5,
+      "buildP95Us": 2299,
+      "rasterMedianUs": 407.0,
+      "rasterP95Us": 544,
+      "buildRoundMediansUs": [
+        1866.5,
+        1866.0,
+        1572.5,
+        1356.5,
+        1493.0,
+        1926.5
+      ]
+    },
+    {
+      "mode": "release",
+      "diagnostics": true,
+      "label": "reference",
+      "frames": 360,
+      "buildMedianUs": 1927.5,
+      "buildP95Us": 2339,
+      "rasterMedianUs": 391.5,
+      "rasterP95Us": 532,
+      "buildRoundMediansUs": [
+        1998.5,
+        2029.0,
+        2108.5,
+        1879.5,
+        1580.5,
+        1948.0
+      ]
+    },
+    {
+      "mode": "release",
+      "diagnostics": true,
+      "label": "before",
+      "frames": 360,
+      "buildMedianUs": 1854.5,
+      "buildP95Us": 2390,
+      "rasterMedianUs": 374.0,
+      "rasterP95Us": 491,
+      "buildRoundMediansUs": [
+        1982.0,
+        2109.5,
+        2136.0,
+        1715.5,
+        1684.5,
+        1627.0
+      ]
+    },
+    {
+      "mode": "release",
+      "diagnostics": true,
+      "label": "candidate",
+      "frames": 360,
+      "buildMedianUs": 1917.0,
+      "buildP95Us": 2436,
+      "rasterMedianUs": 400.0,
+      "rasterP95Us": 513,
+      "buildRoundMediansUs": [
+        2110.0,
+        2115.5,
+        2255.5,
+        1836.5,
+        1798.5,
+        1801.0
+      ]
+    }
+  ],
+  "rss": [
+    99.796875,
+    166.6875
+  ]
+}

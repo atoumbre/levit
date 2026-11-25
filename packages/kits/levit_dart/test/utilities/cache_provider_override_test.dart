@@ -51,17 +51,23 @@ void main() {
     );
 
     // Initial run
-    await controller.tasksEngine
-        .schedule((_) async => 100, id: 'key1', cachePolicy: policy);
+    await controller.tasksEngine.schedule(
+      (_) async => 100,
+      id: 'key1',
+      cachePolicy: policy,
+    );
     expect(controller.mockCache.writeCount, 1);
 
     // Second run should hit the mock cache
-    final result = await controller.tasksEngine
-        .schedule((_) async => 200, id: 'key1', cachePolicy: policy);
+    final result = await controller.tasksEngine.schedule(
+      (_) async => 200,
+      id: 'key1',
+      cachePolicy: policy,
+    );
     expect(result, 100);
     expect(controller.mockCache.readCount, 2);
 
-    controller.onClose();
+    await controller.onClose();
   });
 
   test('LevitReactiveTasksMixin uses overridden taskCacheProvider', () async {
@@ -79,11 +85,14 @@ void main() {
     expect(controller.mockCache.writeCount, 1);
 
     // Second run should hit the mock cache
-    final result = await controller.runTask((_) async => 400,
-        id: 'key2', cachePolicy: policy);
+    final result = await controller.runTask(
+      (_) async => 400,
+      id: 'key2',
+      cachePolicy: policy,
+    );
     expect(result, 300);
     expect(controller.mockCache.readCount, 2);
 
-    controller.onClose();
+    await controller.onClose();
   });
 }

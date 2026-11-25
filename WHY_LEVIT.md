@@ -184,8 +184,7 @@ In practice, that can stay small:
 ```dart
 return LScopedView<CounterController>.put(
   () => CounterController(),
-  builder: (context, controller) =>
-      LWatch(() => Text('Count: ${controller.count()}')),
+  builder: (context, controller) => Text('Count: ${controller.count()}'),
 );
 ```
 
@@ -217,3 +216,35 @@ If your team keeps asking:
 - Can the same model survive outside the widget tree?
 
 then Levit has a clear reason to exist.
+
+## Runtime and ecosystem boundary
+
+The main repository owns scopes, cleanup, reactive state, structured work, runtime
+diagnostics and first-party Flutter bindings. It stays independent of storage
+backends and persistence policy. Native Flutter observation adapters belong with
+the bindings; corrections to existing time utilities belong with those utilities.
+
+Persistence interfaces, codecs, migrations, storage implementations, persistent
+task caches and codec-based restoration belong in an independently released
+ecosystem repository. Those integrations consume public Levit APIs and test
+initialization, subscription ownership and awaited cleanup against supported
+runtime versions. The runtime must not depend on ecosystem packages. See the
+[ecosystem roadmap](reports/ecosystem_roadmap.md).
+
+## 0.1.0 lifetime and observation contracts
+
+Owners request cancellation and drain tracked work before releasing dependencies.
+All cleanup is attempted, then awaited failures aggregate. Closing stops admission
+and publication immediately; a deadline is not proof that work has stopped.
+Flutter replacement serializes generations and exposes cleanup failure/retry.
+
+Stores use definition identity plus variant, and receiving scopes own overrides.
+Observation uses `LxReadable`; collections borrow entries, and an owned LxResource preserves observers when its producer is replaced.
+Controller task roots supervise unrelated workflows while child workflows cancel
+siblings on failure. Only leaf tasks occupy scheduling slots. These boundaries
+make ownership inspectable without coupling the core to a storage or network stack.
+
+The optional local inspector shows redacted, bounded state and task metadata.
+Snapshots after reconnection restore current state without inventing missing
+history. The lint plugin adds focused local checks, not general cancellation proofs.
+See [onboarding](docs/ONBOARDING.md) and [migration](MIGRATION_0.1.0.md).

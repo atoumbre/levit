@@ -122,7 +122,7 @@ void main() {
       );
 
       expect(find.text('Pi: 3.14, Exists: true'), findsOneWidget);
-      Levit.reset();
+      await Levit.reset();
     });
 
     testWidgets('LevitProvider put works in scope', (tester) async {

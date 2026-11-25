@@ -17,7 +17,7 @@ abstract class StoppableService {
   void resume();
 
   /// Stops the service gracefully.
-  void stop();
+  Future<void> stop();
 }
 
 /// A standalone execution engine for managing repetitive loops and long-running services.
@@ -26,13 +26,20 @@ abstract class StoppableService {
 /// *   Sequential loop execution with delays.
 /// *   Isolate-based loops for heavy background work.
 /// *   Centralized start/pause/resume/stop control for all registered services.
-class LevitLoopEngine implements LevitDisposable {
+class LevitLoopEngine
+    implements LevitDisposable, LevitDrainable, LevitExecutionBoundary {
+  static final Object _executionZone = Object();
   final Map<String, StoppableService> _services = {};
   final Set<String> _permanentServices = {};
+  final Set<String> _manuallyPaused = {};
+  final Set<String> _bulkPaused = {};
+  final Set<Future<void>> _pendingStops = {};
+  bool _closing = false;
+  Future<void>? _closeFuture;
 
   /// Registers a [service] under [id].
   ///
-  /// If a service with the same [id] already exists, it is stopped first.
+  /// Await [stopService] before replacing an existing [id].
   ///
   /// If [permanent] is true, the service will resist standard calls to [pauseAllServices].
   /// It will only be paused if [force] is set to true.
@@ -42,7 +49,12 @@ class LevitLoopEngine implements LevitDisposable {
     T service, {
     bool permanent = false,
   }) {
-    _services[id]?.stop();
+    if (_closing) throw StateError('Loop engine is closing.');
+    if (_services.containsKey(id)) {
+      throw StateError(
+        'Await stopService("$id") before registering a replacement.',
+      );
+    }
     _services[id] = service;
     if (permanent) {
       _permanentServices.add(id);
@@ -62,7 +74,10 @@ class LevitLoopEngine implements LevitDisposable {
     Duration? delay,
     bool permanent = false,
   }) {
-    final service = _LoopService(body, delay: delay);
+    final service = _LoopService(
+      () => runZoned(body, zoneValues: {_executionZone: this}),
+      delay: delay,
+    );
     registerService(id, service, permanent: permanent);
     service.start();
   }
@@ -78,23 +93,41 @@ class LevitLoopEngine implements LevitDisposable {
     String? debugName,
     bool permanent = false,
   }) {
-    final service =
-        _IsolateLoopService(body, delay: delay, debugName: debugName);
+    final service = _IsolateLoopService(
+      body,
+      delay: delay,
+      debugName: debugName,
+    );
     registerService(id, service, permanent: permanent);
     service.start();
   }
 
   /// Pauses the service with the given [id].
-  void pauseService(String id) => _services[id]?.pause();
+  void pauseService(String id) {
+    _manuallyPaused.add(id);
+    _services[id]?.pause();
+  }
 
   /// Resumes the service with the given [id].
-  void resumeService(String id) => _services[id]?.resume();
+  void resumeService(String id) {
+    _manuallyPaused.remove(id);
+    if (!_bulkPaused.contains(id)) _services[id]?.resume();
+  }
 
   /// Stops the service with the given [id].
-  void stopService(String id) {
-    _services[id]?.stop();
-    _services.remove(id);
-    _permanentServices.remove(id);
+  Future<void> stopService(String id) {
+    final service = _services[id];
+    if (service == null) return Future<void>.value();
+    late final Future<void> stopping;
+    stopping = Future<void>.sync(service.stop).whenComplete(() {
+      if (identical(_services[id], service)) _services.remove(id);
+      _permanentServices.remove(id);
+      _manuallyPaused.remove(id);
+      _bulkPaused.remove(id);
+      _pendingStops.remove(stopping);
+    });
+    _pendingStops.add(stopping);
+    return stopping;
   }
 
   /// Pauses all registered services.
@@ -104,6 +137,7 @@ class LevitLoopEngine implements LevitDisposable {
   void pauseAllServices({bool force = false}) {
     for (final entry in _services.entries) {
       if (force || !_permanentServices.contains(entry.key)) {
+        _bulkPaused.add(entry.key);
         entry.value.pause();
       }
     }
@@ -116,7 +150,8 @@ class LevitLoopEngine implements LevitDisposable {
   void resumeAllServices({bool force = false}) {
     for (final entry in _services.entries) {
       if (force || !_permanentServices.contains(entry.key)) {
-        entry.value.resume();
+        _bulkPaused.remove(entry.key);
+        if (!_manuallyPaused.contains(entry.key)) entry.value.resume();
       }
     }
   }
@@ -124,21 +159,64 @@ class LevitLoopEngine implements LevitDisposable {
   /// Stops all registered services.
   ///
   /// This stops EVERYTHING, regardless of permanent status.
-  void stopAllServices() {
-    for (final service in _services.values) {
-      service.stop();
-    }
-    _services.clear();
-    _permanentServices.clear();
+  Future<void> stopAllServices() async {
+    final results = await Future.wait([
+      for (final id in _services.keys.toList())
+        stopService(id).then<AsyncError?>(
+          (_) => null,
+          onError: (Object error, StackTrace stack) => AsyncError(error, stack),
+        ),
+    ]);
+    final errors = results.whereType<AsyncError>().toList();
+    if (errors.isNotEmpty)
+      throw LevitDisposalException([
+        for (final error in errors)
+          LevitDisposalFailure(
+            resource: this,
+            error: error.error,
+            stackTrace: error.stackTrace,
+          ),
+      ]);
   }
 
-  /// Returns the status of the service with the given [id], or null if not found.
-  LxReactive<LxStatus<dynamic>>? getServiceStatus(String id) =>
+  /// The current status, borrowed from the registered service.
+  LxReadable<LxStatus<dynamic>>? getServiceStatus(String id) =>
       _services[id]?.status;
 
   @override
-  void dispose() {
-    stopAllServices();
+  void requestCancel() {
+    if (_closing) return;
+    _closing = true;
+    for (final service in _services.values) {
+      if (service is LevitDrainable) {
+        (service as LevitDrainable).requestCancel();
+      } else {
+        service.pause();
+      }
+    }
+  }
+
+  @override
+  Future<void> drain() {
+    assertCanDispose();
+    requestCancel();
+    return _closeFuture ??= stopAllServices();
+  }
+
+  @override
+  void assertCanDispose() {
+    if (identical(Zone.current[_executionZone], this)) {
+      throw StateError(
+        'A loop cannot dispose its own owner; request cancellation instead.',
+      );
+    }
+  }
+
+  @override
+  Future<void> dispose() {
+    assertCanDispose();
+    requestCancel();
+    return drain();
   }
 }
 
@@ -151,13 +229,16 @@ class _LoopExecutor {
   bool _isStopped = false;
   bool _isPaused = false;
   Completer<void>? _pauseCompleter;
+  Future<void>? _running;
+  Timer? _delayTimer;
+  Completer<void>? _delayCompleter;
   LxStatus<dynamic> _lastStatus = LxIdle();
 
   _LoopExecutor(this._body, this._delay, this._onStatusChanged);
 
   void start() {
-    if (_lastStatus is! LxIdle) return;
-    _run();
+    if (_running != null || _isStopped) return;
+    _running = _run();
   }
 
   void pause() {
@@ -172,12 +253,20 @@ class _LoopExecutor {
     _updateStatus(LxWaiting());
   }
 
-  void stop() {
+  void requestCancel() {
     _isStopped = true;
     if (_pauseCompleter != null && !_pauseCompleter!.isCompleted) {
       _pauseCompleter!.complete();
     }
-    _updateStatus(LxIdle());
+    _delayTimer?.cancel();
+    if (!(_delayCompleter?.isCompleted ?? true)) _delayCompleter!.complete();
+  }
+
+  Future<void> stop() {
+    requestCancel();
+    return (_running ?? Future<void>.value()).whenComplete(
+      () => _updateStatus(LxIdle()),
+    );
   }
 
   void _updateStatus(LxStatus<dynamic> newStatus) {
@@ -205,16 +294,18 @@ class _LoopExecutor {
         _updateStatus(LxError(e, s));
       }
 
-      if (_delay != null && !_isStopped) {
-        try {
-          await Future.delayed(_delay!);
-        } catch (_) {}
+      if (!_isStopped) {
+        _delayCompleter = Completer<void>();
+        _delayTimer = Timer(_delay ?? Duration.zero, _delayCompleter!.complete);
+        await _delayCompleter!.future;
+        _delayCompleter = null;
+        _delayTimer = null;
       }
     }
   }
 }
 
-class _LoopService implements StoppableService {
+class _LoopService implements StoppableService, LevitDrainable {
   final _status = LxVar<LxStatus<dynamic>>(LxIdle());
   late final _LoopExecutor _executor;
 
@@ -235,47 +326,61 @@ class _LoopService implements StoppableService {
   void resume() => _executor.resume();
 
   @override
-  void stop() => _executor.stop();
+  void requestCancel() => _executor.requestCancel();
+
+  @override
+  Future<void> drain() => _executor.stop();
+
+  @override
+  Future<void> stop() async {
+    await drain();
+    await _status.close();
+  }
 }
 
-typedef _IsolateSpawner = Future<Isolate> Function(
-  void Function(_IsolateConfig) entryPoint,
-  _IsolateConfig message, {
-  String? debugName,
-});
+typedef _IsolateSpawner =
+    Future<Isolate> Function(
+      void Function(_IsolateConfig) entryPoint,
+      _IsolateConfig message, {
+      String? debugName,
+    });
 
-_IsolateSpawner _spawnIsolate = (
-  void Function(_IsolateConfig) entryPoint,
-  _IsolateConfig message, {
-  String? debugName,
-}) {
-  return Isolate.spawn(entryPoint, message, debugName: debugName);
-};
+_IsolateSpawner _spawnIsolate =
+    (
+      void Function(_IsolateConfig) entryPoint,
+      _IsolateConfig message, {
+      String? debugName,
+    }) {
+      return Isolate.spawn(entryPoint, message, debugName: debugName);
+    };
 
-class _IsolateLoopService implements StoppableService {
+class _IsolateLoopService implements StoppableService, LevitDrainable {
   final FutureOr<void> Function() _body;
   final Duration? _delay;
   final String? _debugName;
   final _status = LxVar<LxStatus<dynamic>>(LxIdle());
 
   SendPort? _commandPort;
-  Isolate? _isolate;
   ReceivePort? _receivePort;
   StreamSubscription<dynamic>? _receiveSubscription;
   String? _pendingCommand;
   bool _desiredPaused = false;
+  bool _stopping = false;
+  final Completer<void> _finished = Completer<void>();
+  Future<void>? _starting;
+  Future<void>? _stopFuture;
 
   _IsolateLoopService(this._body, {Duration? delay, String? debugName})
-      : _delay = delay,
-        _debugName = debugName;
+    : _delay = delay,
+      _debugName = debugName;
 
   @override
   LxReactive<LxStatus<dynamic>> get status => _status;
 
   @override
   void start() {
-    if (_status.value is! LxIdle) return;
-    unawaited(_start());
+    if (_starting != null || _stopping) return;
+    _starting = _start();
   }
 
   Future<void> _start() async {
@@ -284,36 +389,34 @@ class _IsolateLoopService implements StoppableService {
     await _closeReceivePort();
     try {
       _receivePort = ReceivePort();
-      _receiveSubscription = _receivePort!.listen(
-        (message) {
-          if (message is SendPort) {
-            _commandPort = message;
-            final pendingCommand = _pendingCommand;
-            if (pendingCommand != null) {
-              message.send(pendingCommand);
-              _pendingCommand = null;
-            }
-          } else if (message is LxStatus<dynamic>) {
-            _status.value = message;
+      _receiveSubscription = _receivePort!.listen((message) {
+        if (message is SendPort) {
+          _commandPort = message;
+          final pendingCommand = _pendingCommand;
+          if (pendingCommand != null) {
+            message.send(pendingCommand);
+            _pendingCommand = null;
           }
-        },
-      );
+        } else if (message == 'stopped') {
+          if (!_finished.isCompleted) _finished.complete();
+        } else if (message is LxStatus<dynamic> && !_stopping) {
+          _status.value = message;
+        }
+      });
 
-      final isolate = await _spawnIsolate(
+      await _spawnIsolate(
         _isolateEntry,
-        _IsolateConfig(_body, _receivePort!.sendPort, _delay,
-            startPaused: _desiredPaused),
+        _IsolateConfig(
+          _body,
+          _receivePort!.sendPort,
+          _delay,
+          startPaused: _desiredPaused,
+        ),
         debugName: _debugName,
       );
-
-      if (_status.value is LxIdle) {
-        isolate.kill(priority: Isolate.beforeNextEvent);
-        await _closeReceivePort();
-        return;
-      }
-      _isolate = isolate;
     } catch (e, s) {
       _status.value = LxError(e, s);
+      if (!_finished.isCompleted) _finished.complete();
       await _closeReceivePort();
     }
   }
@@ -342,15 +445,33 @@ class _IsolateLoopService implements StoppableService {
   }
 
   @override
-  void stop() {
-    _desiredPaused = false;
-    _pendingCommand = null;
-    _commandPort?.send('stop');
-    _isolate?.kill(priority: Isolate.beforeNextEvent);
+  Future<void> stop() {
+    requestCancel();
+    return _stopFuture ??= _stop();
+  }
+
+  @override
+  void requestCancel() {
+    if (_stopping) return;
+    _stopping = true;
+    _dispatchCommand('stop');
+  }
+
+  @override
+  Future<void> drain() async {
+    requestCancel();
+    if (_starting != null) {
+      await _starting;
+      await _finished.future;
+    }
+  }
+
+  Future<void> _stop() async {
+    await drain();
     _commandPort = null;
-    _isolate = null;
-    unawaited(_closeReceivePort());
+    await _closeReceivePort();
     _status.value = LxIdle();
+    await _status.close();
   }
 
   Future<void> _closeReceivePort() async {
@@ -372,13 +493,10 @@ class _IsolateLoopService implements StoppableService {
 
     late final StreamSubscription<dynamic> commandSubscription;
     commandSubscription = commandPort.listen((message) {
-      _handleCommand(
-        message,
-        executor,
-        commandSubscription,
-        commandPort,
-        () => Isolate.exit(),
-      );
+      _handleCommand(message, executor, commandSubscription, commandPort, () {
+        config.mainSendPort.send('stopped');
+        Isolate.exit();
+      });
     });
 
     // Isolate loop starts only after command port handshake is established.
@@ -400,10 +518,13 @@ class _IsolateLoopService implements StoppableService {
     } else if (message == 'resume') {
       executor.resume();
     } else if (message == 'stop') {
-      executor.stop();
-      unawaited(commandSubscription.cancel());
-      commandPort.close();
-      exit();
+      unawaited(
+        executor.stop().then((_) async {
+          await commandSubscription.cancel();
+          commandPort.close();
+          exit();
+        }),
+      );
     }
   }
 }
@@ -414,6 +535,10 @@ class _IsolateConfig {
   final Duration? delay;
   final bool startPaused;
 
-  _IsolateConfig(this.body, this.mainSendPort, this.delay,
-      {this.startPaused = false});
+  _IsolateConfig(
+    this.body,
+    this.mainSendPort,
+    this.delay, {
+    this.startPaused = false,
+  });
 }

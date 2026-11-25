@@ -1,14 +1,13 @@
 part of '../../levit_dart.dart';
 
-/// A mixin for [LevitController] that manages background loops and stoppable services.
-///
-/// This mixin provides controller-scoped execution management with automatic cleanup.
+/// Controller-owned repeated work. Cancellation begins before resource cleanup.
 mixin LevitLoopExecutionMixin on LevitController {
-  final LevitLoopEngine loopEngine = LevitLoopEngine();
+  late final LevitLoopEngine loopEngine = own(LevitLoopEngine());
 
   @override
-  FutureOr<void> onClose() {
-    loopEngine.dispose();
-    return super.onClose();
+  void requestCancel() {
+    // Initialize/register before the owner closes admission.
+    loopEngine.requestCancel();
+    super.requestCancel();
   }
 }

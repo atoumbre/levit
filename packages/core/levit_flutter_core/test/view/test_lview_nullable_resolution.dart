@@ -5,13 +5,14 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 import '../helpers.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('LView orElse', () {
-    testWidgets('renders builder when controller is registered',
-        (tester) async {
+    testWidgets('renders builder when controller is registered', (
+      tester,
+    ) async {
       Levit.put(() => TestController()..count = 7);
 
       await tester.pumpWidget(
@@ -29,8 +30,9 @@ void main() {
       expect(find.text('Fallback'), findsNothing);
     });
 
-    testWidgets('renders orElse when controller is not registered',
-        (tester) async {
+    testWidgets('renders orElse when controller is not registered', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: LView<TestController>(
@@ -45,8 +47,9 @@ void main() {
       expect(find.text('Found'), findsNothing);
     });
 
-    testWidgets('throws StateError when controller missing and no orElse',
-        (tester) async {
+    testWidgets('throws StateError when controller missing and no orElse', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: LView<TestController>(
@@ -59,8 +62,9 @@ void main() {
       expect(tester.takeException(), isA<StateError>());
     });
 
-    testWidgets('reactive updates work with autoWatch and orElse',
-        (tester) async {
+    testWidgets('reactive updates work with autoWatch and orElse', (
+      tester,
+    ) async {
       final controller = TestController();
       Levit.put(() => controller);
 

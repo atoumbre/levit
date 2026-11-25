@@ -14,10 +14,7 @@ import '../test/headless_benchmark_runner.dart';
 void main() {
   BenchmarkConfig.useTestProfile();
 
-  final runner = HeadlessBenchmarkRunner(
-    iterations: 100,
-    warmupIterations: 50,
-  );
+  final runner = HeadlessBenchmarkRunner(iterations: 100, warmupIterations: 50);
   final environment = BenchmarkEnvironment.capture(
     executionContext: 'flutter_test_report',
     benchmarkProfile: BenchmarkConfig.profileName,
@@ -45,15 +42,20 @@ void main() {
         for (final framework in rotatedFrameworks) {
           if (benchmark.isUI) {
             testWidgets(framework.label, (tester) async {
-              final result =
-                  await runner.runUIBenchmark(tester, benchmark, framework);
+              final result = await runner.runUIBenchmark(
+                tester,
+                benchmark,
+                framework,
+              );
               _addResult(results, result);
               expect(result.success, true, reason: result.error);
             });
           } else {
             test(framework.label, () async {
-              final result =
-                  await runner.runLogicBenchmark(benchmark, framework);
+              final result = await runner.runLogicBenchmark(
+                benchmark,
+                framework,
+              );
               _addResult(results, result);
               expect(result.success, true, reason: result.error);
             });

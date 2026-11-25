@@ -39,8 +39,8 @@ void main() {
       controller.onInit();
     });
 
-    tearDown(() {
-      controller.onClose();
+    tearDown(() async {
+      await controller.onClose();
     });
 
     test('isBusy is reactive and notifies listeners', () async {
@@ -55,21 +55,29 @@ void main() {
       expect(lastBusy, isFalse);
 
       final task = controller.runTask((_) => completer.future);
-      expect(lastBusy, isTrue,
-          reason: 'Listener should be notified of busy state');
+      expect(
+        lastBusy,
+        isTrue,
+        reason: 'Listener should be notified of busy state',
+      );
 
       completer.complete();
       await task;
-      expect(lastBusy, isFalse,
-          reason: 'Listener should be notified of idle state');
+      expect(
+        lastBusy,
+        isFalse,
+        reason: 'Listener should be notified of idle state',
+      );
 
-      watcher.close();
+      await watcher.close();
     });
 
     test('started flag reflects if task has begun execution', () async {
       final completer = Completer<void>();
-      final task =
-          controller.runTask((_) => completer.future, id: 'start_test');
+      final task = controller.runTask(
+        (_) => completer.future,
+        id: 'start_test',
+      );
 
       // Cache lookup precedes execution, then the start event updates details.
       await Future<void>.delayed(Duration.zero);
@@ -119,23 +127,32 @@ void main() {
         await completer.future;
       });
 
-      expect(controller.isBusy.value, isTrue,
-          reason: 'Busy when task is active');
+      expect(
+        controller.isBusy.value,
+        isTrue,
+        reason: 'Busy when task is active',
+      );
 
       // Start task 2 (queued)
       final task2 = controller.runTask((_) async {
         return 'done';
       });
 
-      expect(controller.isBusy.value, isTrue,
-          reason: 'Busy when task is queued');
+      expect(
+        controller.isBusy.value,
+        isTrue,
+        reason: 'Busy when task is queued',
+      );
 
       completer.complete();
       await task1;
       await task2;
 
-      expect(controller.isBusy.value, isFalse,
-          reason: 'Not busy when all tasks finished');
+      expect(
+        controller.isBusy.value,
+        isFalse,
+        reason: 'Not busy when all tasks finished',
+      );
     });
 
     test('totalProgress calculates correctly with weights', () async {
@@ -161,51 +178,69 @@ void main() {
       expect(controller.totalProgress.value, 1.0);
     });
 
-    test('caching policy handles expiration and deserialization failure',
-        () async {
-      final cachePolicy = TaskCachePolicy<int>(
-        ttl: const Duration(seconds: 1),
-        toJson: (v) => {'v': v},
-        fromJson: (json) {
-          if (json['v'] == -1) throw Exception('fail');
-          return json['v'] as int;
-        },
-      );
+    test(
+      'caching policy handles expiration and deserialization failure',
+      () async {
+        final cachePolicy = TaskCachePolicy<int>(
+          ttl: const Duration(seconds: 1),
+          toJson: (v) => {'v': v},
+          fromJson: (json) {
+            if (json['v'] == -1) throw Exception('fail');
+            return json['v'] as int;
+          },
+        );
 
-      // 1. Success write/read
-      await controller.runTask((_) async => 42,
-          id: 'cache_test', cachePolicy: cachePolicy);
-      expect(controller.tasks['cache_test']?.status is LxSuccess, isTrue);
+        // 1. Success write/read
+        await controller.runTask(
+          (_) async => 42,
+          id: 'cache_test',
+          cachePolicy: cachePolicy,
+        );
+        expect(controller.tasks['cache_test']?.status is LxSuccess, isTrue);
 
-      final result = await controller.runTask((_) async => 99,
-          id: 'cache_test', cachePolicy: cachePolicy);
-      expect(result, 42, reason: 'Should return cached value');
+        final result = await controller.runTask(
+          (_) async => 99,
+          id: 'cache_test',
+          cachePolicy: cachePolicy,
+        );
+        expect(result, 42, reason: 'Should return cached value');
 
-      // 2. Deserialization failure
-      await controller.tasksEngine.cacheProvider.write('cache_fail', {
-        'expiresAt':
-            DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch,
-        'data': {'v': -1},
-      });
-      final failResult = await controller.runTask((_) async => 100,
-          id: 'cache_fail', cachePolicy: cachePolicy);
-      expect(failResult, 100,
-          reason: 'Should run task if cache deserialization fails');
+        // 2. Deserialization failure
+        await controller.tasksEngine.cacheProvider.write('cache_fail', {
+          'expiresAt': DateTime.now()
+              .add(const Duration(hours: 1))
+              .millisecondsSinceEpoch,
+          'data': {'v': -1},
+        });
+        final failResult = await controller.runTask(
+          (_) async => 100,
+          id: 'cache_fail',
+          cachePolicy: cachePolicy,
+        );
+        expect(
+          failResult,
+          100,
+          reason: 'Should run task if cache deserialization fails',
+        );
 
-      // 3. Expiration
-      await controller.tasksEngine.cacheProvider.write('cache_expire', {
-        'expiresAt': DateTime.now()
-            .subtract(const Duration(hours: 1))
-            .millisecondsSinceEpoch,
-        'data': {'v': 200},
-      });
-      final expireResult = await controller.runTask((_) async => 300,
-          id: 'cache_expire', cachePolicy: cachePolicy);
-      expect(expireResult, 300, reason: 'Should run task if cache expired');
+        // 3. Expiration
+        await controller.tasksEngine.cacheProvider.write('cache_expire', {
+          'expiresAt': DateTime.now()
+              .subtract(const Duration(hours: 1))
+              .millisecondsSinceEpoch,
+          'data': {'v': 200},
+        });
+        final expireResult = await controller.runTask(
+          (_) async => 300,
+          id: 'cache_expire',
+          cachePolicy: cachePolicy,
+        );
+        expect(expireResult, 300, reason: 'Should run task if cache expired');
 
-      // Coverage for LevitTaskCacheProvider const constructor
-      const VoidCacheProvider();
-    });
+        // Coverage for LevitTaskCacheProvider const constructor
+        const VoidCacheProvider();
+      },
+    );
 
     test('autoCleanupDelay triggers timer and onClose cancels it', () async {
       final cleanupController = CleanupController();
@@ -214,7 +249,7 @@ void main() {
       await cleanupController.runTask((_) async => 'done', id: 'auto_clean');
       expect(cleanupController.tasks.containsKey('auto_clean'), isTrue);
 
-      cleanupController
+      await cleanupController
           .onClose(); // This should cover the timer.cancel() loop (line 479)
     });
 
@@ -227,7 +262,7 @@ void main() {
       controller.tasksEngine.cancel('cancel_me');
       completer.complete('done');
 
-      expect(await task, isNull);
+      await expectLater(task, throwsA(isA<LevitTaskCancelledException>()));
       expect(controller.tasks['cancel_me']?.phase, LevitTaskPhase.completed);
       expect(
         controller.tasks['cancel_me']?.outcome,
@@ -247,15 +282,21 @@ void main() {
         fromJson: (j) => j['data'] as String,
       );
 
-      final r1 = await controller.tasksEngine
-          .schedule((_) async => 'hello', id: 't1', cachePolicy: cachePolicy);
+      final r1 = await controller.tasksEngine.schedule(
+        (_) async => 'hello',
+        id: 't1',
+        cachePolicy: cachePolicy,
+      );
       expect(r1, 'hello');
 
-      final r2 = await controller.tasksEngine
-          .schedule((_) async => 'world', id: 't1', cachePolicy: cachePolicy);
+      final r2 = await controller.tasksEngine.schedule(
+        (_) async => 'world',
+        id: 't1',
+        cachePolicy: cachePolicy,
+      );
       expect(r2, 'hello');
 
-      controller.onClose();
+      await controller.onClose();
     });
   });
 }

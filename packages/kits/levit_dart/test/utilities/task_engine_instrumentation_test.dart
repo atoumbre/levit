@@ -7,10 +7,7 @@ void main() {
   group('LevitTaskEngine instrumentation', () {
     test('emits queued/started/finished lifecycle events', () async {
       final events = <LevitTaskEvent>[];
-      final engine = LevitTaskEngine(
-        maxConcurrent: 1,
-        onTaskEvent: events.add,
-      );
+      final engine = LevitTaskEngine(maxConcurrent: 1, onTaskEvent: events.add);
       final blocker = Completer<void>();
 
       final first = engine.schedule(
@@ -32,13 +29,20 @@ void main() {
       blocker.complete();
       await Future.wait([first, second]);
 
-      final secondQueuedIndex = events.indexWhere((event) =>
-          event.taskId == 'second' && event.type == LevitTaskEventType.queued);
-      final secondStartedIndex = events.indexWhere((event) =>
-          event.taskId == 'second' && event.type == LevitTaskEventType.started);
-      final secondFinishedIndex = events.indexWhere((event) =>
-          event.taskId == 'second' &&
-          event.type == LevitTaskEventType.finished);
+      final secondQueuedIndex = events.indexWhere(
+        (event) =>
+            event.taskId == 'second' && event.type == LevitTaskEventType.queued,
+      );
+      final secondStartedIndex = events.indexWhere(
+        (event) =>
+            event.taskId == 'second' &&
+            event.type == LevitTaskEventType.started,
+      );
+      final secondFinishedIndex = events.indexWhere(
+        (event) =>
+            event.taskId == 'second' &&
+            event.type == LevitTaskEventType.finished,
+      );
 
       expect(secondQueuedIndex, greaterThanOrEqualTo(0));
       expect(secondStartedIndex, greaterThan(secondQueuedIndex));
@@ -47,10 +51,7 @@ void main() {
 
     test('emits retryScheduled with attempt and delay metadata', () async {
       final events = <LevitTaskEvent>[];
-      final engine = LevitTaskEngine(
-        maxConcurrent: 1,
-        onTaskEvent: events.add,
-      );
+      final engine = LevitTaskEngine(maxConcurrent: 1, onTaskEvent: events.add);
       var count = 0;
 
       final result = await engine.schedule<String>(
@@ -60,9 +61,13 @@ void main() {
           return 'ok';
         },
         id: 'retry_task',
-        retries: 1,
-        retryDelay: const Duration(milliseconds: 1),
-        useExponentialBackoff: false,
+        retryPolicy: LevitRetryPolicy(
+          shouldRetry: (error, stack) => true,
+          maxRetries: 1,
+          initialDelay: const Duration(milliseconds: 1),
+          maxDelay: const Duration(milliseconds: 1),
+          jitter: 0,
+        ),
       );
 
       expect(result, 'ok');
@@ -77,10 +82,7 @@ void main() {
 
     test('emits skipped(cacheHit) when result is served from cache', () async {
       final events = <LevitTaskEvent>[];
-      final engine = LevitTaskEngine(
-        maxConcurrent: 1,
-        onTaskEvent: events.add,
-      );
+      final engine = LevitTaskEngine(maxConcurrent: 1, onTaskEvent: events.add);
       final policy = TaskCachePolicy<int>(
         ttl: const Duration(minutes: 1),
         toJson: (value) => {'value': value},
@@ -101,85 +103,86 @@ void main() {
 
       expect(second, 10);
       expect(
-        events.any((event) =>
-            event.taskId == 'cached_task' &&
-            event.type == LevitTaskEventType.skipped &&
-            event.skipReason == TaskSkipReason.cacheHit),
+        events.any(
+          (event) =>
+              event.taskId == 'cached_task' &&
+              event.type == LevitTaskEventType.skipped &&
+              event.skipReason == TaskSkipReason.cacheHit,
+        ),
         isTrue,
       );
     });
 
-    test('emits skipped(cancelledWhileQueued) for queued cancellations',
-        () async {
-      final events = <LevitTaskEvent>[];
-      final engine = LevitTaskEngine(
-        maxConcurrent: 1,
-        onTaskEvent: events.add,
-      );
-      final blocker = Completer<void>();
+    test(
+      'emits skipped(cancelledWhileQueued) for queued cancellations',
+      () async {
+        final events = <LevitTaskEvent>[];
+        final engine = LevitTaskEngine(
+          maxConcurrent: 1,
+          onTaskEvent: events.add,
+        );
+        final blocker = Completer<void>();
 
-      final active = engine.schedule(
-        (_) async {
+        final active = engine.schedule((_) async {
           await blocker.future;
           return 'active';
-        },
-        id: 'active_task',
-      );
-      final queued = engine.schedule(
-        (_) async => 'queued',
-        id: 'queued_task',
-      );
+        }, id: 'active_task');
+        final queued = engine.schedule(
+          (_) async => 'queued',
+          id: 'queued_task',
+        );
 
-      await Future<void>.delayed(Duration.zero);
-      engine.cancel('queued_task');
-      expect(await queued, isNull);
+        await Future<void>.delayed(Duration.zero);
+        engine.cancel('queued_task');
+        await expectLater(queued, throwsA(isA<LevitTaskCancelledException>()));
 
-      blocker.complete();
-      await active;
+        blocker.complete();
+        await active;
 
-      expect(
-        events.any((event) =>
-            event.taskId == 'queued_task' &&
-            event.type == LevitTaskEventType.skipped &&
-            event.skipReason == TaskSkipReason.cancelledWhileQueued),
-        isTrue,
-      );
-    });
+        expect(
+          events.any(
+            (event) =>
+                event.taskId == 'queued_task' &&
+                event.type == LevitTaskEventType.skipped &&
+                event.skipReason == TaskSkipReason.cancelledWhileQueued,
+          ),
+          isTrue,
+        );
+      },
+    );
 
-    test('emits skipped(cancelledBeforeStart) when onStart cancels the task',
-        () async {
-      final events = <LevitTaskEvent>[];
-      late final LevitTaskEngine engine;
-      engine = LevitTaskEngine(
-        maxConcurrent: 1,
-        onTaskEvent: events.add,
-      );
-      var cancelled = false;
+    test(
+      'emits skipped(cancelledBeforeStart) when onStart cancels the task',
+      () async {
+        final events = <LevitTaskEvent>[];
+        late final LevitTaskEngine engine;
+        engine = LevitTaskEngine(maxConcurrent: 1, onTaskEvent: events.add);
+        var cancelled = false;
 
-      final task = engine.schedule<String>(
-        (_) async => 'should-not-run',
-        id: 'cancelled_before_start',
-        onStart: () => engine.cancel('cancelled_before_start'),
-        onCancel: () => cancelled = true,
-      );
+        final task = engine.schedule<String>(
+          (_) async => 'should-not-run',
+          id: 'cancelled_before_start',
+          onStart: () => engine.cancel('cancelled_before_start'),
+          onCancel: () => cancelled = true,
+        );
 
-      expect(await task, isNull);
-      expect(cancelled, isTrue);
-      expect(
-        events.any((event) =>
-            event.taskId == 'cancelled_before_start' &&
-            event.type == LevitTaskEventType.skipped &&
-            event.skipReason == TaskSkipReason.cancelledBeforeStart),
-        isTrue,
-      );
-    });
+        await expectLater(task, throwsA(isA<LevitTaskCancelledException>()));
+        expect(cancelled, isTrue);
+        expect(
+          events.any(
+            (event) =>
+                event.taskId == 'cancelled_before_start' &&
+                event.type == LevitTaskEventType.skipped &&
+                event.skipReason == TaskSkipReason.cancelledBeforeStart,
+          ),
+          isTrue,
+        );
+      },
+    );
 
     test('emits skipped(cancelledAfterRun) for active cancellation', () async {
       final events = <LevitTaskEvent>[];
-      final engine = LevitTaskEngine(
-        maxConcurrent: 1,
-        onTaskEvent: events.add,
-      );
+      final engine = LevitTaskEngine(maxConcurrent: 1, onTaskEvent: events.add);
       final blocker = Completer<void>();
       var cancelled = false;
 
@@ -196,46 +199,49 @@ void main() {
       engine.cancel('cancelled_active_task');
       blocker.complete();
 
-      expect(await active, isNull);
+      await expectLater(active, throwsA(isA<LevitTaskCancelledException>()));
       expect(cancelled, isTrue);
       expect(
-        events.any((event) =>
-            event.taskId == 'cancelled_active_task' &&
-            event.type == LevitTaskEventType.skipped &&
-            event.skipReason == TaskSkipReason.cancelledAfterRun),
+        events.any(
+          (event) =>
+              event.taskId == 'cancelled_active_task' &&
+              event.type == LevitTaskEventType.skipped &&
+              event.skipReason == TaskSkipReason.cancelledAfterRun,
+        ),
         isTrue,
       );
     });
 
-    test('emits skipped(cancelledAfterRun) when cancelled task fails',
-        () async {
-      final events = <LevitTaskEvent>[];
-      late final LevitTaskEngine engine;
-      engine = LevitTaskEngine(
-        maxConcurrent: 1,
-        onTaskEvent: events.add,
-      );
-      var cancelled = false;
+    test(
+      'emits skipped(cancelledAfterRun) when cancelled task fails',
+      () async {
+        final events = <LevitTaskEvent>[];
+        late final LevitTaskEngine engine;
+        engine = LevitTaskEngine(maxConcurrent: 1, onTaskEvent: events.add);
+        var cancelled = false;
 
-      final task = engine.schedule<String>(
-        (_) {
-          engine.cancel('cancelled_failed_task');
-          throw StateError('cancelled failure');
-        },
-        id: 'cancelled_failed_task',
-        onCancel: () => cancelled = true,
-      );
+        final task = engine.schedule<String>(
+          (_) {
+            engine.cancel('cancelled_failed_task');
+            throw StateError('cancelled failure');
+          },
+          id: 'cancelled_failed_task',
+          onCancel: () => cancelled = true,
+        );
 
-      expect(await task, isNull);
-      expect(cancelled, isTrue);
-      expect(
-        events.any((event) =>
-            event.taskId == 'cancelled_failed_task' &&
-            event.type == LevitTaskEventType.skipped &&
-            event.skipReason == TaskSkipReason.cancelledAfterRun &&
-            event.error is StateError),
-        isTrue,
-      );
-    });
+        await expectLater(task, throwsA(isA<LevitTaskCancelledException>()));
+        expect(cancelled, isTrue);
+        expect(
+          events.any(
+            (event) =>
+                event.taskId == 'cancelled_failed_task' &&
+                event.type == LevitTaskEventType.skipped &&
+                event.skipReason == TaskSkipReason.cancelledAfterRun &&
+                event.error is StateError,
+          ),
+          isTrue,
+        );
+      },
+    );
   });
 }

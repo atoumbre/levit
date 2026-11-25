@@ -6,23 +6,33 @@ class TestObserver extends LevitScopeMiddleware {
 
   @override
   void onDependencyRegister(
-      int scopeId, String scopeName, String key, dynamic info,
-      {required String source, int? parentScopeId}) {
+    int scopeId,
+    String scopeName,
+    String key,
+    dynamic info, {
+    required String source,
+    int? parentScopeId,
+  }) {
     registerCount++;
   }
 
   @override
   void onDependencyDelete(
-      int scopeId, String scopeName, String key, dynamic info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    dynamic info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
 }
 
 class Service {}
 
 void main() {
   group('Levit Observer Registration', () {
-    setUp(() {
-      Levit.reset(force: true);
+    setUp(() async {
+      await Levit.reset(force: true);
     });
 
     test('addDependencyMiddleware registers middleware', () {

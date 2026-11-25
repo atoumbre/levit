@@ -4,6 +4,7 @@ enum _TaskExecutionState { queued, running, completed }
 
 enum _IsolateTaskMessage {
   cancellationPort,
+  cancelled,
   progress,
   success,
   error,
@@ -12,9 +13,9 @@ enum _IsolateTaskMessage {
 class _TaskExecutionConfig {
   FutureOr<dynamic> Function(LevitTaskContext context) task;
   TaskPriority priority;
-  int retries;
-  Duration? retryDelay;
-  bool useExponentialBackoff;
+  LevitRetryPolicy? retryPolicy;
+  LevitTaskGroup group;
+  DateTime? deadline;
   void Function(Object, StackTrace)? onError;
   dynamic cachePolicy;
   void Function()? onStart;
@@ -28,9 +29,9 @@ class _TaskExecutionConfig {
   _TaskExecutionConfig({
     required this.task,
     required this.priority,
-    required this.retries,
-    required this.retryDelay,
-    required this.useExponentialBackoff,
+    required this.retryPolicy,
+    required this.group,
+    required this.deadline,
     required this.onError,
     required this.cachePolicy,
     required this.onStart,
@@ -45,6 +46,8 @@ class _TaskExecutionConfig {
 
 class _TaskExecution {
   final String taskId;
+  final Object schedulingKey;
+  Timer? deadlineTimer;
   final String executionId;
   final String ownerPath;
   final DateTime queuedAt;
@@ -61,6 +64,7 @@ class _TaskExecution {
 
   _TaskExecution({
     required this.taskId,
+    required this.schedulingKey,
     required this.executionId,
     required this.ownerPath,
     required this.queuedAt,
@@ -69,11 +73,11 @@ class _TaskExecution {
 }
 
 class _TaskGroup {
-  final String taskId;
+  final Object key;
   final List<_TaskExecution> outstanding = [];
   _TaskExecution? coalescedTail;
 
-  _TaskGroup(this.taskId);
+  _TaskGroup(this.key);
 
   _TaskExecution? get latest => outstanding.isEmpty ? null : outstanding.last;
 }

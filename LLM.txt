@@ -84,13 +84,13 @@ or initialization with the returned LevitResourceOwner lifecycle. With it
 enabled, field-level reactives on a LevitController or other owner are often
 cleaned up automatically.
 
-Still call autoDispose(...) explicitly for:
+Still call own(...) explicitly for:
 
 - Non-reactive resources (TextEditingController, streams, timers).
 - Reactives created outside controller init (e.g. dynamically added items).
 - Workers, computed values, and objects not covered by auto-linking.
 
-levit_monitor enables auto-linking when initialized.
+levit_monitor never enables auto-linking; configure ownership explicitly before attaching it.
 
 
 Dependency Model
@@ -133,14 +133,14 @@ Use stores for portable, reusable state definitions (a "recipe" passed by
 reference, instantiated per scope):
 
 ```dart
-final counterStore = LevitStore<int>((ref) {
-  final count = ref.autoDispose(0.lx);
-  return count();
+final counterStore = LevitStore<LxVar<int>>((ref) {
+  final count = ref.own(0.lx);
+  return count;
 });
 
 // In Flutter:
 LScopedView.store(counterStore, builder: (context, count) => ...);
-context.levit.find<int>(key: counterStore);
+context.levit.findStore(counterStore);
 ```
 
 LevitAsyncStore resolves async setup via LevitStore.async(...).
@@ -166,7 +166,7 @@ when an LScope is in the tree):
 - context.levit.find<T>(), findOrNull, findAsync, findOrNullAsync
 - context.levit.put, lazyPut, lazyPutAsync, putOrFind
 - context.levit.isRegistered, isInstantiated
-- context.levit.find<T>(key: store) for LevitStore / LevitAsyncStore
+- context.levit.findStore(store) / findAsyncStore(store) for typed stores
 
 Use LView / LAsyncView when the dependency already exists in the nearest scope.
 
@@ -193,13 +193,13 @@ Before writing code:
 Reactive State
 --------------
 
-Use .lx for reactive values. Both call syntax and .value are valid on LxVar:
+Use .lx for reactive values. Call syntax reads only; use .value for writes:
 
 ```dart
 final count = 0.lx;
 
 count();       // read
-count(1);      // write
+count.value = 1;      // write
 count.value;   // read
 count.value++; // write
 ```
@@ -235,11 +235,12 @@ plus exactly one coalesced trailing run).
 LxStream defaults to LxStreamCompletionPolicy.close. Use retain for sources
 that complete but must preserve their status and later restart/rebind.
 
-Use LxFamily<K, R> for dynamically keyed reactive resources. Families lazily
-cache entries, support explicit invalidation/close, and optionally evict
-inactive entries. Raw keys are not exposed in diagnostic names by default.
+Observe an address with LxMap.entry(key) or LxList.entry(index). Collections
+borrow their contents. Own LxResource for one replaceable producer. For keyed
+async data own LevitAsyncMap, observe queries.entry(key), await fetch(key) to
+reuse fresh results or refresh(key) to join or reload. No async list is needed.
 
-Use workers for side effects. Prefer LxWorker + autoDispose on controllers
+Use workers for side effects. Prefer LxWorker + own on controllers
 over raw .stream.listen for reload / reaction glue:
 
 ```dart
@@ -251,7 +252,7 @@ class FeesController extends LevitController {
   @override
   void onInit() {
     super.onInit();
-    autoDispose(LxWorker(contextVar, (_) async {
+    own(LxWorker(contextVar, (_) async {
       await reload();
     }));
   }
@@ -260,7 +261,7 @@ class FeesController extends LevitController {
 }
 ```
 
-LxWorker is LxReactive, so autoDispose closes it with the controller.
+LxWorker is LxReactive, so own closes it with the controller.
 
 Close long-lived reactive objects, computed values, and workers when they are
 not owned by a controller, store, or scope that handles cleanup.
@@ -278,16 +279,16 @@ Use LevitController for feature or screen logic.
 class CounterController extends LevitController {
   final count = 0.lx.named('count');
 
-  // Field-level autoDispose works for non-reactive resources:
-  late final addController = autoDispose(TextEditingController());
+  // Field-level own works for non-reactive resources:
+  late final addController = own(TextEditingController(), dispose: (value) => value.dispose());
 
-  void increment() => count(count() + 1);
+  void increment() => count.value++;
 
   @override
   void onInit() {
     super.onInit();
     // Explicit when auto-linking is off or for reactives created in onInit:
-    autoDispose(count);
+    own(count);
   }
 }
 ```
@@ -342,7 +343,7 @@ Overlays: use LScope.capture for dialogs/sheets that must context.levit.find
 app or page deps. Prefer showLevitDialog / showLevitModalBottomSheet from
 levit_flutter (capture by default).
 
-Widget-test harness (until levit_tests ships pumpLevitApp):
+Widget-test harness with explicit scopes and awaited teardown:
 
 - Mount MaterialApp with LScope(dependencyFactory: ..., child: ...)
 - Capture the scope from dependencyFactory into a test holder
@@ -366,11 +367,15 @@ Widget guide:
 - scopeName / name — optional stable diagnostic labels; omitted names are
   auto-generated and unique.
 
+Flutter interoperability: source.asValueListenable() creates a borrowing adapter
+from any LxReadable. Own/retain it outside build; disposal only unsubscribes. Expose
+ValueListenable to observation-only consumers. Source ownership remains unchanged.
+
 levit_flutter kit additions (import levit_flutter):
 
 - showLevitDialog / showLevitModalBottomSheet — overlays with LScope.capture.
 - LKeepAlive — preserve expensive subtrees in scrollable lists.
-- LListItemMonitor — subtree lifecycle monitoring.
+- Mount/unmount hooks: use a local StatefulWidget; see the levit_flutter example recipe.
 - LevitAppLifecycleMixin — react to app pause/resume/detach.
 - LevitLoopExecutionLifecycleMixin — pause/resume loop execution with app lifecycle.
 
@@ -409,9 +414,9 @@ and clean them up when the feature ends.
 
 Controllers, stores, and custom LevitScopeDisposable resources may implement
 LevitResourceOwner via LevitResourceOwnership. Register timers,
-subscriptions, reactives, and disposable helpers through own/autoDispose.
+subscriptions, reactives, and disposable helpers through own.
 Cleanup is awaited, LIFO, and idempotent. Lifecycle overrides must call
-super.onInit and await/return super.onClose.
+super.onInit and await/return super.onBeforeClose and super.onClose.
 
 
 Task Utilities
@@ -447,6 +452,9 @@ root blocking/busy view is needed.
 Other levit_dart mixins:
 
 - LevitTimeMixin — debounce, throttle, periodic timers tied to controller life.
+  Countdowns use elapsed time; pause freezes partial intervals, resume excludes
+  paused time, start resets, and stop resets without finishing. Await standalone
+  countdown disposal or use own; the mixin drains countdown cleanup automatically.
 - LevitSelectionMixin<T> — single/multi selection state.
 - LevitLoopExecutionMixin — managed periodic/continuous workloads.
 
@@ -487,7 +495,7 @@ behavior in place.
 Optional analyzer rules
 -----------------------
 
-Enable levit_lints (Dart 3.10+) for discarded/unowned lifecycle resources,
+Enable levit_lints (Dart 3.12+) for discarded/unowned lifecycle resources,
 preconstructed Levit.put closures, lifecycle overrides missing super calls,
 and mutable or snapshot of plain LxStatus owner fields.
 
@@ -535,3 +543,32 @@ melos run benchmarks
 
 When changing public APIs, update inline DartDoc and the relevant package
 README.
+
+
+0.1.0 contracts
+----------------
+- Reactive call() only reads. Use .value for writes.
+- Register using builders; consuming LView/LAsyncView have no .put constructor.
+- Factories own disposable results in the registering scope, including async
+  results arriving during removal. Always await deletion before replacement.
+- batchAsync is context-local notification batching, not value isolation.
+- Store lookups inherit by default; localOnly: true creates/reuses local state.
+- View resolver identity never refetches by itself; use args or scope changes.
+- Task engine disposal waits for runners. Task mixins drain in onBeforeClose
+  before owned resources close; delegate super in lifecycle overrides.
+- Monitoring does not enable auto-linking. Bootstrap explicitly.
+- levit_lints 0.1.0 is publishable; use native root plugins configuration.
+  Before publication, use the checkout path. See its README for rule limits.
+
+Runtime and ecosystem boundary
+------------------------------
+Keep persistence interfaces, codecs, migrations and storage integrations in the
+independent ecosystem repository. Persistent task caches and codec-based Flutter
+restoration belong there too. These are no longer main 0.1.0 release requirements.
+Ecosystem packages depend on public Levit APIs; runtime packages never depend on
+ecosystem packages. Track work in reports/ecosystem_roadmap.md and use the revised
+release plan in reports/release_0.1.0_plan.md.
+
+Onboarding: docs/ONBOARDING.md (scopes → owners → state → widgets).
+Advanced selection/time, numeric helpers, LKeepAlive, staticDeps and batchAsync:
+docs/ADVANCED.md. All runtime/tool packages target 0.1.0; Dart 3.12+, Flutter 3.44+.

@@ -25,6 +25,17 @@ Start with `LLM-Short.txt`. Open `LLM.txt` when the short doc is not enough.
 5. Keep business logic in controllers/stores; keep widgets thin.
 6. Use `LWatch` for focused reactive rebuilds.
 
+## Test naming
+
+Name test files, groups, and cases after the behavior and expected outcome they
+verify. Use descriptive names such as `middleware_token_removal_test.dart` and
+`removing middleware clears its tokens`.
+
+Do not use `coverage` in test filenames or test/group labels, regardless of letter
+case. Avoid generic labels such as `Final Gaps` and names based on source-line
+numbers. CI checks filenames and statically written labels in Dart test files with
+`dart run scripts/check_test_names.dart`.
+
 ## Repo checks
 
 ```bash

@@ -51,14 +51,9 @@ void main() {
 
     // Simulate _asyncZoneDepth > 0
     Lx.enterAsyncScope();
-    runZoned(
-      () {
-        resolvedVal = original.value; // Hits lines 640-645 in core.dart
-      },
-      zoneValues: {
-        Lx.asyncComputedTrackerZoneKey: observer,
-      },
-    );
+    runZoned(() {
+      resolvedVal = original.value; // Hits lines 640-645 in core.dart
+    }, zoneValues: {Lx.asyncComputedTrackerZoneKey: observer});
     Lx.exitAsyncScope();
 
     expect(resolvedVal, 20);

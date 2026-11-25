@@ -32,14 +32,21 @@ If your app is still small enough that ownership is obvious everywhere, it may b
 ### Flutter applications
 
 ```bash
-flutter pub add levit_flutter
+flutter pub add levit_flutter:^0.1.0-beta.1
 ```
 
 ### Pure Dart applications (CLI, server, shared domain)
 
 ```bash
-dart pub add levit
+dart pub add levit:^0.1.0-beta.1
 ```
+
+## Start with scopes → owners → state → widgets
+
+Requires Dart 3.12+ and Flutter 3.44+ for Flutter apps. Choose the lifetime first,
+register its owner, keep state on that owner, then observe it from focused widgets.
+Follow the [onboarding guide](docs/ONBOARDING.md) and use
+[advanced helpers](docs/ADVANCED.md) when needed.
 
 ## Quick Start
 
@@ -48,19 +55,26 @@ dart pub add levit
 ```dart
 import 'package:levit/levit.dart';
 
+class CounterController extends LevitController {
+  final count = 0.lx;
+  @override
+  void onInit() {
+    super.onInit();
+    own(count);
+  }
+  void increment() => count.value++;
+}
+
 Future<void> main() async {
   final scope = Levit.createScope('app');
 
-  scope.run(() {
-    final count = Levit.put(() => 0.lx, tag: 'count');
-    final worker = LxWorker(count, (value) => print('count=$value'));
-
-    count(1);
-
-    worker.close();
-  });
-
-  await scope.dispose();
+  try {
+    final controller = scope.put(() => CounterController());
+    controller.increment();
+    print(controller.count.value);
+  } finally {
+    await scope.dispose();
+  }
 }
 ```
 
@@ -72,7 +86,7 @@ import 'package:levit_flutter/levit_flutter.dart';
 
 class CounterController extends LevitController {
   final count = 0.lx;
-  void increment() => count(count() + 1);
+  void increment() => count.value++;
 }
 
 class CounterPage extends StatelessWidget {
@@ -82,6 +96,7 @@ class CounterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return LScopedView<CounterController>.put(
       () => CounterController(),
+      autoWatch: false,
       builder: (context, controller) => Scaffold(
         body: Center(
           child: LWatch(() => Text('Count: ${controller.count()}')),
@@ -228,6 +243,12 @@ Reference docs:
 - Package READMEs document package scope, architecture role, and onboarding.
 - This root README documents ecosystem-level architecture and adoption guidance.
 
+The [0.1.0 release plan](reports/release_0.1.0_plan.md) keeps the runtime independent
+of storage backends. Persistence codecs, migrations, storage adapters and persistent
+task caches are tracked in the independently released
+[ecosystem roadmap](reports/ecosystem_roadmap.md). Native Flutter interoperability
+and existing runtime correctness remain in this repository.
+
 ## For AI assistants
 
 Agents and coding tools should start with [`AGENTS.md`](./AGENTS.md), then:
@@ -253,3 +274,5 @@ melos test
 ```
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for workflow details.
+
+Upgrading to 0.1.0? Read the [cumulative migration guide](MIGRATION_0.1.0.md) for lifecycle and API changes.

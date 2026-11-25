@@ -5,8 +5,8 @@ class Service {}
 
 void main() {
   group('Levit Async Lookup', () {
-    setUp(() {
-      Levit.reset(force: true);
+    setUp(() async {
+      await Levit.reset(force: true);
     });
 
     test('findAsync returns future for async dependency', () async {

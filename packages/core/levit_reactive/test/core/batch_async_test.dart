@@ -43,8 +43,11 @@ void main() {
         // Expected
       }
 
-      expect(notifications, 1,
-          reason: 'Should flush notifications in finally block');
+      expect(
+        notifications,
+        1,
+        reason: 'Should flush notifications in finally block',
+      );
       expect(a.value, 1);
     });
 
@@ -75,13 +78,18 @@ void main() {
         // This effectively "promotes" the sync batch content to the surrounding async batch.
 
         expect(aNotifications, 0);
-        expect(bNotifications, 0,
-            reason: 'Sync batch should merge into async batch context');
+        expect(
+          bNotifications,
+          0,
+          reason: 'Sync batch should merge into async batch context',
+        );
       });
 
       expect(aNotifications, 1);
-      expect(bNotifications,
-          1); // Only 1 notification for b (last valid value, deduped)
+      expect(
+        bNotifications,
+        1,
+      ); // Only 1 notification for b (last valid value, deduped)
     });
     test('triggers middleware hooks', () async {
       int startCount = 0;
@@ -96,16 +104,25 @@ void main() {
 
       try {
         await Lx.batchAsync(() async {
-          expect(startCount, 1,
-              reason: 'onBatchStart should be called before execution');
-          expect(endCount, 0,
-              reason: 'onBatchEnd should NOT be called during execution');
+          expect(
+            startCount,
+            1,
+            reason: 'onBatchStart should be called before execution',
+          );
+          expect(
+            endCount,
+            0,
+            reason: 'onBatchEnd should NOT be called during execution',
+          );
           await Future.delayed(Duration.zero);
         });
 
         expect(startCount, 1);
-        expect(endCount, 1,
-            reason: 'onBatchEnd should be called after execution');
+        expect(
+          endCount,
+          1,
+          reason: 'onBatchEnd should be called after execution',
+        );
       } finally {
         Lx.removeMiddleware(middleware);
       }
@@ -147,23 +164,23 @@ class TestBatchHookMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnBatch? get onBatch => (next, change) {
-        return () {
-          onStart();
-          // ignore: prefer_typing_uninitialized_variables
-          var result;
-          try {
-            result = next();
-          } catch (e) {
-            onEnd();
-            rethrow;
-          }
+    return () {
+      onStart();
+      // ignore: prefer_typing_uninitialized_variables
+      var result;
+      try {
+        result = next();
+      } catch (e) {
+        onEnd();
+        rethrow;
+      }
 
-          if (result is Future) {
-            return result.whenComplete(onEnd);
-          } else {
-            onEnd();
-            return result;
-          }
-        };
-      };
+      if (result is Future) {
+        return result.whenComplete(onEnd);
+      } else {
+        onEnd();
+        return result;
+      }
+    };
+  };
 }

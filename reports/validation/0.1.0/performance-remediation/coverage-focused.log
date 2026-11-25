@@ -1,0 +1,41 @@
+Scanning for packages in: packages...
+Excluding example projects (use --include-examples to include).
+Filtering to packages: levit_scope, levit_monitor, levit_dart
+Coverage threshold: 100.00%
+Found 3 packages: levit_monitor, levit_scope, levit_dart
+
+[levit_monitor] Running tests and generating coverage...
+[levit_monitor] Pure Dart package; using dart test.
+[levit_monitor] Done. (99.8%)
+[levit_scope] Running tests and generating coverage...
+[levit_scope] Detected dart:mirrors in tests; using dart test.
+[levit_scope] Done. (100.0%)
+[levit_dart] Running tests and generating coverage...
+[levit_dart] Detected dart:mirrors in tests; using dart test.
+[levit_dart] Done. (100.0%)
+
+=================================================================
+LEVIT COVERAGE REPORT
+=================================================================
+| Package              | Lines Covered | Total Lines | Coverage |
+|----------------------|---------------|-------------|----------|
+| levit_dart           |          1172 |        1172 |  100.00% |
+| levit_monitor        |          1020 |        1022 |   99.80% |
+| levit_scope          |           767 |         767 |  100.00% |
+-----------------------------------------------------------------
+| GLOBAL               |          2959 |        2961 |   99.93% |
+=================================================================
+
+Uncovered Lines Details:
+
+levit_monitor
+  - packages/core/levit_monitor/lib/src/snapshot.dart: 108-109
+
+=================================================================
+
+Skipped report file generation (use --generate-report to enable)
+Coverage threshold failed: expected at least 100.00%.
+Global coverage: 99.93%.
+levit_monitor: 99.80%.
+
+Coverage checks failed. Check logs above.

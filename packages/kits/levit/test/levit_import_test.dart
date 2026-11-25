@@ -16,7 +16,7 @@ void main() {
       expect(Levit.find<_TestController>(), same(controller));
       expect(doubled(), 0);
 
-      count(2);
+      (count.value = 2);
       expect(doubled(), 4);
 
       doubled.close();

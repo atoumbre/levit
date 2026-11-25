@@ -16,6 +16,9 @@ class LevitLintsPlugin extends Plugin {
       ..registerLintRule(AvoidPlainLxStatusFields())
       ..registerLintRule(AvoidPreconstructedLevitPut())
       ..registerLintRule(MustCallSuperLevitLifecycle())
-      ..registerLintRule(UnownedLevitResource());
+      ..registerLintRule(UnownedLevitResource())
+      ..registerLintRule(AwaitLevitLifecycle())
+      ..registerLintRule(AvoidGlobalLevitInWidgets())
+      ..registerLintRule(DiscardedLevitFuture());
   }
 }

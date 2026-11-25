@@ -31,14 +31,14 @@ class TestMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
-        if (!allowChange) {
-          return (value) {}; // Do nothing, blocking change
-        }
-        return (value) {
-          next(value);
-          onAfter?.call(change);
-        };
-      };
+    if (!allowChange) {
+      return (value) {}; // Do nothing, blocking change
+    }
+    return (value) {
+      next(value);
+      onAfter?.call(change);
+    };
+  };
 }
 
 /// Middleware that uses the default wrapper implementation
@@ -47,11 +47,11 @@ class MinimalMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
-        return (value) {
-          next(value);
-          changes.add(change);
-        };
-      };
+    return (value) {
+      next(value);
+      changes.add(change);
+    };
+  };
 }
 
 class DefaultMiddleware extends LevitReactiveMiddleware {

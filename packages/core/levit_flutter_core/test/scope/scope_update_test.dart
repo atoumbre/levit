@@ -11,10 +11,12 @@ void main() {
         textDirection: TextDirection.ltr,
         child: LScope(
           dependencyFactory: (s) => s.put<String>(() => 'A', tag: 'tag1'),
-          child: Builder(builder: (context) {
-            buildCount++;
-            return const SizedBox();
-          }),
+          child: Builder(
+            builder: (context) {
+              buildCount++;
+              return const SizedBox();
+            },
+          ),
         ),
       ),
     );
@@ -27,10 +29,12 @@ void main() {
         textDirection: TextDirection.ltr,
         child: LScope(
           dependencyFactory: (s) => s.put<String>(() => 'A', tag: 'tag2'),
-          child: Builder(builder: (context) {
-            buildCount++;
-            return const SizedBox();
-          }),
+          child: Builder(
+            builder: (context) {
+              buildCount++;
+              return const SizedBox();
+            },
+          ),
         ),
       ),
     );

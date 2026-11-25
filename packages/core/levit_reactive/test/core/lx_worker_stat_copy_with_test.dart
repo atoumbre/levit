@@ -2,24 +2,27 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  test('LxWorkerStat copyWith coverage', () {
-    const stat = LxWorkerStat(runCount: 0);
+  test(
+    'copyWith applies worker count, duration, error, and processing fields',
+    () {
+      const stat = LxWorkerStat(runCount: 0);
 
-    final s1 = stat.copyWith(runCount: 1);
-    expect(s1.runCount, 1);
-    expect(s1.toString(), contains('runCount: 1'));
+      final s1 = stat.copyWith(runCount: 1);
+      expect(s1.runCount, 1);
+      expect(s1.toString(), contains('runCount: 1'));
 
-    final s2 = stat.copyWith(
-      lastDuration: Duration(seconds: 1),
-      totalDuration: Duration(seconds: 1),
-      lastRun: DateTime(2023),
-      error: 'Err',
-      isAsync: true,
-      isProcessing: true,
-    );
+      final s2 = stat.copyWith(
+        lastDuration: Duration(seconds: 1),
+        totalDuration: Duration(seconds: 1),
+        lastRun: DateTime(2023),
+        error: 'Err',
+        isAsync: true,
+        isProcessing: true,
+      );
 
-    expect(s2.lastDuration.inSeconds, 1);
-    expect(s2.isAsync, true);
-    expect(s2.error, 'Err');
-  });
+      expect(s2.lastDuration.inSeconds, 1);
+      expect(s2.isAsync, true);
+      expect(s2.error, 'Err');
+    },
+  );
 }

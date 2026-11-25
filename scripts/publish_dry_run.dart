@@ -141,8 +141,10 @@ bool _isFlutterPackage(String pubspec) {
 }
 
 String? _readPubspecScalar(String pubspec, String key) {
-  final match =
-      RegExp('^$key:\\s*(.+?)\\s*\$', multiLine: true).firstMatch(pubspec);
+  final match = RegExp(
+    '^$key:\\s*(.+?)\\s*\$',
+    multiLine: true,
+  ).firstMatch(pubspec);
   return match?.group(1)?.trim();
 }
 

@@ -3,13 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   test('LevitReactiveBatch properties', () {
-    final history = LevitReactiveHistoryMiddleware();
-    Lx.addMiddleware(history);
-
-    Lx.batch(() {
-      0.lx.value = 1;
-    });
-    final composite = history.changes.first as LevitReactiveBatch;
+    final composite = LevitReactiveBatch([]);
 
     expect((composite as dynamic).oldValue, isNull);
     expect((composite as dynamic).newValue, isNull);

@@ -12,7 +12,10 @@ void main() {
       transport.onConnectController.add(null);
 
       await Future.delayed(Duration(milliseconds: 10));
-      expect(transport.sentEvents.any((e) => e is SnapshotEvent), isTrue);
+      expect(
+        transport.sentEvents.any((e) => e.toJson()['type'] == 'snapshot'),
+        isTrue,
+      );
 
       middleware.disable();
       await middleware.close();

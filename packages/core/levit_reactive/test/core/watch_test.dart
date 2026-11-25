@@ -36,10 +36,13 @@ void main() {
       final query = ''.lx;
       final values = <String>[];
       LxWorker(
-          query.transform(
-              (s) => s.transform(_debounce(Duration(milliseconds: 50)))), (v) {
-        if (v is LxSuccess<String>) values.add(v.value);
-      });
+        query.transform(
+          (s) => s.transform(_debounce(Duration(milliseconds: 50))),
+        ),
+        (v) {
+          if (v is LxSuccess<String>) values.add(v.value);
+        },
+      );
 
       query.value = 'a';
       query.value = 'ab';
@@ -58,10 +61,13 @@ void main() {
       final scroll = 0.lx;
       final values = <int>[];
       LxWorker(
-          scroll.transform(
-              (s) => s.transform(_throttle(Duration(milliseconds: 50)))), (v) {
-        if (v is LxSuccess<int>) values.add(v.value);
-      });
+        scroll.transform(
+          (s) => s.transform(_throttle(Duration(milliseconds: 50))),
+        ),
+        (v) {
+          if (v is LxSuccess<int>) values.add(v.value);
+        },
+      );
 
       scroll.value = 1;
       scroll.value = 2; // Ignored
@@ -98,7 +104,8 @@ void main() {
       final values = <int>[];
       final dispose = LxWorker(
         count.transform(
-            (s) => s.transform(_debounce(Duration(milliseconds: 50)))),
+          (s) => s.transform(_debounce(Duration(milliseconds: 50))),
+        ),
         (v) {
           if (v is LxSuccess<int>) values.add(v.value);
         },
@@ -111,7 +118,7 @@ void main() {
       expect(values, isEmpty); // Debounce was cancelled
     });
 
-    test('watch with onError coverage', () async {
+    test('workers forward source errors to onError', () async {
       final source = _ErrorReactive<int>(0);
 
       Object? receivedError;
@@ -135,8 +142,9 @@ void main() {
       final count = 0.lx;
       final values = <int>[];
 
-      final dispose =
-          LxWorker(count.transform((s) => s.transform(_skip(2))), (v) {
+      final dispose = LxWorker(count.transform((s) => s.transform(_skip(2))), (
+        v,
+      ) {
         if (v is LxSuccess<int>) values.add(v.value);
       });
 
@@ -156,10 +164,12 @@ void main() {
       final count = 0.lx;
       final values = <int>[];
 
-      final dispose =
-          LxWorker(count.transform((s) => s.transform(_distinct())), (v) {
-        if (v is LxSuccess<int>) values.add(v.value);
-      });
+      final dispose = LxWorker(
+        count.transform((s) => s.transform(_distinct())),
+        (v) {
+          if (v is LxSuccess<int>) values.add(v.value);
+        },
+      );
 
       count.value = 1;
       count.refresh(); // Same value, should be ignored
@@ -179,8 +189,9 @@ void main() {
 
       // Create a custom stream that we can close
       final values = <int>[];
-      final transformed =
-          controller.stream.transform(_debounce(Duration(milliseconds: 20)));
+      final transformed = controller.stream.transform(
+        _debounce(Duration(milliseconds: 20)),
+      );
       transformed.listen((v) => values.add(v));
 
       controller.add(1);
@@ -197,8 +208,9 @@ void main() {
       final controller = StreamController<int>.broadcast();
       final values = <int>[];
 
-      final transformed =
-          controller.stream.transform(_throttle(Duration(milliseconds: 20)));
+      final transformed = controller.stream.transform(
+        _throttle(Duration(milliseconds: 20)),
+      );
       transformed.listen((v) => values.add(v));
 
       controller.add(1);
@@ -223,67 +235,63 @@ StreamTransformer<T, T> _distinct<T>() =>
 
 StreamTransformer<T, T> _debounce<T>(Duration d) {
   Timer? timer;
-  return StreamTransformer<T, T>(
-    (Stream<T> input, bool cancelOnError) {
-      late StreamController<T> controller;
-      StreamSubscription<T>? subscription;
+  return StreamTransformer<T, T>((Stream<T> input, bool cancelOnError) {
+    late StreamController<T> controller;
+    StreamSubscription<T>? subscription;
 
-      controller = StreamController<T>(
-        onListen: () {
-          subscription = input.listen(
-            (data) {
-              timer?.cancel();
-              timer = Timer(d, () => controller.add(data));
-            },
-            onError: controller.addError,
-            onDone: () {
-              timer?.cancel();
-              controller.close();
-            },
-            cancelOnError: cancelOnError,
-          );
-        },
-        onPause: () => subscription?.pause(),
-        onResume: () => subscription?.resume(),
-        onCancel: () {
-          timer?.cancel();
-          return subscription?.cancel();
-        },
-      );
-      return controller.stream.listen(null);
-    },
-  );
+    controller = StreamController<T>(
+      onListen: () {
+        subscription = input.listen(
+          (data) {
+            timer?.cancel();
+            timer = Timer(d, () => controller.add(data));
+          },
+          onError: controller.addError,
+          onDone: () {
+            timer?.cancel();
+            controller.close();
+          },
+          cancelOnError: cancelOnError,
+        );
+      },
+      onPause: () => subscription?.pause(),
+      onResume: () => subscription?.resume(),
+      onCancel: () {
+        timer?.cancel();
+        return subscription?.cancel();
+      },
+    );
+    return controller.stream.listen(null);
+  });
 }
 
 StreamTransformer<T, T> _throttle<T>(Duration d) {
   bool canFire = true;
-  return StreamTransformer<T, T>(
-    (Stream<T> input, bool cancelOnError) {
-      late StreamController<T> controller;
-      StreamSubscription<T>? subscription;
+  return StreamTransformer<T, T>((Stream<T> input, bool cancelOnError) {
+    late StreamController<T> controller;
+    StreamSubscription<T>? subscription;
 
-      controller = StreamController<T>(
-        onListen: () {
-          subscription = input.listen(
-            (data) {
-              if (canFire) {
-                canFire = false;
-                controller.add(data);
-                Timer(d, () => canFire = true);
-              }
-            },
-            onError: controller.addError,
-            onDone: controller.close,
-            cancelOnError: cancelOnError,
-          );
-        },
-        onPause: () => subscription?.pause(),
-        onResume: () => subscription?.resume(),
-        onCancel: () => subscription?.cancel(),
-      );
-      return controller.stream.listen(null);
-    },
-  );
+    controller = StreamController<T>(
+      onListen: () {
+        subscription = input.listen(
+          (data) {
+            if (canFire) {
+              canFire = false;
+              controller.add(data);
+              Timer(d, () => canFire = true);
+            }
+          },
+          onError: controller.addError,
+          onDone: controller.close,
+          cancelOnError: cancelOnError,
+        );
+      },
+      onPause: () => subscription?.pause(),
+      onResume: () => subscription?.resume(),
+      onCancel: () => subscription?.cancel(),
+    );
+    return controller.stream.listen(null);
+  });
 }
 
 class _ErrorReactive<T> implements LxReactive<T> {
@@ -309,7 +317,7 @@ class _ErrorReactive<T> implements LxReactive<T> {
   void removeListener(void Function() l) {}
 
   @override
-  void close() => _controller.close();
+  Future<void> close() => _controller.close();
 
   @override
   void refresh() => _controller.add(_value);

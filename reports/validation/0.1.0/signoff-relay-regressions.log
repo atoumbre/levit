@@ -1,0 +1,27 @@
+00:00 +0: loading test/relay_test.dart
+00:00 +0: two sessions, immutable redacted export and reconnect state
+00:00 +1: slow viewer overflow recovers from a current snapshot
+00:00 +2: server is read-only, loopback-bound and rejects remote browser origins
+00:00 +3: startup guards and asset responses are deterministic
+00:00 +4: session capacity pins live producers and evicts disconnected sessions
+00:00 +4 -1: session capacity pins live producers and evicts disconnected sessions [E]
+  Expected: <1013>
+    Actual: <1007>
+  
+  package:matcher             expect
+  test/relay_test.dart 218:5  main.<fn>
+  
+00:00 +4 -1: duplicate sequence is acknowledged once and oversized history retains current state
+00:00 +5 -1: /ws rejects malformed String frames
+00:00 +6 -1: /ws rejects malformed List<int> frames
+00:00 +7 -1: /inspect rejects malformed String frames
+00:00 +8 -1: /inspect rejects malformed List<int> frames
+00:00 +9 -1: producer envelope validation rejects missing fields and changed session identities
+00:00 +10 -1: slow unselected viewer recovers session membership and times out without ack
+00:05 +11 -1: Some tests failed.
+
+Failing tests:
+  test/relay_test.dart: session capacity pins live producers and evicts disconnected sessions
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

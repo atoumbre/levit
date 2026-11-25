@@ -1,0 +1,20 @@
+{
+  "before": {
+    "levit_dart": "/private/tmp/levit-20261112-before-vdalnd4n/packages/kits/levit_dart",
+    "levit_dart_core": "/private/tmp/levit-20261112-before-vdalnd4n/packages/core/levit_dart_core",
+    "levit_flutter": "/private/tmp/levit-20261112-before-vdalnd4n/packages/kits/levit_flutter",
+    "levit_flutter_core": "/private/tmp/levit-20261112-before-vdalnd4n/packages/core/levit_flutter_core",
+    "levit_monitor": "/private/tmp/levit-20261112-before-vdalnd4n/packages/core/levit_monitor",
+    "levit_reactive": "/private/tmp/levit-20261112-before-vdalnd4n/packages/core/levit_reactive",
+    "levit_scope": "/private/tmp/levit-20261112-before-vdalnd4n/packages/core/levit_scope"
+  },
+  "after": {
+    "levit_dart": "/Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit_dart",
+    "levit_dart_core": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_dart_core",
+    "levit_flutter": "/Users/atoumbre/SoftiLab/levit-svg/packages/kits/levit_flutter",
+    "levit_flutter_core": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core",
+    "levit_monitor": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_monitor",
+    "levit_reactive": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_reactive",
+    "levit_scope": "/Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_scope"
+  }
+}

@@ -39,3 +39,6 @@ coverage_report/
 .temp-docs
 **/doc/api/
 pana_report.md
+# Release evidence and the publishable inspector's bundled web assets.
+!reports/validation/**/*.log
+!packages/tools/levit_devtools/lib/assets/**

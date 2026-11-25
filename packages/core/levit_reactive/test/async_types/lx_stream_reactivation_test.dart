@@ -39,27 +39,29 @@ void main() {
       await controller.close();
     });
 
-    test('static stream does not survive reactivation if single-subscription',
-        () async {
-      // Create a raw single subscription stream
-      final controller = StreamController<int>();
-      final stream = controller.stream;
+    test(
+      'static stream does not survive reactivation if single-subscription',
+      () async {
+        // Create a raw single subscription stream
+        final controller = StreamController<int>();
+        final stream = controller.stream;
 
-      // By using the standard constructor, we wrap the *existing* instance.
-      final lxStream = LxStream(stream);
+        // By using the standard constructor, we wrap the *existing* instance.
+        final lxStream = LxStream(stream);
 
-      // First mount works
-      final sub1 = lxStream.valueStream.listen((_) {});
-      await Future<void>.delayed(Duration.zero);
+        // First mount works
+        final sub1 = lxStream.valueStream.listen((_) {});
+        await Future<void>.delayed(Duration.zero);
 
-      // Unmount cancels the subscription
-      await sub1.cancel();
+        // Unmount cancels the subscription
+        await sub1.cancel();
 
-      // Remounting a single-subscription static stream crashes
-      // because we try to listen to the *same* static instance.
-      expect(() => lxStream.valueStream.listen((_) {}), throwsStateError);
+        // Remounting a single-subscription static stream crashes
+        // because we try to listen to the *same* static instance.
+        expect(() => lxStream.valueStream.listen((_) {}), throwsStateError);
 
-      await controller.close();
-    });
+        await controller.close();
+      },
+    );
   });
 }

@@ -29,8 +29,9 @@ class TestView extends StatelessWidget {
 
 void main() {
   group('LScopedView Behavior', () {
-    testWidgets('LScopedView creates controller and auto-watches',
-        (tester) async {
+    testWidgets('LScopedView creates controller and auto-watches', (
+      tester,
+    ) async {
       TestReactiveController? capturedController;
       int buildCount = 0;
 

@@ -1,49 +1,31 @@
 import 'dart:async';
-import 'dart:mirrors';
-
+import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('LevitMonitorMiddleware close() (hasListener branch)', () {
-    test('close awaits controller close when an external listener exists',
-        () async {
-      final transport = _TestTransport();
-      final middleware = LevitMonitorMiddleware(transport: transport);
-
-      // Attach an extra listener to the internal StreamController so
-      // StreamController.hasListener remains true even after the middleware
-      // cancels its own subscription.
-      final controller = _getEventControllerViaMirrors(middleware);
-      final extraSub = controller.stream.listen((_) {});
-
-      await middleware.close();
-      expect(transport.closeCalled, isTrue);
-
-      await extraSub.cancel();
-    });
+  test('close drains the admitted send before closing its transport', () async {
+    final transport = _Blocked();
+    final middleware = LevitMonitorMiddleware(transport: transport)..enable();
+    final value = 0.lx;
+    value.value = 1;
+    final closed = middleware.close();
+    await Future<void>.delayed(Duration.zero);
+    expect(transport.closed, isFalse);
+    transport.release.complete();
+    await closed;
+    expect(transport.closed, isTrue);
+    await value.close();
   });
 }
 
-StreamController<MonitorEvent> _getEventControllerViaMirrors(
-    LevitMonitorMiddleware middleware) {
-  final mirror = reflect(middleware);
-  final lib = mirror.type.owner as LibraryMirror;
-  final symbol = MirrorSystem.getSymbol('_eventStream', lib);
-  return mirror.getField(symbol).reflectee as StreamController<MonitorEvent>;
-}
-
-class _TestTransport implements LevitTransport {
-  bool closeCalled = false;
-
+class _Blocked extends LevitTransport {
+  final release = Completer<void>();
+  bool closed = false;
   @override
-  Stream<void> get onConnect => const Stream<void>.empty();
-
-  @override
-  void send(MonitorEvent event) {}
-
+  Future<void> send(MonitorEvent event) => release.future;
   @override
   Future<void> close() async {
-    closeCalled = true;
+    closed = true;
   }
 }

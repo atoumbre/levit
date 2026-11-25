@@ -1,0 +1,127 @@
+{
+  "date": "2026-11-11",
+  "candidateRoot": "/private/tmp/levit-0.1.0-performance-x773iaob",
+  "checks": {
+    "native-comparison": {
+      "result": "pass",
+      "evidence": "performance-remediation/comparison-9/run.log"
+    },
+    "snapshot-format": {
+      "result": "pass",
+      "evidence": "performance-remediation/snapshot-format.log"
+    },
+    "snapshot-ci": {
+      "result": "pass",
+      "evidence": "performance-remediation/snapshot-ci.log"
+    },
+    "snapshot-coverage": {
+      "result": "pass",
+      "evidence": "performance-remediation/snapshot-coverage.log"
+    },
+    "snapshot-stress": {
+      "result": "pass",
+      "evidence": "performance-remediation/snapshot-stress.log"
+    },
+    "snapshot-benchmarks": {
+      "result": "pass",
+      "evidence": "performance-remediation/snapshot-benchmarks.log"
+    },
+    "snapshot-browser-builds": {
+      "result": "pass",
+      "evidence": "performance-remediation/snapshot-browser-builds.log"
+    },
+    "snapshot-publish-dry-runs": {
+      "result": "pass",
+      "evidence": "performance-remediation/snapshot-publish-dry-runs.log"
+    },
+    "exactBinaryReplication": {
+      "result": "pass",
+      "evidence": "performance-remediation/repeat-status.json"
+    },
+    "installedInspector": {
+      "result": "pass",
+      "evidence": "performance-remediation/candidate-cli-consumer.json"
+    },
+    "reproducibleInspectorAssets": {
+      "result": "pass",
+      "evidence": "performance-remediation/inspector-assets.json"
+    },
+    "dependenciesAndMigration": {
+      "result": "pass",
+      "evidence": "performance-remediation/dependencies-and-migration.json"
+    },
+    "referenceIntegrity": {
+      "result": "pass",
+      "evidence": "performance-remediation/reference-integrity.json"
+    },
+    "profiledHotPaths": {
+      "result": "pass",
+      "evidence": "PERFORMANCE.md"
+    },
+    "finalStressReport": {
+      "result": "pass",
+      "evidence": "performance-remediation/final-stress-report.log"
+    },
+    "isolatedUiProfile": {
+      "result": "pass",
+      "evidence": "performance-remediation/ui-profile-summary.json"
+    }
+  },
+  "coverage": {
+    "covered": 6747,
+    "total": 6747,
+    "packages": 11,
+    "thresholdChanged": false,
+    "exclusionsChanged": false
+  },
+  "formattedDartFiles": 587,
+  "browserTargets": 5,
+  "benchmarkTests": 67,
+  "publishablePackages": 10,
+  "nativeProcesses": 32,
+  "nativeSamples": 17280,
+  "matchedFrames": 5760,
+  "performanceEvidence": "performance-remediation/replicated-comparison",
+  "performanceSignoff": "complete",
+  "performanceSignoffScope": "Investigated runtime hot spots; all remaining measured differences, warmup and host/UI limits are explicit. No universal parity or cold-start claim.",
+  "remainingPositiveLogicDeltas": [
+    {
+      "mode": "profile",
+      "diagnostics": false,
+      "workload": "notify_10000",
+      "changePercent": 0.7407407407407307
+    },
+    {
+      "mode": "profile",
+      "diagnostics": false,
+      "workload": "tasks_100",
+      "changePercent": 1.0802469135802406
+    },
+    {
+      "mode": "profile",
+      "diagnostics": true,
+      "workload": "tasks_100",
+      "changePercent": 0.4716981132075526
+    },
+    {
+      "mode": "release",
+      "diagnostics": false,
+      "workload": "fanout_128_x_100",
+      "changePercent": 0.9050187402870558
+    },
+    {
+      "mode": "release",
+      "diagnostics": false,
+      "workload": "scope_lifetime_100",
+      "changePercent": 1.3100436681222627
+    },
+    {
+      "mode": "release",
+      "diagnostics": true,
+      "workload": "tasks_100",
+      "changePercent": 0.4878048780487809
+    }
+  ],
+  "uiLimit": "Pooled release unmonitored build/raster medians +6.9%/+6.4%; monitored build p95 +37.9% pooled, but the spike did not repeat. Isolated CPU profiles did not establish an additional Levit hot spot.",
+  "published": false
+}

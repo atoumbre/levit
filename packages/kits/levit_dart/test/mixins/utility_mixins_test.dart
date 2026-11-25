@@ -16,14 +16,17 @@ void main() {
 
       // New API requires ID
       controller.startInterval(
-          'test_interval', const Duration(milliseconds: 10), (timer) {
-        count++;
-      });
+        'test_interval',
+        const Duration(milliseconds: 10),
+        (timer) {
+          count++;
+        },
+      );
 
       await Future.delayed(const Duration(milliseconds: 50));
       expect(count, greaterThanOrEqualTo(3));
 
-      controller.onClose();
+      await controller.onClose();
     });
 
     test('onClose cancels interval', () async {
@@ -32,14 +35,17 @@ void main() {
       int count = 0;
 
       controller.startInterval(
-          'test_interval', const Duration(milliseconds: 10), (timer) {
-        count++;
-      });
+        'test_interval',
+        const Duration(milliseconds: 10),
+        (timer) {
+          count++;
+        },
+      );
 
       await Future.delayed(const Duration(milliseconds: 20));
       final countBefore = count;
 
-      controller.onClose();
+      await controller.onClose();
 
       await Future.delayed(const Duration(milliseconds: 50));
       // Should not increment significantly after close (timing can be tricky but shouldn't run indefinitely)
@@ -65,7 +71,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
       expect(runs, 1);
 
-      controller.onClose();
+      await controller.onClose();
     });
 
     test('cancelTimer prevents execution', () async {
@@ -83,7 +89,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
       expect(runs, 0);
 
-      controller.onClose();
+      await controller.onClose();
     });
 
     test('onClose cancels pending debounce', () async {
@@ -95,7 +101,7 @@ void main() {
         runs++;
       });
 
-      controller.onClose();
+      await controller.onClose();
 
       await Future.delayed(const Duration(milliseconds: 100));
       expect(runs, 0);

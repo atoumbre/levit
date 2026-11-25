@@ -12,7 +12,7 @@ class DynamicGridBenchmark extends Benchmark {
 
   @override
   String get description =>
-      'Adds and removes 50 widgets per frame. Tests allocation and mount/unmount overhead.';
+      'Replaces 50 of 200 keyed items; verifies visible cells mount and unmount during each replacement.';
 
   @override
   bool get isUI => true;
@@ -34,36 +34,70 @@ class DynamicGridBenchmark extends Benchmark {
   }
 }
 
-class _GridItem extends StatelessWidget {
+class _GridItem extends StatefulWidget {
   final int value;
+  final Set<int> mountedItems;
+  final VoidCallback onMount;
+  final VoidCallback onUnmount;
 
-  const _GridItem(this.value);
+  _GridItem(this.value, this.mountedItems, this.onMount, this.onUnmount)
+    : super(key: ValueKey(value));
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.primaries[value % Colors.primaries.length],
-      child: Center(
-        child: Text('$value', style: const TextStyle(fontSize: 10)),
-      ),
-    );
+  State<_GridItem> createState() => _GridItemState();
+}
+
+class _GridItemState extends State<_GridItem> {
+  @override
+  void initState() {
+    super.initState();
+    widget.mountedItems.add(widget.value);
+    widget.onMount();
   }
+
+  @override
+  void dispose() {
+    widget.mountedItems.remove(widget.value);
+    widget.onUnmount();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Container(
+    color: Colors.primaries[widget.value % Colors.primaries.length],
+    child: Center(
+      child: Text('${widget.value}', style: const TextStyle(fontSize: 10)),
+    ),
+  );
 }
 
 abstract class _DynamicGridBase extends BenchmarkImplementation {
   final List<int> items = <int>[];
   int nextItem = 0;
   int updateVersion = 0;
+  int renderedVersion = 0;
+  final mountedItems = <int>{};
+  int mounts = 0;
+  int unmounts = 0;
+  int mountsBefore = 0;
+  int unmountsBefore = 0;
 
   @override
   Future<void> setup() async {
-    items.clear();
-    nextItem = 0;
+    items
+      ..clear()
+      ..addAll(List.generate(200, (i) => i));
+    mountedItems.clear();
+    mounts = unmounts = mountsBefore = unmountsBefore = 0;
+    renderedVersion = 0;
+    nextItem = 200;
     updateVersion = 0;
   }
 
   @override
   Future<void> run() async {
+    mountsBefore = mounts;
+    unmountsBefore = unmounts;
     for (int i = 0; i < 50; i++) {
       items.add(nextItem++);
     }
@@ -76,19 +110,31 @@ abstract class _DynamicGridBase extends BenchmarkImplementation {
 
   @override
   Future<void> verify() async {
+    if (mounts <= mountsBefore ||
+        unmounts <= unmountsBefore ||
+        mountedItems.any((id) => !items.contains(id))) {
+      throw StateError(
+        'Grid replacement must mount new visible cells and unmount removed cells',
+      );
+    }
     final expectedLength = nextItem <= 200 ? nextItem : 200;
     if (items.length != expectedLength) {
       throw StateError(
-          'Dynamic grid length mismatch: expected $expectedLength, got ${items.length}');
+        'Dynamic grid length mismatch: expected $expectedLength, got ${items.length}',
+      );
     }
-    if (currentVersion != updateVersion) {
+    if (currentVersion != updateVersion || renderedVersion != updateVersion) {
       throw StateError(
-          'Dynamic grid version mismatch: expected $updateVersion, got $currentVersion');
+        'Dynamic grid version mismatch: expected $updateVersion, got $currentVersion',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
+    if (mountedItems.isNotEmpty) {
+      throw StateError('Grid must be unmounted before teardown');
+    }
     items.clear();
   }
 
@@ -97,11 +143,16 @@ abstract class _DynamicGridBase extends BenchmarkImplementation {
   int get currentVersion;
 
   Widget buildGrid() {
+    renderedVersion = currentVersion;
+    final indices = {for (var i = 0; i < items.length; i++) items[i]: i};
     return GridView.builder(
-      gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
+      findChildIndexCallback: (key) => indices[(key as ValueKey<int>).value],
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 10,
+      ),
       itemCount: items.length,
-      itemBuilder: (ctx, i) => _GridItem(items[i]),
+      itemBuilder: (ctx, i) =>
+          _GridItem(items[i], mountedItems, () => mounts++, () => unmounts++),
     );
   }
 }
@@ -131,7 +182,7 @@ class LevitDynamicGrid extends _DynamicGridBase {
   @override
   Future<void> teardown() async {
     await super.teardown();
-    version.close();
+    await version.close();
   }
 }
 

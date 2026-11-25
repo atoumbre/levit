@@ -61,10 +61,7 @@ void main() {
 
     test('LxInt divide throws on division by zero', () {
       final count = 1.lx;
-      expect(
-        () => count.divide(0),
-        throwsA(isA<ArgumentError>()),
-      );
+      expect(() => count.divide(0), throwsA(isA<ArgumentError>()));
     });
   });
 }

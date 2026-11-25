@@ -39,7 +39,9 @@ void main() {
       await pump();
       expect(deferred.value, isA<LxError<String>>());
       expect(
-          (deferred.value as LxError).error.toString(), contains('sync error'));
+        (deferred.value as LxError).error.toString(),
+        contains('sync error'),
+      );
 
       await sub.cancel();
     });

@@ -1,232 +1,246 @@
 part of '../levit_monitor.dart';
 
-/// Represents a snapshot of the application state.
+/// Redacted shadow state with optional bounded event retention (off by default).
+/// Only immutable JSON envelopes are retained; live application objects are not.
 class StateSnapshot {
-  /// Active Dependency Injection scopes, keyed by scope ID.
-  final scopes = <int, ScopeModel>{}.lx;
-
-  /// Active Dependencies, keyed by composite ID "scopeId:key".
-  final dependencies = <String, DependencyModel>{}.lx;
-
-  /// Active Reactive variables, keyed by reactive ID.
-  final variables = <int, ReactiveModel>{}.lx;
-
-  /// The maximum number of events to keep in the cache.
+  final scopes = <int, ScopeModel>{};
+  final dependencies = <String, DependencyModel>{};
+  final variables = <int, ReactiveModel>{};
+  final taskTrees = <String, Map<String, dynamic>>{};
   final int maxEvents;
-
-  final ListQueue<MonitorEvent> _eventCache;
-
-  /// Returns a snapshot of the cached events.
-  List<MonitorEvent> get events => _eventCache.toList();
-
-  StateSnapshot({this.maxEvents = 10000}) : _eventCache = ListQueue(maxEvents);
-
+  final ListQueue<LevitEventEnvelope> _eventCache = ListQueue();
+  int droppedHistoryEvents = 0;
+  List<LevitEventEnvelope> get events => List.unmodifiable(_eventCache);
+  StateSnapshot({this.maxEvents = 0}) {
+    if (maxEvents < 0) throw RangeError.value(maxEvents, 'maxEvents');
+  }
   Map<String, dynamic> toJson() => {
-        'scopes': scopes.values.map((e) => e.toJson()).toList(),
-        'dependencies': dependencies.values.map((e) => e.toJson()).toList(),
-        'variables': variables.values.map((e) => e.toJson()).toList(),
-      };
+    'scopes': scopes.values.map((e) => e.toJson()).toList(),
+    'dependencies': dependencies.values.map((e) => e.toJson()).toList(),
+    'variables': variables.values.map((e) => e.toJson()).toList(),
+    'taskTrees': taskTrees,
+    'historyComplete': false,
+    'historyCapacity': maxEvents,
+    'droppedHistoryEvents': droppedHistoryEvents,
+  };
+  void applyEvent(MonitorEvent event) => applyEnvelope(event.freeze().envelope);
 
-  /// Applies an incoming event to update the shadow state.
-  void applyEvent(MonitorEvent event) {
-    _cacheEvent(event);
-    if (event is DependencyEvent) {
-      _applyDependencyEvent(event);
-    } else if (event is ReactiveEvent) {
-      _applyReactiveEvent(event);
-    } else if (event is ReactiveBatchEvent) {
-      _applyBatchEvent(event);
-    } else if (event is SnapshotEvent) {
-      _restore(event.state);
+  /// Applies a previously serialized event, also used for inspector replay.
+  void applyEnvelope(LevitEventEnvelope envelope) {
+    final data = envelope.data;
+    if (envelope.type == 'snapshot') {
+      _restore(Map<String, dynamic>.from(data['state'] as Map));
+      return;
+    }
+    if (maxEvents > 0) {
+      if (_eventCache.length == maxEvents) {
+        _eventCache.removeFirst();
+        droppedHistoryEvents++;
+      }
+      _eventCache.add(envelope);
+    }
+    final scopeId = data['scopeId'] as int?;
+    final key = data['key'] as String?;
+    late final depKey = '$scopeId:$key';
+    switch (envelope.type) {
+      case 'scope_progress':
+        if (data['version'] != 1) {
+          throw FormatException(
+            'Unsupported scope progress version: ${data['version']}',
+          );
+        }
+        final record = data['scope'] as List;
+        final id = record[0] as int;
+        final ancestry = record[4] as List;
+        final scope = scopes[id] ??= ScopeModel(
+          id: id,
+          name: record[1] as String,
+          parentScopeId: ancestry.isEmpty ? null : ancestry.first[0] as int,
+        );
+        scope._wireProgress = record;
+        scope._progress = null;
+      case 'scope_create':
+        scopes[scopeId!] = ScopeModel(
+          id: scopeId,
+          name: data['scopeName'] as String,
+          parentScopeId: data['parentScopeId'] as int?,
+        );
+      case 'scope_dispose':
+        scopes.remove(scopeId);
+        dependencies.removeWhere((_, value) => value.scopeId == scopeId);
+      case 'di_register':
+        scopes.putIfAbsent(
+          scopeId!,
+          () => ScopeModel(id: scopeId, name: data['scopeName'] as String),
+        );
+        dependencies[depKey] = DependencyModel(
+          scopeId: scopeId,
+          key: key!,
+          isLazy: data['isLazy'] as bool,
+          isFactory: data['isFactory'] as bool,
+          isAsync: data['isAsync'] as bool,
+          status: DependencyStatus.registered,
+        );
+      case 'di_delete':
+        dependencies.remove(depKey);
+      case 'di_instance_create':
+        dependencies[depKey]?.status = DependencyStatus.creating;
+      case 'di_instance_init':
+        final dep = dependencies[depKey];
+        if (dep != null) {
+          dep.status = DependencyStatus.active;
+          dep.value = data['instance'] as String?;
+          dep.type = switch (data['dependencyType']) {
+            'controller' => DependencyType.controller,
+            'store' => DependencyType.store,
+            _ => DependencyType.other,
+          };
+        }
+      case 'custom':
+        if (data['namespace'] == 'levit.tasks' &&
+            data['name'] == 'tree' &&
+            data['attributes'] is Map) {
+          final tree = Map<String, dynamic>.from(data['attributes'] as Map);
+          final owner = tree['ownerPath'] as String;
+          if (tree['closed'] == true) {
+            taskTrees.remove(owner);
+          } else {
+            if (!taskTrees.containsKey(owner) && taskTrees.length >= 256) {
+              taskTrees.remove(taskTrees.keys.first);
+            }
+            taskTrees[owner] = tree;
+          }
+        }
+      case 'batch':
+        for (final item in data['entries'] as List) {
+          _applyVariable(
+            Map<String, dynamic>.from(item as Map),
+            'state_change',
+          );
+        }
+      default:
+        if (data['reactiveId'] != null) _applyVariable(data, envelope.type);
     }
   }
 
-  void _cacheEvent(MonitorEvent event) {
-    if (event is SnapshotEvent) {
-      return; // Don't cache snapshots, they are too big
+  static Map<String, dynamic> _decodeScopeProgress(List record) {
+    final ancestry = record[4] as List;
+    final flags = record[2] as int;
+    return {
+      'id': record[0] as int,
+      'name': record[1] as String,
+      'isClosing': flags & 1 != 0,
+      'isDisposed': flags & 2 != 0,
+      'pendingInitializations': record[3] as int,
+      'parentScopeId': ancestry.isEmpty
+          ? null
+          : (ancestry.first as List)[0] as int,
+      'ancestry': [
+        for (final parent in ancestry) {'id': parent[0], 'name': parent[1]},
+      ],
+      'ownedChildren': [
+        for (final child in record[5] as List)
+          {'id': child[0], 'name': child[1]},
+      ],
+      'registrations': [
+        for (final entry in record[6] as List)
+          {
+            'key': entry[0] as String,
+            'type': entry[1] as String,
+            'aliasOf': entry[2] as String?,
+            'isFactory': (entry[3] as int) & 1 != 0,
+            'isAsync': (entry[3] as int) & 2 != 0,
+            'isLazy': (entry[3] as int) & 4 != 0,
+            'permanent': (entry[3] as int) & 8 != 0,
+            'isInstantiated': (entry[3] as int) & 16 != 0,
+            'isClosing': (entry[3] as int) & 32 != 0,
+            'pendingInitializations': entry[4] as int,
+            'ownedInstances': entry[5] as int,
+          },
+      ],
+    };
+  }
+
+  void _applyVariable(Map<String, dynamic> data, String type) {
+    final id = int.parse(data['reactiveId'].toString());
+    if (type == 'reactive_dispose') {
+      variables.remove(id);
+      return;
     }
-    _eventCache.add(event);
-    if (_eventCache.length > maxEvents) {
-      _eventCache.removeFirst();
+    final model = variables[id] ??= ReactiveModel(
+      id: id,
+      name: data['name'] as String? ?? '?',
+      ownerId: data['ownerId'] as String?,
+    );
+    if (data['name'] != null) model.name = data['name'] as String;
+    if (data.containsKey('ownerId')) {
+      model.ownerId = data['ownerId'] as String?;
+      model.parseOwnerId();
+    }
+    model.isSensitive = data['isSensitive'] as bool? ?? model.isSensitive;
+    if (type == 'reactive_metadata' && model.isSensitive) {
+      model.value = LevitMonitor.obfuscate(model.value);
+    }
+    if (type == 'reactive_init' || type == 'state_change') {
+      model.value = data[type == 'reactive_init' ? 'initialValue' : 'newValue'];
+      model.valueType = data['valueType'] as String?;
+    } else if (type == 'graph_change') {
+      model.dependencies = (data['dependencies'] as List)
+          .map((d) => int.parse(d['id'].toString()))
+          .toList();
+    } else if (type == 'listener_add') {
+      model.listenerCount++;
+    } else if (type == 'listener_remove') {
+      model.listenerCount = (model.listenerCount - 1).clamp(0, 999999);
     }
   }
 
   void _restore(Map<String, dynamic> state) {
-    // A snapshot replaces the entire shadow state.
     scopes.clear();
     dependencies.clear();
     variables.clear();
+    taskTrees.clear();
     _eventCache.clear();
-
-    // Restore scopes first so dependency/owner references can resolve.
-    if (state['scopes'] != null) {
-      for (final s in state['scopes']) {
-        final scope = ScopeModel(
-            id: s['id'], name: s['name'], parentScopeId: s['parentScopeId']);
-        scopes[scope.id] = scope;
-      }
-    }
-
-    // Restore dependency registrations and lifecycle metadata.
-    if (state['dependencies'] != null) {
-      for (final d in state['dependencies']) {
-        final dep = DependencyModel(
-          scopeId: d['scopeId'],
-          key: d['key'],
-          isLazy: d['isLazy'],
-          isFactory: d['isFactory'],
-          isAsync: d['isAsync'],
-          status:
-              DependencyStatus.values.firstWhere((e) => e.name == d['status']),
-          type: d['type'] != null
-              ? DependencyType.values.firstWhere((e) => e.name == d['type'])
-              : DependencyType.other,
-          value: d['value'],
-        );
-        dependencies['${dep.scopeId}:${dep.key}'] = dep;
-      }
-    }
-
-    // Restore reactive values after scopes/dependencies are available.
-    if (state['variables'] != null) {
-      for (final v in state['variables']) {
-        final reactive = ReactiveModel(
-          id: v['id'],
-          name: v['name'],
-          ownerId: v['ownerId'],
-        );
-        reactive.value = v['value'];
-        reactive.valueType = v['valueType'];
-        reactive.isSensitive = v['isSensitive'] ?? false;
-        reactive.listenerCount = v['listenerCount'] ?? 0;
-        if (v['dependencies'] != null) {
-          reactive.dependencies = List<int>.from(v['dependencies']);
-        }
-        variables[reactive.id] = reactive;
-      }
-    }
-  }
-
-  void _applyDependencyEvent(DependencyEvent event) {
-    if (event is ScopeCreateEvent) {
-      scopes[event.scopeId] = ScopeModel(
-        id: event.scopeId,
-        name: event.scopeName,
-        parentScopeId: event.parentScopeId,
+    for (final entry in (state['taskTrees'] as Map? ?? {}).entries.take(256)) {
+      taskTrees[entry.key as String] = Map<String, dynamic>.from(
+        entry.value as Map,
       );
-      return;
-    } else if (event is ScopeDisposeEvent) {
-      scopes.remove(event.scopeId);
-      // Remove by key list to avoid mutating while iterating reactive map views.
-      final keysToRemove = dependencies.values
-          .where((d) => d.scopeId == event.scopeId)
-          .map((d) => '${d.scopeId}:${d.key}')
-          .toList();
-
-      for (final key in keysToRemove) {
-        dependencies.remove(key);
-      }
-      return;
     }
-
-    // Late or replayed events may reference a scope before its create event arrives.
-    if (!scopes.containsKey(event.scopeId)) {
-      scopes[event.scopeId] =
-          ScopeModel(id: event.scopeId, name: event.scopeName);
-    }
-
-    final depKey = '${event.scopeId}:${event.key}';
-
-    if (event is DependencyRegisterEvent) {
-      dependencies[depKey] = DependencyModel(
-        scopeId: event.scopeId,
-        key: event.key,
-        isLazy: event.info.isLazy,
-        isFactory: event.info.isFactory,
-        isAsync: event.info.isAsync,
-        status: DependencyStatus.registered,
+    droppedHistoryEvents = state['droppedHistoryEvents'] as int? ?? 0;
+    for (final s in state['scopes'] as List? ?? []) {
+      final scope = ScopeModel(
+        id: s['id'] as int,
+        name: s['name'] as String,
+        parentScopeId: s['parentScopeId'] as int?,
       );
-    } else if (event is DependencyDeleteEvent) {
-      dependencies.remove(depKey);
-    } else if (event is DependencyInstanceCreateEvent) {
-      dependencies[depKey]?.status = DependencyStatus.creating;
-    } else if (event is DependencyInstanceReadyEvent) {
-      final dep = dependencies[depKey];
-      if (dep != null) {
-        dep.status = DependencyStatus.active;
-        dep.value = '<${MonitorEvent._instanceType(event.instance)}>';
-
-        // Dependency type is derived from runtime shape for monitor grouping.
-        final instance = event.instance;
-        if (instance is LevitController) {
-          dep.type = DependencyType.controller;
-        } else if (instance.runtimeType
-            .toString()
-            .contains('LevitStoreInstance')) {
-          dep.type = DependencyType.store;
-        } else {
-          dep.type = DependencyType.other;
-        }
-      }
+      scope.progress = Map<String, dynamic>.from(s['progress'] as Map? ?? {});
+      scopes[scope.id] = scope;
     }
-  }
-
-  void _applyReactiveEvent(ReactiveEvent event) {
-    final reactive = variables.putIfAbsent(
-      event.reactive.id,
-      () => ReactiveModel(
-        id: event.reactive.id,
-        name: event.reactive.name ?? '?',
-        ownerId: event.reactive.ownerId,
-        isSensitive: event.reactive.isSensitive,
-      ),
-    );
-
-    // Owner parsing is refreshed only when ownership actually changes.
-    if (event.reactive.ownerId != null &&
-        reactive.ownerId != event.reactive.ownerId) {
-      reactive.ownerId = event.reactive.ownerId;
-      reactive.parseOwnerId();
-    }
-
-    // Sensitivity can change at runtime and must mirror the latest event.
-    reactive.isSensitive = event.reactive.isSensitive;
-
-    if (event is ReactiveInitEvent) {
-      reactive.value = MonitorEvent._stringify(
-        event.reactive.value,
-        isSensitive: event.reactive.isSensitive,
+    for (final d in state['dependencies'] as List? ?? []) {
+      final dep = DependencyModel(
+        scopeId: d['scopeId'] as int,
+        key: d['key'] as String,
+        isLazy: d['isLazy'] as bool,
+        isFactory: d['isFactory'] as bool,
+        isAsync: d['isAsync'] as bool,
+        status: DependencyStatus.values.byName(d['status'] as String),
+        type: DependencyType.values.byName(d['type'] as String? ?? 'other'),
+        value: d['value'] as String?,
       );
-      reactive.valueType =
-          event.reactive.value?.runtimeType.toString() ?? 'dynamic';
-    } else if (event is ReactiveChangeEvent) {
-      reactive.value = MonitorEvent._stringify(
-        event.change.newValue,
-        isSensitive: event.reactive.isSensitive,
-      );
-      reactive.valueType = event.change.valueType.toString();
-    } else if (event is ReactiveDisposeEvent) {
-      variables.remove(event.reactive.id);
-    } else if (event is ReactiveGraphChangeEvent) {
-      reactive.dependencies = event.dependencies.map((d) => d.id).toList();
-    } else if (event is ReactiveListenerAddedEvent) {
-      reactive.listenerCount++;
-    } else if (event is ReactiveListenerRemovedEvent) {
-      reactive.listenerCount = (reactive.listenerCount - 1).clamp(0, 9999);
+      dependencies['${dep.scopeId}:${dep.key}'] = dep;
     }
-  }
-
-  void _applyBatchEvent(ReactiveBatchEvent event) {
-    for (final entry in event.change.entries) {
-      final reactiveDef = entry.$1;
-      final reactive = variables[reactiveDef.id];
-      if (reactive != null) {
-        reactive.value = MonitorEvent._stringify(
-          entry.$2.newValue,
-          isSensitive: reactiveDef.isSensitive,
-        );
-        reactive.valueType = entry.$2.valueType.toString();
-      }
+    for (final v in state['variables'] as List? ?? []) {
+      final model = ReactiveModel(
+        id: v['id'] as int,
+        name: v['name'] as String,
+        ownerId: v['ownerId'] as String?,
+        isSensitive: v['isSensitive'] as bool? ?? false,
+      );
+      model.value = v['value'];
+      model.valueType = v['valueType'] as String?;
+      model.listenerCount = v['listenerCount'] as int? ?? 0;
+      model.dependencies = List<int>.from(v['dependencies'] as List? ?? []);
+      variables[model.id] = model;
     }
   }
 }
@@ -245,6 +259,18 @@ class ScopeModel {
   /// The parent scope identifier, if this scope has a parent.
   final int? parentScopeId;
 
+  /// Initialization and cleanup metadata from the latest progress event.
+  /// Compact records expand on observation, preserving the same named fields.
+  Map<String, dynamic> get progress =>
+      _progress ??= StateSnapshot._decodeScopeProgress(_wireProgress!);
+  set progress(Map<String, dynamic> value) {
+    _progress = value;
+    _wireProgress = null;
+  }
+
+  Map<String, dynamic>? _progress = const {};
+  List? _wireProgress;
+
   /// Creates a scope snapshot model.
   ///
   /// [id] is the scope identifier.
@@ -254,10 +280,11 @@ class ScopeModel {
 
   /// Converts this model to a JSON-serializable map.
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'parentScopeId': parentScopeId,
-      };
+    'id': id,
+    'name': name,
+    'parentScopeId': parentScopeId,
+    'progress': progress,
+  };
 }
 
 /// The lifecycle state of a dependency registration within a scope.
@@ -318,15 +345,15 @@ class DependencyModel {
 
   /// Converts this model to a JSON-serializable map.
   Map<String, dynamic> toJson() => {
-        'scopeId': scopeId,
-        'key': key,
-        'isLazy': isLazy,
-        'isFactory': isFactory,
-        'isAsync': isAsync,
-        'status': status.name,
-        'type': type.name,
-        'value': value,
-      };
+    'scopeId': scopeId,
+    'key': key,
+    'isLazy': isLazy,
+    'isFactory': isFactory,
+    'isAsync': isAsync,
+    'status': status.name,
+    'type': type.name,
+    'value': value,
+  };
 }
 
 /// A serializable representation of a reactive object and its metadata.
@@ -338,7 +365,7 @@ class ReactiveModel {
   final int id;
 
   /// The reactive name, if provided by the producer.
-  final String name;
+  String name;
 
   /// The owner identifier associated with the reactive, if any.
   String? ownerId;
@@ -400,15 +427,15 @@ class ReactiveModel {
 
   /// Converts this model to a JSON-serializable map.
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'ownerId': ownerId,
-        'isSensitive': isSensitive,
-        'value': value,
-        'valueType': valueType,
-        'scopeId': scopeId,
-        'ownerKey': ownerKey,
-        'dependencies': dependencies,
-        'listenerCount': listenerCount,
-      };
+    'id': id,
+    'name': name,
+    'ownerId': ownerId,
+    'isSensitive': isSensitive,
+    'value': value,
+    'valueType': valueType,
+    'scopeId': scopeId,
+    'ownerKey': ownerKey,
+    'dependencies': dependencies,
+    'listenerCount': listenerCount,
+  };
 }

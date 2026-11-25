@@ -4,8 +4,8 @@ import 'dart:async';
 
 void main() {
   group('Implicit DI Scopes (LevitScope.run)', () {
-    setUp(() {
-      Levit.reset(force: true);
+    setUp(() async {
+      await Levit.reset(force: true);
     });
 
     test('finds dependency in implicit scope', () {

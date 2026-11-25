@@ -1,3 +1,4 @@
+import '../../example/lib/mount_observer.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter/levit_flutter.dart';
@@ -14,7 +15,7 @@ void main() {
             itemExtent: 100, // Fixed height to easily scroll out
             itemBuilder: (context, index) {
               return LKeepAlive(
-                child: LWidgetMonitor(
+                child: MountObserver(
                   onDispose: () => disposeCalls.add(index),
                   child: Text('Item $index'),
                 ),
@@ -46,7 +47,7 @@ void main() {
             itemBuilder: (context, index) {
               return LKeepAlive(
                 keepAlive: false, // Don't keep alive
-                child: LWidgetMonitor(
+                child: MountObserver(
                   onDispose: () => disposeCalls.add(index),
                   child: Text('Item $index'),
                 ),

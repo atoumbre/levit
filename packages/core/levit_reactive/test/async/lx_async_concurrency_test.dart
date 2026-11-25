@@ -11,16 +11,16 @@ Future<void> _flush() async {
 
 void main() {
   group('LxAsyncComputed exhaustLatest', () {
-    test('coalesces changes into exactly one non-overlapping trailing run',
-        () async {
-      final source = 0.lx;
-      final gates = <Completer<void>>[];
-      final captured = <int>[];
-      var active = 0;
-      var maxActive = 0;
+    test(
+      'coalesces changes into exactly one non-overlapping trailing run',
+      () async {
+        final source = 0.lx;
+        final gates = <Completer<void>>[];
+        final captured = <int>[];
+        var active = 0;
+        var maxActive = 0;
 
-      final computed = LxComputed.async<int>(
-        () async {
+        final computed = LxComputed.async<int>(() async {
           final current = source.value;
           captured.add(current);
           active++;
@@ -30,48 +30,44 @@ void main() {
           await gate.future;
           active--;
           return current;
-        },
-        concurrency: LxAsyncConcurrency.exhaustLatest,
-      );
-      void listener() {}
-      computed.addListener(listener);
+        }, concurrency: LxAsyncConcurrency.exhaustLatest);
+        void listener() {}
+        computed.addListener(listener);
 
-      expect(gates, hasLength(1));
-      source.value = 1;
-      source.value = 2;
-      source.value = 3;
-      expect(gates, hasLength(1));
+        expect(gates, hasLength(1));
+        source.value = 1;
+        source.value = 2;
+        source.value = 3;
+        expect(gates, hasLength(1));
 
-      gates.first.complete();
-      await _flush();
+        gates.first.complete();
+        await _flush();
 
-      expect(gates, hasLength(2));
-      expect(captured, <int>[0, 3]);
-      expect(maxActive, 1);
+        expect(gates, hasLength(2));
+        expect(captured, <int>[0, 3]);
+        expect(maxActive, 1);
 
-      gates.last.complete();
-      await _flush();
-      expect(computed.status, const LxSuccess<int>(3));
-      computed.close();
-      source.close();
-    });
+        gates.last.complete();
+        await _flush();
+        expect(computed.status, const LxSuccess<int>(3));
+        computed.close();
+        source.close();
+      },
+    );
 
     test('a failed execution still admits the trailing run', () async {
       final source = 0.lx;
       final gates = <Completer<void>>[];
       final captured = <int>[];
 
-      final computed = LxComputed.async<int>(
-        () async {
-          final current = source.value;
-          captured.add(current);
-          final gate = Completer<void>();
-          gates.add(gate);
-          await gate.future;
-          return current;
-        },
-        concurrency: LxAsyncConcurrency.exhaustLatest,
-      );
+      final computed = LxComputed.async<int>(() async {
+        final current = source.value;
+        captured.add(current);
+        final gate = Completer<void>();
+        gates.add(gate);
+        await gate.future;
+        return current;
+      }, concurrency: LxAsyncConcurrency.exhaustLatest);
       void listener() {}
       computed.addListener(listener);
 
@@ -93,15 +89,12 @@ void main() {
       final source = 0.lx;
       final gate = Completer<void>();
       var runs = 0;
-      final computed = LxComputed.async<int>(
-        () async {
-          runs++;
-          final current = source.value;
-          await gate.future;
-          return current;
-        },
-        concurrency: LxAsyncConcurrency.exhaustLatest,
-      );
+      final computed = LxComputed.async<int>(() async {
+        runs++;
+        final current = source.value;
+        await gate.future;
+        return current;
+      }, concurrency: LxAsyncConcurrency.exhaustLatest);
       void listener() {}
       computed.addListener(listener);
       source.value = 1;
@@ -123,19 +116,15 @@ void main() {
       var active = 0;
       var maxActive = 0;
 
-      final worker = LxWorker<int>(
-        source,
-        (value) async {
-          seen.add(value);
-          active++;
-          maxActive = max(maxActive, active);
-          final gate = Completer<void>();
-          gates.add(gate);
-          await gate.future;
-          active--;
-        },
-        concurrency: LxAsyncConcurrency.exhaustLatest,
-      );
+      final worker = LxWorker<int>(source, (value) async {
+        seen.add(value);
+        active++;
+        maxActive = max(maxActive, active);
+        final gate = Completer<void>();
+        gates.add(gate);
+        await gate.future;
+        active--;
+      }, concurrency: LxAsyncConcurrency.exhaustLatest);
 
       source.value = 1;
       source.value = 2;

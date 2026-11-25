@@ -8,29 +8,39 @@ void main() {
       final s1 = 0.lx;
       final s2 = 0.lx;
 
-      await tester.pumpWidget(LWatch(() {
-        s1.value;
-        return Container();
-      }));
+      await tester.pumpWidget(
+        LWatch(() {
+          s1.value;
+          return Container();
+        }),
+      );
 
-      await tester.pumpWidget(LWatch(() {
-        s1.value;
-        s2.value;
-        return Container();
-      }));
+      await tester.pumpWidget(
+        LWatch(() {
+          s1.value;
+          s2.value;
+          return Container();
+        }),
+      );
 
-      await tester.pumpWidget(LWatch(() {
-        return Container();
-      }));
+      await tester.pumpWidget(
+        LWatch(() {
+          return Container();
+        }),
+      );
 
-      await tester.pumpWidget(LWatch(() {
-        s1.value;
-        return Container();
-      }));
+      await tester.pumpWidget(
+        LWatch(() {
+          s1.value;
+          return Container();
+        }),
+      );
 
-      await tester.pumpWidget(LWatch(() {
-        return Container();
-      }));
+      await tester.pumpWidget(
+        LWatch(() {
+          return Container();
+        }),
+      );
     });
   });
 }

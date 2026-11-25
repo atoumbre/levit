@@ -7,8 +7,8 @@ class _Service {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('Stress Test: DI Scoping', () {
@@ -35,12 +35,14 @@ void main() {
 
       expect(service.id, 0);
       print(
-          'Resolved root dependency through $depth layers in ${sw.elapsedMilliseconds}ms');
+        'Resolved root dependency through $depth layers in ${sw.elapsedMilliseconds}ms',
+      );
     });
 
     test('Shadowing - Resolution at each level', () {
       print(
-          '[Description] Tests that shadowing works correctly at all levels.');
+        '[Description] Tests that shadowing works correctly at all levels.',
+      );
       const depth = 100;
 
       LevitScope current = Levit.createScope('root');
@@ -59,10 +61,11 @@ void main() {
       sw.stop();
 
       print(
-          'Performed 1000 shadowed lookups at depth $depth in ${sw.elapsedMilliseconds}ms');
+        'Performed 1000 shadowed lookups at depth $depth in ${sw.elapsedMilliseconds}ms',
+      );
     });
 
-    test('Scope Reset Cascade', () {
+    test('Scope Reset Cascade', () async {
       print('[Description] Tests that resetting a scope cleans up correctly.');
       final root = Levit.createScope('root');
       root.put<_Service>(() => _Service(0), tag: 'svc');
@@ -74,7 +77,7 @@ void main() {
       expect(child.find<_Service>(tag: 'svc').id, 0);
 
       // Reset root
-      root.reset(force: true);
+      await root.reset(force: true);
 
       // Root service should be gone
       expect(root.isRegistered<_Service>(tag: 'svc'), false);

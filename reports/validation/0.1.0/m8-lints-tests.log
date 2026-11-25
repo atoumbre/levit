@@ -1,0 +1,25 @@
+00:00 +0: loading test/async_rules_test.dart
+00:00 +0: test/async_rules_test.dart: AwaitLifecycleTest | test_discardedOrUnawaitedDelegation
+00:02 +1: test/rules_test.dart: AvoidPlainLxStatusFieldsTest | test_mutableAndSnapshot
+00:02 +2: test/async_rules_test.dart: AwaitLifecycleTest | test_awaitReturnAndSynchronousDelegation
+00:02 +3: test/rules_test.dart: AvoidPlainLxStatusFieldsTest | test_reactiveOrLiveReadIsAllowed
+00:02 +4: test/rules_test.dart: AvoidPlainLxStatusFieldsTest | test_reactiveOrLiveReadIsAllowed
+00:02 +5: test/rules_test.dart: AvoidPlainLxStatusFieldsTest | test_reactiveOrLiveReadIsAllowed
+00:02 +6: test/async_rules_test.dart: GlobalLookupTest | test_widgetAndStateWithImportAlias
+00:02 +7: test/rules_test.dart: AvoidPlainLxStatusFieldsTest | test_unrelatedClassIsIgnored
+00:02 +8: test/async_rules_test.dart: GlobalLookupTest | test_contextAndNonWidgetComposition
+00:02 +9: test/rules_test.dart: AvoidPreconstructedLevitPutTest | test_existingOwner
+00:02 +10: test/rules_test.dart: AvoidPreconstructedLevitPutTest | test_existingOwner
+00:02 +11: test/async_rules_test.dart: DiscardedFutureTest | test_discardedCleanup
+00:02 +12: test/rules_test.dart: AvoidPreconstructedLevitPutTest | test_existingOwnerReturnedFromBlock
+00:02 +13: test/async_rules_test.dart: DiscardedFutureTest | test_observedFuturesAndUnrelatedMethods
+00:02 +14: test/rules_test.dart: AvoidPreconstructedLevitPutTest | test_inlineConstructionAndFactoryCallAreAllowed
+00:02 +15: test/rules_test.dart: MustCallSuperLevitLifecycleTest | test_missingBothSuperCalls
+00:02 +16: test/rules_test.dart: MustCallSuperLevitLifecycleTest | test_missingBeforeCloseSuperCall
+00:02 +17: test/rules_test.dart: MustCallSuperLevitLifecycleTest | test_superCallsInBlockAndExpressionBodies
+00:02 +18: test/rules_test.dart: MustCallSuperLevitLifecycleTest | test_unrelatedLifecycleMethodsAreIgnored
+00:02 +19: test/rules_test.dart: UnownedLevitResourceTest | test_discardedSubscriptionAndTimer
+00:02 +20: test/rules_test.dart: UnownedLevitResourceTest | test_ownedResourcesAreAllowed
+00:02 +21: test/rules_test.dart: UnownedLevitResourceTest | test_lazyReactiveMustBeExplicitlyOwned
+00:02 +22: test/rules_test.dart: UnownedLevitResourceTest | test_nonOwnerIsIgnored
+00:02 +23: All tests passed!

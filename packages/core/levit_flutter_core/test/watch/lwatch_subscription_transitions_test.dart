@@ -53,19 +53,16 @@ void main() {
     await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
-        child: LWatch(
-          () {
-            if (mode == 0) {
-              return Text('${rx1.value} ${rx2.value}');
-            }
-            if (mode == 1) {
-              // Rx1 removed, Rx3, Rx4 added
-              return Text('${rx2.value} ${rx3.value} ${rx4.value}');
-            }
-            return const Text('Done');
-          },
-          debugLabel: 'TestWatch',
-        ),
+        child: LWatch(() {
+          if (mode == 0) {
+            return Text('${rx1.value} ${rx2.value}');
+          }
+          if (mode == 1) {
+            // Rx1 removed, Rx3, Rx4 added
+            return Text('${rx2.value} ${rx3.value} ${rx4.value}');
+          }
+          return const Text('Done');
+        }, debugLabel: 'TestWatch'),
       ),
     );
 

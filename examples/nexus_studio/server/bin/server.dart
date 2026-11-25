@@ -3,16 +3,25 @@ import 'package:levit_monitor/levit_monitor.dart';
 import 'package:nexus_studio_server/server.dart';
 import 'package:nexus_studio_shared/shared.dart';
 
-void main() async {
+Future<void> main() async {
+  Levit.enableAutoLinking();
   // Connect to LevitDevTools in debug mode
   final transport = WebSocketTransport.connect(
-    'ws://localhost:9200/ws',
+    const String.fromEnvironment(
+      'LEVIT_INSPECTOR_URL',
+      defaultValue: 'ws://127.0.0.1:9200/ws',
+    ),
     appId: 'nexus-server',
     onError: (e) =>
         print('⚠️ DevTool Server not available. Running without monitoring.'),
   );
 
-  LevitMonitor.attach(transport: transport);
+  await LevitMonitor.attach(
+    transport: transport,
+    historyCapacity: 1000,
+    includeStackTrace: true,
+    enableWorkerStatistics: true,
+  );
 
   // Register the core engine (singleton)
   Levit.put(() => NexusEngine());

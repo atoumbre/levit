@@ -92,18 +92,19 @@ void main() {
 
   group('levit.find()', () {
     test('throws if not registered', () {
-      expect(
-        () => levit.find<_TestService>(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => levit.find<_TestService>(), throwsA(isA<Exception>()));
     });
 
     test('throws with helpful message', () {
       expect(
         () => levit.find<_TestService>(),
-        throwsA(predicate((e) =>
-            e.toString().contains('_TestService') &&
-            e.toString().contains('not registered'))),
+        throwsA(
+          predicate(
+            (e) =>
+                e.toString().contains('_TestService') &&
+                e.toString().contains('not registered'),
+          ),
+        ),
       );
     });
 
@@ -263,7 +264,7 @@ void main() {
   group('Extensions', () {
     test('ToBuilder creates a builder function', () {
       final service = _TestService('extension');
-      final builder = service.toBuilder;
+      final builder = () => service;
       expect(builder(), service);
     });
   });

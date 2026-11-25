@@ -5,6 +5,61 @@ part of '../levit_reactive.dart';
 /// [Lx] provides static access to core functionality, including configuration,
 /// dependency tracking, and batching.
 class Lx {
+  /// Reads implementation state without subscribing an enclosing consumer.
+  static R untracked<R>(R Function() read) {
+    final previous = proxy;
+    if (previous == null && _LevitReactiveCore._asyncZoneDepth == 0) {
+      return read();
+    }
+    proxy = null;
+    try {
+      if (_LevitReactiveCore._asyncZoneDepth != 0) {
+        return runZoned(
+          read,
+          zoneValues: {_LevitReactiveCore.asyncComputedTrackerZoneKey: null},
+        );
+      }
+      return read();
+    } finally {
+      proxy = previous;
+    }
+  }
+
+  static List<(LxReactive, void Function())>? _construction;
+
+  /// Runs a synchronous factory whose returned object has an explicit owner.
+  /// Dependency capture still receives independent reactive allocations.
+  static R createOwned<R>(R Function() create) {
+    final parent = _construction;
+    final captured = <(LxReactive, void Function())>[];
+    _construction = captured;
+    Object? result;
+    try {
+      final created = create();
+      result = created;
+      return created;
+    } finally {
+      _construction = parent;
+      for (final item in captured) {
+        if (!identical(item.$1, result)) {
+          if (parent == null) {
+            item.$2();
+          } else {
+            parent.add(item);
+          }
+        }
+      }
+    }
+  }
+
+  /// Framework hook for automatic ownership capture during [createOwned].
+  static bool deferAutoLink(LxReactive reactive, void Function() capture) {
+    final frame = _construction;
+    if (frame == null) return false;
+    frame.add((reactive, capture));
+    return true;
+  }
+
   /// The active observer capturing dependencies.
   static LevitReactiveObserver? get proxy => _LevitReactiveCore.proxy;
 
@@ -20,7 +75,7 @@ class Lx {
     _LevitReactiveCore.captureStackTrace = value;
   }
 
-  static bool _enableWatchMonitoring = true;
+  static bool _enableWatchMonitoring = false;
 
   /// Global flag to enable or disable performance monitoring for all [LxWorker] instances.
   ///
@@ -81,12 +136,17 @@ class Lx {
 
   /// Executes asynchronous [callback] in a batch.
   ///
-  /// Like [batch], but maintains the batching context across asynchronous gaps.
+  /// Notifications are collected in the current execution context across awaits.
+  /// Concurrent outer batches flush independently; nested batches merge into an
+  /// enclosing open batch. Errors flush changes and close the context.
+  /// Values remain shared: outside writes notify immediately, even to a source
+  /// touched by a pending batch. This provides no isolation or rollback.
+  /// Work escaping the callback uses an enclosing open batch or normal delivery.
   static Future<R> batchAsync<R>(Future<R> Function() callback) {
     return _LevitReactiveCore.batchAsync(callback);
   }
 
-  /// Returns `true` if a batching operation is currently in progress.
+  /// Returns `true` if the current execution context has an open batch.
   static bool get isBatching => _LevitReactiveCore.isBatching;
 
   /// The context is passed to [LevitReactiveMiddleware.startedListening]
@@ -101,9 +161,18 @@ class Lx {
 
   /// Executes [fn] while associating any created reactive variables with [ownerId].
   static T runWithOwner<T>(String ownerId, T Function() fn) {
-    return _LevitReactiveCore.runWithContext(
+    // A producer factory can resolve another owner. Let the nested owner
+    // capture its own allocations before its construction completes.
+    final outerConstruction = _construction;
+    _construction = null;
+    try {
+      return _LevitReactiveCore.runWithContext(
         LxListenerContext(type: 'Owner', id: 0, data: {'ownerId': ownerId}),
-        fn);
+        fn,
+      );
+    } finally {
+      _construction = outerConstruction;
+    }
   }
 
   /// Internal: Enters an asynchronous tracking scope.

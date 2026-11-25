@@ -6,10 +6,15 @@ void main() {
   testWidgets('LWatch cleans up subscriptions', (tester) async {
     final notifier = 0.lx;
     final toggle = true.lx;
-    await tester.pumpWidget(MaterialApp(
-        home: LWatch(() => toggle.value
-            ? Text('V: ${notifier.value}')
-            : const Text('V: Clean'))));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LWatch(
+          () => toggle.value
+              ? Text('V: ${notifier.value}')
+              : const Text('V: Clean'),
+        ),
+      ),
+    );
     expect(find.text('V: 0'), findsOneWidget);
     toggle.value = false;
     await tester.pump();

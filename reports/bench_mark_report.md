@@ -1,5 +1,5 @@
 # Benchmark Results
-Date: 2026-06-26 13:55:02.361182
+Date: 2026-09-06 08:27:26.505643
 
 ## Environment
 | Key | Value |
@@ -13,8 +13,8 @@ Date: 2026-06-26 13:55:02.361182
 | Frameworks | Vanilla, Levit, GetX, BLoC, Riverpod |
 | Benchmarks | Rapid State Mutation, Complex Graph (Diamond), Fan Out Update, Fan In Update, Async Computed, Batch vs Un-batched, Scoped DI Lookup, Computed Chain (Deep Propagation), Large List Update (UI), Deep Tree Propagation (UI), Dynamic Grid Churn (UI), Animated State - 60fps (UI) |
 | Operating System | macos |
-| OS Version | Version 26.5.1 (Build 25F80) |
-| Dart Version | 3.11.1 |
+| OS Version | Version 26.6.2 (Build 25G83) |
+| Dart Version | 3.12.2 |
 | CPU Threads | 8 |
 | Locale | en_US |
 
@@ -22,124 +22,124 @@ Date: 2026-06-26 13:55:02.361182
 Classification: Comparative
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| Levit | 436 | 458.9 | 410-794 | 60.2 | 100 | OK |
-| BLoC | 511 | 586.7 | 438-2656 | 283.5 | 100 | OK |
-| Vanilla | 520 | 558.5 | 443-1114 | 111.9 | 100 | OK |
-| GetX | 637 | 649.7 | 606-1027 | 53.7 | 100 | OK |
-| Riverpod | 3836 | 4004.8 | 3473-5883 | 472.8 | 100 | OK |
+| Levit | 402 | 413.6 | 385-543 | 32.6 | 100 | OK |
+| Vanilla | 441 | 463.0 | 405-788 | 60.2 | 100 | OK |
+| BLoC | 455 | 464.8 | 413-696 | 42.7 | 100 | OK |
+| GetX | 619 | 626.0 | 599-726 | 27.4 | 100 | OK |
+| Riverpod | 3592 | 3710.1 | 3342-11976 | 876.8 | 100 | OK |
 
 ## Complex Graph (Diamond)
 Classification: Approximate  
 Note: Uses each framework's closest graph/computed primitive.
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| Levit | 23 | 29.7 | 19-114 | 17.1 | 100 | OK |
-| Vanilla | 62 | 82.5 | 53-503 | 56.4 | 100 | OK |
-| GetX | 122 | 130.4 | 106-267 | 26.2 | 100 | OK |
-| Riverpod | 141 | 166.9 | 106-631 | 72.8 | 100 | OK |
-| BLoC | 403 | 429.3 | 364-800 | 78.4 | 100 | OK |
+| Levit | 21 | 26.3 | 19-112 | 12.9 | 100 | OK |
+| Vanilla | 52 | 59.7 | 50-239 | 25.8 | 100 | OK |
+| Riverpod | 121 | 134.8 | 104-318 | 38.0 | 100 | OK |
+| GetX | 122 | 126.5 | 90-289 | 29.9 | 100 | OK |
+| BLoC | 351 | 367.9 | 341-574 | 44.3 | 100 | OK |
 
 ## Fan Out Update
 Classification: Comparative
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| Vanilla | 9 | 14.8 | 6-78 | 12.7 | 100 | OK |
-| Levit | 17 | 26.4 | 13-172 | 20.8 | 100 | OK |
-| GetX | 22 | 31.0 | 17-211 | 25.7 | 100 | OK |
-| Riverpod | 26 | 38.5 | 7-274 | 32.1 | 100 | OK |
-| BLoC | 547 | 573.8 | 485-1122 | 100.2 | 100 | OK |
+| Vanilla | 13 | 13.4 | 7-55 | 6.9 | 100 | OK |
+| GetX | 17 | 19.9 | 14-59 | 7.6 | 100 | OK |
+| Levit | 19 | 24.1 | 14-73 | 11.3 | 100 | OK |
+| Riverpod | 26 | 39.6 | 5-281 | 38.6 | 100 | OK |
+| BLoC | 500 | 520.2 | 465-852 | 61.3 | 100 | OK |
 
 ## Fan In Update
 Classification: Comparative
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| Vanilla | 8 | 10.7 | 6-43 | 6.9 | 100 | OK |
-| Levit | 9 | 16.8 | 4-387 | 38.7 | 100 | OK |
-| Riverpod | 20 | 30.6 | 6-208 | 31.9 | 100 | OK |
-| GetX | 20 | 29.1 | 14-149 | 25.2 | 100 | OK |
-| BLoC | 29 | 38.6 | 21-221 | 26.6 | 100 | OK |
+| Vanilla | 7 | 7.9 | 5-20 | 2.4 | 100 | OK |
+| Levit | 8 | 12.2 | 3-111 | 15.4 | 100 | OK |
+| Riverpod | 15 | 17.4 | 5-55 | 5.9 | 100 | OK |
+| GetX | 16 | 17.6 | 13-73 | 6.9 | 100 | OK |
+| BLoC | 26 | 29.4 | 20-144 | 15.4 | 100 | OK |
 
 ## Async Computed
 Classification: Approximate  
 Note: Measures sequential async recomputation using each framework's closest async primitive.
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| Vanilla | 907 | 1061.9 | 654-2835 | 402.7 | 100 | OK |
-| GetX | 1166 | 1283.1 | 803-2564 | 407.6 | 100 | OK |
-| Levit | 1524 | 1688.8 | 1116-3236 | 455.1 | 100 | OK |
-| Riverpod | 1936 | 2052.1 | 1192-4277 | 576.7 | 100 | OK |
-| BLoC | 2104 | 2244.2 | 1242-4122 | 666.8 | 100 | OK |
+| Vanilla | 691 | 714.7 | 609-1019 | 84.6 | 100 | OK |
+| GetX | 877 | 900.8 | 766-1276 | 103.6 | 100 | OK |
+| Levit | 1342 | 1432.3 | 1108-3811 | 400.7 | 100 | OK |
+| BLoC | 1361 | 1441.4 | 1092-4458 | 411.9 | 100 | OK |
+| Riverpod | 1426 | 1458.7 | 1129-2288 | 226.2 | 100 | OK |
 
 ## Batch vs Un-batched
 Classification: Feature Demo  
 Note: Levit uses a native batching primitive; others measure un-batched closest equivalents.
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| BLoC | 19 | 31.9 | 15-306 | 45.4 | 100 | OK |
-| GetX | 23 | 34.8 | 19-177 | 30.0 | 100 | OK |
-| Levit | 37 | 70.7 | 26-583 | 97.7 | 100 | OK |
-| Riverpod | 73 | 111.1 | 68-634 | 88.2 | 100 | OK |
-| Vanilla | 168 | 209.5 | 141-727 | 103.1 | 100 | OK |
+| BLoC | 17 | 18.9 | 15-56 | 5.5 | 100 | OK |
+| GetX | 21 | 25.6 | 19-107 | 12.8 | 100 | OK |
+| Levit | 30 | 37.8 | 24-162 | 20.9 | 100 | OK |
+| Riverpod | 72 | 81.7 | 63-287 | 29.4 | 100 | OK |
+| Vanilla | 146 | 150.4 | 131-243 | 18.9 | 100 | OK |
 
 ## Scoped DI Lookup
 Classification: Feature Demo  
 Note: DI containers are not first-class primitives in every framework.
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| BLoC | 6 | 8.0 | 6-38 | 5.3 | 100 | OK |
-| Vanilla | 9 | 22.8 | 6-172 | 28.9 | 100 | OK |
-| Riverpod | 25 | 37.2 | 22-263 | 32.3 | 100 | OK |
-| Levit | 49 | 52.0 | 47-89 | 9.1 | 100 | OK |
-| GetX | 133 | 155.1 | 121-514 | 56.6 | 100 | OK |
+| BLoC | 6 | 7.7 | 6-63 | 6.1 | 100 | OK |
+| Vanilla | 6 | 8.6 | 6-133 | 13.6 | 100 | OK |
+| Riverpod | 22 | 26.3 | 21-139 | 15.0 | 100 | OK |
+| Levit | 52 | 142.3 | 45-7584 | 753.4 | 100 | OK |
+| GetX | 128 | 139.4 | 114-314 | 33.7 | 100 | OK |
 
 ## Computed Chain (Deep Propagation)
 Classification: Approximate  
 Note: Approximates deep computed propagation with each framework's closest primitive.
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| Levit | 135 | 137.7 | 119-202 | 16.8 | 100 | OK |
-| Vanilla | 229 | 246.5 | 209-689 | 61.6 | 100 | OK |
-| GetX | 463 | 648.2 | 364-4059 | 459.3 | 100 | OK |
-| BLoC | 33586 | 34220.9 | 31689-56305 | 3413.8 | 100 | OK |
-| Riverpod | 115781 | 128349.5 | 104721-404769 | 43848.2 | 100 | OK |
+| Levit | 119 | 124.8 | 118-231 | 14.0 | 100 | OK |
+| Vanilla | 196 | 209.5 | 190-384 | 35.9 | 100 | OK |
+| GetX | 377 | 386.1 | 350-493 | 30.9 | 100 | OK |
+| BLoC | 36443 | 40045.8 | 31706-131666 | 12356.8 | 100 | OK |
+| Riverpod | 95152 | 97565.7 | 90615-225653 | 14741.8 | 100 | OK |
 
 ## Large List Update (UI)
 Classification: Comparative
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| Levit | 904 | 1028.1 | 652-2163 | 367.4 | 100 | OK |
-| Vanilla | 1023 | 1224.2 | 676-6937 | 803.4 | 100 | OK |
-| GetX | 1067 | 1287.8 | 664-3804 | 636.7 | 100 | OK |
-| Riverpod | 1753 | 2073.7 | 964-6314 | 985.5 | 100 | OK |
-| BLoC | 5116 | 9397.9 | 1277-156272 | 17281.0 | 100 | OK |
+| Vanilla | 795 | 896.9 | 660-2312 | 288.6 | 100 | OK |
+| GetX | 852 | 923.5 | 656-2203 | 291.6 | 100 | OK |
+| Levit | 887 | 966.7 | 642-2098 | 310.3 | 100 | OK |
+| Riverpod | 1069 | 1214.3 | 739-3080 | 414.2 | 100 | OK |
+| BLoC | 1644 | 1705.6 | 982-3623 | 499.3 | 100 | OK |
 
 ## Deep Tree Propagation (UI)
 Classification: Comparative
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| Levit | 475 | 570.4 | 370-1408 | 209.6 | 100 | OK |
-| GetX | 489 | 567.4 | 345-1552 | 222.6 | 100 | OK |
-| BLoC | 504 | 594.9 | 388-1312 | 209.3 | 100 | OK |
-| Vanilla | 638 | 694.5 | 382-1405 | 238.6 | 100 | OK |
-| Riverpod | 1150 | 1590.2 | 594-6274 | 1109.8 | 100 | OK |
+| GetX | 650 | 688.5 | 526-1130 | 129.5 | 100 | OK |
+| BLoC | 654 | 719.7 | 569-1228 | 152.2 | 100 | OK |
+| Levit | 734 | 760.9 | 549-1308 | 163.4 | 100 | OK |
+| Vanilla | 764 | 804.4 | 550-1384 | 175.2 | 100 | OK |
+| Riverpod | 982 | 1154.6 | 665-10997 | 1038.9 | 100 | OK |
 
 ## Dynamic Grid Churn (UI)
 Classification: Comparative
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| GetX | 7249 | 7410.1 | 6257-10157 | 699.8 | 100 | OK |
-| Levit | 7601 | 8768.1 | 6139-41904 | 4267.8 | 100 | OK |
-| Riverpod | 7701 | 7795.8 | 6597-10627 | 779.9 | 100 | OK |
-| BLoC | 7906 | 8408.2 | 6696-18411 | 1712.7 | 100 | OK |
-| Vanilla | 10461 | 10910.7 | 6921-25557 | 2800.5 | 100 | OK |
+| GetX | 7244 | 7309.5 | 5960-9415 | 760.1 | 100 | OK |
+| BLoC | 7521 | 7573.4 | 6092-9727 | 745.9 | 100 | OK |
+| Riverpod | 7540 | 7647.9 | 6471-9996 | 654.7 | 100 | OK |
+| Levit | 7906 | 9100.5 | 6461-38386 | 5118.8 | 100 | OK |
+| Vanilla | 8234 | 8261.1 | 6604-10483 | 873.1 | 100 | OK |
 
 ## Animated State - 60fps (UI)
 Classification: Comparative
 | Framework | Median (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|
-| Vanilla | 166 | 193.0 | 143-616 | 66.2 | 100 | OK |
-| Riverpod | 192 | 253.5 | 150-1301 | 166.7 | 100 | OK |
-| GetX | 206 | 249.8 | 160-816 | 121.9 | 100 | OK |
-| BLoC | 239 | 281.3 | 189-811 | 116.1 | 100 | OK |
-| Levit | 260 | 332.8 | 199-1967 | 224.4 | 100 | OK |
+| Vanilla | 167 | 193.6 | 143-727 | 76.9 | 100 | OK |
+| Riverpod | 195 | 231.0 | 154-1067 | 111.5 | 100 | OK |
+| GetX | 243 | 286.4 | 179-1595 | 168.2 | 100 | OK |
+| Levit | 291 | 350.0 | 222-1579 | 202.8 | 100 | OK |
+| BLoC | 297 | 381.3 | 192-1796 | 280.6 | 100 | OK |
 

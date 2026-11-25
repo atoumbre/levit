@@ -25,31 +25,37 @@ void main() {
 
   test('LxFuture does not emit after close', () async {
     final errors = <Object>[];
-    await runZonedGuarded(() async {
-      final completer = Completer<int>();
-      final lx = LxFuture<int>(completer.future);
-      lx.close();
-      completer.complete(1);
-      await Future<void>.delayed(Duration.zero);
-    }, (e, st) {
-      errors.add(e);
-    });
+    await runZonedGuarded(
+      () async {
+        final completer = Completer<int>();
+        final lx = LxFuture<int>(completer.future);
+        lx.close();
+        completer.complete(1);
+        await Future<void>.delayed(Duration.zero);
+      },
+      (e, st) {
+        errors.add(e);
+      },
+    );
 
     expect(errors, isEmpty);
   });
 
   test('LxAsyncComputed does not emit after close', () async {
     final errors = <Object>[];
-    await runZonedGuarded(() async {
-      final completer = Completer<int>();
-      final computed = LxComputed.async<int>(() => completer.future);
-      computed.addListener(() {});
-      computed.close();
-      completer.complete(1);
-      await Future<void>.delayed(Duration.zero);
-    }, (e, st) {
-      errors.add(e);
-    });
+    await runZonedGuarded(
+      () async {
+        final completer = Completer<int>();
+        final computed = LxComputed.async<int>(() => completer.future);
+        computed.addListener(() {});
+        computed.close();
+        completer.complete(1);
+        await Future<void>.delayed(Duration.zero);
+      },
+      (e, st) {
+        errors.add(e);
+      },
+    );
 
     expect(errors, isEmpty);
   });
@@ -104,9 +110,9 @@ class _SetCountMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
-        return (value) {
-          setCount++;
-          next(value);
-        };
-      };
+    return (value) {
+      setCount++;
+      next(value);
+    };
+  };
 }

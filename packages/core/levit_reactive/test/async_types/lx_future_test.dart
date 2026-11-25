@@ -4,12 +4,13 @@ import 'package:test/test.dart';
 
 void main() {
   group('LxFuture Refined Tests', () {
-    test('LxFuture.transform coverage', () async {
+    test('future transformations emit the resolved value', () async {
       final future = Future.value(42).lx;
       future.addListener(() {}); // Activate immediately
 
-      final transformed =
-          future.transform((s) => s.map((status) => status.valueOrNull));
+      final transformed = future.transform(
+        (s) => s.map((status) => status.valueOrNull),
+      );
       transformed.addListener(() {}); // Keep alive
 
       await Future.delayed(const Duration(milliseconds: 30));

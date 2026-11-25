@@ -3,8 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
-  testWidgets('LScopedView renders orElse when controller is null',
-      (tester) async {
+  testWidgets('LScopedView renders orElse when controller is null', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: LScopedView<String>(

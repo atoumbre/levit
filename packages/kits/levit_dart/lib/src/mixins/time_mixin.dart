@@ -50,7 +50,10 @@ mixin LevitTimeMixin on LevitController {
   ///
   /// Replaces `Timer.periodic`. Automatically cancelled on controller close.
   void startInterval(
-      String id, Duration duration, void Function(Timer timer) callback) {
+    String id,
+    Duration duration,
+    void Function(Timer timer) callback,
+  ) {
     _timers[id]?.cancel();
     _timers[id] = Timer.periodic(duration, callback);
   }
@@ -60,9 +63,9 @@ mixin LevitTimeMixin on LevitController {
   /// Returns an [LxCountdown] object that exposes the [LxCountdown.remaining]
   /// duration and control methods (pause, resume, stop).
   ///
-  /// *   [duration]: The total duration to count down/up.
-  /// *   [interval]: The tick interval (default: 1 second).
-  /// *   [onTick]: Called on every interval.
+  /// *   [duration]: The non-negative total duration to count down.
+  /// *   [interval]: The positive maximum interval between updates (default: 1 second).
+  /// *   [onTick]: Called on each delivered update, including the final zero.
   /// *   [onFinish]: Called when the countdown reaches zero.
   LxCountdown startCountdown({
     required Duration duration,
@@ -70,6 +73,9 @@ mixin LevitTimeMixin on LevitController {
     void Function(Duration remaining)? onTick,
     void Function()? onFinish,
   }) {
+    if (isClosing || isDisposed) {
+      throw StateError('Cannot start a countdown on a closing controller.');
+    }
     final countdown = LxCountdown(
       totalDuration: duration,
       interval: interval,
@@ -97,70 +103,232 @@ mixin LevitTimeMixin on LevitController {
   }
 
   @override
-  FutureOr<void> onClose() {
-    cancelAllTimers();
-    for (final c in _countdowns) {
-      c.dispose();
+  FutureOr<void> onBeforeClose() async {
+    final failures = <LevitDisposalFailure>[];
+    try {
+      await super.onBeforeClose();
+    } catch (error, stack) {
+      failures.add(
+        LevitDisposalFailure(resource: this, error: error, stackTrace: stack),
+      );
     }
+    try {
+      await _closeTimeResources();
+    } catch (error, stack) {
+      failures.add(
+        LevitDisposalFailure(resource: this, error: error, stackTrace: stack),
+      );
+    }
+    if (failures.isNotEmpty) throw LevitDisposalException.aggregate(failures);
+  }
+
+  Future<void> _closeTimeResources() async {
+    cancelAllTimers();
+    final failures = <LevitDisposalFailure>[];
+    // Request cancellation for every countdown before awaiting any IO cleanup.
+    final cleanup = _countdowns.map((countdown) {
+      return Future<void>.sync(countdown.dispose).catchError((
+        Object error,
+        StackTrace stack,
+      ) {
+        failures.add(
+          LevitDisposalFailure(
+            resource: countdown,
+            error: error,
+            stackTrace: stack,
+          ),
+        );
+      });
+    }).toList();
+    await Future.wait(cleanup);
     _countdowns.clear();
-    return super.onClose();
+    if (failures.isNotEmpty) throw LevitDisposalException(failures);
   }
 }
 
-/// A reactive countdown timer.
-class LxCountdown {
+/// A countdown measured from elapsed time, independent of callback frequency.
+///
+/// The default clock is a monotonic [Stopwatch]. Delayed timer delivery catches
+/// up on the next update; missed ticks are not replayed. [pause] freezes elapsed
+/// time, including the fraction since the last tick, until [resume]. App lifecycle
+/// changes do not pause it automatically: call these controls explicitly if wanted.
+///
+/// [start] begins a new run at [totalDuration]; [stop] resets without finishing.
+/// Callbacks are synchronous. [dispose] cancels timing immediately and awaits
+/// closure of [remaining]. A controller can own a standalone countdown with `own`.
+class LxCountdown implements LevitDisposable {
+  /// The non-negative duration of each run.
   final Duration totalDuration;
+
+  /// The positive maximum delay between published updates. The final update is
+  /// scheduled at the remaining deadline when it is shorter than this interval.
   final Duration interval;
+
+  /// Receives actual remaining time, once per delivered tick (including zero).
   final void Function(Duration remaining)? onTick;
+
+  /// Called once when a run reaches zero. Stopping, restarting or disposing from
+  /// the zero notification or [onTick] suppresses that run's remaining callbacks.
   final void Function()? onFinish;
 
+  final Stopwatch _stopwatch;
   Timer? _timer;
-  late final remaining = LxVar<Duration>(totalDuration);
+  Future<void>? _closing;
+  int _generation = 0;
+  bool _isRunning = false;
   bool _isPaused = false;
 
+  /// The last published duration. Use control methods to alter the countdown;
+  /// assigning this reactive value does not change its elapsed-time clock.
+  late final LxVar<Duration> remaining;
+
+  /// Creates an idle countdown. [stopwatch] optionally supplies a deterministic
+  /// clock for testing; this countdown exclusively starts, stops and resets it.
+  /// A negative duration or a non-positive interval throws [ArgumentError].
   LxCountdown({
     required this.totalDuration,
     required this.interval,
     this.onTick,
     this.onFinish,
-  });
+    Stopwatch? stopwatch,
+  }) : _stopwatch = stopwatch ?? Stopwatch() {
+    if (totalDuration < Duration.zero) {
+      throw ArgumentError.value(
+        totalDuration,
+        'totalDuration',
+        'Must not be negative.',
+      );
+    }
+    if (interval <= Duration.zero) {
+      throw ArgumentError.value(interval, 'interval', 'Must be positive.');
+    }
+    remaining = LxVar<Duration>(totalDuration);
+  }
 
+  /// Whether elapsed time currently counts toward completion.
+  bool get isRunning => _isRunning;
+
+  /// Whether an unfinished run is explicitly paused.
+  bool get isPaused => _isPaused;
+
+  /// Whether disposal has started; new control operations then throw.
+  bool get isDisposed => _closing != null;
+
+  void _ensureActive() {
+    if (isDisposed) throw StateError('Countdown is disposed.');
+  }
+
+  Duration get _currentRemaining {
+    final value = totalDuration - _stopwatch.elapsed;
+    return value > Duration.zero ? value : Duration.zero;
+  }
+
+  bool _isCurrent(int generation) => !isDisposed && generation == _generation;
+
+  /// Starts a fresh run, replacing any previous run or paused state.
+  /// Zero-duration runs complete asynchronously on the next timer turn.
   void start() {
+    _ensureActive();
+    final generation = ++_generation;
     _timer?.cancel();
-    _timer = Timer.periodic(interval, (timer) {
-      if (_isPaused) return;
+    _stopwatch
+      ..stop()
+      ..reset()
+      ..start();
+    _isRunning = true;
+    _isPaused = false;
+    remaining.value = totalDuration;
+    if (_isCurrent(generation) && _isRunning) _schedule(generation);
+  }
 
-      final newRemaining = remaining.value - interval;
-      if (newRemaining <= Duration.zero) {
-        remaining.value = Duration.zero;
-        timer.cancel();
-        onTick?.call(Duration.zero);
-        onFinish?.call();
-      } else {
-        remaining.value = newRemaining;
-        onTick?.call(newRemaining);
+  void _schedule(int generation) {
+    final left = _currentRemaining;
+    _timer = Timer(left < interval ? left : interval, () {
+      if (!_isCurrent(generation) || !_isRunning) return;
+      _timer = null;
+      try {
+        _publish(generation, tick: true);
+      } finally {
+        if (_isCurrent(generation) && _isRunning) _schedule(generation);
       }
     });
   }
 
+  void _publish(int generation, {required bool tick}) {
+    final left = _currentRemaining;
+    final finished = left == Duration.zero;
+    if (finished) {
+      _timer?.cancel();
+      _timer = null;
+      _stopwatch.stop();
+      _isRunning = false;
+      _isPaused = false;
+    }
+    remaining.value = left;
+    if (!_isCurrent(generation)) return;
+    try {
+      if (tick || finished) onTick?.call(left);
+    } finally {
+      if (finished && _isCurrent(generation)) onFinish?.call();
+    }
+  }
+
+  /// Freezes elapsed time and publishes the exact remaining duration without an
+  /// extra tick callback. If the deadline already passed, completes the run.
+  /// Has no effect when idle, completed or already paused.
   void pause() {
-    _isPaused = true;
-  }
-
-  void resume() {
-    _isPaused = false;
-  }
-
-  void stop() {
+    _ensureActive();
+    if (!_isRunning) return;
+    final generation = ++_generation;
     _timer?.cancel();
     _timer = null;
-    remaining.value =
-        totalDuration; // `stop` resets countdown to the initial duration.
-    _isPaused = false;
+    _stopwatch.stop();
+    _isRunning = false;
+    _isPaused = true;
+    _publish(generation, tick: false);
   }
 
-  void dispose() {
+  /// Continues a paused run, excluding all time spent paused. Has no effect when
+  /// idle, completed or already running; use [start] to begin a new run.
+  void resume() {
+    _ensureActive();
+    if (!_isPaused) return;
+    _isPaused = false;
+    _isRunning = true;
+    final generation = ++_generation;
+    _stopwatch.start();
+    _schedule(generation);
+  }
+
+  /// Cancels the current run and resets the published duration without calling
+  /// [onTick] or [onFinish]. Call [start] to run again.
+  void stop() {
+    _ensureActive();
+    _generation++;
     _timer?.cancel();
-    remaining.close();
+    _timer = null;
+    _stopwatch
+      ..stop()
+      ..reset();
+    _isRunning = false;
+    _isPaused = false;
+    remaining.value = totalDuration;
+  }
+
+  /// Cancels timing immediately and awaits reactive cleanup. Repeated calls
+  /// return the same completion; the source is closed even when never started.
+  @override
+  Future<void> dispose() {
+    if (_closing != null) return _closing!;
+    final completion = Completer<void>();
+    _closing = completion.future;
+    _generation++;
+    _timer?.cancel();
+    _timer = null;
+    _stopwatch.stop();
+    _isRunning = false;
+    _isPaused = false;
+    completion.complete(Future<void>.sync(remaining.close));
+    return _closing!;
   }
 }

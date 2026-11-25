@@ -1,16 +1,16 @@
+import '../../example/lib/mount_observer.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:levit_flutter/levit_flutter.dart';
 
 void main() {
-  group('LListItemMonitor', () {
+  group('MountObserver', () {
     testWidgets('triggers onInit when added to tree', (tester) async {
       var initCalled = false;
 
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LWidgetMonitor(
+          child: MountObserver(
             onInit: () => initCalled = true,
             child: const Text('Test'),
           ),
@@ -27,7 +27,7 @@ void main() {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: LWidgetMonitor(
+          child: MountObserver(
             onDispose: () => disposeCalled = true,
             child: const Text('Test'),
           ),
@@ -47,9 +47,7 @@ void main() {
       await tester.pumpWidget(
         const Directionality(
           textDirection: TextDirection.ltr,
-          child: LWidgetMonitor(
-            child: Text('Content'),
-          ),
+          child: MountObserver(child: Text('Content')),
         ),
       );
 

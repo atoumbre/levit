@@ -1,5 +1,4 @@
 @Timeout(Duration(minutes: 5))
-
 library;
 
 import 'package:benchmarks/benchmark_discovery.dart';
@@ -13,10 +12,7 @@ import 'headless_benchmark_runner.dart';
 
 void main() {
   BenchmarkConfig.useTestProfile();
-  final runner = HeadlessBenchmarkRunner(
-    iterations: 100,
-    warmupIterations: 50,
-  );
+  final runner = HeadlessBenchmarkRunner(iterations: 100, warmupIterations: 50);
   final environment = BenchmarkEnvironment.capture(
     executionContext: 'flutter_test',
     benchmarkProfile: BenchmarkConfig.profileName,
@@ -44,16 +40,21 @@ void main() {
         for (final framework in rotatedFrameworks) {
           if (benchmark.isUI) {
             testWidgets(framework.label, (tester) async {
-              final result =
-                  await runner.runUIBenchmark(tester, benchmark, framework);
+              final result = await runner.runUIBenchmark(
+                tester,
+                benchmark,
+                framework,
+              );
               _printResult(result);
               _addResult(results, result);
               expect(result.success, true, reason: result.error);
             });
           } else {
             test(framework.label, () async {
-              final result =
-                  await runner.runLogicBenchmark(benchmark, framework);
+              final result = await runner.runLogicBenchmark(
+                benchmark,
+                framework,
+              );
               _printResult(result);
               _addResult(results, result);
               expect(result.success, true, reason: result.error);
@@ -65,17 +66,21 @@ void main() {
 
     tearDownAll(() {
       BenchmarkConfig.useProductionProfile();
-      print(BenchmarkReporter.generateConsoleReport(
-        results: results,
-        title: 'Benchmark Consolidated Report',
-        environment: environment,
-      ));
+      print(
+        BenchmarkReporter.generateConsoleReport(
+          results: results,
+          title: 'Benchmark Consolidated Report',
+          environment: environment,
+        ),
+      );
     });
   });
 }
 
 void _addResult(
-    Map<String, List<BenchmarkResult>> results, BenchmarkResult result) {
+  Map<String, List<BenchmarkResult>> results,
+  BenchmarkResult result,
+) {
   if (!results.containsKey(result.benchmarkName)) {
     results[result.benchmarkName] = [];
   }
@@ -85,9 +90,11 @@ void _addResult(
 void _printResult(BenchmarkResult result) {
   if (result.success) {
     print(
-        'RESULT: ${result.benchmarkName} [${result.framework.label}]: ${result.durationMicros}µs (${result.durationMs.toStringAsFixed(3)}ms)');
+      'RESULT: ${result.benchmarkName} [${result.framework.label}]: ${result.durationMicros}µs (${result.durationMs.toStringAsFixed(3)}ms)',
+    );
   } else {
     print(
-        'ERROR: ${result.benchmarkName} [${result.framework.label}]: ${result.error}');
+      'ERROR: ${result.benchmarkName} [${result.framework.label}]: ${result.error}',
+    );
   }
 }

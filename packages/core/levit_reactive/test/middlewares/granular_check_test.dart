@@ -6,11 +6,11 @@ class SetOnlyMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
-        return (value) {
-          setCallCount++;
-          next(value);
-        };
-      };
+    return (value) {
+      setCallCount++;
+      next(value);
+    };
+  };
 }
 
 class InitOnlyMiddleware extends LevitReactiveMiddleware {
@@ -18,8 +18,8 @@ class InitOnlyMiddleware extends LevitReactiveMiddleware {
 
   @override
   void Function(LxReactive reactive)? get onInit => (reactive) {
-        initCallCount++;
-      };
+    initCallCount++;
+  };
 }
 
 void main() {
@@ -43,17 +43,19 @@ void main() {
       expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
     });
 
-    test('hasInitMiddlewares is true only when InitOnlyMiddleware is added',
-        () {
-      expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
-      expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
+    test(
+      'hasInitMiddlewares is true only when InitOnlyMiddleware is added',
+      () {
+        expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
+        expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
 
-      final mw = InitOnlyMiddleware();
-      Lx.addMiddleware(mw);
+        final mw = InitOnlyMiddleware();
+        Lx.addMiddleware(mw);
 
-      expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
-      expect(LevitReactiveMiddleware.hasInitMiddlewares, isTrue);
-    });
+        expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
+        expect(LevitReactiveMiddleware.hasInitMiddlewares, isTrue);
+      },
+    );
 
     test('events are skipped if flag is false', () {
       // 1. Add only Set listener
@@ -71,18 +73,6 @@ void main() {
       // 3. Trigger Set
       val.value = 1;
       expect(setMw.setCallCount, equals(1));
-    });
-
-    test('LevitReactiveHistoryMiddleware opts out of Init', () {
-      final history = LevitReactiveHistoryMiddleware();
-      Lx.addMiddleware(history);
-
-      expect(LevitReactiveMiddleware.hasSetMiddlewares, isTrue);
-      expect(LevitReactiveMiddleware.hasBatchMiddlewares, isTrue);
-      // History does NOT observe Init/Dispose/GraphChange in optimization
-      expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
-      expect(LevitReactiveMiddleware.hasDisposeMiddlewares, isFalse);
-      expect(LevitReactiveMiddleware.hasGraphChangeMiddlewares, isFalse);
     });
   });
 }

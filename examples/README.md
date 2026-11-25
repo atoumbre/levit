@@ -14,10 +14,10 @@ Examples are not API specifications. Inline DartDoc and package READMEs remain a
 
 ## Available Examples
 
-- [`task_board`](./task_board): CRUD workflow with selectors, scoped controllers, and reactive list updates.
-- [`async_catalog`](./async_catalog): async status modeling with loading/error/success transitions.
+- [`task_board`](./task_board): CRUD plus save/upload task groups, cancellation and awaited repository cleanup.
+- [`async_catalog`](./async_catalog): searchable pagination, stable query refresh, retained data and optimistic rollback.
 - [`route_scopes`](./route_scopes): route-owned scope lifetime, covered/current visibility, and async route initialization.
-- [`scope_playground`](./scope_playground): nested scope isolation and deterministic disposal behavior.
+- [`scope_playground`](./scope_playground): session replacement during cleanup, coalescing and typed store overrides in widget tests.
 - [`nexus_studio`](./nexus_studio): advanced end-to-end client/server/shared architecture reference.
 
 ## Running an Example

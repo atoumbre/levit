@@ -60,7 +60,8 @@ class _MockChannel implements WebSocketChannel {
 
   @override
   StreamChannel<S> transform<S>(
-      StreamChannelTransformer<S, dynamic> transformer) {
+    StreamChannelTransformer<S, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
@@ -71,13 +72,15 @@ class _MockChannel implements WebSocketChannel {
 
   @override
   StreamChannel<dynamic> transformStream(
-      StreamTransformer<dynamic, dynamic> transformer) {
+    StreamTransformer<dynamic, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
   @override
   StreamChannel<dynamic> changeSink(
-      StreamSink<dynamic> Function(StreamSink<dynamic> sink) change) {
+    StreamSink<dynamic> Function(StreamSink<dynamic> sink) change,
+  ) {
     throw UnimplementedError();
   }
 
@@ -88,7 +91,8 @@ class _MockChannel implements WebSocketChannel {
 
   @override
   StreamChannel<dynamic> changeStream(
-      Stream<dynamic> Function(Stream<dynamic> stream) change) {
+    Stream<dynamic> Function(Stream<dynamic> stream) change,
+  ) {
     throw UnimplementedError();
   }
 }
@@ -100,22 +104,24 @@ class _MockChannelWithReadyError extends _MockChannel {
 
 void main() {
   group('WebSocketTransport Fault Handling', () {
-    test('Handles invalid URL connection failure by scheduling reconnect',
-        () async {
-      int channelBuilderCalls = 0;
+    test(
+      'Handles invalid URL connection failure by scheduling reconnect',
+      () async {
+        int channelBuilderCalls = 0;
 
-      final transport = WebSocketTransport.connect(
-        'ws://invalid-url',
-        channelBuilder: (uri) {
-          channelBuilderCalls++;
-          throw 'Connection failed';
-        },
-      );
+        final transport = WebSocketTransport.connect(
+          'ws://invalid-url',
+          channelBuilder: (uri) {
+            channelBuilderCalls++;
+            throw 'Connection failed';
+          },
+        );
 
-      await Future.delayed(Duration(milliseconds: 1100));
-      expect(channelBuilderCalls, greaterThanOrEqualTo(2));
-      await transport.close();
-    });
+        await Future.delayed(Duration(milliseconds: 1100));
+        expect(channelBuilderCalls, greaterThanOrEqualTo(2));
+        await transport.close();
+      },
+    );
 
     test('Triggers onReady callback when ready future completes', () async {
       int onReadyCalls = 0;
@@ -152,12 +158,14 @@ void main() {
       final mockChannel = _MockChannel();
       int connectCount = 0;
 
-      final transport =
-          WebSocketTransport.connect('ws://localhost', channelBuilder: (uri) {
-        connectCount++;
-        if (connectCount == 1) return mockChannel;
-        return _MockChannel();
-      });
+      final transport = WebSocketTransport.connect(
+        'ws://localhost',
+        channelBuilder: (uri) {
+          connectCount++;
+          if (connectCount == 1) return mockChannel;
+          return _MockChannel();
+        },
+      );
 
       await Future.delayed(Duration(milliseconds: 10));
       mockChannel._sink.closed = true;

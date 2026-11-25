@@ -1,3 +1,13 @@
+## 0.1.0-beta.1
+
+- Coordinate the breaking ownership, refresh and tooling release. Requires Dart
+  3.12+ and Flutter 3.44+ where applicable; see MIGRATION_0.1.0.md in the repository.
+
+## 0.0.12
+
+- Expose the 0.0.12 runtime contracts; add executable Dart/controller/store onboarding coverage.
+- Updated internal runtime constraints to `^0.0.12`.
+
 ## 0.0.11
 
 - Re-export the new lifecycle ownership, keyed reactive-family, stream

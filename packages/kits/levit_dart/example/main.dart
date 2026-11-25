@@ -18,6 +18,7 @@ class LoopExampleController extends LevitController
 /// A comprehensive example demonstrating the high-level utility mixins
 /// provided by the `levit_dart` package.
 void main() async {
+  Levit.enableAutoLinking();
   // Example runs in an isolated root scope and disposes it at the end.
   final scope = LevitScope.root();
 
@@ -33,18 +34,24 @@ void main() async {
       attempts++;
       if (attempts == 1) {
         print('  Attempt 1: Throwing temporary error...');
-        throw Exception('Temporary network error');
+        throw TimeoutException('Temporary network timeout');
       }
       return 'Success after $attempts attempts!';
     },
-    retries: 2,
-    retryDelay: const Duration(milliseconds: 500),
+    retryPolicy: LevitRetryPolicy(
+      shouldRetry: (error, stack) => error is TimeoutException,
+      maxRetries: 2,
+      initialDelay: const Duration(milliseconds: 500),
+      maxDelay: const Duration(seconds: 30),
+      jitter: 0,
+    ),
   );
   print('Result: $result');
 
   print('\n2. SelectionMixin Demo - Multi-selection');
-  final selectionController =
-      scope.put(() => SelectionExampleController<String>());
+  final selectionController = scope.put(
+    () => SelectionExampleController<String>(),
+  );
 
   selectionController.select('Apple');
   selectionController.select('Banana');
@@ -58,7 +65,8 @@ void main() async {
   final timeController = scope.put(() => TimeExampleController());
 
   print(
-      'Triggering multiple debounced calls (only the last one should run)...');
+    'Triggering multiple debounced calls (only the last one should run)...',
+  );
   for (int i = 1; i <= 3; i++) {
     timeController.debounce('search', const Duration(milliseconds: 300), () {
       print('  Debounced search executed (last call wins)');
@@ -72,7 +80,8 @@ void main() async {
   print('Starting a background loop (ticking every 200ms)...');
   loopController.loopEngine.startLoop('ticker', () async {
     print(
-        '  Tick! (Status: ${loopController.loopEngine.getServiceStatus('ticker')?.value})');
+      '  Tick! (Status: ${loopController.loopEngine.getServiceStatus('ticker')?.value})',
+    );
   }, delay: const Duration(milliseconds: 200));
 
   await Future.delayed(const Duration(milliseconds: 700));
@@ -80,5 +89,5 @@ void main() async {
   loopController.loopEngine.stopService('ticker');
 
   print('\n--- Example Complete ---');
-  scope.dispose();
+  await scope.dispose();
 }

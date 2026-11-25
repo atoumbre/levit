@@ -8,11 +8,11 @@ import '../../benchmark_engine.dart';
 /// Tests pure DI resolution performance without widget context overhead.
 class ScopedDIBenchmark extends Benchmark {
   @override
-  String get name => 'Scoped DI Lookup';
+  String get name => 'Warm Root DI Lookup';
 
   @override
   String get description =>
-      '${BenchmarkConfig.scopedDiIterations} DI lookups. Tests DI resolution performance.';
+      '${BenchmarkConfig.scopedDiIterations} warm root lookups plus increments; no scoped-widget lookup or cleanup is timed.';
 
   @override
   bool get isUI => false;
@@ -24,6 +24,10 @@ class ScopedDIBenchmark extends Benchmark {
   @override
   String get comparisonNote =>
       'DI containers are not first-class primitives in every framework.';
+
+  @override
+  String implementationLabel(Framework framework) =>
+      framework == Framework.bloc ? 'Custom map (substitute)' : framework.label;
 
   @override
   BenchmarkImplementation createImplementation(Framework framework) {
@@ -72,13 +76,14 @@ class LevitScopedDIBenchmark extends BenchmarkImplementation {
     final service = Levit.find<CounterService>();
     if (service.value != expectedValue) {
       throw StateError(
-          'Levit DI mismatch: expected $expectedValue, got ${service.value}');
+        'Levit DI mismatch: expected $expectedValue, got ${service.value}',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
-    Levit.delete<CounterService>();
+    await Levit.delete<CounterService>();
   }
 }
 
@@ -123,7 +128,8 @@ class VanillaScopedDIBenchmark extends BenchmarkImplementation {
     final service = _locator.find<CounterService>();
     if (service.value != expectedValue) {
       throw StateError(
-          'Vanilla DI mismatch: expected $expectedValue, got ${service.value}');
+        'Vanilla DI mismatch: expected $expectedValue, got ${service.value}',
+      );
     }
   }
 
@@ -157,7 +163,8 @@ class GetXScopedDIBenchmark extends BenchmarkImplementation {
     final service = Get.find<CounterService>();
     if (service.value != expectedValue) {
       throw StateError(
-          'GetX DI mismatch: expected $expectedValue, got ${service.value}');
+        'GetX DI mismatch: expected $expectedValue, got ${service.value}',
+      );
     }
   }
 
@@ -194,7 +201,8 @@ class RiverpodScopedDIBenchmark extends BenchmarkImplementation {
     final service = container.read(_counterProvider);
     if (service.value != expectedValue) {
       throw StateError(
-          'Riverpod DI mismatch: expected $expectedValue, got ${service.value}');
+        'Riverpod DI mismatch: expected $expectedValue, got ${service.value}',
+      );
     }
   }
 
@@ -245,7 +253,8 @@ class BlocScopedDIBenchmark extends BenchmarkImplementation {
     final service = _locator.get<CounterService>();
     if (service.value != expectedValue) {
       throw StateError(
-          'BLoC DI mismatch: expected $expectedValue, got ${service.value}');
+        'BLoC DI mismatch: expected $expectedValue, got ${service.value}',
+      );
     }
   }
 

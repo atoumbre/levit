@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
+  Levit.enableAutoLinking();
   runApp(const TaskBoardApp());
 }
 
@@ -22,16 +23,9 @@ class TaskItem {
   final String title;
   final bool done;
 
-  const TaskItem({
-    required this.id,
-    required this.title,
-    this.done = false,
-  });
+  const TaskItem({required this.id, required this.title, this.done = false});
 
-  TaskItem copyWith({
-    String? title,
-    bool? done,
-  }) {
+  TaskItem copyWith({String? title, bool? done}) {
     return TaskItem(
       id: id,
       title: title ?? this.title,
@@ -46,9 +40,9 @@ class TaskBoardController extends LevitController {
   final tasks = LxList<TaskItem>().named('tasks');
   final filter = TaskFilter.all.lx.named('filter');
   final isBulkUpdating = false.lx.named('isBulkUpdating');
-  final saveStatus = LxVar<LxStatus<String>>(LxIdle<String>()).named(
-    'saveStatus',
-  );
+  final saveStatus = LxVar<LxStatus<String>>(
+    LxIdle<String>(),
+  ).named('saveStatus');
 
   late final LxComputed<int> completedCount;
   late final LxComputed<List<TaskItem>> visibleTasks;
@@ -57,18 +51,18 @@ class TaskBoardController extends LevitController {
   @override
   void onInit() {
     super.onInit();
-    autoDispose(tasks);
-    autoDispose(filter);
-    autoDispose(isBulkUpdating);
-    autoDispose(saveStatus);
+    own(tasks);
+    own(filter);
+    own(isBulkUpdating);
+    own(saveStatus);
 
-    completedCount = autoDispose(
-      LxComputed(() => tasks.where((task) => task.done).length).named(
-        'completedCount',
-      ),
+    completedCount = own(
+      LxComputed(
+        () => tasks.where((task) => task.done).length,
+      ).named('completedCount'),
     );
 
-    visibleTasks = autoDispose(
+    visibleTasks = own(
       LxComputed(() {
         return switch (filter.value) {
           TaskFilter.all => tasks.toList(growable: false),
@@ -94,9 +88,7 @@ class TaskBoardController extends LevitController {
     final normalized = title.trim();
     if (normalized.isEmpty) return;
 
-    tasks.add(
-      TaskItem(id: _nextId++, title: normalized),
-    );
+    tasks.add(TaskItem(id: _nextId++, title: normalized));
   }
 
   void toggleTask(int id) {
@@ -139,9 +131,7 @@ class TaskBoardController extends LevitController {
     final now = DateTime.now();
     final timestamp =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    saveStatus.value = LxSuccess(
-      'Saved ${tasks.length} tasks at $timestamp.',
-    );
+    saveStatus.value = LxSuccess('Saved ${tasks.length} tasks at $timestamp.');
   }
 }
 
@@ -194,14 +184,16 @@ class TaskBoardPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   FilledButton.tonal(
-                    onPressed:
-                        isBusy ? null : () => controller.markAll(done: true),
+                    onPressed: isBusy
+                        ? null
+                        : () => controller.markAll(done: true),
                     child: const Text('Mark all done'),
                   ),
                   const SizedBox(width: 8),
                   FilledButton.tonal(
-                    onPressed:
-                        isBusy ? null : () => controller.markAll(done: false),
+                    onPressed: isBusy
+                        ? null
+                        : () => controller.markAll(done: false),
                     child: const Text('Mark all active'),
                   ),
                   const SizedBox(width: 8),
@@ -214,36 +206,32 @@ class TaskBoardPage extends StatelessWidget {
             ),
             const Divider(height: 24),
             Expanded(
-              child: LWatch(
-                () {
-                  final visibleTasks = controller.visibleTasks.value;
-                  if (visibleTasks.isEmpty) {
-                    return const Center(
-                      child: Text('No tasks in this filter.'),
-                    );
-                  }
+              child: LWatch(() {
+                final visibleTasks = controller.visibleTasks.value;
+                if (visibleTasks.isEmpty) {
+                  return const Center(child: Text('No tasks in this filter.'));
+                }
 
-                  return ListView.builder(
-                    itemCount: visibleTasks.length,
-                    itemBuilder: (context, index) {
-                      final task = visibleTasks[index];
-                      return CheckboxListTile(
-                        key: ValueKey('task_${task.id}'),
-                        value: task.done,
-                        title: Text(task.title),
-                        onChanged: (_) => controller.toggleTask(task.id),
-                      );
-                    },
-                  );
-                },
-              ),
+                return ListView.builder(
+                  itemCount: visibleTasks.length,
+                  itemBuilder: (context, index) {
+                    final task = visibleTasks[index];
+                    return CheckboxListTile(
+                      key: ValueKey('task_${task.id}'),
+                      value: task.done,
+                      title: Text(task.title),
+                      onChanged: (_) => controller.toggleTask(task.id),
+                    );
+                  },
+                );
+              }),
             ),
             Padding(
               padding: const EdgeInsets.all(12),
               child: LStatusBuilder<String>(
                 controller.saveStatus,
-                onIdle: () => const Text('No save operation yet.'),
-                onWaiting: () => const Row(
+                onIdle: (status) => const Text('No save operation yet.'),
+                onWaiting: (status) => const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox.square(
@@ -254,12 +242,10 @@ class TaskBoardPage extends StatelessWidget {
                     Text('Saving...'),
                   ],
                 ),
-                onSuccess: (message) => Text(
-                  message,
-                  style: const TextStyle(color: Colors.green),
-                ),
-                onError: (error, _) => Text(
-                  error.toString(),
+                onSuccess: (message) =>
+                    Text(message, style: const TextStyle(color: Colors.green)),
+                onError: (status) => Text(
+                  status.error.toString(),
                   style: const TextStyle(color: Colors.red),
                 ),
               ),

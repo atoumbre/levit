@@ -1,0 +1,28 @@
+{
+  "basis": "../collection-redesign/candidate-source.sha256",
+  "basisSha256": "cebb44ff16d8189994c90fb1b0aeadb93dc7f7546e17189abeed1634aa33135a",
+  "pathsCompared": 922,
+  "updatedManifestSha256": "e4f5d9525d15705dfc50093079b4f2529bd654f7c561536ac5203bb12299a836",
+  "changed": {
+    "packages/core/levit_reactive/lib/src/collection_entries.dart": {
+      "before": "cb25901a1c926694d4e210810e3132755989e7fb8c21f486ba74eba6918d0e12",
+      "after": "25439045256cbda4c646161590a6a7443576d304637bd8cbc2790bdc4cfcdfea"
+    },
+    "packages/core/levit_reactive/lib/src/collections.dart": {
+      "before": "6152790e3c5de33bbf6910c051ae7b166d5eed11d6da65b4c78c72a37a7605f3",
+      "after": "fcf326c026d3da9695fdfb0cc491207a899cc08569b75e55e46f15bc3cc4feb6"
+    },
+    "packages/core/levit_reactive/lib/src/computed.dart": {
+      "before": "c6e452c01416850b37489a6789f7bee16a56cdfbeb757bc1ccb97f835205700f",
+      "after": "a0ba8971166d8a0cc08a077a8ae99f777738dedd67816ecaa006f9576fed6934"
+    },
+    "packages/core/levit_reactive/lib/src/core.dart": {
+      "before": "e2bce103a06963551895bd318a491d9372e2ec3b44c0ae36a663897eb6e52717",
+      "after": "13180f42f1c9e864f2b34fb90893235246287429b775b5b189868ed77058a79e"
+    },
+    "packages/core/levit_reactive/test/collections/entry_contract_test.dart": {
+      "before": "71a57e812e8c2f08267a40a9dcc8e9243bf4826195c764d2e036eb050db45115",
+      "after": "cbf7fe94c8b6367feabcf616362edb88f91f5084c26ac4c7bb4f85b204fe2eb5"
+    }
+  }
+}

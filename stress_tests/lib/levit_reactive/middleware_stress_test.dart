@@ -6,11 +6,11 @@ class _CountingMiddleware implements LevitReactiveMiddleware {
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
-        return (value) {
-          onChangeCount++;
-          next(value);
-        };
-      };
+    return (value) {
+      onChangeCount++;
+      next(value);
+    };
+  };
 
   @override
   LxOnBatch? get onBatch => null;
@@ -32,8 +32,8 @@ class _CountingMiddleware implements LevitReactiveMiddleware {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('Stress Test: Middleware', () {
@@ -42,8 +42,10 @@ void main() {
       const middlewareCount = 100;
       const updates = 10000;
 
-      final middlewares =
-          List.generate(middlewareCount, (_) => _CountingMiddleware());
+      final middlewares = List.generate(
+        middlewareCount,
+        (_) => _CountingMiddleware(),
+      );
       for (final m in middlewares) {
         Levit.addStateMiddleware(m);
       }
@@ -56,10 +58,13 @@ void main() {
       }
       sw.stop();
 
-      final totalOnChange =
-          middlewares.fold<int>(0, (sum, m) => sum + m.onChangeCount);
+      final totalOnChange = middlewares.fold<int>(
+        0,
+        (sum, m) => sum + m.onChangeCount,
+      );
       print(
-          'Middleware Pipeline: Processed $updates updates with $middlewareCount middlewares in ${sw.elapsedMilliseconds}ms');
+        'Middleware Pipeline: Processed $updates updates with $middlewareCount middlewares in ${sw.elapsedMilliseconds}ms',
+      );
       print('Total onChange calls across all middlewares: $totalOnChange');
 
       expect(totalOnChange, updates * middlewareCount);

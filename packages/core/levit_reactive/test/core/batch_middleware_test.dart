@@ -69,9 +69,9 @@ class TestBatchMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnBatch? get onBatch => (next, change) {
-        if (onBatchCallback != null) {
-          return onBatchCallback!(next, change);
-        }
-        return next;
-      };
+    if (onBatchCallback != null) {
+      return onBatchCallback!(next, change);
+    }
+    return next;
+  };
 }

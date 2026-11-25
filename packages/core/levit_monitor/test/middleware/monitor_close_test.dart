@@ -54,7 +54,7 @@ void main() {
   });
 }
 
-class TestTransport implements LevitTransport {
+class TestTransport extends LevitTransport {
   final List<dynamic> events = [];
   bool closeCalled = false;
 

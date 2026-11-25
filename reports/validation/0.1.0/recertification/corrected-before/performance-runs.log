@@ -1,0 +1,39 @@
+Measuring performance-reference-profile-off-1
+Passed performance-reference-profile-off-1
+Measuring performance-candidate-profile-off-1
+Passed performance-candidate-profile-off-1
+Measuring performance-reference-profile-on-1
+Passed performance-reference-profile-on-1
+Measuring performance-candidate-profile-on-1
+Passed performance-candidate-profile-on-1
+Measuring performance-reference-release-off-1
+Passed performance-reference-release-off-1
+Measuring performance-candidate-release-off-1
+Passed performance-candidate-release-off-1
+Measuring performance-reference-release-on-1
+Passed performance-reference-release-on-1
+Measuring performance-candidate-release-on-1
+Passed performance-candidate-release-on-1
+Measuring performance-candidate-profile-on-2
+Passed performance-candidate-profile-on-2
+Measuring performance-reference-profile-on-2
+Passed performance-reference-profile-on-2
+Measuring performance-candidate-profile-off-2
+Passed performance-candidate-profile-off-2
+Measuring performance-reference-profile-off-2
+Passed performance-reference-profile-off-2
+Measuring performance-candidate-release-on-2
+Passed performance-candidate-release-on-2
+Measuring performance-reference-release-on-2
+Passed performance-reference-release-on-2
+Measuring performance-candidate-release-off-2
+Passed performance-candidate-release-off-2
+Measuring performance-reference-release-off-2
+Passed performance-reference-release-off-2
+Traceback (most recent call last):
+  File "/Users/atoumbre/SoftiLab/levit-svg/benchmarks/tool/compare_release_performance.py", line 93, in <module>
+    main()
+    ~~~~^^
+  File "/Users/atoumbre/SoftiLab/levit-svg/benchmarks/tool/compare_release_performance.py", line 72, in main
+    raise RuntimeError(f"Inconsistent display geometry: {layouts}")
+RuntimeError: Inconsistent display geometry: {((800.0, 600.0), 1.0), ((1600.0, 1200.0), 2.0)}

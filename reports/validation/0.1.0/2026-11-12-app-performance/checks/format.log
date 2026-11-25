@@ -1,0 +1,32 @@
+$ melos exec
+  └> dart format --output=none --set-exit-if-changed .
+     └> RUNNING (in 22 packages)
+
+--------------------------------------------------------------------------------
+[levit]: Formatted 6 files (0 changed) in 0.06 seconds.
+[levit_devtools]: Formatted 6 files (0 changed) in 0.05 seconds.
+[levit_devtools_ui]: Formatted 5 files (0 changed) in 0.06 seconds.
+[levit_dart_core]: Formatted 52 files (0 changed) in 0.12 seconds.
+[levit_dart]: Formatted 53 files (0 changed) in 0.20 seconds.
+[benchmarks]: Formatted 39 files (0 changed) in 0.26 seconds.
+[levit_example_async_catalog]: Formatted 4 files (0 changed) in 0.02 seconds.
+[levit_example_scope_playground]: Formatted 3 files (0 changed) in 0.02 seconds.
+[levit_example_route_scopes]: Formatted 1 file (0 changed) in 0.02 seconds.
+[levit_example_task_board]: Formatted 3 files (0 changed) in 0.04 seconds.
+[levit_flutter_core_example]: Formatted 1 file (0 changed) in 0.01 seconds.
+[levit_flutter]: Formatted 19 files (0 changed) in 0.07 seconds.
+[levit_flutter_example]: Formatted 3 files (0 changed) in 0.04 seconds.
+[levit_lints]: Formatted 6 files (0 changed) in 0.01 seconds.
+[levit_flutter_core]: Formatted 88 files (0 changed) in 0.21 seconds.
+[levit_monitor]: Formatted 59 files (0 changed) in 0.13 seconds.
+[levit_scope]: Formatted 53 files (0 changed) in 0.09 seconds.
+[levit_stress_tests]: Formatted 14 files (0 changed) in 0.04 seconds.
+[levit_reactive]: Formatted 163 files (0 changed) in 0.22 seconds.
+[nexus_studio_server]: Formatted 6 files (0 changed) in 0.02 seconds.
+[nexus_studio_app]: Formatted 4 files (0 changed) in 0.05 seconds.
+[nexus_studio_shared]: Formatted 4 files (0 changed) in 0.02 seconds.
+--------------------------------------------------------------------------------
+
+$ melos exec
+  └> dart format --output=none --set-exit-if-changed .
+     └> SUCCESS

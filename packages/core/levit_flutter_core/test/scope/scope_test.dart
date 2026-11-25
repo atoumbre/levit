@@ -5,8 +5,8 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 import '../helpers.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('LScope', () {
@@ -19,7 +19,8 @@ void main() {
             child: Builder(
               builder: (context) {
                 return Text(
-                    'Registered: ${context.levit.isRegistered<TestController>()}');
+                  'Registered: ${context.levit.isRegistered<TestController>()}',
+                );
               },
             ),
           ),
@@ -61,10 +62,13 @@ void main() {
                       controller = TestController();
                       s.put<TestController>(() => controller!);
                     },
-                    child: Builder(builder: (context) {
-                      return Text(
-                          'Registered: ${context.levit.isRegistered<TestController>()}');
-                    }),
+                    child: Builder(
+                      builder: (context) {
+                        return Text(
+                          'Registered: ${context.levit.isRegistered<TestController>()}',
+                        );
+                      },
+                    ),
                   )
                 : const Text('Hidden'),
           ),
@@ -108,22 +112,30 @@ void main() {
               LScope(
                 name: 'firstScope',
                 dependencyFactory: (s) => s.put<TestController>(
-                    () => TestController()..count = 1,
-                    tag: 'first'),
-                child: Builder(builder: (context) {
-                  return Text(
-                      'First: ${context.levit.find<TestController>(tag: 'first').count}');
-                }),
+                  () => TestController()..count = 1,
+                  tag: 'first',
+                ),
+                child: Builder(
+                  builder: (context) {
+                    return Text(
+                      'First: ${context.levit.find<TestController>(tag: 'first').count}',
+                    );
+                  },
+                ),
               ),
               LScope(
                 name: 'secondScope',
                 dependencyFactory: (s) => s.put<TestController>(
-                    () => TestController()..count = 2,
-                    tag: 'second'),
-                child: Builder(builder: (context) {
-                  return Text(
-                      'Second: ${context.levit.find<TestController>(tag: 'second').count}');
-                }),
+                  () => TestController()..count = 2,
+                  tag: 'second',
+                ),
+                child: Builder(
+                  builder: (context) {
+                    return Text(
+                      'Second: ${context.levit.find<TestController>(tag: 'second').count}',
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -135,64 +147,76 @@ void main() {
     });
 
     testWidgets('nests inside LScope (parentScope usage)', (tester) async {
-      await tester.pumpWidget(Directionality(
-        textDirection: TextDirection.ltr,
-        child: LScope(
-          dependencyFactory: (s) =>
-              s.put<TestController>(() => TestController()),
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
           child: LScope(
-            name: 'nested',
             dependencyFactory: (s) =>
                 s.put<TestController>(() => TestController()),
-            child: Builder(builder: (c) {
-              return Text('Nested: ${c.levit.isRegistered<TestController>()}');
-            }),
+            child: LScope(
+              name: 'nested',
+              dependencyFactory: (s) =>
+                  s.put<TestController>(() => TestController()),
+              child: Builder(
+                builder: (c) {
+                  return Text(
+                    'Nested: ${c.levit.isRegistered<TestController>()}',
+                  );
+                },
+              ),
+            ),
           ),
         ),
-      ));
+      );
 
       expect(find.text('Nested: true'), findsOneWidget);
     });
 
     testWidgets('LevContext.put works with scope', (tester) async {
-      await tester.pumpWidget(Directionality(
-        textDirection: TextDirection.ltr,
-        child: LScope(
-          dependencyFactory: (s) =>
-              s.put<TestController>(() => TestController()),
-          child: Builder(
-            builder: (c) {
-              final ctrl = TestController();
-              c.levit.put<TestController>(() => ctrl, tag: 'dynamic');
-              final found = c.levit.find<TestController>(tag: 'dynamic');
-              return Text('Found: ${found == ctrl}');
-            },
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: LScope(
+            dependencyFactory: (s) =>
+                s.put<TestController>(() => TestController()),
+            child: Builder(
+              builder: (c) {
+                final ctrl = TestController();
+                c.levit.put<TestController>(() => ctrl, tag: 'dynamic');
+                final found = c.levit.find<TestController>(tag: 'dynamic');
+                return Text('Found: ${found == ctrl}');
+              },
+            ),
           ),
         ),
-      ));
+      );
       expect(find.text('Found: true'), findsOneWidget);
     });
 
     testWidgets('updateShouldNotify detects scope changes', (tester) async {
       final rebuildTrigger = ValueNotifier<int>(0);
 
-      await tester.pumpWidget(Directionality(
-        textDirection: TextDirection.ltr,
-        child: ValueListenableBuilder<int>(
-          valueListenable: rebuildTrigger,
-          builder: (context, value, _) {
-            return LScope(
-              key: const ValueKey('scope'),
-              dependencyFactory: (s) =>
-                  s.put<TestController>(() => TestController()),
-              child: Builder(builder: (c) {
-                final registered = c.levit.isRegistered<TestController>();
-                return Text('Found: $registered, build: $value');
-              }),
-            );
-          },
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: ValueListenableBuilder<int>(
+            valueListenable: rebuildTrigger,
+            builder: (context, value, _) {
+              return LScope(
+                key: const ValueKey('scope'),
+                dependencyFactory: (s) =>
+                    s.put<TestController>(() => TestController()),
+                child: Builder(
+                  builder: (c) {
+                    final registered = c.levit.isRegistered<TestController>();
+                    return Text('Found: $registered, build: $value');
+                  },
+                ),
+              );
+            },
+          ),
         ),
-      ));
+      );
 
       expect(find.text('Found: true, build: 0'), findsOneWidget);
 
@@ -211,7 +235,8 @@ void main() {
             dependencyFactory: (s) {
               s.put<TestController>(() => TestController()..count = 1);
               s.put<AnotherController>(
-                  () => AnotherController()..name = 'Test');
+                () => AnotherController()..name = 'Test',
+              );
             },
             child: Builder(
               builder: (context) {
@@ -228,28 +253,28 @@ void main() {
     });
 
     testWidgets('nests inside LScope', (tester) async {
-      await tester.pumpWidget(Directionality(
-        textDirection: TextDirection.ltr,
-        child: LScope(
-          dependencyFactory: (s) =>
-              s.put<TestController>(() => TestController()),
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) {
-              s.put<TestController>(() => TestController());
-            },
-            child: Container(),
+            dependencyFactory: (s) =>
+                s.put<TestController>(() => TestController()),
+            child: LScope(
+              dependencyFactory: (s) {
+                s.put<TestController>(() => TestController());
+              },
+              child: Container(),
+            ),
           ),
         ),
-      ));
+      );
       expect(find.byType(LScope), findsAtLeastNWidgets(2));
     });
   });
 
   group('LScopedView', () {
     testWidgets('creates and provides controller', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(home: TestScopedView()),
-      );
+      await tester.pumpWidget(MaterialApp(home: TestScopedView()));
 
       expect(find.text('Count: 0'), findsOneWidget);
     });
@@ -280,20 +305,14 @@ void main() {
     });
 
     testWidgets('controller accessible in scope', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: TestScopedView(),
-        ),
-      );
+      await tester.pumpWidget(MaterialApp(home: TestScopedView()));
 
       // The controller should be registered in the scope
       expect(find.text('Count: 0'), findsOneWidget);
     });
 
     testWidgets('supports tags', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(home: TaggedScopedView()),
-      );
+      await tester.pumpWidget(MaterialApp(home: TaggedScopedView()));
 
       expect(find.text('Tagged: 0'), findsOneWidget);
     });

@@ -1,0 +1,13 @@
+{
+  "packages": 23,
+  "publishable": 10,
+  "allPublishableVersions": "0.1.0",
+  "localPackageRootsVerified": 112,
+  "dependencyLocksUnchanged": 23,
+  "inspectorUiPrivate": true,
+  "persistence": "ecosystem roadmap only",
+  "migrationGuide": "MIGRATION_0.1.0.md",
+  "publicSurfaceNegativeTestsAndReadableContract": "passed in current snapshot CI and coverage",
+  "nexusTwoClientConvergence": "passed in current snapshot CI",
+  "candidateRoot": "/private/tmp/levit-0.1.0-performance-x773iaob"
+}

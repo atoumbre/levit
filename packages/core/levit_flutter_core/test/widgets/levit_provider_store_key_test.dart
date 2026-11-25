@@ -3,72 +3,58 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
-  });
-
-  tearDown(() {
-    Levit.reset(force: true);
-  });
-
-  testWidgets('LevitProvider supports LevitStore/LevitAsyncStore as keys',
-      (tester) async {
-    final asyncStore = LevitStore.async((_) async => 42);
-    final futureStore = LevitStore((_) => Future.value('hello'));
-
-    Future<int>? fromFindAsyncStore;
-    Future<int>? fromFindOrNullAsyncStore;
-    Future<int?>? fromFindOrNullAsyncStoreAsync;
-    Future<String>? fromFindAsyncFutureStore;
-
-    bool? isRegisteredBefore;
-    bool? isInstantiatedBefore;
-    bool? isRegisteredAfter;
-    bool? isInstantiatedAfter;
-
+  testWidgets('typed store access uses the nearest scope and local overrides', (
+    tester,
+  ) async {
+    final first = LevitStore((_) => 7);
+    final second = LevitStore((_) => 9);
+    final remote = LevitAsyncStore((_) async => 42);
+    late LevitScope parent;
+    final outer = LevitScopeLifecycleController();
+    final lifecycle = LevitScopeLifecycleController();
+    late Future<int> resolved;
+    late Future<int> resolvedSync;
     await tester.pumpWidget(
       MaterialApp(
         home: LScope(
-          dependencyFactory: (scope) => scope.put<String>(() => 'seed'),
-          child: Builder(
-            builder: (context) {
-              isRegisteredBefore = context.levit.isRegistered(key: asyncStore);
-              isInstantiatedBefore =
-                  context.levit.isInstantiated(key: asyncStore);
-
-              fromFindAsyncStore =
-                  context.levit.find<Future<int>>(key: asyncStore);
-              fromFindOrNullAsyncStore =
-                  context.levit.findOrNull<Future<int>>(key: asyncStore);
-              fromFindOrNullAsyncStoreAsync =
-                  context.levit.findOrNullAsync<int>(key: asyncStore);
-
-              // This exercises the "double await" path for LevitStore values
-              // that are Future<T>.
-              fromFindAsyncFutureStore =
-                  context.levit.findAsync<String>(key: futureStore);
-
-              isRegisteredAfter = context.levit.isRegistered(key: asyncStore);
-              isInstantiatedAfter =
-                  context.levit.isInstantiated(key: asyncStore);
-
-              return const SizedBox.shrink();
-            },
+          lifecycle: outer,
+          dependencyFactory: (scope) {
+            parent = scope;
+            first.findIn(scope);
+          },
+          child: LScope(
+            lifecycle: lifecycle,
+            dependencyFactory: (scope) => scope.applyOverrides([
+              first.overrideWith((_) => 11),
+              remote.overrideWith((_) async => 88),
+            ]),
+            child: Builder(
+              builder: (context) {
+                expect(context.levit.isAsyncStoreRegistered(remote), isTrue);
+                expect(context.levit.isAsyncStoreInstantiated(remote), isFalse);
+                expect(context.levit.findStore(first, tag: 'same'), 7);
+                expect(context.levit.findStore(second, tag: 'same'), 9);
+                expect(context.levit.findStore(first), 11);
+                resolved = context.levit.findAsyncStore(
+                  remote,
+                  localOnly: true,
+                );
+                resolvedSync = context.levit.findStoreAsync(second);
+                expect(context.levit.isStoreRegistered(first), isTrue);
+                expect(context.levit.isStoreInstantiated(first), isTrue);
+                expect(context.levit.isAsyncStoreInstantiated(remote), isTrue);
+                return const SizedBox();
+              },
+            ),
           ),
         ),
       ),
     );
-
-    expect(isRegisteredBefore, isFalse);
-    expect(isInstantiatedBefore, isFalse);
-    expect(isRegisteredAfter, isTrue);
-    expect(isInstantiatedAfter, isTrue);
-
-    await tester.runAsync(() async {
-      expect(await fromFindAsyncStore, 42);
-      expect(await fromFindOrNullAsyncStore, 42);
-      expect(await fromFindOrNullAsyncStoreAsync, 42);
-      expect(await fromFindAsyncFutureStore, 'hello');
-    });
+    expect(await resolved, 88);
+    expect(await resolvedSync, 9);
+    expect(first.findIn(parent), 7);
+    await tester.pumpWidget(const SizedBox());
+    await lifecycle.closed;
+    await outer.closed;
   });
 }

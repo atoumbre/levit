@@ -40,32 +40,37 @@ void main() {
       // However, forcing the binding to change state is easier:
 
       // Resumed
-      WidgetsBinding.instance
-          .handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      WidgetsBinding.instance.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
       await tester.pump();
       expect(controller.resumedCount, 1);
 
       // Paused
-      WidgetsBinding.instance
-          .handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      WidgetsBinding.instance.handleAppLifecycleStateChanged(
+        AppLifecycleState.paused,
+      );
       await tester.pump();
       expect(controller.pausedCount, 1);
 
       // Inactive
-      WidgetsBinding.instance
-          .handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      WidgetsBinding.instance.handleAppLifecycleStateChanged(
+        AppLifecycleState.inactive,
+      );
       await tester.pump();
       expect(controller.inactiveCount, 1);
 
       // Detached
-      WidgetsBinding.instance
-          .handleAppLifecycleStateChanged(AppLifecycleState.detached);
+      WidgetsBinding.instance.handleAppLifecycleStateChanged(
+        AppLifecycleState.detached,
+      );
       await tester.pump();
       expect(controller.detachedCount, 1);
 
       // Hidden
-      WidgetsBinding.instance
-          .handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      WidgetsBinding.instance.handleAppLifecycleStateChanged(
+        AppLifecycleState.hidden,
+      );
       await tester.pump();
       expect(controller.hiddenCount, 1);
 
@@ -75,16 +80,13 @@ void main() {
     test('default lifecycle callbacks are no-ops', () {
       final controller = DefaultLifecycleController();
 
-      expect(
-        () {
-          controller.onAppResumed();
-          controller.onAppPaused();
-          controller.onAppInactive();
-          controller.onAppDetached();
-          controller.onAppHidden();
-        },
-        returnsNormally,
-      );
+      expect(() {
+        controller.onAppResumed();
+        controller.onAppPaused();
+        controller.onAppInactive();
+        controller.onAppDetached();
+        controller.onAppHidden();
+      }, returnsNormally);
     });
 
     test('onClose without onInit does not throw', () {

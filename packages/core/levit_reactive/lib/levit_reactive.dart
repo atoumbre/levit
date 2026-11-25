@@ -13,17 +13,20 @@
 library;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:meta/meta.dart';
 
+part 'src/async_lifecycle.dart';
 part 'src/async_status.dart';
 part 'src/async_types.dart';
 part 'src/base_types.dart';
+part 'src/collection_entries.dart';
 part 'src/collections.dart';
 part 'src/computed.dart';
 part 'src/core.dart';
-part 'src/family.dart';
+part 'src/resource.dart';
 part 'src/global_accessor.dart';
 part 'src/middlewares.dart';
 part 'src/workers.dart';

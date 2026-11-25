@@ -4,8 +4,8 @@ import 'package:test/test.dart';
 class TestController extends LevitController {}
 
 void main() {
-  group('LevitController Coverage', () {
-    test('Properties reflect state', () {
+  group('Controller initialization and disposal', () {
+    test('Properties reflect state', () async {
       final controller = TestController();
 
       expect(controller.isInitialized, false);
@@ -15,7 +15,7 @@ void main() {
       controller.onInit();
       expect(controller.isInitialized, true);
 
-      controller.onClose();
+      await controller.onClose();
       expect(controller.isClosed, true);
 
       // Simulate scope attachment (normally done by DI)

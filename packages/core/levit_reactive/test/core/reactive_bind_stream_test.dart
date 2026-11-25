@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
-  group('Reactive Bind Stream Coverage', () {
+  group('Reactive binding to external streams', () {
     test('bind early returns if the same stream is bound again', () async {
       final v = 0.lx;
       final controller = StreamController<int>.broadcast();

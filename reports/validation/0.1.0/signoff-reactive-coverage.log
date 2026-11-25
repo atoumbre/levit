@@ -1,0 +1,35 @@
+Scanning for packages in: packages...
+Excluding example projects (use --include-examples to include).
+Filtering to packages: levit_reactive
+Per-package timeout: 600s
+Coverage threshold: 100.00%
+Found 1 packages: levit_reactive
+
+[levit_reactive] Running tests and generating coverage...
+[levit_reactive] Detected dart:mirrors in tests; using dart test.
+[levit_reactive] Done. (99.9%)
+
+=================================================================
+LEVIT COVERAGE REPORT
+=================================================================
+| Package              | Lines Covered | Total Lines | Coverage |
+|----------------------|---------------|-------------|----------|
+| levit_reactive       |          1770 |        1772 |   99.89% |
+-----------------------------------------------------------------
+| GLOBAL               |          1770 |        1772 |   99.89% |
+=================================================================
+
+Uncovered Lines Details:
+
+levit_reactive
+  - packages/core/levit_reactive/lib/src/core.dart: 958
+  - packages/core/levit_reactive/lib/src/family.dart: 485
+
+=================================================================
+
+Skipped report file generation (use --generate-report to enable)
+Coverage threshold failed: expected at least 100.00%.
+Global coverage: 99.89%.
+levit_reactive: 99.89%.
+
+Coverage checks failed. Check logs above.

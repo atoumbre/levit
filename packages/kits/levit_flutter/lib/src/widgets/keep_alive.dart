@@ -20,11 +20,7 @@ class LKeepAlive extends StatefulWidget {
   /// Defaults to `true`. Changing this value at runtime updates the keep-alive state.
   final bool keepAlive;
 
-  const LKeepAlive({
-    super.key,
-    required this.child,
-    this.keepAlive = true,
-  });
+  const LKeepAlive({super.key, required this.child, this.keepAlive = true});
 
   @override
   State<LKeepAlive> createState() => _LKeepAliveState();

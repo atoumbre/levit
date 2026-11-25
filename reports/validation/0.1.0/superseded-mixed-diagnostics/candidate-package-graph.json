@@ -1,0 +1,298 @@
+[
+  {
+    "name": "benchmarks",
+    "path": "benchmarks",
+    "version": "1.0.0+1",
+    "private": true,
+    "localPackages": [
+      "levit_dart",
+      "levit_dart_core",
+      "levit_flutter",
+      "levit_flutter_core",
+      "levit_monitor",
+      "levit_reactive",
+      "levit_scope",
+      "benchmarks"
+    ]
+  },
+  {
+    "name": "levit",
+    "path": "packages/kits/levit",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit_dart",
+      "levit_dart_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit"
+    ]
+  },
+  {
+    "name": "levit_dart",
+    "path": "packages/kits/levit_dart",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit_dart_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_dart"
+    ]
+  },
+  {
+    "name": "levit_dart_core",
+    "path": "packages/core/levit_dart_core",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit_reactive",
+      "levit_scope",
+      "levit_dart_core"
+    ]
+  },
+  {
+    "name": "levit_devtools",
+    "path": "packages/tools/levit_devtools",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit_dart_core",
+      "levit_monitor",
+      "levit_reactive",
+      "levit_scope",
+      "levit_devtools"
+    ]
+  },
+  {
+    "name": "levit_devtools_ui",
+    "path": "packages/tools/levit_devtools_ui",
+    "version": "0.1.0",
+    "private": true,
+    "localPackages": [
+      "levit_dart_core",
+      "levit_monitor",
+      "levit_reactive",
+      "levit_scope",
+      "levit_devtools_ui"
+    ]
+  },
+  {
+    "name": "levit_example_async_catalog",
+    "path": "examples/async_catalog",
+    "version": "0.1.0",
+    "private": true,
+    "localPackages": [
+      "levit_dart",
+      "levit_dart_core",
+      "levit_flutter",
+      "levit_flutter_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_example_async_catalog"
+    ]
+  },
+  {
+    "name": "levit_example_route_scopes",
+    "path": "examples/route_scopes",
+    "version": "0.1.0",
+    "private": true,
+    "localPackages": [
+      "levit_dart",
+      "levit_dart_core",
+      "levit_flutter",
+      "levit_flutter_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_example_route_scopes"
+    ]
+  },
+  {
+    "name": "levit_example_scope_playground",
+    "path": "examples/scope_playground",
+    "version": "0.1.0",
+    "private": true,
+    "localPackages": [
+      "levit_dart",
+      "levit_dart_core",
+      "levit_flutter",
+      "levit_flutter_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_example_scope_playground"
+    ]
+  },
+  {
+    "name": "levit_example_task_board",
+    "path": "examples/task_board",
+    "version": "0.1.0",
+    "private": true,
+    "localPackages": [
+      "levit_dart",
+      "levit_dart_core",
+      "levit_flutter",
+      "levit_flutter_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_example_task_board"
+    ]
+  },
+  {
+    "name": "levit_flutter",
+    "path": "packages/kits/levit_flutter",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit_dart",
+      "levit_dart_core",
+      "levit_flutter_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_flutter"
+    ]
+  },
+  {
+    "name": "levit_flutter_core",
+    "path": "packages/core/levit_flutter_core",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit_dart_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_flutter_core"
+    ]
+  },
+  {
+    "name": "levit_flutter_core_example",
+    "path": "packages/core/levit_flutter_core/example",
+    "version": "1.0.0+1",
+    "private": true,
+    "localPackages": [
+      "levit_dart_core",
+      "levit_flutter_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_flutter_core_example"
+    ]
+  },
+  {
+    "name": "levit_flutter_example",
+    "path": "packages/kits/levit_flutter/example",
+    "version": "0.1.0",
+    "private": true,
+    "localPackages": [
+      "levit_dart",
+      "levit_dart_core",
+      "levit_flutter",
+      "levit_flutter_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_flutter_example"
+    ]
+  },
+  {
+    "name": "levit_lints",
+    "path": "packages/tools/levit_lints",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit_lints"
+    ]
+  },
+  {
+    "name": "levit_monitor",
+    "path": "packages/core/levit_monitor",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit",
+      "levit_dart",
+      "levit_dart_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_monitor"
+    ]
+  },
+  {
+    "name": "levit_reactive",
+    "path": "packages/core/levit_reactive",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit_reactive"
+    ]
+  },
+  {
+    "name": "levit_scope",
+    "path": "packages/core/levit_scope",
+    "version": "0.1.0",
+    "private": false,
+    "localPackages": [
+      "levit_scope"
+    ]
+  },
+  {
+    "name": "levit_stress_tests",
+    "path": "stress_tests",
+    "version": "0.0.1",
+    "private": true,
+    "localPackages": [
+      "levit_dart_core",
+      "levit_flutter_core",
+      "levit_reactive",
+      "levit_scope",
+      "levit_stress_tests"
+    ]
+  },
+  {
+    "name": "levit_workspace",
+    "path": ".",
+    "version": null,
+    "private": true,
+    "localPackages": [
+      "levit_workspace"
+    ]
+  },
+  {
+    "name": "nexus_studio_app",
+    "path": "examples/nexus_studio/app",
+    "version": "0.1.0",
+    "private": true,
+    "localPackages": [
+      "levit_dart_core",
+      "levit_flutter_core",
+      "levit_monitor",
+      "levit_reactive",
+      "levit_scope",
+      "nexus_studio_shared",
+      "nexus_studio_app"
+    ]
+  },
+  {
+    "name": "nexus_studio_server",
+    "path": "examples/nexus_studio/server",
+    "version": "1.0.0",
+    "private": true,
+    "localPackages": [
+      "levit_dart_core",
+      "levit_monitor",
+      "levit_reactive",
+      "levit_scope",
+      "nexus_studio_shared",
+      "nexus_studio_server"
+    ]
+  },
+  {
+    "name": "nexus_studio_shared",
+    "path": "examples/nexus_studio/shared",
+    "version": "1.0.0",
+    "private": true,
+    "localPackages": [
+      "levit_dart_core",
+      "levit_reactive",
+      "levit_scope",
+      "nexus_studio_shared"
+    ]
+  }
+]

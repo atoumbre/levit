@@ -5,8 +5,8 @@ class Service {}
 
 void main() {
   group('Deprecation Tests', () {
-    setUp(() {
-      Levit.reset(force: true);
+    setUp(() async {
+      await Levit.reset(force: true);
     });
 
     test('putFactory still works', () {

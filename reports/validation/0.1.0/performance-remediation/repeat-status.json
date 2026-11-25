@@ -1,0 +1,15 @@
+{
+  "purpose": "Exact-binary replication of comparison 9 after functional validation; no rebuilds or source changes",
+  "started": "2026-11-11T20:05:25.686171-05:00",
+  "status": "pass",
+  "command": [
+    "python3",
+    "benchmarks/tool/compare_release_performance.py",
+    "/private/tmp/levit-performance-539f130-q8vb_rc4",
+    "/Users/atoumbre/SoftiLab/levit-svg/reports/validation/0.1.0/performance-remediation/comparison-10"
+  ],
+  "published": false,
+  "exitCode": 0,
+  "finished": "2026-11-11T20:09:24.940240-05:00",
+  "sameExecutableAndAotAsComparison9": true
+}

@@ -2,7 +2,7 @@ import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('Levit.addStateMiddleware / removeStateMiddleware coverage', () {
+  group('State middleware registration and removal', () {
     tearDown(() {
       Lx.clearMiddlewares();
     });

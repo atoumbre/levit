@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 import '../../benchmark_config.dart';
+import '../../benchmark_observer.dart';
 import '../../benchmark_engine.dart';
 
 class RapidMutationBenchmark extends Benchmark {
@@ -38,11 +39,12 @@ class RapidMutationBenchmark extends Benchmark {
 class LevitRapidMutation extends BenchmarkImplementation {
   late LxVar<int> counter;
   int expectedValue = 0;
+  final observed = BenchmarkObserver<int>();
 
   @override
   Future<void> setup() async {
     counter = LxVar(0);
-    counter.addListener(() {});
+    counter.addListener(() => observed.record(counter.value));
     expectedValue = 0;
   }
 
@@ -52,19 +54,26 @@ class LevitRapidMutation extends BenchmarkImplementation {
       counter.value++;
     }
     expectedValue += BenchmarkConfig.rapidMutationIterations;
+    await observed.waitFor(expectedValue);
   }
 
   @override
   Future<void> verify() async {
+    if (observed.value != expectedValue || observed.count != expectedValue) {
+      throw StateError(
+        "Incomplete mutation delivery: ${observed.count}/$expectedValue",
+      );
+    }
     if (counter.value != expectedValue) {
       throw StateError(
-          'Levit counter mismatch: expected $expectedValue, got ${counter.value}');
+        'Levit counter mismatch: expected $expectedValue, got ${counter.value}',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
-    counter.close();
+    await counter.close();
   }
 }
 
@@ -72,11 +81,12 @@ class LevitRapidMutation extends BenchmarkImplementation {
 class VanillaRapidMutation extends BenchmarkImplementation {
   late ValueNotifier<int> counter;
   int expectedValue = 0;
+  final observed = BenchmarkObserver<int>();
 
   @override
   Future<void> setup() async {
     counter = ValueNotifier(0);
-    counter.addListener(() {});
+    counter.addListener(() => observed.record(counter.value));
     expectedValue = 0;
   }
 
@@ -86,13 +96,20 @@ class VanillaRapidMutation extends BenchmarkImplementation {
       counter.value++;
     }
     expectedValue += BenchmarkConfig.rapidMutationIterations;
+    await observed.waitFor(expectedValue);
   }
 
   @override
   Future<void> verify() async {
+    if (observed.value != expectedValue || observed.count != expectedValue) {
+      throw StateError(
+        "Incomplete mutation delivery: ${observed.count}/$expectedValue",
+      );
+    }
     if (counter.value != expectedValue) {
       throw StateError(
-          'Vanilla counter mismatch: expected $expectedValue, got ${counter.value}');
+        'Vanilla counter mismatch: expected $expectedValue, got ${counter.value}',
+      );
     }
   }
 
@@ -106,11 +123,12 @@ class VanillaRapidMutation extends BenchmarkImplementation {
 class GetXRapidMutation extends BenchmarkImplementation {
   late RxInt counter;
   int expectedValue = 0;
+  final observed = BenchmarkObserver<int>();
 
   @override
   Future<void> setup() async {
     counter = 0.obs;
-    counter.listen((_) {});
+    counter.listen(observed.record);
     expectedValue = 0;
   }
 
@@ -120,13 +138,20 @@ class GetXRapidMutation extends BenchmarkImplementation {
       counter.value++;
     }
     expectedValue += BenchmarkConfig.rapidMutationIterations;
+    await observed.waitFor(expectedValue);
   }
 
   @override
   Future<void> verify() async {
+    if (observed.value != expectedValue || observed.count != expectedValue) {
+      throw StateError(
+        "Incomplete mutation delivery: ${observed.count}/$expectedValue",
+      );
+    }
     if (counter.value != expectedValue) {
       throw StateError(
-          'GetX counter mismatch: expected $expectedValue, got ${counter.value}');
+        'GetX counter mismatch: expected $expectedValue, got ${counter.value}',
+      );
     }
   }
 
@@ -146,11 +171,12 @@ class BlocRapidMutation extends BenchmarkImplementation {
   // ignore: library_private_types_in_public_api
   late _CounterCubit cubit;
   int expectedValue = 0;
+  final observed = BenchmarkObserver<int>();
 
   @override
   Future<void> setup() async {
     cubit = _CounterCubit();
-    cubit.stream.listen((_) {});
+    cubit.stream.listen(observed.record);
     expectedValue = 0;
   }
 
@@ -160,13 +186,20 @@ class BlocRapidMutation extends BenchmarkImplementation {
       cubit.increment();
     }
     expectedValue += BenchmarkConfig.rapidMutationIterations;
+    await observed.waitFor(expectedValue);
   }
 
   @override
   Future<void> verify() async {
+    if (observed.value != expectedValue || observed.count != expectedValue) {
+      throw StateError(
+        "Incomplete mutation delivery: ${observed.count}/$expectedValue",
+      );
+    }
     if (cubit.state != expectedValue) {
       throw StateError(
-          'BLoC counter mismatch: expected $expectedValue, got ${cubit.state}');
+        'BLoC counter mismatch: expected $expectedValue, got ${cubit.state}',
+      );
     }
   }
 
@@ -181,12 +214,13 @@ class RiverpodRapidMutation extends BenchmarkImplementation {
   late ProviderContainer container;
   late StateProvider<int> provider;
   int expectedValue = 0;
+  final observed = BenchmarkObserver<int>();
 
   @override
   Future<void> setup() async {
     container = ProviderContainer();
     provider = StateProvider((ref) => 0);
-    container.listen(provider, (previous, next) {});
+    container.listen(provider, (previous, next) => observed.record(next));
     expectedValue = 0;
   }
 
@@ -197,14 +231,21 @@ class RiverpodRapidMutation extends BenchmarkImplementation {
       notifier.state++;
     }
     expectedValue += BenchmarkConfig.rapidMutationIterations;
+    await observed.waitFor(expectedValue);
   }
 
   @override
   Future<void> verify() async {
+    if (observed.value != expectedValue || observed.count != expectedValue) {
+      throw StateError(
+        "Incomplete mutation delivery: ${observed.count}/$expectedValue",
+      );
+    }
     final value = container.read(provider);
     if (value != expectedValue) {
       throw StateError(
-          'Riverpod counter mismatch: expected $expectedValue, got $value');
+        'Riverpod counter mismatch: expected $expectedValue, got $value',
+      );
     }
   }
 

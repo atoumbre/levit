@@ -1,0 +1,78 @@
+Resolving dependencies...
+Downloading packages...
+  async 2.13.0 (2.13.1 available)
+  cli_launcher 0.3.2+1 (0.3.4+1 available)
+  cli_util 0.4.2 (0.6.0 available)
+  glob 2.1.3 (2.2.0 available)
+  io 1.0.5 (1.1.0 available)
+  json_annotation 4.11.0 (4.12.0 available)
+  melos 6.3.3 (8.10.1 available)
+  meta 1.18.1 (1.19.0 available)
+  mustache_template 2.0.3 (2.0.6 available)
+  platform 3.1.6 (3.2.0 available)
+  pool 1.5.2 (1.5.3 available)
+  process 5.0.5 (5.0.6 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  pub_updater 0.5.0 (0.6.0 available)
+  pubspec_parse 1.5.0 (1.7.0 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  web 1.1.1 (1.1.2 available)
+  yaml 3.1.3 (3.1.4 available)
+Got dependencies!
+18 packages have newer versions incompatible with dependency constraints.
+Try `dart pub outdated` for more information.
+melos bootstrap
+  └> /private/tmp/levit-redesign-candidate
+
+Note: this may take a while in large workspaces such as this one.
+Running "flutter pub get --offline" in workspace packages...
+  ✓ levit_dart_core
+    └> packages/core/levit_dart_core
+  ✓ levit
+    └> packages/kits/levit
+  ✓ levit_dart
+    └> packages/kits/levit_dart
+  ✓ levit_devtools
+    └> packages/tools/levit_devtools
+  ✓ levit_example_route_scopes
+    └> examples/route_scopes
+  ✓ levit_devtools_ui
+    └> packages/tools/levit_devtools_ui
+  ✓ levit_lints
+    └> packages/tools/levit_lints
+  ✓ levit_example_async_catalog
+    └> examples/async_catalog
+  ✓ levit_example_task_board
+    └> examples/task_board
+  ✓ levit_monitor
+    └> packages/core/levit_monitor
+  ✓ benchmarks
+    └> benchmarks
+  ✓ levit_reactive
+    └> packages/core/levit_reactive
+  ✓ levit_flutter
+    └> packages/kits/levit_flutter
+  ✓ levit_flutter_example
+    └> packages/kits/levit_flutter/example
+  ✓ levit_example_scope_playground
+    └> examples/scope_playground
+  ✓ levit_flutter_core
+    └> packages/core/levit_flutter_core
+  ✓ levit_flutter_core_example
+    └> packages/core/levit_flutter_core/example
+  ✓ levit_scope
+    └> packages/core/levit_scope
+  ✓ nexus_studio_server
+    └> examples/nexus_studio/server
+  ✓ nexus_studio_shared
+    └> examples/nexus_studio/shared
+  ✓ nexus_studio_app
+    └> examples/nexus_studio/app
+  ✓ levit_stress_tests
+    └> stress_tests
+  > SUCCESS
+
+Generating IntelliJ IDE files...
+  > SUCCESS
+
+ -> 22 packages bootstrapped

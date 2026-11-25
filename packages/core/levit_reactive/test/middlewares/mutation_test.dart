@@ -6,11 +6,11 @@ class TestMutationMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
-        return (value) {
-          next(value);
-          changeCount++;
-        };
-      };
+    return (value) {
+      next(value);
+      changeCount++;
+    };
+  };
 }
 
 void main() {
@@ -24,8 +24,11 @@ void main() {
 
     Lx.removeMiddleware(middleware);
 
-    expect(middleware.changeCount, equals(1),
-        reason: 'Middleware should be notified of map mutation');
+    expect(
+      middleware.changeCount,
+      equals(1),
+      reason: 'Middleware should be notified of map mutation',
+    );
   });
 
   test('LxInt mutation triggers middleware', () {

@@ -8,9 +8,9 @@ class TestController extends LevitController {
   final reactiveCount = 0.lx;
 
   @override
-  void onClose() {
+  Future<void> onClose() async {
     closeCalled = true;
-    super.onClose();
+    await super.onClose();
   }
 }
 

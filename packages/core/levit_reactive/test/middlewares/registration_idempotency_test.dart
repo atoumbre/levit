@@ -39,20 +39,22 @@ void main() {
       expect(Lx.containsMiddlewareToken('history'), isFalse);
     });
 
-    test('token can be attached to an existing middleware without duplicates',
-        () {
-      final calls = <String>[];
-      final middleware = _RecordingMiddleware('same', calls);
+    test(
+      'token can be attached to an existing middleware without duplicates',
+      () {
+        final calls = <String>[];
+        final middleware = _RecordingMiddleware('same', calls);
 
-      Lx.addMiddleware(middleware);
-      Lx.addMiddleware(middleware, token: 'shared');
-      Lx.addMiddleware(middleware, token: 'shared');
+        Lx.addMiddleware(middleware);
+        Lx.addMiddleware(middleware, token: 'shared');
+        Lx.addMiddleware(middleware, token: 'shared');
 
-      final state = 0.lx;
-      state.value = 1;
+        final state = 0.lx;
+        state.value = 1;
 
-      expect(calls, ['same']);
-    });
+        expect(calls, ['same']);
+      },
+    );
 
     test('re-adding the same tokenized middleware is a no-op', () {
       final calls = <String>[];
@@ -91,7 +93,7 @@ class _RecordingMiddleware extends LevitReactiveMiddleware {
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {
-        calls.add(id);
-        return next;
-      };
+    calls.add(id);
+    return next;
+  };
 }

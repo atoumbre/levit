@@ -183,8 +183,10 @@ void main() {
       expect(items.where((e) => e.isOdd).toList(), equals([1, 3, 5]));
       expect(items.whereType<int>().toList(), equals([1, 2, 3, 4, 5]));
       expect(items.map((e) => e * 2).toList(), equals([2, 4, 6, 8, 10]));
-      expect(items.expand((e) => [e, e]).toList(),
-          equals([1, 1, 2, 2, 3, 3, 4, 4, 5, 5]));
+      expect(
+        items.expand((e) => [e, e]).toList(),
+        equals([1, 1, 2, 2, 3, 3, 4, 4, 5, 5]),
+      );
       expect(items.join(','), equals('1,2,3,4,5'));
       expect(items.skip(2).toList(), equals([3, 4, 5]));
       expect(items.skipWhile((e) => e < 3).toList(), equals([3, 4, 5]));
@@ -263,7 +265,9 @@ void main() {
 
       final emptyList = <int>[].lx;
       expect(
-          () => emptyList.single, throwsStateError); // Standard List behavior
+        () => emptyList.single,
+        throwsStateError,
+      ); // Standard List behavior
     });
   });
 }

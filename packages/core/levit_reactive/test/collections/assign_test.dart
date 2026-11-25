@@ -65,36 +65,38 @@ void main() {
   });
 
   group('LxList obscure methods', () {
-    test('retainWhere/fillRange/replaceRange/setAll/setRange/assign/assignOne',
-        () {
-      final list = [1, 2, 3, 4, 5].lx;
+    test(
+      'retainWhere/fillRange/replaceRange/setAll/setRange/assign/assignOne',
+      () {
+        final list = [1, 2, 3, 4, 5].lx;
 
-      // retainWhere
-      list.retainWhere((i) => i.isOdd);
-      expect(list, equals([1, 3, 5]));
+        // retainWhere
+        list.retainWhere((i) => i.isOdd);
+        expect(list, equals([1, 3, 5]));
 
-      // fillRange (0, 2 exclusive -> indices 0, 1)
-      list.fillRange(0, 2, 9);
-      expect(list, equals([9, 9, 5]));
+        // fillRange (0, 2 exclusive -> indices 0, 1)
+        list.fillRange(0, 2, 9);
+        expect(list, equals([9, 9, 5]));
 
-      // replaceRange
-      list.replaceRange(0, 1, [0]);
-      expect(list, equals([0, 9, 5]));
+        // replaceRange
+        list.replaceRange(0, 1, [0]);
+        expect(list, equals([0, 9, 5]));
 
-      // setAll
-      list.setAll(0, [7, 8]);
-      expect(list, equals([7, 8, 5]));
+        // setAll
+        list.setAll(0, [7, 8]);
+        expect(list, equals([7, 8, 5]));
 
-      // setRange
-      list.setRange(0, 1, [1]);
-      expect(list, equals([1, 8, 5]));
+        // setRange
+        list.setRange(0, 1, [1]);
+        expect(list, equals([1, 8, 5]));
 
-      // assign / assignOne
-      list.assign([10, 11]);
-      expect(list, equals([10, 11]));
-      list.assignOne(99);
-      expect(list, equals([99]));
-    });
+        // assign / assignOne
+        list.assign([10, 11]);
+        expect(list, equals([10, 11]));
+        list.assignOne(99);
+        expect(list, equals([99]));
+      },
+    );
   });
 
   group('LxMap obscure methods', () {

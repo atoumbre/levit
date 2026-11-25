@@ -105,8 +105,14 @@ void main() {
             if (attempts < 3) throw 'fail';
             return 'success';
           },
-          retries: 3,
-          retryDelay: const Duration(milliseconds: 1), // Fast retry
+          retryPolicy: LevitRetryPolicy(
+            shouldRetry: (error, stack) => true,
+            maxRetries: 3,
+            initialDelay: const Duration(milliseconds: 1),
+            maxDelay: const Duration(seconds: 30),
+            jitter: 0,
+          ),
+          // Fast retry
         );
       } catch (e) {
         fail('Should not throw');
@@ -122,9 +128,13 @@ void main() {
           if (attempts < 3) throw 'fail';
           return 'success';
         },
-        retries: 2,
-        useExponentialBackoff: false,
-        retryDelay: const Duration(milliseconds: 1),
+        retryPolicy: LevitRetryPolicy(
+          shouldRetry: (error, stack) => true,
+          maxRetries: 2,
+          initialDelay: const Duration(milliseconds: 1),
+          maxDelay: const Duration(milliseconds: 1),
+          jitter: 0,
+        ),
       );
       expect(attempts, 3);
     });
@@ -137,8 +147,13 @@ void main() {
             attempts++;
             throw 'fail';
           },
-          retries: 2,
-          retryDelay: const Duration(milliseconds: 1),
+          retryPolicy: LevitRetryPolicy(
+            shouldRetry: (error, stack) => true,
+            maxRetries: 2,
+            initialDelay: const Duration(milliseconds: 1),
+            maxDelay: const Duration(seconds: 30),
+            jitter: 0,
+          ),
         );
       } catch (e) {
         // Expected rethrow
@@ -148,7 +163,7 @@ void main() {
 
     test('uses default maxConcurrentTasks', () {
       final defaultService = DefaultService()..onInit();
-      expect(defaultService.maxConcurrentTasks, 100000);
+      expect(defaultService.maxConcurrentTasks, 8);
     });
 
     test('cancels active task', () async {
@@ -183,8 +198,7 @@ void main() {
       expect(ran, false);
     });
 
-    test('cancels active task specifically during retry delay (L299)',
-        () async {
+    test('cancels active task specifically during retry delay (L299)', () async {
       final started = Completer();
       int attempts = 0;
       bool onErrorCalled = false;
@@ -198,8 +212,14 @@ void main() {
           return 'success';
         },
         id: 'retry_cancel_loop',
-        retries: 1,
-        retryDelay: const Duration(milliseconds: 200),
+        retryPolicy: LevitRetryPolicy(
+          shouldRetry: (error, stack) => true,
+          maxRetries: 1,
+          initialDelay: const Duration(milliseconds: 200),
+          maxDelay: const Duration(seconds: 30),
+          jitter: 0,
+        ),
+
         onError: (e, s) {
           onErrorCalled = true;
         },
@@ -211,8 +231,7 @@ void main() {
 
       service.tasksEngine.cancel('retry_cancel_loop');
 
-      final result = await future;
-      expect(result, null);
+      await expectLater(future, throwsA(isA<LevitTaskCancelledException>()));
       expect(attempts, 1);
       expect(onErrorCalled, false); // Proves it hit L299, not L319
     });
@@ -302,7 +321,7 @@ void main() {
 
     test('uses default maxConcurrentTasks', () {
       final c = DefaultController()..onInit();
-      expect(c.maxConcurrentTasks, 100000);
+      expect(c.maxConcurrentTasks, 8);
     });
 
     test('clearTask removes task and cancels it', () async {
@@ -375,8 +394,10 @@ void main() {
     test('supports mixing both TasksMixins without name collisions', () async {
       final mixed = MixedController()..onInit();
       final r1 = await mixed.runTask((_) async => 'basic');
-      final r2 = await (mixed as LevitReactiveTasksMixin)
-          .runTask((_) async => 'reactive', id: 'r1');
+      final r2 = await (mixed as LevitReactiveTasksMixin).runTask(
+        (_) async => 'reactive',
+        id: 'r1',
+      );
 
       expect(r1, 'basic');
       expect(r2, 'reactive');

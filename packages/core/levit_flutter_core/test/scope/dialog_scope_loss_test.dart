@@ -29,8 +29,8 @@ void main() {
                         child: Builder(
                           builder: (dialogContext) {
                             try {
-                              final controller =
-                                  dialogContext.levit.find<TestController>();
+                              final controller = dialogContext.levit
+                                  .find<TestController>();
                               return Text('Found: ${controller.value()}');
                             } catch (e) {
                               return Text('Error: Exception');
@@ -54,8 +54,9 @@ void main() {
     expect(find.text('Found: Hello'), findsOneWidget);
   });
 
-  testWidgets('LScope.capture preserves access for nested dialog widgets',
-      (tester) async {
+  testWidgets('LScope.capture preserves access for nested dialog widgets', (
+    tester,
+  ) async {
     const buttonKey = Key('open_dialog');
 
     await tester.pumpWidget(
@@ -72,10 +73,8 @@ void main() {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (_) => LScope.capture(
-                        context,
-                        child: const _DeepWidget(),
-                      ),
+                      builder: (_) =>
+                          LScope.capture(context, child: const _DeepWidget()),
                     );
                   },
                 ),
@@ -93,44 +92,45 @@ void main() {
   });
 
   testWidgets(
-      'runBridged alone still does not transfer scope to nested widgets',
-      (tester) async {
-    const buttonKey = Key('open_dialog');
+    'runBridged alone still does not transfer scope to nested widgets',
+    (tester) async {
+      const buttonKey = Key('open_dialog');
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: ThemeData(splashFactory: NoSplash.splashFactory),
-        home: LScope.put(
-          () => TestController(),
-          child: Builder(
-            builder: (context) {
-              return Scaffold(
-                body: const Center(child: Text('Page')),
-                floatingActionButton: FloatingActionButton(
-                  key: buttonKey,
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) {
-                        return LScope.runBridged(context, () {
-                          return const _DeepWidget();
-                        });
-                      },
-                    );
-                  },
-                ),
-              );
-            },
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
+          home: LScope.put(
+            () => TestController(),
+            child: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: const Center(child: Text('Page')),
+                  floatingActionButton: FloatingActionButton(
+                    key: buttonKey,
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) {
+                          return LScope.runBridged(context, () {
+                            return const _DeepWidget();
+                          });
+                        },
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.tap(find.byKey(buttonKey));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(buttonKey));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Error: Exception'), findsOneWidget);
-  });
+      expect(find.text('Error: Exception'), findsOneWidget);
+    },
+  );
 }
 
 class _DeepWidget extends StatelessWidget {

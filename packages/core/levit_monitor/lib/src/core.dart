@@ -102,16 +102,18 @@ class LevitMonitor {
   }) {
     final middleware = _middleware;
     if (middleware == null) return;
-    middleware._addToBuffer(CustomMonitorEvent(
-      sessionId: middleware.sessionId,
-      namespace: namespace,
-      name: name,
-      attributes: attributes,
-      level: level,
-      sensitive: sensitive,
-      error: error,
-      stackTrace: stackTrace,
-    ));
+    middleware._addToBuffer(
+      CustomMonitorEvent(
+        sessionId: middleware.sessionId,
+        namespace: namespace,
+        name: name,
+        attributes: attributes,
+        level: level,
+        sensitive: sensitive,
+        error: error,
+        stackTrace: stackTrace,
+      ),
+    );
   }
 
   /// Helper method for emitting a log at [Level.trace].
@@ -127,9 +129,11 @@ class LevitMonitor {
       log(data, level: Level.info, error: error, stackTrace: stackTrace);
 
   /// Helper method for emitting a log at [Level.warning].
-  static void logWarning(Object? data,
-          {Object? error, StackTrace? stackTrace}) =>
-      log(data, level: Level.warning, error: error, stackTrace: stackTrace);
+  static void logWarning(
+    Object? data, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) => log(data, level: Level.warning, error: error, stackTrace: stackTrace);
 
   /// Helper method for emitting a log at [Level.error].
   static void logError(Object? data, {Object? error, StackTrace? stackTrace}) =>
@@ -147,39 +151,78 @@ class LevitMonitor {
   /// *   [transport]: A single destination for monitor events.
   /// *   [transports]: A list of destinations for monitor events. If provided,
   ///     it will be combined with [transport] if both are present.
-  static void attach({
+  static Future<void> _lifecycle = Future.value();
+  static bool? _previousWorkerMonitoring;
+  static Future<void> _serialize(Future<void> Function() action) {
+    final operation = _lifecycle.then((_) => action());
+    _lifecycle = operation.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {},
+    );
+    return operation;
+  }
+
+  /// Enables bounded event history and worker statistics only when requested.
+  static Future<void> attach({
     LevitTransport? transport,
     List<LevitTransport>? transports,
-  }) {
-    detach(); // Ensure an idempotent state
+    int historyCapacity = 0,
+    int maxPendingEvents = 1024,
+    bool includeStackTrace = false,
+    bool enableWorkerStatistics = false,
+  }) => _serialize(() async {
+    await _detachNow();
+    final all = [if (transport != null) transport, ...?transports];
+    final sink = all.isEmpty
+        ? ConsoleTransport()
+        : all.length == 1
+        ? all.single
+        : MultiTransport(all);
+    final middleware = LevitMonitorMiddleware(
+      transport: sink,
+      includeStackTrace: includeStackTrace,
+      historyCapacity: historyCapacity,
+      maxPendingEvents: maxPendingEvents,
+    );
+    _previousWorkerMonitoring = Lx.enableWatchMonitoring;
+    if (enableWorkerStatistics) Lx.enableWatchMonitoring = true;
+    _middleware = middleware;
+    middleware.enable();
+  });
 
-    // Monitoring relies on owner paths produced by auto-linking.
-    Levit.enableAutoLinking();
-
-    final List<LevitTransport> allTransports = [];
-    if (transport != null) allTransports.add(transport);
-    if (transports != null) allTransports.addAll(transports);
-
-    final LevitTransport t;
-    if (allTransports.isEmpty) {
-      t = ConsoleTransport();
-    } else if (allTransports.length == 1) {
-      t = allTransports.first;
-    } else {
-      t = MultiTransport(allTransports);
-    }
-
-    _middleware = LevitMonitorMiddleware(transport: t);
-    _middleware?.enable();
-  }
-
-  /// Detaches the monitor from the application and releases associated resources.
-  static void detach() {
-    final middleware = _middleware;
+  static Future<void> _detachNow() async {
+    final previous = _middleware;
     _middleware = null;
-    if (middleware == null) return;
-
-    middleware.disable();
-    unawaited(middleware.close().catchError((_) {}));
+    if (previous == null) return;
+    try {
+      await previous.close();
+    } finally {
+      if (_previousWorkerMonitoring != null) {
+        Lx.enableWatchMonitoring = _previousWorkerMonitoring!;
+      }
+      _previousWorkerMonitoring = null;
+    }
   }
+
+  /// Completes only after admitted events and transport cleanup finish.
+  static Future<void> detach() => _serialize(_detachNow);
+
+  /// Waits for attachment/replacement and all admitted event delivery.
+  static Future<void> flush() => _serialize(() async {
+    await _middleware?.flush();
+  });
+  static int get droppedEvents => _middleware?.droppedEvents ?? 0;
+  static List<LevitEventEnvelope> get history =>
+      _middleware?.history ?? const [];
+  static Map<String, dynamic>? get snapshot => _middleware?.snapshot;
+}
+
+/// Failures from awaited event delivery/cleanup, after all cleanup was attempted.
+final class LevitMonitorException implements Exception {
+  final List<AsyncError> failures;
+  LevitMonitorException(Iterable<AsyncError> failures)
+    : failures = List.unmodifiable(failures);
+  @override
+  String toString() =>
+      'LevitMonitorException(${failures.length} recorded failures)';
 }

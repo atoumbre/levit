@@ -5,17 +5,32 @@ import '../helpers.dart';
 
 void main() {
   testWidgets('lazyPut with and without scope', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) {
-      context.levit.lazyPut(() => TestController()..count = 11);
-      return Text('Count: ${context.levit.find<TestController>().count}');
-    })));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            context.levit.lazyPut(() => TestController()..count = 11);
+            return Text('Count: ${context.levit.find<TestController>().count}');
+          },
+        ),
+      ),
+    );
     expect(find.text('Count: 11'), findsOneWidget);
-    Levit.reset(force: true);
-    await tester
-        .pumpWidget(LScope(child: MaterialApp(home: Builder(builder: (context) {
-      context.levit.lazyPut(() => TestController()..count = 22);
-      return Text('Count: ${context.levit.find<TestController>().count}');
-    }))));
+    await Levit.reset(force: true);
+    await tester.pumpWidget(
+      LScope(
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) {
+              context.levit.lazyPut(() => TestController()..count = 22);
+              return Text(
+                'Count: ${context.levit.find<TestController>().count}',
+              );
+            },
+          ),
+        ),
+      ),
+    );
     expect(find.text('Count: 22'), findsOneWidget);
   });
 }

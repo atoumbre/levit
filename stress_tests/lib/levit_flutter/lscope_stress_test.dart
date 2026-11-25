@@ -8,26 +8,30 @@ class _TestController extends LevitController {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('Stress Test: LScope', () {
     testWidgets('Deep Tree - 500 nested LScope widgets', (tester) async {
       print(
-          '[Description] Tests resolution through deeply nested LScope widgets.');
+        '[Description] Tests resolution through deeply nested LScope widgets.',
+      );
       const depth = 500;
 
       Widget buildNested(int level) {
         if (level >= depth) {
-          return Builder(builder: (context) {
-            final sw = Stopwatch()..start();
-            final ctrl = Levit.find<_TestController>(tag: 'root');
-            sw.stop();
-            print(
-                'Resolved deep scope through $depth layers in ${sw.elapsedMilliseconds}ms');
-            return Text('ID: ${ctrl.id}');
-          });
+          return Builder(
+            builder: (context) {
+              final sw = Stopwatch()..start();
+              final ctrl = Levit.find<_TestController>(tag: 'root');
+              sw.stop();
+              print(
+                'Resolved deep scope through $depth layers in ${sw.elapsedMilliseconds}ms',
+              );
+              return Text('ID: ${ctrl.id}');
+            },
+          );
         }
         return LScope(
           dependencyFactory: (context) => level,
@@ -48,19 +52,22 @@ void main() {
 
       final sw = Stopwatch()..start();
       for (var i = 0; i < cycles; i++) {
-        await tester.pumpWidget(MaterialApp(
-          home: LScope(
-            dependencyFactory: (context) => _TestController(i),
-            child: const Text('Scoped'),
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LScope(
+              dependencyFactory: (context) => _TestController(i),
+              child: const Text('Scoped'),
+            ),
           ),
-        ));
+        );
         await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
       }
       sw.stop();
 
       final opsPerMs = cycles / sw.elapsedMilliseconds;
       print(
-          'LScope Churn: $cycles mount/unmount cycles in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(1)} ops/ms)');
+        'LScope Churn: $cycles mount/unmount cycles in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(1)} ops/ms)',
+      );
     });
   });
 }

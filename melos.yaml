@@ -47,6 +47,14 @@ scripts:
         - benchmarks
         - flutter_dev_tool
 
+  test:browser:
+    run: dart run scripts/check_browser_builds.dart
+    description: Compile browser runtime contracts, examples and bundled inspector
+
+  test:lints:
+    run: dart run scripts/check_lint_plugin.dart
+    description: Verify native analyzer plugin in a real local consumer
+
   coverage:
     run: dart run scripts/check_coverage.dart --fail-under=100
     description: Run coverage checks
@@ -60,8 +68,12 @@ scripts:
     description: Run stress tests
 
   benchmarks:
-    run: flutter test benchmarks
-    description: Run benchmarks
+    run: flutter test
+    description: Run benchmark harness tests
+    exec:
+      concurrency: 1
+    packageFilters:
+      scope: benchmarks
 
   report:benchmarks:
     run: dart run scripts/benchmark_report.dart

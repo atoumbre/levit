@@ -8,11 +8,15 @@ void main() {
       final s = 0.lx;
       dynamic caughtError;
 
-      LxWorker(s, (v) {
-        if (v == 1) throw 'Sync Error';
-      }, onProcessingError: (e, s) {
-        caughtError = e;
-      });
+      LxWorker(
+        s,
+        (v) {
+          if (v == 1) throw 'Sync Error';
+        },
+        onProcessingError: (e, s) {
+          caughtError = e;
+        },
+      );
 
       s.value = 1;
       expect(caughtError, 'Sync Error');
@@ -38,12 +42,16 @@ void main() {
       final s = 0.lx;
       final completer = Completer<dynamic>();
 
-      LxWorker(s, (v) async {
-        await Future.delayed(Duration.zero);
-        throw 'Async Error';
-      }, onProcessingError: (e, s) {
-        if (!completer.isCompleted) completer.complete(e);
-      });
+      LxWorker(
+        s,
+        (v) async {
+          await Future.delayed(Duration.zero);
+          throw 'Async Error';
+        },
+        onProcessingError: (e, s) {
+          if (!completer.isCompleted) completer.complete(e);
+        },
+      );
 
       s.value = 1;
       expect(await completer.future, 'Async Error');

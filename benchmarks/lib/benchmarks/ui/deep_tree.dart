@@ -9,11 +9,11 @@ import '../../benchmark_engine.dart';
 
 class DeepTreeBenchmark extends Benchmark {
   @override
-  String get name => 'Deep Tree Propagation (UI)';
+  String get name => 'Nested Leaf Rebuild (UI)';
 
   @override
   String get description =>
-      'Updates a value at the root of a 100-deep widget tree. Measures time to update the leaf.';
+      'Rebuilds one observed leaf below 100 static containers; ancestors do not observe the value.';
 
   @override
   bool get isUI => true;
@@ -65,21 +65,25 @@ class LevitDeepTree extends BenchmarkImplementation {
   Future<void> verify() async {
     if (counter.value != expectedValue) {
       throw StateError(
-          'Levit deep tree mismatch: expected $expectedValue, got ${counter.value}');
+        'Levit deep tree mismatch: expected $expectedValue, got ${counter.value}',
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return buildDeepTree(100, LWatch(() {
-      // Access value to subscribe
-      return Text('Value: ${counter.value}');
-    }));
+    return buildDeepTree(
+      100,
+      LWatch(() {
+        // Access value to subscribe
+        return Text('Value: ${counter.value}');
+      }),
+    );
   }
 
   @override
   Future<void> teardown() async {
-    counter.close();
+    await counter.close();
   }
 }
 
@@ -104,7 +108,8 @@ class VanillaDeepTree extends BenchmarkImplementation {
   Future<void> verify() async {
     if (counter.value != expectedValue) {
       throw StateError(
-          'Vanilla deep tree mismatch: expected $expectedValue, got ${counter.value}');
+        'Vanilla deep tree mismatch: expected $expectedValue, got ${counter.value}',
+      );
     }
   }
 
@@ -116,13 +121,14 @@ class VanillaDeepTree extends BenchmarkImplementation {
   @override
   Widget build(BuildContext context) {
     return buildDeepTree(
-        100,
-        ValueListenableBuilder<int>(
-          valueListenable: counter,
-          builder: (context, value, _) {
-            return Text('Value: $value');
-          },
-        ));
+      100,
+      ValueListenableBuilder<int>(
+        valueListenable: counter,
+        builder: (context, value, _) {
+          return Text('Value: $value');
+        },
+      ),
+    );
   }
 }
 
@@ -147,7 +153,8 @@ class GetXDeepTree extends BenchmarkImplementation {
   Future<void> verify() async {
     if (counter.value != expectedValue) {
       throw StateError(
-          'GetX deep tree mismatch: expected $expectedValue, got ${counter.value}');
+        'GetX deep tree mismatch: expected $expectedValue, got ${counter.value}',
+      );
     }
   }
 
@@ -158,9 +165,12 @@ class GetXDeepTree extends BenchmarkImplementation {
 
   @override
   Widget build(BuildContext context) {
-    return buildDeepTree(100, Obx(() {
-      return Text('Value: ${counter.value}');
-    }));
+    return buildDeepTree(
+      100,
+      Obx(() {
+        return Text('Value: ${counter.value}');
+      }),
+    );
   }
 }
 
@@ -190,7 +200,8 @@ class BlocDeepTree extends BenchmarkImplementation {
   Future<void> verify() async {
     if (cubit.state != expectedValue) {
       throw StateError(
-          'BLoC deep tree mismatch: expected $expectedValue, got ${cubit.state}');
+        'BLoC deep tree mismatch: expected $expectedValue, got ${cubit.state}',
+      );
     }
   }
 
@@ -203,11 +214,14 @@ class BlocDeepTree extends BenchmarkImplementation {
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: cubit,
-      child: buildDeepTree(100, BlocBuilder<DeepCounterCubit, int>(
-        builder: (context, state) {
-          return Text('Value: $state');
-        },
-      )),
+      child: buildDeepTree(
+        100,
+        BlocBuilder<DeepCounterCubit, int>(
+          builder: (context, state) {
+            return Text('Value: $state');
+          },
+        ),
+      ),
     );
   }
 }
@@ -236,7 +250,8 @@ class RiverpodDeepTree extends BenchmarkImplementation {
     final value = container.read(deepProvider);
     if (value != expectedValue) {
       throw StateError(
-          'Riverpod deep tree mismatch: expected $expectedValue, got $value');
+        'Riverpod deep tree mismatch: expected $expectedValue, got $value',
+      );
     }
   }
 
@@ -249,12 +264,15 @@ class RiverpodDeepTree extends BenchmarkImplementation {
   Widget build(BuildContext context) {
     return UncontrolledProviderScope(
       container: container,
-      child: buildDeepTree(100, Consumer(
-        builder: (context, ref, _) {
-          final val = ref.watch(deepProvider);
-          return Text('Value: $val');
-        },
-      )),
+      child: buildDeepTree(
+        100,
+        Consumer(
+          builder: (context, ref, _) {
+            final val = ref.watch(deepProvider);
+            return Text('Value: $val');
+          },
+        ),
+      ),
     );
   }
 }

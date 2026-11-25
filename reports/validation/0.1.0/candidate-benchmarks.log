@@ -1,0 +1,338 @@
+melos run benchmarks
+  └> melos exec --concurrency 1 -- "flutter test"
+     └> RUNNING
+
+$ melos exec
+  └> flutter test
+     └> RUNNING (in 1 packages)
+
+--------------------------------------------------------------------------------
+benchmarks:
+00:00 +0: loading /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart
+00:00 +0: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Vanilla
+00:00 +1: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Vanilla
+00:00 +2: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Vanilla
+00:00 +3: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Vanilla
+RESULT: Rapid State Mutation [Vanilla]: 523µs (0.523ms)
+00:00 +4: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Levit
+RESULT: Rapid State Mutation [Levit]: 454µs (0.454ms)
+00:00 +5: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/performance_monitor_test.dart: each measurement session unregisters both middleware hooks
+00:00 +6: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation GetX
+RESULT: Rapid State Mutation [GetX]: 658µs (0.658ms)
+00:00 +7: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:00 +7: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/runner_failure_test.dart: app runner rejects a measured run whose cleanup fails
+Running cleanup failure for Levit...
+Error tearing down cleanup failure: Bad state: teardown failed
+00:00 +8: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:00 +8: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/runner_failure_test.dart: headless logic runner reports cleanup failure
+Error tearing down cleanup failure: Bad state: teardown failed
+00:00 +9: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+00:00 +9: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/runner_failure_test.dart: headless UI runner unmounts and reports cleanup failure
+Error tearing down cleanup failure: Bad state: teardown failed
+00:00 +10: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation BLoC
+RESULT: Rapid State Mutation [BLoC]: 498µs (0.498ms)
+00:17 +11: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Rapid State Mutation Riverpod
+RESULT: Rapid State Mutation [Riverpod]: 3542µs (3.542ms)
+00:17 +12: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Complex Graph (Diamond) Levit
+RESULT: Complex Graph (Diamond) [Levit]: 20µs (0.020ms)
+00:17 +13: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Complex Graph (Diamond) GetX
+RESULT: Complex Graph (Diamond) [GetX]: 105µs (0.105ms)
+00:17 +14: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Complex Graph (Diamond) BLoC
+RESULT: Complex Graph (Diamond) [BLoC]: 384µs (0.384ms)
+00:17 +15: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Complex Graph (Diamond) Riverpod
+RESULT: Complex Graph (Diamond) [Riverpod]: 140µs (0.140ms)
+00:17 +16: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Complex Graph (Diamond) Vanilla
+RESULT: Complex Graph (Diamond) [Vanilla]: 56µs (0.056ms)
+00:17 +17: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update GetX
+RESULT: Fan Out Update [GetX]: 17µs (0.017ms)
+00:18 +18: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update BLoC
+RESULT: Fan Out Update [BLoC]: 530µs (0.530ms)
+00:18 +19: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update Riverpod
+RESULT: Fan Out Update [Riverpod]: 21µs (0.021ms)
+00:18 +20: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update Vanilla
+RESULT: Fan Out Update [Vanilla]: 7µs (0.007ms)
+00:18 +21: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan Out Update Levit
+RESULT: Fan Out Update [Levit]: 15µs (0.015ms)
+00:18 +22: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update BLoC
+RESULT: Fan In Update [BLoC]: 27µs (0.027ms)
+00:18 +23: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update Riverpod
+RESULT: Fan In Update [Riverpod]: 14µs (0.014ms)
+00:18 +24: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update Vanilla
+RESULT: Fan In Update [Vanilla]: 8µs (0.008ms)
+00:18 +25: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update Levit
+RESULT: Fan In Update [Levit]: 6µs (0.006ms)
+00:18 +26: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Fan In Update GetX
+RESULT: Fan In Update [GetX]: 15µs (0.015ms)
+00:18 +27: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed Riverpod
+RESULT: Async Computed [Riverpod]: 1332µs (1.332ms)
+00:18 +28: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed Vanilla
+RESULT: Async Computed [Vanilla]: 647µs (0.647ms)
+00:18 +29: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed Levit
+RESULT: Async Computed [Levit]: 1475µs (1.475ms)
+00:18 +30: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed GetX
+RESULT: Async Computed [GetX]: 787µs (0.787ms)
+00:18 +31: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Async Computed BLoC
+RESULT: Async Computed [BLoC]: 1186µs (1.186ms)
+00:19 +32: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched Vanilla
+RESULT: Batch vs Un-batched [Vanilla]: 135µs (0.135ms)
+00:19 +33: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched Levit
+RESULT: Batch vs Un-batched [Levit]: 30µs (0.030ms)
+00:19 +34: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched GetX
+RESULT: Batch vs Un-batched [GetX]: 20µs (0.020ms)
+00:19 +35: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched BLoC
+RESULT: Batch vs Un-batched [BLoC]: 17µs (0.017ms)
+00:19 +36: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Batch vs Un-batched Riverpod
+RESULT: Batch vs Un-batched [Riverpod]: 68µs (0.068ms)
+00:19 +37: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Scoped DI Lookup Levit
+RESULT: Scoped DI Lookup [Levit]: 50µs (0.050ms)
+00:19 +38: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Scoped DI Lookup GetX
+RESULT: Scoped DI Lookup [GetX]: 120µs (0.120ms)
+00:19 +39: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Scoped DI Lookup BLoC
+RESULT: Scoped DI Lookup [BLoC]: 6µs (0.006ms)
+00:19 +40: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Scoped DI Lookup Riverpod
+RESULT: Scoped DI Lookup [Riverpod]: 22µs (0.022ms)
+00:19 +41: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Scoped DI Lookup Vanilla
+RESULT: Scoped DI Lookup [Vanilla]: 6µs (0.006ms)
+00:19 +42: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) GetX
+RESULT: Computed Chain (Deep Propagation) [GetX]: 351µs (0.351ms)
+00:19 +43: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) BLoC
+RESULT: Computed Chain (Deep Propagation) [BLoC]: 31946µs (31.946ms)
+00:24 +44: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) Riverpod
+RESULT: Computed Chain (Deep Propagation) [Riverpod]: 99920µs (99.920ms)
+00:39 +45: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) Vanilla
+RESULT: Computed Chain (Deep Propagation) [Vanilla]: 213µs (0.213ms)
+00:39 +46: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Computed Chain (Deep Propagation) Levit
+RESULT: Computed Chain (Deep Propagation) [Levit]: 132µs (0.132ms)
+00:39 +47: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Large List Update (UI) BLoC
+RESULT: Large List Update (UI) [BLoC]: 1778µs (1.778ms)
+00:40 +48: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Large List Update (UI) Riverpod
+RESULT: Large List Update (UI) [Riverpod]: 1113µs (1.113ms)
+00:41 +49: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Large List Update (UI) Vanilla
+RESULT: Large List Update (UI) [Vanilla]: 997µs (0.997ms)
+00:41 +50: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Large List Update (UI) Levit
+RESULT: Large List Update (UI) [Levit]: 916µs (0.916ms)
+00:41 +51: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Large List Update (UI) GetX
+RESULT: Large List Update (UI) [GetX]: 870µs (0.870ms)
+00:41 +52: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Deep Tree Propagation (UI) Riverpod
+RESULT: Deep Tree Propagation (UI) [Riverpod]: 1079µs (1.079ms)
+00:42 +53: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Deep Tree Propagation (UI) Vanilla
+RESULT: Deep Tree Propagation (UI) [Vanilla]: 957µs (0.957ms)
+00:42 +54: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Deep Tree Propagation (UI) Levit
+RESULT: Deep Tree Propagation (UI) [Levit]: 676µs (0.676ms)
+00:42 +55: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Deep Tree Propagation (UI) GetX
+RESULT: Deep Tree Propagation (UI) [GetX]: 716µs (0.716ms)
+00:42 +56: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Deep Tree Propagation (UI) BLoC
+RESULT: Deep Tree Propagation (UI) [BLoC]: 883µs (0.883ms)
+00:42 +57: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) Vanilla
+RESULT: Dynamic Grid Churn (UI) [Vanilla]: 9541µs (9.541ms)
+00:44 +58: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) Levit
+RESULT: Dynamic Grid Churn (UI) [Levit]: 8087µs (8.087ms)
+00:45 +59: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) GetX
+RESULT: Dynamic Grid Churn (UI) [GetX]: 7775µs (7.775ms)
+00:46 +60: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) BLoC
+RESULT: Dynamic Grid Churn (UI) [BLoC]: 7932µs (7.932ms)
+00:48 +61: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Dynamic Grid Churn (UI) Riverpod
+RESULT: Dynamic Grid Churn (UI) [Riverpod]: 7827µs (7.827ms)
+00:49 +62: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Animated State - 60fps (UI) Levit
+RESULT: Animated State - 60fps (UI) [Levit]: 266µs (0.266ms)
+00:49 +63: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Animated State - 60fps (UI) GetX
+RESULT: Animated State - 60fps (UI) [GetX]: 219µs (0.219ms)
+00:49 +64: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Animated State - 60fps (UI) BLoC
+RESULT: Animated State - 60fps (UI) [BLoC]: 257µs (0.257ms)
+00:49 +65: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Animated State - 60fps (UI) Riverpod
+RESULT: Animated State - 60fps (UI) [Riverpod]: 171µs (0.171ms)
+00:49 +66: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks Animated State - 60fps (UI) Vanilla
+RESULT: Animated State - 60fps (UI) [Vanilla]: 157µs (0.157ms)
+00:49 +67: /private/tmp/levit-0.1.0-recert-80vkslwn/benchmarks/test/benchmark_runner_test.dart: Headless Benchmarks (tearDownAll)
+
+================================================================================
+BENCHMARK CONSOLIDATED REPORT
+Date: 2026-11-11 16:50:19.691165
+================================================================================
+
+ENVIRONMENT
+--------------------------------------------------------------------------------
+Execution Context        : flutter_test
+Build Mode               : debug
+Benchmark Profile        : test
+Iterations               : 100
+Warmup Iterations        : 50
+Framework Order Rotation : Enabled
+Frameworks               : Vanilla, Levit, GetX, BLoC, Riverpod
+Benchmarks               : Rapid State Mutation, Complex Graph (Diamond), Fan Out Update, Fan In Update, Async Computed, Batch vs Un-batched, Scoped DI Lookup, Computed Chain (Deep Propagation), Large List Update (UI), Deep Tree Propagation (UI), Dynamic Grid Churn (UI), Animated State - 60fps (UI)
+Operating System         : macos
+OS Version               : Version 26.6.2 (Build 25G83)
+Dart Version             : 3.12.2
+CPU Threads              : 8
+Locale                   : en_US
+Host Name                : MacBook-Pro-de-Atoumbre-4.local
+================================================================================
+
+>>> Rapid State Mutation
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Levit           | 454        | 506.5      | 401-1637          | 158.9      | 100 | OK
+BLoC            | 498        | 614.0      | 452-4690          | 498.8      | 100 | OK
+Vanilla         | 523        | 572.9      | 435-1337          | 165.2      | 100 | OK
+GetX            | 658        | 676.2      | 616-1270          | 74.5       | 100 | OK
+Riverpod        | 3542       | 3557.1     | 3376-3799         | 95.0       | 100 | OK
+================================================================================
+
+>>> Complex Graph (Diamond)
+--------------------------------------------------------------------------------
+Class: Approximate | Note: Uses each framework's closest graph/computed primitive.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Levit           | 20         | 25.8       | 18-70             | 11.6       | 100 | OK
+Vanilla         | 56         | 63.0       | 51-261            | 25.9       | 100 | OK
+GetX            | 105        | 110.0      | 88-177            | 17.5       | 100 | OK
+Riverpod        | 140        | 204.7      | 109-1865          | 202.6      | 100 | OK
+BLoC            | 384        | 393.6      | 352-596           | 39.5       | 100 | OK
+================================================================================
+
+>>> Fan Out Update
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Vanilla         | 7          | 8.8        | 6-33              | 4.1        | 100 | OK
+Levit           | 15         | 16.7       | 13-76             | 9.1        | 100 | OK
+GetX            | 17         | 19.8       | 15-49             | 6.3        | 100 | OK
+Riverpod        | 21         | 32.6       | 6-193             | 26.7       | 100 | OK
+BLoC            | 530        | 549.6      | 472-1224          | 83.2       | 100 | OK
+================================================================================
+
+>>> Fan In Update
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Levit           | 6          | 8.0        | 4-28              | 3.6        | 100 | OK
+Vanilla         | 8          | 8.1        | 6-19              | 2.4        | 100 | OK
+Riverpod        | 14         | 17.4       | 5-113             | 10.9       | 100 | OK
+GetX            | 15         | 16.0       | 13-78             | 7.2        | 100 | OK
+BLoC            | 27         | 32.7       | 20-138            | 17.0       | 100 | OK
+================================================================================
+
+>>> Async Computed
+--------------------------------------------------------------------------------
+Class: Approximate | Note: Measures sequential async recomputation using each framework's closest async primitive.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Vanilla         | 647        | 688.1      | 564-1717          | 139.2      | 100 | OK
+GetX            | 787        | 808.4      | 720-1041          | 67.8       | 100 | OK
+BLoC            | 1186       | 1231.9     | 1065-2198         | 166.8      | 100 | OK
+Riverpod        | 1332       | 1392.1     | 1120-2305         | 232.9      | 100 | OK
+Levit           | 1475       | 1545.3     | 1293-2611         | 227.9      | 100 | OK
+================================================================================
+
+>>> Batch vs Un-batched
+--------------------------------------------------------------------------------
+Class: Feature Demo | Note: Levit uses a native batching primitive; others measure un-batched closest equivalents.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+BLoC            | 17         | 19.7       | 16-154            | 14.3       | 100 | OK
+GetX            | 20         | 21.2       | 19-69             | 5.9        | 100 | OK
+Levit           | 30         | 40.2       | 19-259            | 38.0       | 100 | OK
+Riverpod        | 68         | 78.2       | 64-318            | 32.2       | 100 | OK
+Vanilla         | 135        | 137.0      | 128-179           | 7.8        | 100 | OK
+================================================================================
+
+>>> Scoped DI Lookup
+--------------------------------------------------------------------------------
+Class: Feature Demo | Note: DI containers are not first-class primitives in every framework.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+BLoC            | 6          | 7.3        | 6-59              | 5.8        | 100 | OK
+Vanilla         | 6          | 6.6        | 6-24              | 2.1        | 100 | OK
+Riverpod        | 22         | 22.9       | 21-35             | 2.6        | 100 | OK
+Levit           | 50         | 52.4       | 47-134            | 10.7       | 100 | OK
+GetX            | 120        | 132.0      | 118-402           | 36.7       | 100 | OK
+================================================================================
+
+>>> Computed Chain (Deep Propagation)
+--------------------------------------------------------------------------------
+Class: Approximate | Note: Approximates deep computed propagation with each framework's closest primitive.
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Levit           | 132        | 166.4      | 121-615           | 68.7       | 100 | OK
+Vanilla         | 213        | 263.2      | 198-754           | 106.0      | 100 | OK
+GetX            | 351        | 358.8      | 333-416           | 15.0       | 100 | OK
+BLoC            | 31946      | 34307.3    | 30868-116382      | 11480.3    | 100 | OK
+Riverpod        | 99920      | 102785.6   | 94804-242323      | 15198.4    | 100 | OK
+================================================================================
+
+>>> Large List Update (UI)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+GetX            | 870        | 951.0      | 629-2176          | 310.4      | 100 | OK
+Levit           | 916        | 1026.3     | 704-2766          | 342.3      | 100 | OK
+Vanilla         | 997        | 1168.3     | 745-4478          | 506.0      | 100 | OK
+Riverpod        | 1113       | 1324.9     | 766-4850          | 627.5      | 100 | OK
+BLoC            | 1778       | 1900.8     | 1107-4109         | 585.2      | 100 | OK
+================================================================================
+
+>>> Deep Tree Propagation (UI)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Levit           | 676        | 736.8      | 562-1180          | 155.4      | 100 | OK
+GetX            | 716        | 784.1      | 565-1890          | 224.0      | 100 | OK
+BLoC            | 883        | 1156.8     | 616-7024          | 894.8      | 100 | OK
+Vanilla         | 957        | 958.0      | 584-2481          | 284.3      | 100 | OK
+Riverpod        | 1079       | 1202.4     | 701-4373          | 506.9      | 100 | OK
+================================================================================
+
+>>> Dynamic Grid Churn (UI)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+GetX            | 7775       | 8100.7     | 6270-13933        | 1366.8     | 100 | OK
+Riverpod        | 7827       | 8400.6     | 6464-36950        | 3084.6     | 100 | OK
+BLoC            | 7932       | 8108.9     | 6532-12533        | 1065.7     | 100 | OK
+Levit           | 8087       | 8566.6     | 6149-13829        | 1570.6     | 100 | OK
+Vanilla         | 9541       | 9823.3     | 7284-13974        | 1311.1     | 100 | OK
+================================================================================
+
+>>> Animated State - 60fps (UI)
+--------------------------------------------------------------------------------
+Class: Comparative
+--------------------------------------------------------------------------------
+Framework       | Median µs  | Mean µs    | Min-Max µs        | StdDev     | N   | Status
+--------------------------------------------------------------------------------
+Vanilla         | 157        | 173.5      | 141-488           | 53.8       | 100 | OK
+Riverpod        | 171        | 214.0      | 149-1369          | 143.6      | 100 | OK
+GetX            | 219        | 316.4      | 179-4767          | 472.4      | 100 | OK
+BLoC            | 257        | 335.2      | 184-930           | 162.8      | 100 | OK
+Levit           | 266        | 390.2      | 197-1853          | 263.2      | 100 | OK
+================================================================================
+
+
+00:49 +67: All tests passed!
+benchmarks: SUCCESS
+--------------------------------------------------------------------------------
+
+$ melos exec
+  └> flutter test
+     └> SUCCESS
+
+melos run benchmarks
+  └> melos exec --concurrency 1 -- "flutter test"
+     └> SUCCESS

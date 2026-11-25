@@ -24,3 +24,12 @@ flutter run
 - Keep controller ownership local to feature scope.
 - Prefer selector-based rebuilds on hot render paths.
 - Maintain explicit mutation and derivation boundaries.
+
+## Save and upload workflow
+
+A controller-owned supervisor root contains a save workflow and a child upload group. A failed upload cancels its sibling; cancel/unmount drains every finally block before the repository closes. The buttons expose success, cancellation and failure. The tests use completion signals to hold cleanup open and assert ordering.
+
+```bash
+flutter run -d chrome -t lib/save_upload.dart
+flutter test
+```

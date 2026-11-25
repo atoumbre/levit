@@ -1,0 +1,233 @@
+Resolving dependencies...
+Downloading packages...
+  async 2.13.0 (2.13.1 available)
+  clock 1.1.2 (1.1.3 available)
+! levit_dart_core 0.0.12 from path ../levit_dart_core (overridden in ./pubspec_overrides.yaml)
+! levit_reactive 0.0.12 from path ../levit_reactive (overridden in ./pubspec_overrides.yaml)
+! levit_scope 0.0.12 from path ../levit_scope (overridden in ./pubspec_overrides.yaml)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.0 (1.19.0 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test_api 0.7.11 (0.7.15 available)
+  vector_math 2.2.0 (2.4.4 available)
+  vm_service 15.0.2 (15.4.0 available)
+Got dependencies!
+9 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Resolving dependencies in `./example`...
+Downloading packages...
+Got dependencies in `./example`.
+00:00 +0: loading /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch_status_test.dart
+00:00 +0: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch_status_test.dart: LWatchStatus Tests renders success state
+00:00 +1: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch_status_test.dart: LWatchStatus Tests renders success state
+00:00 +2: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lazy_put_static_test.dart: LScope.lazyPut static factory
+00:00 +3: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lazy_put_static_test.dart: LScope.lazyPut static factory
+00:00 +4: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lazy_put_static_test.dart: LScope.lazyPut static factory
+00:00 +5: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lazy_put_static_test.dart: LScope.lazyPut static factory
+00:00 +6: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lazy_put_static_test.dart: LScope.lazyPut static factory
+00:00 +7: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lazy_put_static_test.dart: LScope.lazyPut static factory
+00:00 +8: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lazy_put_static_test.dart: LScope.lazyPut static factory
+00:00 +9: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lazy_put_static_test.dart: LScope.lazyPut static factory
+00:00 +10: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lazy_put_async_static_test.dart: LScope.lazyPutAsync static factory
+00:00 +11: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/scope_default_name_test.dart: unnamed LRouteScope without route settings name uses unique fallback
+00:00 +12: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/scope_default_name_test.dart: unnamed LAsyncRouteScope without route settings name uses unique fallback
+00:01 +13: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/scope_update_test.dart: LScope update rebuilds children
+00:01 +14: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_factory_test.dart: LScope.put static factory
+00:01 +15: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/scope_reparenting_test.dart: LScope rebinds to new parent scope on re-parent
+00:01 +16: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/scope_reparenting_test.dart: LScope rebinds to new parent scope on re-parent
+00:01 +17: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/scope_reparenting_test.dart: LScope rebinds to new parent scope on re-parent
+00:02 +18: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/scope_reparenting_test.dart: LScope disposes scope on dependencyFactory error
+00:02 +19: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/scope_reparenting_test.dart: LAsyncScope disposes scope on dependencyFactory error
+00:02 +20: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart: LScope Lifecycle & Behavior LScope creates and disposes scope correctly
+00:02 +21: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart: LScope Lifecycle & Behavior LScope creates and disposes scope correctly
+00:02 +22: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart: LScope Lifecycle & Behavior LScope creates and disposes scope correctly
+00:02 +23: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart: LScope Lifecycle & Behavior LScope creates and disposes scope correctly
+00:02 +24: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart: LScope Lifecycle & Behavior LScope creates and disposes scope correctly
+00:02 +25: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart: LScope Lifecycle & Behavior Nested LScope inheritance
+00:02 +26: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart: LScope Lifecycle & Behavior LScope registers multiple bindings
+00:02 +27: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart: LScope Lifecycle & Behavior LevitProvider fallback to global
+00:02 +28: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart: LScope Lifecycle & Behavior LevitProvider put works in scope
+00:03 +29: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/l_async_scope_test.dart: LAsyncScope Coverage LAsyncScope error state (Line 114)
+00:03 +30: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/dialog_scope_loss_test.dart: LScope.capture provides page scope to dialogs
+00:03 +31: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/dialog_scope_loss_test.dart: LScope.capture provides page scope to dialogs
+00:03 +32: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/dialog_scope_loss_test.dart: LScope.capture provides page scope to dialogs
+00:03 +33: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/dialog_scope_loss_test.dart: LScope.capture provides page scope to dialogs
+00:04 +34: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/dialog_scope_loss_test.dart: LScope.capture preserves access for nested dialog widgets
+00:04 +35: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/dialog_scope_loss_test.dart: runBridged alone still does not transfer scope to nested widgets
+00:04 +36: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LRouteScope put registers controller and exposes route bindings
+00:05 +37: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/levit_provider_resolves_store_test.dart: LevitProvider resolves LevitStore using context.levit.find
+00:05 +38: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/levit_provider_resolves_store_test.dart: LevitProvider resolves LevitStore using context.levit.find
+00:05 +39: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/levit_provider_resolves_store_test.dart: LevitProvider resolves LevitStore using context.levit.find
+00:05 +40: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/scope_test.dart: LScope registers controller in local scope
+00:05 +41: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LRouteScope updates visibility when a route is covered and uncovered
+00:05 +42: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LRouteScope updates visibility when a route is covered and uncovered
+00:05 +43: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LRouteScope updates visibility when a route is covered and uncovered
+00:05 +44: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LRouteScope updates visibility when a route is covered and uncovered
+00:05 +45: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LRouteScope updates visibility when a route is covered and uncovered
+00:05 +46: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LRouteScope updates visibility when a route is covered and uncovered
+00:05 +47: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LRouteScope updates visibility when a route is covered and uncovered
+00:05 +48: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LRouteScope updates visibility when a route is covered and uncovered
+00:05 +49: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +50: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +51: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +52: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +53: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +54: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +55: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +56: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +57: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +58: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +59: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +60: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +61: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +62: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +63: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart: LScope.put static factory
+00:05 +64: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope/route_scope_test.dart: LAsyncRouteScope disposes local scope when the async route is replaced
+00:05 +65: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/controller/controller_test.dart: LevitController (Flutter Extensions) disposes ChangeNotifier on close via autoDisposeNotifier
+00:06 +66: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedasyncview_error_handling_test.dart: LScopedAsyncView handles error state
+00:06 +67: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedasyncview_error_handling_test.dart: LScopedAsyncView handles error state
+00:06 +68: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedasyncview_error_handling_test.dart: LScopedAsyncView handles error state
+00:06 +69: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedasyncview_error_handling_test.dart: LScopedAsyncView handles error state
+00:06 +70: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedasyncview_error_handling_test.dart: LScopedAsyncView handles error state
+00:07 +71: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedasyncview_store_resolves_test.dart: LScopedAsyncView.store resolves LevitAsyncState
+00:07 +72: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_test.dart: LView provides controller access
+00:07 +73: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_test.dart: LView supports tagged controller
+00:07 +74: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_test.dart: LView autoWatch enables automatic reactivity
+00:07 +75: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_test.dart: LView throws if controller missing
+00:07 +76: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_test.dart: LScopedView creates and provides controller
+00:07 +77: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_test.dart: LScopedView disposes controller on widget removal
+00:07 +78: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_test.dart: LScopedView autoWatch enables reactive updates
+00:07 +79: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_test.dart: LScopedView nests inside another LScopedView
+00:07 +80: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lview_resolve_existing_test.dart: LView constructor resolves existing
+00:08 +81: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/scoped_view_throws_when_controller_null_test.dart: LScopedView throws StateError when controller is null and no orElse provided
+00:08 +82: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/scoped_view_throws_when_controller_null_test.dart: LScopedView throws StateError when controller is null and no orElse provided
+00:08 +83: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/scoped_view_throws_when_controller_null_test.dart: LScopedView throws StateError when controller is null and no orElse provided
+00:08 +84: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_resolve_existing_async_test.dart: LAsyncView constructor resolves existing async
+00:08 +85: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_resolve_existing_async_test.dart: LAsyncView constructor resolves existing async
+00:08 +86: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_resolve_existing_async_test.dart: LAsyncView constructor resolves existing async
+00:08 +87: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_resolve_existing_async_test.dart: LAsyncView constructor resolves existing async
+00:08 +88: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_resolve_existing_async_test.dart: LAsyncView constructor resolves existing async
+00:08 +89: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_resolve_existing_async_test.dart: LAsyncView constructor resolves existing async
+00:08 +90: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_resolve_existing_async_test.dart: LAsyncView constructor resolves existing async
+00:08 +91: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedview_behavior_test.dart: LScopedView Behavior LScopedView creates controller and auto-watches
+00:09 +92: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedview_store_initialization_test.dart: LScopedView.store coverage
+00:09 +93: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedview_store_initialization_test.dart: LScopedView.store coverage
+00:09 +94: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lview_renders_or_else_when_controller_null_test.dart: LView renders orElse when controller is null
+00:09 +95: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lview_renders_or_else_when_controller_null_test.dart: LView renders orElse when controller is null
+00:09 +96: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lview_put_constructor_test.dart: LScopedView.put registers and resolves
+00:10 +97: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_put_constructor_test.dart: LScopedAsyncView.put registers and resolves async
+00:10 +98: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_put_constructor_test.dart: LScopedAsyncView.put registers and resolves async
+00:10 +99: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lview_put_registers_test.dart: LScopedView.put registers and resolves
+00:10 +100: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedasyncview_put_tags_test.dart: LScopedAsyncView.put works with tags
+00:11 +101: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_edge_cases_test.dart: levit_flutter_core Final Gaps (setUpAll)
+00:11 +101: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_edge_cases_test.dart: levit_flutter_core Final Gaps LAsyncView UnimplementedError coverage
+00:11 +102: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_store_initialization_test.dart: LAsyncView.store coverage
+00:11 +103: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_store_initialization_test.dart: LAsyncView.store coverage
+00:11 +104: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_store_initialization_test.dart: LAsyncView.store coverage
+00:11 +105: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_store_initialization_test.dart: LAsyncView.store coverage
+00:11 +106: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_store_initialization_test.dart: LAsyncView.store coverage
+00:11 +107: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedasyncview_handles_error_test.dart: LScopedAsyncView handles error state
+00:11 +108: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lview_in_scope_test.dart: LView in Scope
+00:12 +109: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_corner_cases_test.dart: LAsyncView.store coverage
+00:12 +110: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_anonymous_closure_warning_test.dart: fresh async resolver closures do not refetch without args
+00:12 +111: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_anonymous_closure_warning_test.dart: fresh async resolver closures do not refetch without args
+00:12 +112: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_anonymous_closure_warning_test.dart: fresh async resolver closures do not refetch without args
+00:12 +113: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_anonymous_closure_warning_test.dart: fresh async resolver closures do not refetch without args
+00:12 +114: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_anonymous_closure_warning_test.dart: fresh async resolver closures do not refetch without args
+00:12 +115: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_anonymous_closure_warning_test.dart: fresh async resolver closures do not refetch without args
+00:12 +116: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_anonymous_closure_warning_test.dart: fresh async resolver closures do not refetch without args
+00:12 +117: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_anonymous_closure_warning_test.dart: fresh async resolver closures do not refetch without args
+00:12 +118: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_put_registers_test.dart: LScopedAsyncView.put registers and resolves async
+00:12 +119: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_args_update_test.dart: LAsyncView updates when args change
+00:12 +120: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_args_update_test.dart: LAsyncView _argsMatch helper coverage
+00:13 +121: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/compatibility_test.dart: View Compatibility Tests LView supports Composition
+00:13 +122: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/compatibility_test.dart: View Compatibility Tests LView supports Composition
+00:13 +123: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/compatibility_test.dart: View Compatibility Tests LView supports Composition
+00:13 +124: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedview_put_tags_test.dart: LScopedView.put works with tags and isolation
+00:13 +125: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedview_put_tags_test.dart: LScopedView.put works with tags and isolation
+00:13 +126: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedview_put_tags_test.dart: LScopedView.put works with tags and isolation
+00:13 +127: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedview_put_tags_test.dart: LScopedView.put works with tags and isolation
+00:13 +128: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedview_put_works_tags_test.dart: LScopedView.put works with tags and isolation
+00:13 +129: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lscopedview_put_works_tags_test.dart: LScopedView.put works with tags and isolation
+00:13 +130: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/compatibility_test.dart: View Compatibility Tests LAsyncScope + LView supports Extension
+00:13 +131: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/async_scoped_view_autowatch_off_test.dart: LAsyncScope + LView supports autoWatch: false
+00:14 +132: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/shorthand_test.dart: LView Shorthands LView.controller finds controller
+00:14 +133: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_error_handling_helpers_test.dart: LAsyncView error handling and build helpers
+00:14 +134: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/lasyncview_error_handling_helpers_test.dart: LAsyncView error handling and build helpers
+00:14 +135: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_widget_update_test.dart: LView re-resolves controller when args change
+00:14 +136: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_widget_update_test.dart: LView re-resolves controller when args change
+00:14 +137: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_widget_update_test.dart: LView re-resolves controller when args change
+00:14 +138: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/view/view_widget_update_test.dart: LView does not re-resolve controller without args
+00:14 +139: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_dependency_tracking_test.dart: LWatch Dependency Tracking LWatch auto-tracks dependencies
+00:14 +140: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_dependency_tracking_test.dart: LWatch Dependency Tracking LWatch auto-tracks dependencies
+00:14 +141: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_dependency_tracking_test.dart: LWatch Dependency Tracking LWatch auto-tracks dependencies
+00:15 +142: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_dependency_tracking_test.dart: LWatch Dependency Tracking LWatch handles multiple dependencies (Fast Path -> Slow Path)
+00:15 +143: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_dependency_tracking_test.dart: LWatch Dependency Tracking LWatch cleanup on dependencies change
+00:15 +144: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_dependency_tracking_test.dart: LWatch Dependency Tracking LWatch debugLabel asserts
+LWatch[test_watch] rebuilding
+00:16 +145: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/nullable_read_contract_test.dart: nullable reads in a build never mutate the source
+00:16 +146: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_cleanup_dependency_removed_test.dart: LWatch cleans up subscriptions
+00:16 +147: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_cleanup_dependency_removed_test.dart: LWatch cleans up subscriptions
+00:16 +148: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_resets_proxy_on_reentrant_build_test.dart: LWatch re-entrant build proxy reset
+00:17 +149: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_test.dart: LWatch rebuilds when Lx value changes
+00:17 +150: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_test.dart: LWatch handles multiple Lx values
+00:17 +151: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_test.dart: LWatch disposes subscriptions on unmount
+00:17 +152: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_test.dart: LWatch builds correctly with debugLabel set
+LWatch[test-counter] rebuilding
+LWatch[test-counter] rebuilding
+00:17 +153: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_test.dart: LWatch dedupes duplicate LxStream emits when reading lastValue
+00:17 +154: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_test.dart: LWatch stabilizes logical dependency when getter recreates named reactive
+00:17 +155: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_test.dart: LWatchVar resubscribes when Lx changes
+00:17 +156: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_test.dart: LWatch coverage removes unused dependencies
+00:17 +157: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/watch_test.dart: LWatch coverage handles ambiguous logical keys in multi dependency mode
+00:17 +158: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/l_watch_test.dart: LWatch Coverage LWatch with implicit reactive (Line 113 disposal)
+00:18 +159: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_subscription_transitions_test.dart: LWatch complex subscription transitions
+00:18 +160: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_subscription_transitions_test.dart: LWatch complex subscription transitions
+00:18 +161: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_subscription_transitions_test.dart: LWatch complex subscription transitions
+00:18 +162: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/watch/lwatch_subscription_transitions_test.dart: LWatch slow path subscription churn
+LWatch[TestWatch] rebuilding
+LWatch[TestWatch] rebuilding
+LWatch[TestWatch] rebuilding
+00:18 +163: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope_bridging_test.dart: Split-Brain: Levit.find fails inside LScope without context.levit
+00:18 +164: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/scope_bridging_test.dart: Split-Brain: Levit.find works inside LBuilder with fix
+00:19 +165: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/context_aware_watch_test.dart: LWatch runs with context when middleware is present
+00:19 +166: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/context_aware_watch_test.dart: LWatch runs with context when middleware is present
+00:19 +167: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/context_aware_watch_test.dart: LWatch runs with context when middleware is present
+00:19 +168: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/context_aware_watch_test.dart: LWatch runs with context when middleware is present
+00:19 +169: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/context_aware_watch_test.dart: LWatch runs with context when middleware is present
+00:19 +170: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/context_aware_watch_test.dart: LWatch runs with context when middleware is present
+LWatch[TestWatch] rebuilding
+LWatch[TestWatch] rebuilding
+00:19 +171: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_provider_store_key_test.dart: typed store access uses the nearest scope and local overrides
+00:19 +172: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_provider_store_key_test.dart: typed store access uses the nearest scope and local overrides
+00:19 +173: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_provider_store_key_test.dart: typed store access uses the nearest scope and local overrides
+00:19 +174: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_provider_store_key_test.dart: typed store access uses the nearest scope and local overrides
+00:19 +175: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/family_refresh_test.dart: mounted direct builder follows the same handle across refresh
+00:19 +176: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/family_refresh_test.dart: status builder gets retained null during refresh and failure
+00:19 +177: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/family_refresh_test.dart: query switch cannot render an obsolete completion
+00:20 +178: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/l_select_builder_test.dart: LSelectorBuilder builds with initial value
+00:20 +179: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/l_select_builder_test.dart: LSelectorBuilder builds with initial value
+00:20 +180: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/l_select_builder_test.dart: LSelectorBuilder builds with initial value
+00:20 +181: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/l_select_builder_test.dart: LSelectorBuilder builds with initial value
+00:20 +182: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/l_select_builder_test.dart: LSelectorBuilder builds with initial value
+00:21 +183: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/l_select_builder_test.dart: LSelectorBuilder updates when dependency changes
+00:21 +184: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/l_select_builder_test.dart: LSelectorBuilder updates when builder function changes
+00:21 +185: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/l_select_builder_test.dart: LSelectorBuilder disposes inline LxComputed
+00:21 +186: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/lbuilder_subscription_update_test.dart: LBuilder Subscription LWatchVar watches specific reactive
+00:21 +187: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_context_put_or_find_all_test.dart: putOrFind creates global instance if missing
+00:21 +188: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_context_put_or_find_all_test.dart: putOrFind creates global instance if missing
+00:21 +189: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_context_put_or_find_all_test.dart: putOrFind uses existing scoped instance
+00:21 +190: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_context_lazy_put_async_finder_test.dart: lazyPutAsync returns a finder function
+00:21 +191: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_context_lazy_put_async_finder_test.dart: lazyPutAsync returns a finder function
+00:22 +192: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/levit_provider_lazy_put_test.dart: lazyPut with and without scope
+00:22 +193: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart: Coverage Gaps - LevitProvider putOrFind uses existing global instance
+00:22 +194: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart: Coverage Gaps - LevitProvider putOrFind creates global instance if missing
+00:22 +195: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart: Coverage Gaps - LevitProvider putOrFind uses existing scoped instance
+00:22 +196: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart: Coverage Gaps - LevitProvider putOrFind creates scoped instance if missing
+00:22 +197: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart: Coverage Gaps - LevitProvider lazyPutAsync returns a finder function
+00:22 +198: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart: Coverage Gaps - LView LView in Scope
+00:22 +199: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart: Coverage Gaps - LWatch LWatch cleans up subscriptions
+00:22 +200: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart: Coverage Gaps - LScopedView LScopedView updates correctly
+00:22 +201: /Users/atoumbre/SoftiLab/levit-svg/packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart: Coverage Gaps - LScopedView LScopedView.async handles loading and resolution
+00:22 +202: All tests passed!

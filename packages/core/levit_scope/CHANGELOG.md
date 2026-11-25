@@ -1,3 +1,14 @@
+## 0.1.0-beta.1
+
+- Coordinate the breaking ownership, refresh and tooling release. Requires Dart
+  3.12+ and Flutter 3.44+ where applicable; see MIGRATION_0.1.0.md in the repository.
+
+## 0.0.12
+
+- **Breaking:** remove preconstructed instance/future registration extensions; retain builder forms.
+- Own factory-created disposable results in the registering scope; await pending creation and cleanup during removal.
+- Reject replacement while factory results or registration cleanup remain live.
+- Updated internal runtime constraints to `^0.0.12`.
 
 ## 0.0.11
 

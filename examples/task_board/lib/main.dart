@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 
 void main() {
+  Levit.enableAutoLinking();
   runApp(const TaskBoardExampleApp());
 }
 
@@ -22,16 +23,9 @@ class TaskItem {
   final String title;
   final bool done;
 
-  const TaskItem({
-    required this.id,
-    required this.title,
-    this.done = false,
-  });
+  const TaskItem({required this.id, required this.title, this.done = false});
 
-  TaskItem copyWith({
-    String? title,
-    bool? done,
-  }) {
+  TaskItem copyWith({String? title, bool? done}) {
     return TaskItem(
       id: id,
       title: title ?? this.title,
@@ -44,10 +38,14 @@ class TaskBoardController extends LevitController {
   final tasks = LxList<TaskItem>().named('tasks');
   final query = ''.lx.named('query');
 
-  late final TextEditingController addController =
-      autoDispose(TextEditingController());
-  late final TextEditingController searchController =
-      autoDispose(TextEditingController());
+  late final TextEditingController addController = own(
+    TextEditingController(),
+    dispose: (value) => value.dispose(),
+  );
+  late final TextEditingController searchController = own(
+    TextEditingController(),
+    dispose: (value) => value.dispose(),
+  );
 
   late final LxComputed<List<TaskItem>> filteredTasks;
   int _nextId = 1;
@@ -55,10 +53,10 @@ class TaskBoardController extends LevitController {
   @override
   void onInit() {
     super.onInit();
-    autoDispose(tasks);
-    autoDispose(query);
+    own(tasks);
+    own(query);
 
-    filteredTasks = autoDispose(
+    filteredTasks = own(
       LxComputed(() {
         final search = query.value.trim().toLowerCase();
         if (search.isEmpty) return tasks.toList(growable: false);
@@ -121,7 +119,8 @@ class TaskBoardScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: LSelectorBuilder(
-                () => '${controller.tasks.where((item) => item.done).length}'
+                () =>
+                    '${controller.tasks.where((item) => item.done).length}'
                     '/${controller.tasks.length} completed',
                 (summary) => Text(summary),
               ),

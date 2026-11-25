@@ -32,8 +32,8 @@ class _TestView extends StatelessWidget {
 }
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
     _TestController.instanceCount = 0;
     _TestController.disposeCount = 0;
   });
@@ -46,15 +46,17 @@ void main() {
       final sw = Stopwatch()..start();
       for (var i = 0; i < cycles; i++) {
         await tester.pumpWidget(const MaterialApp(home: _TestView()));
-        Levit.reset(force: true); // Force cleanup between cycles
+        await Levit.reset(force: true); // Force cleanup between cycles
         await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
       }
       sw.stop();
 
       print(
-          'LView Lifecycle: $cycles mount/unmount cycles in ${sw.elapsedMilliseconds}ms');
+        'LView Lifecycle: $cycles mount/unmount cycles in ${sw.elapsedMilliseconds}ms',
+      );
       print(
-          'Controllers created: ${_TestController.instanceCount}, disposed: ${_TestController.disposeCount}');
+        'Controllers created: ${_TestController.instanceCount}, disposed: ${_TestController.disposeCount}',
+      );
 
       expect(_TestController.instanceCount, cycles);
       expect(_TestController.disposeCount, cycles);
@@ -64,18 +66,23 @@ void main() {
       print('[Description] Measures controller access performance from LView.');
       Levit.put<_TestController>(() => _TestController(), tag: 'ctrl');
 
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (context) {
-          final sw = Stopwatch()..start();
-          for (var i = 0; i < 10000; i++) {
-            Levit.find<_TestController>(tag: 'ctrl');
-          }
-          sw.stop();
-          print(
-              'Controller Access: 10k Levit.find calls in ${sw.elapsedMilliseconds}ms');
-          return const SizedBox.shrink();
-        }),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              final sw = Stopwatch()..start();
+              for (var i = 0; i < 10000; i++) {
+                Levit.find<_TestController>(tag: 'ctrl');
+              }
+              sw.stop();
+              print(
+                'Controller Access: 10k Levit.find calls in ${sw.elapsedMilliseconds}ms',
+              );
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
     });
   });
 }

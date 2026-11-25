@@ -1,0 +1,6 @@
+flutter: LEVIT_PERFORMANCE_FAILED: Bad state: Missing raster frame timings
+#0      _check (package:benchmarks/release_performance.dart:225)
+#1      main (package:benchmarks/release_performance.dart:186)
+<asynchronous suspension>
+
+2026-11-11 15:06:42.656 benchmarks[86893:42201154] Running with merged UI and platform thread. Experimental.

@@ -20,7 +20,7 @@ enum TaskConflictPolicy {
   /// Return the result of the latest outstanding execution.
   join,
 
-  /// Ignore the new submission and complete it with `null`.
+  /// Ignore the new submission with a typed dropped exception.
   drop,
 
   /// Cooperatively cancel outstanding work and admit the replacement.
@@ -34,12 +34,7 @@ enum TaskConflictPolicy {
 }
 
 /// The scheduling phase represented by a [LevitTaskEvent].
-enum LevitTaskPhase {
-  queued,
-  running,
-  retryWaiting,
-  completed,
-}
+enum LevitTaskPhase { queued, running, retryWaiting, completed }
 
 /// Terminal outcomes for task executions and rejected submissions.
 enum LevitTaskOutcome {
@@ -96,11 +91,20 @@ class LevitTaskCancelledException implements Exception {
   /// The unique execution ID.
   final String executionId;
 
+  final LevitTaskCancellationReason reason;
+
   /// Creates a cooperative cancellation exception.
-  const LevitTaskCancelledException(this.taskId, this.executionId);
+  const LevitTaskCancelledException(
+    this.taskId,
+    this.executionId, {
+    this.reason = const LevitTaskCancellationReason(
+      LevitCancellationKind.requested,
+    ),
+  });
 
   @override
-  String toString() => 'LevitTaskCancelledException: execution "$executionId" '
+  String toString() =>
+      'LevitTaskCancelledException: execution "$executionId" '
       'for task "$taskId" was cancelled.';
 }
 
@@ -136,15 +140,26 @@ class LevitTaskMetadata {
 
 class _LevitTaskCancellation {
   bool _isCancelled = false;
-  final Completer<void> _cancelled = Completer<void>();
+  Completer<void>? _cancelled;
 
   bool get isCancelled => _isCancelled;
-  Future<void> get cancelled => _cancelled.future;
+  Future<void> get cancelled {
+    final completed = _cancelled ??= Completer<void>();
+    if (_isCancelled && !completed.isCompleted) completed.complete();
+    return completed.future;
+  }
 
-  void cancel() {
+  LevitTaskCancellationReason? reason;
+
+  void cancel([
+    LevitTaskCancellationReason reason = const LevitTaskCancellationReason(
+      LevitCancellationKind.requested,
+    ),
+  ]) {
     if (_isCancelled) return;
     _isCancelled = true;
-    _cancelled.complete();
+    this.reason = reason;
+    _cancelled?.complete();
   }
 }
 
@@ -160,19 +175,25 @@ class LevitTaskContext {
   final int attempt;
 
   final _LevitTaskCancellation _cancellation;
+  final LevitTaskGroup group;
+  final DateTime? deadline;
   final void Function(double value) _reportProgress;
 
   LevitTaskContext._({
     required this.taskId,
     required this.executionId,
     required this.attempt,
+    required this.group,
+    this.deadline,
     required _LevitTaskCancellation cancellation,
     required void Function(double value) reportProgress,
-  })  : _cancellation = cancellation,
-        _reportProgress = reportProgress;
+  }) : _cancellation = cancellation,
+       _reportProgress = reportProgress;
 
   /// Whether cooperative cancellation has been requested.
   bool get isCancelled => _cancellation.isCancelled;
+
+  LevitTaskCancellationReason? get cancellationReason => _cancellation.reason;
 
   /// Completes when cooperative cancellation is requested.
   Future<void> get cancelled => _cancellation.cancelled;
@@ -180,7 +201,11 @@ class LevitTaskContext {
   /// Throws [LevitTaskCancelledException] when cancellation was requested.
   void throwIfCancelled() {
     if (isCancelled) {
-      throw LevitTaskCancelledException(taskId, executionId);
+      throw LevitTaskCancelledException(
+        taskId,
+        executionId,
+        reason: _cancellation.reason!,
+      );
     }
   }
 
@@ -208,6 +233,7 @@ class LevitIsolateTaskContext {
   final ReceivePort _cancellationPort;
   final SendPort _eventPort;
   bool _isCancelled = false;
+  LevitTaskCancellationReason? cancellationReason;
   final Completer<void> _cancelled = Completer<void>();
 
   LevitIsolateTaskContext._({
@@ -216,11 +242,14 @@ class LevitIsolateTaskContext {
     required this.attempt,
     required ReceivePort cancellationPort,
     required SendPort eventPort,
-  })  : _cancellationPort = cancellationPort,
-        _eventPort = eventPort {
-    _cancellationPort.listen((_) {
+  }) : _cancellationPort = cancellationPort,
+       _eventPort = eventPort {
+    _cancellationPort.listen((reason) {
       if (_isCancelled) return;
       _isCancelled = true;
+      cancellationReason =
+          reason as LevitTaskCancellationReason? ??
+          const LevitTaskCancellationReason(LevitCancellationKind.requested);
       _cancelled.complete();
     });
   }
@@ -234,7 +263,11 @@ class LevitIsolateTaskContext {
   /// Throws [LevitTaskCancelledException] when cancellation was requested.
   void throwIfCancelled() {
     if (_isCancelled) {
-      throw LevitTaskCancelledException(taskId, executionId);
+      throw LevitTaskCancelledException(
+        taskId,
+        executionId,
+        reason: cancellationReason!,
+      );
     }
   }
 
@@ -251,14 +284,16 @@ class LevitIsolateTaskContext {
 }
 
 /// A top-level or static task entrypoint suitable for isolate execution.
-typedef LevitIsolateTask<I, T> = FutureOr<T> Function(
-  I input,
-  LevitIsolateTaskContext context,
-);
+typedef LevitIsolateTask<I, T> =
+    FutureOr<T> Function(I input, LevitIsolateTaskContext context);
 
 /// Structured lifecycle event emitted by [LevitTaskEngine].
 class LevitTaskEvent {
   final LevitTaskEventType type;
+  final String? groupId;
+  final String? parentGroupId;
+  final DateTime? deadline;
+  final LevitTaskCancellationReason? cancellationReason;
 
   /// Stable logical task ID.
   final String taskId;
@@ -296,6 +331,10 @@ class LevitTaskEvent {
 
   LevitTaskEvent({
     required this.type,
+    this.groupId,
+    this.parentGroupId,
+    this.deadline,
+    this.cancellationReason,
     required this.taskId,
     String? executionId,
     this.ownerPath = '?',
@@ -319,30 +358,28 @@ class LevitTaskEvent {
     bool? runInIsolate,
     String? debugName,
     DateTime? timestamp,
-  })  : executionId = executionId ?? taskId,
-        phase = phase ?? _phaseForEvent(type),
-        metadata = metadata ??
-            (debugName == null
-                ? LevitTaskMetadata.none
-                : LevitTaskMetadata(debugName: debugName)),
-        runsInIsolate = runsInIsolate ?? runInIsolate ?? false,
-        timestamp = timestamp ?? DateTime.now(),
-        queuedAt = queuedAt ?? timestamp ?? DateTime.now();
+  }) : executionId = executionId ?? taskId,
+       phase = phase ?? _phaseForEvent(type),
+       metadata =
+           metadata ??
+           (debugName == null
+               ? LevitTaskMetadata.none
+               : LevitTaskMetadata(debugName: debugName)),
+       runsInIsolate = runsInIsolate ?? runInIsolate ?? false,
+       timestamp = timestamp ?? DateTime.now(),
+       queuedAt = queuedAt ?? timestamp ?? DateTime.now();
 
   static LevitTaskPhase _phaseForEvent(LevitTaskEventType type) {
     return switch (type) {
       LevitTaskEventType.queued ||
-      LevitTaskEventType.coalesced =>
-        LevitTaskPhase.queued,
+      LevitTaskEventType.coalesced => LevitTaskPhase.queued,
       LevitTaskEventType.started ||
-      LevitTaskEventType.progress =>
-        LevitTaskPhase.running,
+      LevitTaskEventType.progress => LevitTaskPhase.running,
       LevitTaskEventType.retryScheduled => LevitTaskPhase.retryWaiting,
       LevitTaskEventType.finished ||
       LevitTaskEventType.failed ||
       LevitTaskEventType.skipped ||
-      LevitTaskEventType.rejected =>
-        LevitTaskPhase.completed,
+      LevitTaskEventType.rejected => LevitTaskPhase.completed,
     };
   }
 }
@@ -359,10 +396,7 @@ abstract class LevitTaskMiddleware {
   void onTaskEvent(LevitTaskEvent event);
 
   /// Registers [middleware] globally, optionally replacing the same [token].
-  static T add<T extends LevitTaskMiddleware>(
-    T middleware, {
-    Object? token,
-  }) {
+  static T add<T extends LevitTaskMiddleware>(T middleware, {Object? token}) {
     if (token != null) {
       final previous = _middlewaresByToken[token];
       if (identical(previous, middleware)) return middleware;
@@ -376,8 +410,9 @@ abstract class LevitTaskMiddleware {
   /// Removes [middleware] and any tokens attached to it.
   static bool remove(LevitTaskMiddleware middleware) {
     final removed = _middlewares.remove(middleware);
-    _middlewaresByToken
-        .removeWhere((_, current) => identical(current, middleware));
+    _middlewaresByToken.removeWhere(
+      (_, current) => identical(current, middleware),
+    );
     return removed;
   }
 
@@ -392,8 +427,10 @@ abstract class LevitTaskMiddleware {
       _middlewares.contains(middleware);
 
   static void _emit(LevitTaskEvent event) {
-    for (final middleware
-        in List<LevitTaskMiddleware>.of(_middlewares, growable: false)) {
+    for (final middleware in List<LevitTaskMiddleware>.of(
+      _middlewares,
+      growable: false,
+    )) {
       try {
         middleware.onTaskEvent(event);
       } catch (_) {
@@ -423,18 +460,36 @@ class LevitTaskExecution<T> {
   /// How this submission was handled.
   final LevitTaskSubmissionDisposition disposition;
 
-  /// The eventual result. Cancellation, dropping, and superseding yield `null`.
-  final Future<T?> result;
+  /// Successful nullable values are preserved. Skipped work throws a typed exception.
+  final Future<T> result;
+
+  /// Observes every terminal state without throwing.
+  late final Future<LevitExecutionOutcome<T>> outcome = result
+      .then<LevitExecutionOutcome<T>>(
+        LevitTaskSuccess<T>.new,
+        onError: (Object error, StackTrace stack) => switch (error) {
+          LevitTaskSupersededException() => LevitTaskSupersession<T>(),
+          LevitTaskCancelledException(:final reason) =>
+            LevitTaskCancellation<T>(reason),
+          LevitTaskDroppedException() => LevitTaskDropping<T>(),
+          _ => LevitTaskFailure<T>(error, stack),
+        },
+      );
 
   final void Function() _cancel;
 
-  const LevitTaskExecution._({
+  LevitTaskExecution._({
     required this.taskId,
     required this.executionId,
     required this.disposition,
     required this.result,
     required void Function() cancel,
-  }) : _cancel = cancel;
+  }) : _cancel = cancel {
+    // A handle may be observed through outcome later. Mark the source handled
+    // immediately, without eagerly allocating an unused outcome future/value.
+    // ignore() retains the result/error for later result and outcome listeners.
+    result.ignore();
+  }
 
   /// Cooperatively cancels this execution.
   void cancel() => _cancel();
@@ -445,6 +500,10 @@ class LevitTaskExecutionSummary {
   final String taskId;
   final String executionId;
   final String ownerPath;
+  final String? groupId;
+  final String? parentGroupId;
+  final DateTime? deadline;
+  final LevitTaskCancellationReason? cancellationReason;
   final LevitTaskPhase phase;
   final LevitTaskMetadata metadata;
   final TaskPriority priority;
@@ -463,6 +522,10 @@ class LevitTaskExecutionSummary {
     required this.taskId,
     required this.executionId,
     required this.ownerPath,
+    this.groupId,
+    this.parentGroupId,
+    this.deadline,
+    this.cancellationReason,
     required this.phase,
     required this.metadata,
     required this.priority,
@@ -483,6 +546,10 @@ class LevitTaskExecutionSummary {
       taskId: event.taskId,
       executionId: event.executionId,
       ownerPath: event.ownerPath,
+      groupId: event.groupId,
+      parentGroupId: event.parentGroupId,
+      deadline: event.deadline,
+      cancellationReason: event.cancellationReason,
       phase: event.phase,
       metadata: event.metadata,
       priority: event.priority,
@@ -504,6 +571,10 @@ class LevitTaskExecutionSummary {
       taskId: taskId,
       executionId: executionId,
       ownerPath: event.ownerPath,
+      groupId: event.groupId,
+      parentGroupId: event.parentGroupId,
+      deadline: event.deadline,
+      cancellationReason: event.cancellationReason,
       phase: event.phase,
       metadata: event.metadata,
       priority: event.priority,
@@ -530,8 +601,9 @@ class LevitTaskTracker extends LevitTaskMiddleware implements LevitDisposable {
   final int maxHistory;
 
   /// Summaries keyed by execution ID.
-  final executions =
-      LxMap<String, LevitTaskExecutionSummary>().named('taskExecutions');
+  final executions = LxMap<String, LevitTaskExecutionSummary>().named(
+    'taskExecutions',
+  );
 
   late final LxComputed<bool> hasBlockingTasks = (() {
     return executions.values.any(
@@ -659,6 +731,10 @@ class TaskDetails {
 
   /// Diagnostic path of the scheduling owner.
   final String ownerPath;
+  final String? groupId;
+  final String? parentGroupId;
+  final DateTime? deadline;
+  final LevitTaskCancellationReason? cancellationReason;
 
   /// Current scheduling phase.
   final LevitTaskPhase phase;
@@ -695,6 +771,10 @@ class TaskDetails {
     required this.status,
     this.executionId,
     this.ownerPath = '?',
+    this.groupId,
+    this.parentGroupId,
+    this.deadline,
+    this.cancellationReason,
     this.phase = LevitTaskPhase.completed,
     this.metadata = LevitTaskMetadata.none,
     this.priority = TaskPriority.normal,
@@ -715,6 +795,10 @@ class TaskDetails {
     LxStatus<dynamic>? status,
     String? executionId,
     String? ownerPath,
+    String? groupId,
+    String? parentGroupId,
+    DateTime? deadline,
+    LevitTaskCancellationReason? cancellationReason,
     LevitTaskPhase? phase,
     LevitTaskMetadata? metadata,
     TaskPriority? priority,
@@ -733,6 +817,10 @@ class TaskDetails {
       status: status ?? this.status,
       executionId: executionId ?? this.executionId,
       ownerPath: ownerPath ?? this.ownerPath,
+      groupId: groupId ?? this.groupId,
+      parentGroupId: parentGroupId ?? this.parentGroupId,
+      deadline: deadline ?? this.deadline,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
       phase: phase ?? this.phase,
       metadata: metadata ?? this.metadata,
       priority: priority ?? this.priority,

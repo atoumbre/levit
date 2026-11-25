@@ -1,0 +1,13 @@
+{
+  "packages/core/levit_monitor/lib/levit_monitor_protocol.dart": "56f4ff64836dac58a56b19dd69b7f5a0e6e9549c496756ee3f6b211607fc5afc",
+  "packages/core/levit_monitor/lib/src/event.dart": "fbc611aa56657272fdc541b63d82181ef7669278d51a32607614ff411f5f6b87",
+  "packages/core/levit_monitor/lib/src/middleware.dart": "93d36c68c3eb10754f919f8726e9e892ef7d402511e8c3e2156311ca5f336b3e",
+  "packages/core/levit_monitor/lib/src/snapshot.dart": "5e0165d3391a556e23c813579d080d48165a737e12ba75498153b0f36fbdc40a",
+  "packages/core/levit_scope/lib/src/core.dart": "e0150a39294c941ae2bf145c68ae5df81e1c6058396c449097d4da7381490ab7",
+  "packages/kits/levit_dart/lib/src/utilities/levit_task_engine.dart": "1df9ebb57140c89d5e5cb3a7227f5a84e4cad987ff579be7fb606277e1f67dba",
+  "packages/kits/levit_dart/lib/src/utilities/task_group.dart": "097deb382cd4feaf84dc0075ae1e47e8a93be77ad807e97bdea59922bb87b475",
+  "packages/kits/levit_dart/lib/src/utilities/task_engine_models.dart": "8a9d1307c54a59a591a65261710e6cdb8606184997945b2a628e523043b4c90e",
+  "packages/kits/levit_dart/lib/src/utilities/query_family.dart": "e9581f30a6c68df512812f4fdb558d5d17904e43b52330e8fb41b760b9c80db5",
+  "packages/core/levit_monitor/lib/src/transports/console_transport.dart": "d9ebdd320cd2a6eced472637b6d7721e2f1d26f1f4e779434bf3199ef0f2a8a7",
+  "packages/kits/levit_dart/lib/src/utilities/task_engine_queue.dart": "807a36ad256926ba34930428fe3a4cbb04618e12c907456ed88e3cff2df264c6"
+}

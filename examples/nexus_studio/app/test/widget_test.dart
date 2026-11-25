@@ -3,6 +3,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'package:levit_monitor/levit_monitor.dart';
 import 'package:stream_channel/stream_channel.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:async/async.dart';
@@ -12,8 +14,11 @@ import 'package:nexus_studio_app/controllers.dart';
 import 'package:nexus_studio_shared/shared.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  tearDown(() async {
+    await LevitMonitor.detach();
+  });
+  setUp(() async {
+    await Levit.reset(force: true);
     // Manual DI setup equivalent to main() but with control
     // We register dependencies before the test pumps the widget
     Levit.lazyPut(() => AuthController());
@@ -36,8 +41,9 @@ void main() {
     expect(find.text('Login as Editor'), findsOneWidget);
   });
 
-  testWidgets('main() runs without external sockets',
-      (WidgetTester tester) async {
+  testWidgets('main() runs without external sockets', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -45,16 +51,19 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    Levit.reset(force: true);
-    app.main(
-      enableDevTools: true,
-      devToolsChannelBuilder: (_) => FakeWebSocketChannel(),
-      projectChannelBuilder: (_) => FakeWebSocketChannel(),
+    await tester.runAsync(() => Levit.reset(force: true));
+    await tester.runAsync(
+      () => app.main(
+        enableDevTools: true,
+        devToolsChannelBuilder: (_) => FakeWebSocketChannel(),
+        projectChannelBuilder: (_) => FakeWebSocketChannel(),
+      ),
     );
     await tester.pump();
 
     expect(find.byType(app.NexusStudioApp), findsOneWidget);
     expect(find.text('Login as Editor'), findsOneWidget);
+    await tester.runAsync(() => LevitMonitor.detach());
   });
 
   testWidgets('Login unlocks editor', (WidgetTester tester) async {
@@ -83,8 +92,9 @@ void main() {
     expect(find.text('Add Shape:'), findsOneWidget);
   });
 
-  testWidgets('Viewer login covers read-only path',
-      (WidgetTester tester) async {
+  testWidgets('Viewer login covers read-only path', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -101,8 +111,9 @@ void main() {
     expect(Levit.find<AuthController>().canEdit, false);
   });
 
-  testWidgets('Editor UI updates on state changes',
-      (WidgetTester tester) async {
+  testWidgets('Editor UI updates on state changes', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -243,8 +254,9 @@ void main() {
     expect(app.GridPainter().shouldRepaint(app.GridPainter()), false);
   });
 
-  testWidgets('Toolbar actions cover add/color/export/presence',
-      (WidgetTester tester) async {
+  testWidgets('Toolbar actions cover add/color/export/presence', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -252,7 +264,7 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    Levit.reset(force: true);
+    await tester.runAsync(() => Levit.reset(force: true));
     Levit.lazyPut(() => AuthController());
     Levit.put(() => PresenceController());
     Levit.put(() => NexusEngine());
@@ -304,8 +316,9 @@ void main() {
     expect(find.textContaining('DONE'), findsOneWidget);
   });
 
-  testWidgets('Session timer covers waiting branch',
-      (WidgetTester tester) async {
+  testWidgets('Session timer covers waiting branch', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -316,7 +329,7 @@ void main() {
     final timerStream = StreamController<String>();
     addTearDown(timerStream.close);
 
-    Levit.reset(force: true);
+    await tester.runAsync(() => Levit.reset(force: true));
     Levit.lazyPut(() => AuthController());
     Levit.put(() => PresenceController());
     Levit.put(() => NexusEngine());
@@ -342,7 +355,7 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    Levit.reset(force: true);
+    await tester.runAsync(() => Levit.reset(force: true));
     Levit.lazyPut(() => AuthController());
     Levit.put(() => PresenceController());
     Levit.put(() => NexusEngine());
@@ -370,26 +383,29 @@ class FakeWebSocketChannel implements WebSocketChannel {
   Stream get stream => _controller.stream;
 
   @override
-  WebSocketSink get sink => _FakeSink(_sinkController);
+  WebSocketSink get sink => _FakeSink(_sinkController, _controller);
 
   @override
   void pipe(StreamChannel<dynamic> other) {}
 
   @override
   StreamChannel<S> transform<S>(
-      StreamChannelTransformer<S, dynamic> transformer) {
+    StreamChannelTransformer<S, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
   @override
   StreamChannel<dynamic> transformStream(
-      StreamTransformer<dynamic, dynamic> transformer) {
+    StreamTransformer<dynamic, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
   @override
   StreamChannel<dynamic> transformSink(
-      StreamSinkTransformer<dynamic, dynamic> transformer) {
+    StreamSinkTransformer<dynamic, dynamic> transformer,
+  ) {
     throw UnimplementedError();
   }
 
@@ -423,10 +439,19 @@ class FakeWebSocketChannel implements WebSocketChannel {
 
 class _FakeSink implements WebSocketSink {
   final StreamController _controller;
-  _FakeSink(this._controller);
+  final StreamController incoming;
+  _FakeSink(this._controller, this.incoming);
 
   @override
-  void add(dynamic data) => _controller.add(data);
+  void add(dynamic data) {
+    _controller.add(data);
+    if (data is String) {
+      final message = jsonDecode(data);
+      if (message is Map && message['seq'] is int) {
+        incoming.add(jsonEncode({'ack': message['seq']}));
+      }
+    }
+  }
 
   @override
   void addError(Object error, [StackTrace? stackTrace]) =>
@@ -436,7 +461,16 @@ class _FakeSink implements WebSocketSink {
   Future addStream(Stream stream) => _controller.addStream(stream);
 
   @override
-  Future close([int? closeCode, String? closeReason]) => _controller.close();
+  Future close([int? closeCode, String? closeReason]) async {
+    // Real WebSocket sinks drain writes without an application output listener.
+    // Start the fake sink's drain if its outgoing stream was never observed.
+    try {
+      _controller.stream.listen((_) {});
+    } on StateError {
+      /* Already observed. */
+    }
+    await _controller.close();
+  }
 
   @override
   Future get done => _controller.done;

@@ -5,16 +5,17 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
   testWidgets(
-      'LScopedView throws StateError when controller is null and no orElse provided',
-      (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: LScopedView<String>(
-          builder: (context, controller) => Text('Success: $controller'),
+    'LScopedView throws StateError when controller is null and no orElse provided',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LScopedView<String>(
+            builder: (context, controller) => Text('Success: $controller'),
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(tester.takeException(), isInstanceOf<StateError>());
-  });
+      expect(tester.takeException(), isInstanceOf<StateError>());
+    },
+  );
 }

@@ -129,10 +129,7 @@ void main() {
       });
       scope.bindExisting<_Port, _Service>();
 
-      expect(
-        () => scope.find<_Port>(),
-        throwsA(isA<StateError>()),
-      );
+      expect(() => scope.find<_Port>(), throwsA(isA<StateError>()));
       final port = await scope.findAsync<_Port>();
       final service = await scope.findAsync<_Service>();
 
@@ -146,10 +143,7 @@ void main() {
       final scope = LevitScope.root('tagged_aliases');
       final service = _Service('tagged');
       scope.put<_Service>(() => service, tag: 'source');
-      scope.bindExisting<_Port, _Service>(
-        sourceTag: 'source',
-        tag: 'port',
-      );
+      scope.bindExisting<_Port, _Service>(sourceTag: 'source', tag: 'port');
 
       expect(scope.find<_Port>(tag: 'port'), same(service));
       expect(scope.findOrNull<_Port>(tag: 'port'), same(service));
@@ -175,16 +169,10 @@ void main() {
 
     test('rejects factory and missing-source aliases', () {
       final scope = LevitScope.root('invalid_aliases');
-      expect(
-        () => scope.bindExisting<_Port, _Service>(),
-        throwsStateError,
-      );
+      expect(() => scope.bindExisting<_Port, _Service>(), throwsStateError);
 
       scope.lazyPut<_Service>(() => _Service('factory'), isFactory: true);
-      expect(
-        () => scope.bindExisting<_Port, _Service>(),
-        throwsStateError,
-      );
+      expect(() => scope.bindExisting<_Port, _Service>(), throwsStateError);
     });
 
     test('rejects key collisions and alias registration replacement', () async {
@@ -192,10 +180,7 @@ void main() {
       scope.put<_Service>(() => _Service('source'));
       scope.bindExisting<_Port, _Service>();
 
-      expect(
-        () => scope.bindExisting<_Port, _Service>(),
-        throwsStateError,
-      );
+      expect(() => scope.bindExisting<_Port, _Service>(), throwsStateError);
       expect(
         () => scope.lazyPut<_Port>(() => _Service('lazy')),
         throwsStateError,

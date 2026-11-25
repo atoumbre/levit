@@ -1,0 +1,7 @@
+Analyzing levit-svg...
+
+warning - packages/core/levit_monitor/lib/levit_monitor_protocol.dart:27:28 - The '!' will have no effect because the receiver can't be null. Try removing the '!' operator. - unnecessary_non_null_assertion
+   info - benchmarks/test/performance_monitor_test.dart:3:8 - Can't use a relative path to import a library in 'lib'. Try fixing the relative path or changing the import to a 'package:' import. - avoid_relative_lib_imports
+   info - packages/core/levit_monitor/lib/levit_monitor_protocol.dart:25:7 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+
+3 issues found.

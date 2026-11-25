@@ -14,14 +14,16 @@ class GenericDisposable extends LevitScopeDisposable {
 }
 
 void main() {
-  test('Auto-linking ownerId registration for generic LevitScopeDisposable',
-      () {
-    Levit.enableAutoLinking();
-    final scope = LevitScope.root();
+  test(
+    'Auto-linking ownerId registration for generic LevitScopeDisposable',
+    () {
+      Levit.enableAutoLinking();
+      final scope = LevitScope.root();
 
-    final instance = scope.put(() => GenericDisposable());
+      final instance = scope.put(() => GenericDisposable());
 
-    expect(instance.count.ownerId, isNotNull);
-    expect(instance.count.ownerId, contains('GenericDisposable'));
-  });
+      expect(instance.count.ownerId, isNotNull);
+      expect(instance.count.ownerId, contains('GenericDisposable'));
+    },
+  );
 }

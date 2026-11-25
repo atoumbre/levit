@@ -4,10 +4,7 @@ import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
 // Top-level function for Isolate tests
-String _testIsolateTask(
-  Object? input,
-  LevitIsolateTaskContext context,
-) =>
+String _testIsolateTask(Object? input, LevitIsolateTaskContext context) =>
     'isolate_result';
 
 int _progressIsolateTask(int input, LevitIsolateTaskContext context) {
@@ -32,40 +29,44 @@ class TestIsolateReactiveTasksController extends LevitController
 
 void main() {
   group('TasksMixin Isolate Behavior', () {
-    test('LevitTasksMixin.runIsolateTask executes and returns result',
-        () async {
-      await Levit.runInScope<void>(() async {
-        final controller = Levit.put(() => TestIsolateTasksController());
-        final result = await controller.tasksEngine.scheduleIsolate(
-          _testIsolateTask,
-          null,
-          debugName: 'test_isolate',
-        );
-        expect(result, 'isolate_result');
-      }, name: 'isolate_task_test');
-    });
+    test(
+      'LevitTasksMixin.runIsolateTask executes and returns result',
+      () async {
+        await Levit.runInScope<void>(() async {
+          final controller = Levit.put(() => TestIsolateTasksController());
+          final result = await controller.tasksEngine.scheduleIsolate(
+            _testIsolateTask,
+            null,
+            debugName: 'test_isolate',
+          );
+          expect(result, 'isolate_result');
+        }, name: 'isolate_task_test');
+      },
+    );
 
-    test('LevitReactiveTasksMixin.runIsolateTask executes and returns result',
-        () async {
-      await Levit.runInScope<void>(() async {
-        final controller = Levit.put(
-          () => TestIsolateReactiveTasksController(),
-        );
-        final result = await controller.runIsolateTask(
-          _testIsolateTask,
-          null,
-          debugName: 'test_reactive_isolate',
-        );
-        expect(result, 'isolate_result');
+    test(
+      'LevitReactiveTasksMixin.runIsolateTask executes and returns result',
+      () async {
+        await Levit.runInScope<void>(() async {
+          final controller = Levit.put(
+            () => TestIsolateReactiveTasksController(),
+          );
+          final result = await controller.runIsolateTask(
+            _testIsolateTask,
+            null,
+            debugName: 'test_reactive_isolate',
+          );
+          expect(result, 'isolate_result');
 
-        expect(
-          controller.tasks.values.any((d) => d.status is LxSuccess),
-          isTrue,
-        );
-      }, name: 'reactive_isolate_task_test');
-    });
+          expect(
+            controller.tasks.values.any((d) => d.status is LxSuccess),
+            isTrue,
+          );
+        }, name: 'reactive_isolate_task_test');
+      },
+    );
 
-    test('LevitTaskCacheProvider constructor coverage', () {
+    test('cache provider subclasses support constant construction', () {
       // Line 30: const LevitTaskCacheProvider();
       const provider = _VoidCacheProvider();
       expect(provider, isA<LevitTaskCacheProvider>());
@@ -74,10 +75,7 @@ void main() {
     test('isolate tasks bridge progress and structured events', () async {
       final progress = <double>[];
       final events = <LevitTaskEvent>[];
-      final engine = LevitTaskEngine(
-        maxConcurrent: 1,
-        onTaskEvent: events.add,
-      );
+      final engine = LevitTaskEngine(maxConcurrent: 1, onTaskEvent: events.add);
 
       final result = await engine.scheduleIsolate(
         _progressIsolateTask,
@@ -101,7 +99,10 @@ void main() {
 
       await progressArrived.future;
       execution.cancel();
-      expect(await execution.result, isNull);
+      await expectLater(
+        execution.result,
+        throwsA(isA<LevitTaskCancelledException>()),
+      );
     });
   });
 }

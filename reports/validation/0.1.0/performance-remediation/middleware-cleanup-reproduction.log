@@ -1,0 +1,63 @@
+00:00 +0: loading test/core/cleanup_failure_acceptance_test.dart
+00:00 +0: middleware failures preserve all cleanup and errors (async: false)
+00:00 +0 -1: middleware failures preserve all cleanup and errors (async: false) [E]
+  Expected: throws <Instance of 'LevitDisposalException'> with `all middleware and resource failures`: equals [
+              StateError:Bad state: delete observer: _CloseCallback,
+              StateError:Bad state: resource cleanup,
+              StateError:Bad state: scope disposal observer
+            ] unordered
+    Actual: <Instance of 'Future<void>'>
+     Which: threw StateError:<Bad state: scope disposal observer>
+            stack test/core/cleanup_failure_acceptance_test.dart 92:57   _FailingCleanupMiddleware.onScopeDispose
+                  package:levit_scope/src/core.dart 2086:16              _LevitScopeMiddlewareChain.applyOnScopeDispose
+                  package:levit_scope/src/core.dart 1953:32              LevitScope._notifyScopeDispose
+                  package:levit_scope/src/core.dart 1436:9               LevitScope._disposeScope.finish
+                  package:levit_scope/src/core.dart 1445:9               LevitScope._disposeScope.releaseRegistrations
+                  package:levit_scope/src/core.dart 1459:40              LevitScope._disposeScope
+                  package:levit_scope/src/core.dart 1381:26              LevitScope.dispose
+                  test/core/cleanup_failure_acceptance_test.dart 115:31  main.<fn>
+                  
+            which is not an instance of 'LevitDisposalException'
+  
+  package:test_api  OutstandingWork.complete
+  
+  Expected: an object with length of <2>
+    Actual: [StateError:Bad state: delete observer: _CloseCallback]
+     Which: has length of <1>
+  
+  package:matcher                                       expect
+  test/core/cleanup_failure_acceptance_test.dart 128:9  main.<fn>
+  
+00:00 +0 -1: middleware failures preserve all cleanup and errors (async: true)
+00:00 +0 -2: middleware failures preserve all cleanup and errors (async: true) [E]
+  Expected: throws <Instance of 'LevitDisposalException'> with `all middleware and resource failures`: equals [
+              StateError:Bad state: delete observer: _CloseCallback,
+              StateError:Bad state: resource cleanup,
+              StateError:Bad state: scope disposal observer
+            ] unordered
+    Actual: <Instance of 'Future<void>'>
+     Which: threw StateError:<Bad state: scope disposal observer>
+            stack test/core/cleanup_failure_acceptance_test.dart 92:57   _FailingCleanupMiddleware.onScopeDispose
+                  package:levit_scope/src/core.dart 2086:16              _LevitScopeMiddlewareChain.applyOnScopeDispose
+                  package:levit_scope/src/core.dart 1953:32              LevitScope._notifyScopeDispose
+                  package:levit_scope/src/core.dart 1436:9               LevitScope._disposeScope.finish
+                  package:levit_scope/src/core.dart 1445:9               LevitScope._disposeScope.releaseRegistrations
+                  package:levit_scope/src/core.dart 1459:40              LevitScope._disposeScope
+                  package:levit_scope/src/core.dart 1381:26              LevitScope.dispose
+                  test/core/cleanup_failure_acceptance_test.dart 115:31  main.<fn>
+                  
+            which is not an instance of 'LevitDisposalException'
+  
+  package:test_api  OutstandingWork.complete
+  
+  Expected: an object with length of <2>
+    Actual: [StateError:Bad state: delete observer: _CloseCallback]
+     Which: has length of <1>
+  
+  package:matcher                                       expect
+  test/core/cleanup_failure_acceptance_test.dart 128:9  main.<fn>
+  
+00:00 +0 -2: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

@@ -6,12 +6,12 @@ import 'package:test/test.dart';
 class FakeLevitStoreInstance {}
 
 void main() {
-  group('levit_monitor Final Gaps', () {
-    test('snapshot.dart:82 - rehydrate dependency with type', () {
+  group('Snapshot dependency type reconstruction', () {
+    test('snapshot events restore controller dependency types', () {
       final snapshot = StateSnapshot();
       final data = {
         'scopes': [
-          {'id': 1, 'name': 'root'}
+          {'id': 1, 'name': 'root'},
         ],
         'dependencies': [
           {
@@ -22,10 +22,10 @@ void main() {
             'isAsync': false,
             'status': 'active',
             'type': 'controller',
-            'value': 'Instance'
-          }
+            'value': 'Instance',
+          },
         ],
-        'variables': []
+        'variables': [],
       };
 
       snapshot.applyEvent(SnapshotEvent(sessionId: 'abc', state: data));
@@ -34,30 +34,34 @@ void main() {
       expect(dep.type, DependencyType.controller);
     });
 
-    test('snapshot.dart:170 - detect LevitStoreInstance type', () {
+    test('instance-ready events classify store dependencies', () {
       final snapshot = StateSnapshot();
       final instance = FakeLevitStoreInstance();
 
       final sid = 'test-session';
       final info = LevitDependency(isLazy: false, isFactory: false);
 
-      snapshot.applyEvent(DependencyRegisterEvent(
-        sessionId: sid,
-        scopeId: 1,
-        scopeName: 's1',
-        key: 'MyState',
-        info: info,
-        source: 'test',
-      ));
+      snapshot.applyEvent(
+        DependencyRegisterEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's1',
+          key: 'MyState',
+          info: info,
+          source: 'test',
+        ),
+      );
 
-      snapshot.applyEvent(DependencyInstanceReadyEvent(
-        sessionId: sid,
-        scopeId: 1,
-        scopeName: 's1',
-        key: 'MyState',
-        info: info,
-        instance: instance,
-      ));
+      snapshot.applyEvent(
+        DependencyInstanceReadyEvent(
+          sessionId: sid,
+          scopeId: 1,
+          scopeName: 's1',
+          key: 'MyState',
+          info: info,
+          instance: instance,
+        ),
+      );
 
       final dep = snapshot.dependencies['1:MyState']!;
       expect(dep.type, DependencyType.store);

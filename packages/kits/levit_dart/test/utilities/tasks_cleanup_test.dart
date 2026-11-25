@@ -25,6 +25,6 @@ void main() {
     // Should be gone
     expect(controller.tasks.containsKey('task1'), isFalse);
 
-    controller.onClose();
+    await controller.onClose();
   });
 }

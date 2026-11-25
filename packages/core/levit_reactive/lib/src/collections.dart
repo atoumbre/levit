@@ -12,12 +12,14 @@ part of '../levit_reactive.dart';
 /// // Adding an item triggers observers
 /// items.add('active');
 /// ```
-class LxList<E> extends LxVar<List<E>> implements List<E> {
+class LxList<E> extends LxVar<List<E>>
+    with _PreciseCollection<List<E>, E>
+    implements List<E> {
   /// Creates a reactive list.
   ///
   /// Backed by [initial] if provided, otherwise an empty list.
   LxList([List<E>? initial, String? name, bool isSensitive = false])
-      : super(initial ?? <E>[], name: name, isSensitive: isSensitive);
+    : super(initial ?? <E>[], name: name, isSensitive: isSensitive);
 
   /// Creates an [LxList] containing all [elements].
   factory LxList.from(Iterable<E> elements) {
@@ -25,166 +27,244 @@ class LxList<E> extends LxVar<List<E>> implements List<E> {
   }
 
   @override
-  int get length => value.length;
-
+  bool get _standardAddresses => true;
   @override
-  set length(int newLength) {
-    value.length = newLength;
-    refresh();
+  int get _count => _value.length;
+  @override
+  _Element _element(Object? index) =>
+      index is int && index >= 0 && index < _count
+      ? (exists: true, value: _value[index])
+      : (exists: false, value: null);
+
+  /// Observes a position, including a position beyond the current length.
+  LxListEntry<E> entry(int index) {
+    RangeError.checkNotNegative(index, 'index');
+    return LxListEntry._(this, index);
   }
 
   @override
-  E operator [](int index) => value[index];
+  int get length {
+    _observe(_ReadKind.length);
+    return _count;
+  }
+
+  @override
+  set length(int newLength) {
+    mutate((list) => list.length = newLength);
+  }
+
+  @override
+  E operator [](int index) {
+    _observe(_ReadKind.element, index);
+    return _value[index];
+  }
 
   @override
   void operator []=(int index, E element) {
-    value[index] = element;
-    refresh();
+    _value[index] = element;
+    _changed(address: index, single: true);
+  }
+
+  // Explicit range writes also invalidate equal-valued positions. On failure
+  // compare actual snapshots: a backing list may already have changed.
+  V _rangeEdit<V>(
+    int start,
+    int Function(int before, int after) end,
+    V Function(List<E>) edit,
+  ) {
+    final before = _count;
+    final V result;
+    try {
+      result = edit(_value);
+    } catch (_) {
+      _changed();
+      rethrow;
+    }
+    final stop = end(before, _count);
+    _changed(listRange: (start, stop));
+    return result;
   }
 
   @override
   void add(E element) {
-    value.add(element);
-    refresh();
+    mutate((list) => list.add(element));
   }
 
   @override
   void addAll(Iterable<E> iterable) {
-    value.addAll(iterable);
-    refresh();
+    mutate((list) => list.addAll(iterable));
   }
 
   @override
   bool remove(Object? element) {
-    final result = value.remove(element);
-    if (result) refresh();
-    return result;
+    final count = _count;
+    final index = !_hasChannels ? -1 : _value.indexWhere((v) => v == element);
+    final removed = _value.remove(element);
+    if (removed) {
+      _changed(written: (key) => key is int && key >= index && key < count);
+    }
+    return removed;
   }
 
   @override
   E removeAt(int index) {
-    final result = value.removeAt(index);
-    refresh();
-    return result;
+    return _rangeEdit(index, max, (list) => list.removeAt(index));
   }
 
   @override
   void removeWhere(bool Function(E element) test) {
-    value.removeWhere(test);
-    refresh();
+    mutate((list) => list.removeWhere(test));
   }
 
   @override
   void retainWhere(bool Function(E element) test) {
-    value.retainWhere(test);
-    refresh();
+    mutate((list) => list.retainWhere(test));
   }
 
   @override
   void clear() {
-    value.clear();
-    refresh();
+    mutate((list) => list.clear());
   }
 
   @override
   void insert(int index, E element) {
-    value.insert(index, element);
-    refresh();
+    _rangeEdit(index, max, (list) => list.insert(index, element));
   }
 
   @override
   void insertAll(int index, Iterable<E> iterable) {
-    value.insertAll(index, iterable);
-    refresh();
+    _rangeEdit(
+      index,
+      (a, b) => a == b ? index : b,
+      (list) => list.insertAll(index, iterable),
+    );
   }
 
   @override
   void sort([int Function(E a, E b)? compare]) {
-    value.sort(compare);
-    refresh();
+    mutate((list) => list.sort(compare));
   }
 
   @override
   void shuffle([Random? random]) {
-    value.shuffle(random);
-    refresh();
+    mutate((list) => list.shuffle(random));
   }
 
   @override
   E removeLast() {
-    final result = value.removeLast();
-    refresh();
+    final result = _value.removeLast();
+    _changed();
     return result;
   }
 
   @override
   void setAll(int index, Iterable<E> iterable) {
-    value.setAll(index, iterable);
-    refresh();
+    if (iterable is List<E>) {
+      final end = index + iterable.length;
+      _rangeEdit(index, (_, _) => end, (list) => list.setAll(index, iterable));
+      return;
+    }
+    var written = 0;
+    _rangeEdit(
+      index,
+      (_, _) => index + written,
+      (list) => list.setAll(
+        index,
+        iterable.map((item) {
+          written++;
+          return item;
+        }),
+      ),
+    );
   }
 
   @override
   void setRange(int start, int end, Iterable<E> iterable, [int skipCount = 0]) {
-    value.setRange(start, end, iterable, skipCount);
-    refresh();
+    _rangeEdit(
+      start,
+      (_, _) => end,
+      (list) => list.setRange(start, end, iterable, skipCount),
+    );
   }
 
   @override
   void removeRange(int start, int end) {
-    value.removeRange(start, end);
-    refresh();
+    _rangeEdit(
+      start,
+      (a, b) => a == b ? start : a,
+      (list) => list.removeRange(start, end),
+    );
   }
 
   @override
   void fillRange(int start, int end, [E? fill]) {
-    value.fillRange(start, end, fill);
-    refresh();
+    _rangeEdit(
+      start,
+      (_, _) => end,
+      (list) => list.fillRange(start, end, fill),
+    );
   }
 
   @override
   void replaceRange(int start, int end, Iterable<E> newContents) {
-    value.replaceRange(start, end, newContents);
-    refresh();
+    _rangeEdit(
+      start,
+      (a, b) => a == b ? end : max(a, b),
+      (list) => list.replaceRange(start, end, newContents),
+    );
   }
 
   @override
-  E get first => value.first;
+  E get first {
+    _observe(_ReadKind.element, 0);
+    return _value.first;
+  }
 
   @override
   set first(E element) {
-    value.first = element;
-    refresh();
+    _value.first = element;
+    _changed(address: 0, single: true);
   }
 
   @override
-  E get last => value.last;
+  E get last {
+    final n = length;
+    _observe(_ReadKind.element, n - 1);
+    return _value.last;
+  }
 
   @override
   set last(E element) {
-    value.last = element;
-    refresh();
+    _value.last = element;
+    _changed(address: _count - 1, single: true);
   }
 
   @override
-  bool get isEmpty => value.isEmpty;
+  bool get isEmpty {
+    _observe(_ReadKind.empty);
+    return _value.isEmpty;
+  }
 
   @override
-  bool get isNotEmpty => value.isNotEmpty;
+  bool get isNotEmpty => !isEmpty;
 
   @override
   Iterator<E> get iterator => value.iterator;
 
   @override
-  E get single => value.single;
+  E get single {
+    if (length == 1) return this[0];
+    return _value.single;
+  }
 
   @override
-  Iterable<E> get reversed => value.reversed;
+  Iterable<E> get reversed => _CollectionIterable(() => value.reversed);
 
   @override
   bool contains(Object? element) => value.contains(element);
 
   @override
-  E elementAt(int index) => value.elementAt(index);
+  E elementAt(int index) => this[index];
 
   @override
   bool every(bool Function(E element) test) => value.every(test);
@@ -226,16 +306,19 @@ class LxList<E> extends LxVar<List<E>> implements List<E> {
       value.fold(initialValue, combine);
 
   @override
-  Iterable<E> where(bool Function(E element) test) => value.where(test);
+  Iterable<E> where(bool Function(E element) test) =>
+      _CollectionIterable(() => value.where(test));
 
   @override
-  Iterable<T> whereType<T>() => value.whereType<T>();
+  Iterable<T> whereType<T>() => _CollectionIterable(() => value.whereType<T>());
 
   @override
-  Iterable<T> map<T>(T Function(E e) f) => value.map(f);
+  Iterable<T> map<T>(T Function(E e) f) =>
+      _CollectionIterable(() => value.map(f));
 
   @override
-  Iterable<T> expand<T>(Iterable<T> Function(E element) f) => value.expand(f);
+  Iterable<T> expand<T>(Iterable<T> Function(E element) f) =>
+      _CollectionIterable(() => value.expand(f));
 
   @override
   void forEach(void Function(E element) f) => value.forEach(f);
@@ -244,16 +327,18 @@ class LxList<E> extends LxVar<List<E>> implements List<E> {
   String join([String separator = '']) => value.join(separator);
 
   @override
-  Iterable<E> skip(int count) => value.skip(count);
+  Iterable<E> skip(int count) => _CollectionIterable(() => value.skip(count));
 
   @override
-  Iterable<E> skipWhile(bool Function(E value) test) => value.skipWhile(test);
+  Iterable<E> skipWhile(bool Function(E value) test) =>
+      _CollectionIterable(() => value.skipWhile(test));
 
   @override
-  Iterable<E> take(int count) => value.take(count);
+  Iterable<E> take(int count) => _CollectionIterable(() => value.take(count));
 
   @override
-  Iterable<E> takeWhile(bool Function(E value) test) => value.takeWhile(test);
+  Iterable<E> takeWhile(bool Function(E value) test) =>
+      _CollectionIterable(() => value.takeWhile(test));
 
   @override
   List<E> toList({bool growable = true}) => value.toList(growable: growable);
@@ -262,10 +347,11 @@ class LxList<E> extends LxVar<List<E>> implements List<E> {
   Set<E> toSet() => value.toSet();
 
   @override
-  Iterable<E> followedBy(Iterable<E> other) => value.followedBy(other);
+  Iterable<E> followedBy(Iterable<E> other) =>
+      _CollectionIterable(() => value.followedBy(other));
 
   @override
-  Map<int, E> asMap() => value.asMap();
+  Map<int, E> asMap() => _ListIndexMap(this);
 
   @override
   List<E> operator +(List<E> other) => value + other;
@@ -274,26 +360,48 @@ class LxList<E> extends LxVar<List<E>> implements List<E> {
   List<E> sublist(int start, [int? end]) => value.sublist(start, end);
 
   @override
-  Iterable<E> getRange(int start, int end) => value.getRange(start, end);
+  Iterable<E> getRange(int start, int end) {
+    RangeError.checkValidRange(start, end, _count);
+    return _CollectionIterable(() => value.getRange(start, end));
+  }
 
   @override
-  List<R> cast<R>() => value.cast<R>();
+  List<R> cast<R>() => List.castFrom<E, R>(this);
 
   /// Replaces all current elements with [elements] in a single notification.
   void assign(Iterable<E> elements) {
-    value
-      ..clear()
-      ..addAll(elements);
-    refresh();
+    if (identical(elements, this) || identical(elements, _value)) return;
+    final copy = List<E>.of(elements);
+    mutate(
+      (list) => list
+        ..clear()
+        ..addAll(copy),
+    );
   }
 
   /// Replaces the list with a single [element].
   void assignOne(E element) {
-    value
-      ..clear()
-      ..add(element);
-    refresh();
+    mutate(
+      (list) => list
+        ..clear()
+        ..add(element),
+    );
   }
+}
+
+class _ListIndexMap<E> extends UnmodifiableMapBase<int, E> {
+  final LxList<E> list;
+  _ListIndexMap(this.list);
+  @override
+  E? operator [](Object? key) {
+    if (key is! int || key < 0) return null;
+    list._observe(_ReadKind.element, key);
+    return key < list._count ? list._value[key] : null;
+  }
+
+  @override
+  Iterable<int> get keys =>
+      _CollectionIterable(() => Iterable<int>.generate(list.length));
 }
 
 /// A reactive map that notifies observers on modification.
@@ -308,122 +416,177 @@ class LxList<E> extends LxVar<List<E>> implements List<E> {
 /// // Update triggers observers
 /// settings['theme'] = 'light';
 /// ```
-class LxMap<K, V> extends LxVar<Map<K, V>> implements Map<K, V> {
+class LxMap<K, V> extends LxVar<Map<K, V>>
+    with _PreciseCollection<Map<K, V>, V>
+    implements Map<K, V> {
   /// Creates a reactive map.
   ///
   /// Backed by [initial] if provided, otherwise an empty map.
   LxMap([Map<K, V>? initial, String? name, bool isSensitive = false])
-      : super(initial ?? <K, V>{}, name: name, isSensitive: isSensitive);
+    : _defaultBacking = initial == null,
+      super(initial ?? <K, V>{}, name: name, isSensitive: isSensitive);
 
   /// Creates an [LxMap] from an existing [Map].
   factory LxMap.from(Map<K, V> other) {
-    return LxMap<K, V>(Map<K, V>.from(other));
+    return LxMap<K, V>().._value.addAll(other);
   }
 
+  bool _defaultBacking;
   @override
-  V? operator [](Object? key) => value[key];
+  bool get _standardAddresses => _defaultBacking;
+  @override
+  int get _count => _value.length;
+  Iterable<Object?> get _orderedKeys => _value.keys;
+  @override
+  _Element _element(Object? key) =>
+      (exists: _value.containsKey(key), value: _value[key]);
+
+  @override
+  void _setValueInternal(Map<K, V> val, {bool notifyListeners = true}) {
+    if (!identical(val, _value)) _defaultBacking = false;
+    super._setValueInternal(val, notifyListeners: notifyListeners);
+  }
+
+  /// Observes one key without owning its value.
+  LxMapEntry<V> entry(K key) => LxMapEntry._(this, key);
+
+  @override
+  V? operator [](Object? key) {
+    _observe(_ReadKind.element, key);
+    return _value[key];
+  }
 
   @override
   void operator []=(K key, V val) {
-    value[key] = val;
-    refresh();
+    _value[key] = val;
+    _changed(address: key, single: true);
   }
 
   @override
-  void addAll(Map<K, V> other) {
-    value.addAll(other);
-    refresh();
-  }
-
+  void addAll(Map<K, V> other) => addEntries(other.entries);
   @override
   void addEntries(Iterable<MapEntry<K, V>> entries) {
-    value.addEntries(entries);
-    refresh();
+    final touched = !_hasChannels
+        ? null
+        : (_standardAddresses ? <Object?>{} : Set<Object?>.identity());
+    try {
+      for (final item in entries) {
+        _value[item.key] = item.value;
+        touched?.add(item.key);
+      }
+    } finally {
+      _changed(written: touched?.contains);
+    }
   }
 
   @override
   V? remove(Object? key) {
-    if (!value.containsKey(key)) return null;
-    final result = value.remove(key);
-    refresh();
-    return result;
+    if (!_value.containsKey(key)) return null;
+    final old = _value.remove(key);
+    _changed(address: key, single: true);
+    return old;
   }
 
   @override
-  void removeWhere(bool Function(K key, V value) test) {
-    value.removeWhere(test);
-    refresh();
-  }
-
+  void removeWhere(bool Function(K, V) test) =>
+      mutate((m) => m.removeWhere(test));
   @override
   void clear() {
-    if (value.isEmpty) return;
-    value.clear();
-    refresh();
+    if (_value.isEmpty) return;
+    _value.clear();
+    _changed();
   }
 
   @override
-  V update(K key, V Function(V value) update, {V Function()? ifAbsent}) {
-    final result = value.update(key, update, ifAbsent: ifAbsent);
-    refresh();
+  V update(K key, V Function(V) update, {V Function()? ifAbsent}) {
+    final result = _value.update(key, update, ifAbsent: ifAbsent);
+    _changed(address: key, single: true);
     return result;
   }
 
   @override
-  void updateAll(V Function(K key, V value) update) {
-    value.updateAll(update);
-    refresh();
+  void updateAll(V Function(K, V) update) {
+    final touched = !_hasChannels
+        ? null
+        : (_standardAddresses ? <Object?>{} : Set<Object?>.identity());
+    try {
+      _value.updateAll((key, old) {
+        final next = update(key, old);
+        touched?.add(key);
+        return next;
+      });
+    } finally {
+      _changed(written: touched?.contains);
+    }
   }
 
   @override
   V putIfAbsent(K key, V Function() ifAbsent) {
-    final hadKey = value.containsKey(key);
-    final result = value.putIfAbsent(key, ifAbsent);
-    if (!hadKey) refresh();
+    final hadKey = _value.containsKey(key);
+    final result = _value.putIfAbsent(key, ifAbsent);
+    if (!hadKey) _changed(address: key, single: true);
     return result;
   }
 
   @override
-  bool containsKey(Object? key) => value.containsKey(key);
+  bool containsKey(Object? key) {
+    _observe(_ReadKind.membership, key);
+    return _value.containsKey(key);
+  }
 
   @override
-  bool containsValue(Object? val) => value.containsValue(val);
+  bool containsValue(Object? value) => this.value.containsValue(value);
+  @override
+  int get length {
+    _observe(_ReadKind.length);
+    return _count;
+  }
 
   @override
-  int get length => value.length;
+  bool get isEmpty {
+    _observe(_ReadKind.empty);
+    return _value.isEmpty;
+  }
 
   @override
-  bool get isEmpty => value.isEmpty;
+  bool get isNotEmpty => !isEmpty;
+  @override
+  Iterable<K> get keys {
+    _observe(_ReadKind.keys);
+    return _CollectionIterable(() {
+      _observe(_ReadKind.keys);
+      return _value.keys;
+    });
+  }
 
   @override
-  bool get isNotEmpty => value.isNotEmpty;
+  Iterable<V> get values {
+    value;
+    return _CollectionIterable(() => value.values);
+  }
 
   @override
-  Iterable<K> get keys => value.keys;
+  Iterable<MapEntry<K, V>> get entries {
+    value;
+    return _CollectionIterable(() => value.entries);
+  }
 
   @override
-  Iterable<V> get values => value.values;
-
+  void forEach(void Function(K, V) action) => value.forEach(action);
   @override
-  Iterable<MapEntry<K, V>> get entries => value.entries;
-
-  @override
-  void forEach(void Function(K key, V value) action) => value.forEach(action);
-
-  @override
-  Map<K2, V2> map<K2, V2>(
-          MapEntry<K2, V2> Function(K key, V value) transform) =>
+  Map<K2, V2> map<K2, V2>(MapEntry<K2, V2> Function(K, V) transform) =>
       value.map(transform);
-
   @override
-  Map<RK, RV> cast<RK, RV>() => value.cast<RK, RV>();
+  Map<RK, RV> cast<RK, RV>() => Map.castFrom<K, V, RK, RV>(this);
 
-  /// Replaces all entries with those from [other] in a single notification.
+  /// Replaces all entries as one mutation.
   void assign(Map<K, V> other) {
-    value
-      ..clear()
-      ..addAll(other);
-    refresh();
+    if (identical(other, this) || identical(other, _value)) return;
+    mutate(
+      (m) => m
+        ..clear()
+        ..addAll(other),
+    );
   }
 }
 
@@ -436,7 +599,7 @@ class LxSet<E> extends LxVar<Set<E>> implements Set<E> {
   ///
   /// Backed by [initial] if provided, otherwise an empty set.
   LxSet([Set<E>? initial, String? name, bool isSensitive = false])
-      : super(initial ?? <E>{}, name: name, isSensitive: isSensitive);
+    : super(initial ?? <E>{}, name: name, isSensitive: isSensitive);
 
   /// Creates an [LxSet] from an existing [Iterable].
   factory LxSet.from(Iterable<E> elements) {

@@ -1,0 +1,3 @@
+PASS: 22 packages plus private root resolve all local dependencies inside revised candidate.
+PASS: all 23 lockfiles match the original candidate dependency versions.
+PASS: 10 publishable packages remain 0.1.0; inspector UI remains private.

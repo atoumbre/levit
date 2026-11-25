@@ -1,0 +1,923 @@
+--- a/packages/core/levit_monitor/lib/levit_monitor_protocol.dart
++++ b/packages/core/levit_monitor/lib/levit_monitor_protocol.dart
+@@ -8,8 +8,13 @@
+ /// retained. Redaction must happen before construction, at the producer boundary.
+ final class LevitEventEnvelope {
+   final Map<String, dynamic> data;
+-  LevitEventEnvelope(Map<String, dynamic> data)
+-    : data = _freeze(data, HashSet<Object>.identity()) as Map<String, dynamic>;
++
++  /// Copies and deeply freezes [data]. [category] supplies a default only when
++  /// the input has no category, without constructing an intermediate map.
++  LevitEventEnvelope(Map<String, dynamic> data, {String? category})
++    : data =
++          _freeze(data, HashSet<Object>.identity(), category: category)
++              as Map<String, dynamic>;
+   String get sessionId => data['sessionId'] as String;
+   int get seq => data['seq'] as int;
+   String get type => data['type'] as String;
+@@ -17,7 +22,11 @@
+   Map<String, dynamic> toJson() => data;
+   String encode() => jsonEncode(data);
+ 
+-  static Object? _freeze(Object? value, Set<Object> active) {
++  static Object? _freeze(
++    Object? value,
++    Set<Object> active, {
++    String? category,
++  }) {
+     if (value == null ||
+         value is String ||
+         value is bool ||
+@@ -28,10 +37,14 @@
+       if (!active.add(value)) throw JsonCyclicError(value);
+       try {
+         if (value is Map<String, dynamic>) {
+-          return Map<String, dynamic>.unmodifiable({
+-            for (final entry in value.entries)
+-              entry.key: _freeze(entry.value, active),
++          final copy = <String, dynamic>{
++            if (category != null) 'category': category,
++          };
++          value.forEach((key, child) {
++            copy[key] = _freeze(child, active);
+           });
++          // The backing copy is private and never escapes independently.
++          return UnmodifiableMapView<String, dynamic>(copy);
+         }
+         return List<Object?>.unmodifiable(
+           (value as List).map((item) => _freeze(item, active)),
+--- a/packages/core/levit_monitor/lib/src/event.dart
++++ b/packages/core/levit_monitor/lib/src/event.dart
+@@ -20,29 +20,34 @@
+       seq = sequence ?? _nextSeq++;
+ 
+   static int _nextSeq = 0;
++  late final String _timestampJson = timestamp.toIso8601String();
+ 
+   /// Converts the event metadata into a standard JSON-encodable map.
+   Map<String, dynamic> toJson() => {
+     'seq': seq,
+-    'timestamp': timestamp.toIso8601String(),
++    'timestamp': _timestampJson,
+     'sessionId': sessionId,
+   };
+ 
+   /// Captures redaction and serialization now, before buffering or retaining.
+-  FrozenMonitorEvent freeze() => this is FrozenMonitorEvent
+-      ? this as FrozenMonitorEvent
+-      : FrozenMonitorEvent(
+-          LevitEventEnvelope({
+-            'category': switch (this) {
+-              DependencyEvent() => 'di',
+-              SnapshotEvent() => 'snapshot',
+-              LogEvent() => 'log',
+-              CustomMonitorEvent() => 'custom',
+-              _ => 'state',
+-            },
+-            ...toJson(),
+-          }),
+-        );
++  FrozenMonitorEvent freeze() {
++    if (this is FrozenMonitorEvent) return this as FrozenMonitorEvent;
++    final envelope = LevitEventEnvelope(
++      toJson(),
++      category: switch (this) {
++        DependencyEvent() => 'di',
++        SnapshotEvent() => 'snapshot',
++        LogEvent() => 'log',
++        CustomMonitorEvent() => 'custom',
++        _ => 'state',
++      },
++    );
++    // Preserve custom toJson overrides while avoiding timestamp parsing for the
++    // ordinary capture path. DateTime and the encoded timestamp are immutable.
++    return envelope.data['timestamp'] == _timestampJson
++        ? FrozenMonitorEvent._captured(envelope, timestamp)
++        : FrozenMonitorEvent(envelope);
++  }
+ 
+   /// Safeguard for converting arbitrary objects to string representations.
+   static dynamic _stringify(dynamic value, {bool isSensitive = false}) {
+@@ -74,13 +79,11 @@
+   ReactiveEvent({required super.sessionId, required this.reactive});
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'reactiveId': reactive.id.toString(),
+-    'name': reactive.name,
+-    'ownerId': reactive.ownerId,
+-    'isSensitive': reactive.isSensitive,
+-  };
++  Map<String, dynamic> toJson() => super.toJson()
++    ..['reactiveId'] = reactive.id.toString()
++    ..['name'] = reactive.name
++    ..['ownerId'] = reactive.ownerId
++    ..['isSensitive'] = reactive.isSensitive;
+ }
+ 
+ /// Event triggered when a new reactive variable is instantiated.
+@@ -124,25 +127,27 @@
+   });
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'type': 'state_change',
+-    'oldValue': MonitorEvent._stringify(
+-      change.oldValue,
+-      isSensitive: reactive.isSensitive,
+-    ),
+-    'newValue': MonitorEvent._stringify(
+-      change.newValue,
+-      isSensitive: reactive.isSensitive,
+-    ),
+-    'valueType': change.valueType.toString(),
+-    'isBatch': false,
+-    if (stackTrace != null)
+-      'stackTrace': MonitorEvent._stringify(
++  Map<String, dynamic> toJson() {
++    final data = super.toJson()
++      ..['type'] = 'state_change'
++      ..['oldValue'] = MonitorEvent._stringify(
++        change.oldValue,
++        isSensitive: reactive.isSensitive,
++      )
++      ..['newValue'] = MonitorEvent._stringify(
++        change.newValue,
++        isSensitive: reactive.isSensitive,
++      )
++      ..['valueType'] = change.valueType.toString()
++      ..['isBatch'] = false;
++    if (stackTrace != null) {
++      data['stackTrace'] = MonitorEvent._stringify(
+         stackTrace,
+         isSensitive: reactive.isSensitive,
+-      ),
+-  };
++      );
++    }
++    return data;
++  }
+ }
+ 
+ /// Event triggered at the completion of a reactive batch.
+@@ -300,17 +305,15 @@
+   });
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'scopeId': scopeId,
+-    'scopeName': scopeName,
+-    'key': key,
+-    'isLazy': info.isLazy,
+-    'isFactory': info.isFactory,
+-    'isAsync': info.isAsync,
+-    'permanent': info.permanent,
+-    'isInstantiated': info.isInstantiated,
+-  };
++  Map<String, dynamic> toJson() => super.toJson()
++    ..['scopeId'] = scopeId
++    ..['scopeName'] = scopeName
++    ..['key'] = key
++    ..['isLazy'] = info.isLazy
++    ..['isFactory'] = info.isFactory
++    ..['isAsync'] = info.isAsync
++    ..['permanent'] = info.permanent
++    ..['isInstantiated'] = info.isInstantiated;
+ }
+ 
+ /// Event triggered when a new scope is created.
+@@ -328,11 +331,9 @@
+        ); // Scope lifecycle events have no dependency payload.
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'type': 'scope_create',
+-    'parentScopeId': parentScopeId,
+-  };
++  Map<String, dynamic> toJson() => super.toJson()
++    ..['type'] = 'scope_create'
++    ..['parentScopeId'] = parentScopeId;
+ }
+ 
+ /// Event triggered when a scope is disposed.
+@@ -347,7 +348,7 @@
+        ); // Scope lifecycle events have no dependency payload.
+ 
+   @override
+-  Map<String, dynamic> toJson() => {...super.toJson(), 'type': 'scope_dispose'};
++  Map<String, dynamic> toJson() => super.toJson()..['type'] = 'scope_dispose';
+ }
+ 
+ /// Event triggered when a dependency is registered with a scope.
+@@ -363,11 +364,9 @@
+   });
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'type': 'di_register',
+-    'source': source,
+-  };
++  Map<String, dynamic> toJson() => super.toJson()
++    ..['type'] = 'di_register'
++    ..['source'] = source;
+ }
+ 
+ /// Event triggered when a dependency instance creation begins.
+@@ -382,10 +381,8 @@
+   });
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'type': 'di_instance_create',
+-  };
++  Map<String, dynamic> toJson() =>
++      super.toJson()..['type'] = 'di_instance_create';
+ }
+ 
+ /// Event triggered when a dependency instance is fully initialized and ready.
+@@ -404,17 +401,18 @@
+   });
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'type': 'di_instance_init',
+-    'instance': '<${MonitorEvent._instanceType(instance)}>',
+-    'instanceType': MonitorEvent._instanceType(instance),
+-    'dependencyType': instance is LevitController
+-        ? 'controller'
+-        : instance.runtimeType.toString().contains('LevitStoreInstance')
+-        ? 'store'
+-        : 'other',
+-  };
++  Map<String, dynamic> toJson() {
++    final type = MonitorEvent._instanceType(instance);
++    return super.toJson()
++      ..['type'] = 'di_instance_init'
++      ..['instance'] = '<$type>'
++      ..['instanceType'] = type
++      ..['dependencyType'] = instance is LevitController
++          ? 'controller'
++          : type.contains('LevitStoreInstance')
++          ? 'store'
++          : 'other';
++  }
+ }
+ 
+ /// Event triggered when a dependency is successfully resolved.
+@@ -430,13 +428,14 @@
+   });
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'type': 'di_resolve',
+-    'source': source,
+-    'instance': '<${MonitorEvent._instanceType(info.instance)}>',
+-    'instanceType': MonitorEvent._instanceType(info.instance),
+-  };
++  Map<String, dynamic> toJson() {
++    final type = MonitorEvent._instanceType(info.instance);
++    return super.toJson()
++      ..['type'] = 'di_resolve'
++      ..['source'] = source
++      ..['instance'] = '<$type>'
++      ..['instanceType'] = type;
++  }
+ }
+ 
+ /// Event triggered when a dependency is removed from a scope.
+@@ -455,11 +454,9 @@
+   });
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'type': 'di_delete',
+-    'source': source,
+-  };
++  Map<String, dynamic> toJson() => super.toJson()
++    ..['type'] = 'di_delete'
++    ..['source'] = source;
+ }
+ 
+ // ============================================================================
+@@ -575,30 +572,36 @@
+   }) : namespace = 'levit.scope',
+        name = 'progress',
+        level = Level.info,
+-       attributes = Map.unmodifiable(description.toJson()),
++       attributes = UnmodifiableMapView(description.toJson()),
+        sensitive = false,
+        error = null,
+        stackTrace = null,
+        _attributesAreJson = true;
+ 
+   @override
+-  Map<String, dynamic> toJson() => {
+-    ...super.toJson(),
+-    'type': 'custom',
+-    'namespace': namespace,
+-    'name': name,
+-    'level': level.name,
+-    'isSensitive': sensitive,
+-    'attributes': sensitive
+-        ? LevitMonitor.obfuscate(attributes)
+-        : _attributesAreJson
+-        ? attributes
+-        : _serializeAttributes(attributes),
+-    if (error != null)
+-      'error': MonitorEvent._stringify(error, isSensitive: sensitive),
+-    if (stackTrace != null)
+-      'stackTrace': MonitorEvent._stringify(stackTrace, isSensitive: sensitive),
+-  };
++  Map<String, dynamic> toJson() {
++    final data = super.toJson()
++      ..['type'] = 'custom'
++      ..['namespace'] = namespace
++      ..['name'] = name
++      ..['level'] = level.name
++      ..['isSensitive'] = sensitive
++      ..['attributes'] = sensitive
++          ? LevitMonitor.obfuscate(attributes)
++          : _attributesAreJson
++          ? attributes
++          : _serializeAttributes(attributes);
++    if (error != null) {
++      data['error'] = MonitorEvent._stringify(error, isSensitive: sensitive);
++    }
++    if (stackTrace != null) {
++      data['stackTrace'] = MonitorEvent._stringify(
++        stackTrace,
++        isSensitive: sensitive,
++      );
++    }
++    return data;
++  }
+ 
+   static Map<String, dynamic> _serializeAttributes(
+     Map<String, Object?> attributes,
+@@ -651,6 +654,15 @@
+ /// The only event form retained by monitor queues and passed to transports.
+ final class FrozenMonitorEvent extends MonitorEvent {
+   final LevitEventEnvelope envelope;
++  // Capture already owns the DateTime. Reparsing its wire representation adds
++  // a regexp/date conversion to every event without strengthening immutability.
++  FrozenMonitorEvent._captured(this.envelope, DateTime timestamp)
++    : super(
++        sessionId: envelope.sessionId,
++        sequence: envelope.seq,
++        timestamp: timestamp,
++      );
++
+   FrozenMonitorEvent(this.envelope)
+     : super(
+         sessionId: envelope.sessionId,
+--- a/packages/core/levit_monitor/lib/src/middleware.dart
++++ b/packages/core/levit_monitor/lib/src/middleware.dart
+@@ -342,12 +342,38 @@
+ 
+   @override
+   void onScopeProgress(LevitScopeDescription description) {
+-    _addToBuffer(
+-      CustomMonitorEvent._scopeProgress(
+-        sessionId: sessionId,
+-        description: description,
+-      ),
+-    );
++    final event = CustomMonitorEvent._scopeProgress(
++      sessionId: sessionId,
++      description: description,
++    );
++    // Several lifecycle hooks can describe the same state (for example a
++    // synchronous initializer followed by registration). Preserve every changed
++    // snapshot, without serializing identical derived progress repeatedly.
++    final previous = _stateSnapshot.scopes[description.id]?.progress;
++    if (_sameProgress(previous, event.attributes)) return;
++    _addToBuffer(event);
++  }
++
++  static bool _sameProgress(Object? before, Object? after) {
++    if (identical(before, after)) return true;
++    if (before is Map && after is Map) {
++      if (before.length != after.length) return false;
++      for (final key in before.keys) {
++        if (!after.containsKey(key) ||
++            !_sameProgress(before[key], after[key])) {
++          return false;
++        }
++      }
++      return true;
++    }
++    if (before is List && after is List) {
++      if (before.length != after.length) return false;
++      for (var i = 0; i < before.length; i++) {
++        if (!_sameProgress(before[i], after[i])) return false;
++      }
++      return true;
++    }
++    return before == after;
+   }
+ 
+   @override
+--- a/packages/core/levit_monitor/lib/src/snapshot.dart
++++ b/packages/core/levit_monitor/lib/src/snapshot.dart
+@@ -41,7 +41,7 @@
+     }
+     final scopeId = data['scopeId'] as int?;
+     final key = data['key'] as String?;
+-    final depKey = '$scopeId:$key';
++    late final depKey = '$scopeId:$key';
+     switch (envelope.type) {
+       case 'scope_create':
+         scopes[scopeId!] = ScopeModel(
+@@ -126,13 +126,10 @@
+       variables.remove(id);
+       return;
+     }
+-    final model = variables.putIfAbsent(
+-      id,
+-      () => ReactiveModel(
+-        id: id,
+-        name: data['name'] as String? ?? '?',
+-        ownerId: data['ownerId'] as String?,
+-      ),
++    final model = variables[id] ??= ReactiveModel(
++      id: id,
++      name: data['name'] as String? ?? '?',
++      ownerId: data['ownerId'] as String?,
+     );
+     if (data['name'] != null) model.name = data['name'] as String;
+     if (data.containsKey('ownerId')) {
+--- a/packages/core/levit_scope/lib/src/core.dart
++++ b/packages/core/levit_scope/lib/src/core.dart
+@@ -172,11 +172,17 @@
+   /// Whether a new instance is created for every lookup.
+   final bool isFactory;
+ 
+-  final _factoryInstances = LinkedHashSet<Object>.identity();
+-  final Set<Future<void>> _pendingFactories = {};
+-  final List<LevitDisposalFailure> _initializationFailures = [];
+-  final Set<Future<void>> _factoryReleases = {};
+-  final _releasingFactoryInstances = HashSet<Object>.identity();
++  Set<Object>? _factoryStorage;
++  Set<Object> get _factoryInstances => _factoryStorage ?? const {};
++  Set<Future<void>>? _pendingStorage;
++  Set<Future<void>> get _pendingFactories => _pendingStorage ?? const {};
++  List<LevitDisposalFailure>? _initializationFailureStorage;
++  List<LevitDisposalFailure> get _initializationFailures =>
++      _initializationFailureStorage ?? const [];
++  List<LevitDisposalFailure> get _mutableInitializationFailures =>
++      _initializationFailureStorage ??= [];
++  late final Set<Future<void>> _factoryReleases = {};
++  late final _releasingFactoryInstances = HashSet<Object>.identity();
+   void Function()? _onProgress;
+ 
+   /// Includes middleware initialization/capture cleanup in this registration's
+@@ -189,7 +195,7 @@
+         .then<void>(
+           (_) {},
+           onError: (Object error, StackTrace stack) {
+-            _initializationFailures.add(
++            _mutableInitializationFailures.add(
+               LevitDisposalFailure(
+                 resource: this,
+                 error: error,
+@@ -199,10 +205,10 @@
+           },
+         )
+         .whenComplete(() {
+-          _pendingFactories.remove(tracked);
++          _pendingStorage?.remove(tracked);
+           _onProgress?.call();
+         });
+-    _pendingFactories.add(tracked);
++    (_pendingStorage ??= {}).add(tracked);
+     _onProgress?.call();
+   }
+ 
+@@ -315,7 +321,7 @@
+   final Map<LevitScopeKey, LevitDependency> _retiring = {};
+ 
+   Future<void>? _disposeFuture;
+-  final Completer<void> _disposedCompleter = Completer<void>();
++  Completer<void>? _disposedCompleter;
+   final Set<LevitScope> _ownedChildren = LinkedHashSet<LevitScope>.identity();
+   final List<LevitDisposalFailure> _cancellationFailures = [];
+   bool _isClosing = false;
+@@ -329,7 +335,11 @@
+ 
+   /// Completes when terminal disposal finishes, including failed cleanup.
+   /// Await [dispose] to receive aggregated cleanup errors.
+-  Future<void> get disposed => _disposedCompleter.future;
++  Future<void> get disposed {
++    final completed = _disposedCompleter ??= Completer<void>();
++    if (_isDisposed && !completed.isCompleted) completed.complete();
++    return completed.future;
++  }
+ 
+   /// Creates a new [LevitScope].
+   LevitScope._(this.name, {LevitScope? parentScope})
+@@ -977,7 +987,7 @@
+       }
+ 
+       final finished = Completer<void>();
+-      info._pendingFactories.add(finished.future);
++      (info._pendingStorage ??= {}).add(finished.future);
+       _notifyScopeProgress();
+       late final Future<S> future;
+       future = (() async {
+@@ -989,7 +999,7 @@
+           );
+           info.instance = instance;
+           if (info._removed || _isClosing || _isDisposed) {
+-            info._pendingFactories.remove(finished.future);
++            info._pendingStorage?.remove(finished.future);
+             _notifyScopeProgress();
+             finished.complete();
+             throw StateError(
+@@ -1000,7 +1010,7 @@
+           _notifyResolve(keyString, info, 'findAsync');
+           return instance;
+         } finally {
+-          info._pendingFactories.remove(finished.future);
++          info._pendingStorage?.remove(finished.future);
+           _notifyScopeProgress();
+           if (!finished.isCompleted) finished.complete();
+           if (identical(_pendingInit[key], future)) _pendingInit.remove(key);
+@@ -1079,13 +1089,15 @@
+ 
+   void _trackFactoryInstance(LevitDependency info, Object? instance) {
+     if (instance is LevitScopeDisposable || instance is LevitDisposable) {
+-      info._factoryInstances.add(instance!);
++      (info._factoryStorage ??= LinkedHashSet<Object>.identity()).add(
++        instance!,
++      );
+     }
+   }
+ 
+   Future<S> _createFactoryAsync<S>(LevitDependency<S> info, String key) async {
+     final finished = Completer<void>();
+-    info._pendingFactories.add(finished.future);
++    (info._pendingStorage ??= {}).add(finished.future);
+     _notifyScopeProgress();
+     try {
+       final instance = await _createInstanceAsync<S>(
+@@ -1097,7 +1109,7 @@
+       if (info._removed || _isClosing || _isDisposed) {
+         // Creation has finished. Teardown can now dispose every result in
+         // reverse creation order, including concurrent late completions.
+-        info._pendingFactories.remove(finished.future);
++        info._pendingStorage?.remove(finished.future);
+         _notifyScopeProgress();
+         finished.complete();
+         throw StateError(
+@@ -1108,7 +1120,7 @@
+       _notifyResolve(key, info, 'findAsync');
+       return instance;
+     } finally {
+-      info._pendingFactories.remove(finished.future);
++      info._pendingStorage?.remove(finished.future);
+       _notifyScopeProgress();
+       if (!finished.isCompleted) finished.complete();
+     }
+@@ -1229,7 +1241,7 @@
+     if (instance is LevitExecutionBoundary) instance.assertCanDispose();
+     info._releasingFactoryInstances.add(instance as Object);
+     final finished = Completer<void>();
+-    info._pendingFactories.add(finished.future);
++    (info._pendingStorage ??= {}).add(finished.future);
+     info._factoryReleases.add(finished.future);
+     _notifyScopeProgress();
+     try {
+@@ -1241,13 +1253,13 @@
+         await Future.wait(initializing);
+       }
+       final released = LevitDependency(instance: instance)
+-        .._initializationFailures.addAll(info._initializationFailures);
++        .._mutableInitializationFailures.addAll(info._initializationFailures);
+       await _disposeRegistrations([
+         released,
+       ], includeScopeInitialization: false);
+       return true;
+     } catch (error, stackTrace) {
+-      info._initializationFailures.add(
++      info._mutableInitializationFailures.add(
+         LevitDisposalFailure(
+           resource: instance,
+           error: error,
+@@ -1256,10 +1268,10 @@
+       );
+       rethrow;
+     } finally {
+-      info._factoryInstances.remove(instance);
++      info._factoryStorage?.remove(instance);
+       info._releasingFactoryInstances.remove(instance);
+       info._factoryReleases.remove(finished.future);
+-      info._pendingFactories.remove(finished.future);
++      info._pendingStorage?.remove(finished.future);
+       _notifyScopeProgress();
+       finished.complete();
+     }
+@@ -1411,7 +1423,7 @@
+     } finally {
+       _isDisposed = true;
+       _parentScope?._ownedChildren.remove(this);
+-      _disposedCompleter.complete();
++      _disposedCompleter?.complete();
+       _notifyScopeProgress();
+       _notifyScopeDispose();
+     }
+@@ -1547,7 +1559,8 @@
+       ]) {
+         if (instance == null || !seen.add(instance)) continue;
+         try {
+-          await _disposeInstance(instance);
++          final cleanup = _disposeInstance(instance);
++          if (cleanup is Future<void>) await cleanup;
+         } catch (error, stackTrace) {
+           failures.add(
+             LevitDisposalFailure(
+@@ -1559,7 +1572,7 @@
+         }
+       }
+     } finally {
+-      info._factoryInstances.clear();
++      info._factoryStorage?.clear();
+       info._removalComplete?.complete();
+       _retiring.remove(info._retiringKey);
+       _notifyScopeProgress();
+@@ -1567,13 +1580,12 @@
+     if (failures.isNotEmpty) throw LevitDisposalException.aggregate(failures);
+   }
+ 
+-  Future<void> _disposeInstance(Object instance) async {
++  FutureOr<void> _disposeInstance(Object instance) {
+     if (instance is LevitScopeDisposable) {
+-      await instance.onClose();
+-      return;
++      return instance.onClose();
+     }
+     if (instance is LevitDisposable) {
+-      await instance.dispose();
++      return instance.dispose();
+     }
+   }
+ 
+--- a/packages/kits/levit_dart/lib/src/utilities/levit_task_engine.dart
++++ b/packages/kits/levit_dart/lib/src/utilities/levit_task_engine.dart
+@@ -110,13 +110,13 @@
+ 
+   static int _nextTaskId = 0;
+   static int _nextExecutionId = 0;
+-
+-  static String _generateTaskId() =>
+-      'task_${DateTime.now().microsecondsSinceEpoch}_${_nextTaskId++}';
++  static final String _idPrefix = DateTime.now().microsecondsSinceEpoch
++      .toRadixString(36);
++
++  static String _generateTaskId() => 'task_${_idPrefix}_${_nextTaskId++}';
+ 
+   static String _generateExecutionId() =>
+-      'execution_${DateTime.now().microsecondsSinceEpoch}_'
+-      '${_nextExecutionId++}';
++      'execution_${_idPrefix}_${_nextExecutionId++}';
+ 
+   static void _onTaskErrorUnset(Object error, StackTrace stackTrace) {}
+   static void _onTaskEventUnset(LevitTaskEvent event) {}
+@@ -570,34 +570,35 @@
+     }
+     _activeExecutions.add(execution);
+     _notifyTaskTree();
+-    final finished = Completer<void>();
+-    _runners.add(finished.future);
+-    unawaited(() async {
+-      try {
+-        await runZoned(
+-          () => _run(execution),
+-          zoneValues: {
+-            _taskEngineZoneKey: this,
+-            _taskExecutionZoneKey: execution,
+-            LevitTaskGroup._zoneKey: execution.config.group,
+-          },
+-        );
+-      } finally {
+-        _runners.remove(finished.future);
+-        finished.complete();
+-      }
+-    }());
++    final runner = runZoned(
++      () => _run(execution),
++      zoneValues: {
++        _taskZoneKey: (group: execution.config.group, execution: execution),
++      },
++    );
++    // Track the actual runner, including its async continuations/finally work.
++    // A second completion proxy adds no lifetime protection.
++    _runners.add(runner);
++    unawaited(
++      runner.whenComplete(() {
++        _runners.remove(runner);
++      }),
++    );
+   }
+ 
+   Future<void> _run(_TaskExecution execution) async {
+     final config = execution.config;
+ 
+     try {
+-      final cachedResult = await _readCachedTaskResult<dynamic>(
+-        cacheProvider: cacheProvider,
+-        taskId: execution.taskId,
+-        cachePolicy: config.cachePolicy,
+-      );
++      // Keep admission asynchronous even without caching, without constructing
++      // an additional no-op cache future for every execution.
++      final cachedResult = await (config.cachePolicy == null
++          ? null
++          : _readCachedTaskResult<dynamic>(
++              cacheProvider: cacheProvider,
++              taskId: execution.taskId,
++              cachePolicy: config.cachePolicy,
++            ));
+       if (execution.config.deadline case final deadline?) {
+         if (!DateTime.now().isBefore(deadline))
+           execution.cancellation.cancel(
+@@ -670,12 +671,14 @@
+             return;
+           }
+ 
+-          await _writeCachedTaskResult<dynamic>(
+-            cacheProvider: cacheProvider,
+-            taskId: execution.taskId,
+-            cachePolicy: config.cachePolicy,
+-            result: result,
+-          );
++          if (config.cachePolicy != null) {
++            await _writeCachedTaskResult<dynamic>(
++              cacheProvider: cacheProvider,
++              taskId: execution.taskId,
++              cachePolicy: config.cachePolicy,
++              result: result,
++            );
++          }
+           if (execution.cancellation.isCancelled) {
+             _completeCancelled(
+               execution,
+@@ -802,13 +805,11 @@
+     required LevitTaskOutcome outcome,
+     TaskSkipReason? skipReason,
+   }) {
+-    final now = DateTime.now();
+     _emitTaskEvent(
+       _eventFor(
+         execution,
+         type: eventType,
+         phase: LevitTaskPhase.completed,
+-        finishedAt: now,
+         progress: outcome == LevitTaskOutcome.succeeded
+             ? 1
+             : execution.progress,
+@@ -837,13 +838,11 @@
+         deliveredStack = handlerStack;
+       }
+     }
+-    final now = DateTime.now();
+     _emitTaskEvent(
+       _eventFor(
+         execution,
+         type: LevitTaskEventType.failed,
+         phase: LevitTaskPhase.completed,
+-        finishedAt: now,
+         outcome: LevitTaskOutcome.failed,
+         error: error,
+         stackTrace: stackTrace,
+@@ -874,13 +873,11 @@
+     final outcome = reason == TaskSkipReason.superseded
+         ? LevitTaskOutcome.superseded
+         : LevitTaskOutcome.cancelled;
+-    final now = DateTime.now();
+     _emitTaskEvent(
+       _eventFor(
+         execution,
+         type: LevitTaskEventType.skipped,
+         phase: LevitTaskPhase.completed,
+-        finishedAt: now,
+         outcome: outcome,
+         skipReason: reason,
+         error: error,
+@@ -942,7 +939,6 @@
+     required LevitTaskEventType type,
+     required LevitTaskPhase phase,
+     int? attempt,
+-    DateTime? finishedAt,
+     Duration? retryIn,
+     double? progress,
+     TaskSkipReason? skipReason,
+@@ -955,7 +951,7 @@
+         LevitTaskMiddleware._middlewares.isEmpty)
+       return null;
+     final startedAt = execution.startedAt;
+-    final end = finishedAt;
++    final end = phase == LevitTaskPhase.completed ? DateTime.now() : null;
+     return LevitTaskEvent(
+       type: type,
+       taskId: execution.taskId,
+@@ -1091,7 +1087,7 @@
+   /// A task must not await disposal of its own engine or controller.
+   @override
+   void assertCanDispose() {
+-    if (identical(Zone.current[_taskEngineZoneKey], this) ||
++    if (identical(_currentTaskZone?.execution?.config.group.engine, this) ||
+         (identical(LevitTaskGroup.current?.engine, this) &&
+             (LevitTaskGroup.current?._bodyRunning ?? false))) {
+       throw StateError(
+--- a/packages/kits/levit_dart/lib/src/utilities/task_group.dart
++++ b/packages/kits/levit_dart/lib/src/utilities/task_group.dart
+@@ -129,9 +129,8 @@
+ /// only submitted leaf tasks do. Always return/await child group bodies.
+ final class LevitTaskGroup
+     implements LevitDrainable, LevitDisposable, LevitExecutionBoundary {
+-  static final Object _zoneKey = Object();
+   static int _nextId = 0;
+-  static LevitTaskGroup? get current => Zone.current[_zoneKey];
++  static LevitTaskGroup? get current => _currentTaskZone?.group;
+   final String id;
+   final String name;
+   final LevitTaskEngine engine;
+@@ -256,7 +255,7 @@
+     _ensureAdmission();
+     if (_root || _bodyStarted)
+       throw StateError('Run a fresh child workflow group once.');
+-    if (identical(Zone.current[_taskEngineZoneKey], engine)) {
++    if (identical(_currentTaskZone?.execution?.config.group.engine, engine)) {
+       throw StateError(
+         'Coordinate groups outside a leaf task; submit leaves from the group body.',
+       );
+@@ -265,7 +264,12 @@
+     _bodyRunning = true;
+     late T result;
+     try {
+-      result = await runZoned(() => body(this), zoneValues: {_zoneKey: this});
++      result = await runZoned(
++        () => body(this),
++        zoneValues: {
++          _taskZoneKey: (group: this, execution: _currentTaskZone?.execution),
++        },
++      );
+     } catch (error, stack) {
+       if (error is LevitTaskCancelledException) {
+         cancel(error.reason);
+@@ -420,8 +424,9 @@
+   }
+ }
+ 
+-final Object _taskEngineZoneKey = Object();
+-final Object _taskExecutionZoneKey = Object();
++final Object _taskZoneKey = Object();
++typedef _TaskZone = ({LevitTaskGroup group, _TaskExecution? execution});
++_TaskZone? get _currentTaskZone => Zone.current[_taskZoneKey] as _TaskZone?;
+ 
+ /// Immutable, value-free live task tree. Completed executions remain available
+ /// through the bounded task tracker/event stream instead of accumulating here.
+--- a/packages/kits/levit_dart/lib/src/utilities/task_engine_models.dart
++++ b/packages/kits/levit_dart/lib/src/utilities/task_engine_models.dart
+@@ -481,7 +481,10 @@
+     required this.result,
+     required void Function() cancel,
+   }) : _cancel = cancel {
+-    outcome;
++    // A handle may be observed through outcome later. Mark the source handled
++    // immediately, without eagerly allocating an unused outcome future/value.
++    // ignore() retains the result/error for later result and outcome listeners.
++    result.ignore();
+   }
+ 
+   /// Cooperatively cancels this execution.
+--- a/packages/kits/levit_dart/lib/src/utilities/query_family.dart
++++ b/packages/kits/levit_dart/lib/src/utilities/query_family.dart
+@@ -28,7 +28,7 @@
+ 
+   @override
+   Future<void> close() {
+-    final running = Zone.current[_taskExecutionZoneKey] as _TaskExecution?;
++    final running = _currentTaskZone?.execution;
+     if (running?.executionId == execution.executionId) {
+       throw StateError('A query cannot close its own producer from its task.');
+     }
+@@ -198,7 +198,7 @@
+ 
+   @override
+   void assertCanDispose() {
+-    final running = Zone.current[_taskExecutionZoneKey] as _TaskExecution?;
++    final running = _currentTaskZone?.execution;
+     if (running != null &&
+         _resources.any(
+           (resource) => resource.execution.executionId == running.executionId,

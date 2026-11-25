@@ -12,11 +12,20 @@ void main() {
 
       // Call repeatedly
       controller.debounce(
-          'test', const Duration(milliseconds: 50), () => callCount++);
+        'test',
+        const Duration(milliseconds: 50),
+        () => callCount++,
+      );
       controller.debounce(
-          'test', const Duration(milliseconds: 50), () => callCount++);
+        'test',
+        const Duration(milliseconds: 50),
+        () => callCount++,
+      );
       controller.debounce(
-          'test', const Duration(milliseconds: 50), () => callCount++);
+        'test',
+        const Duration(milliseconds: 50),
+        () => callCount++,
+      );
 
       // Should not have run yet
       expect(callCount, 0);
@@ -25,7 +34,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 100));
       expect(callCount, 1);
 
-      controller.onClose();
+      await controller.onClose();
     });
 
     test('Throttle logic works', () async {
@@ -35,12 +44,18 @@ void main() {
 
       // First call runs immediately
       controller.throttle(
-          'test', const Duration(milliseconds: 100), () => callCount++);
+        'test',
+        const Duration(milliseconds: 100),
+        () => callCount++,
+      );
       expect(callCount, 1);
 
       // Subsequent calls ignored
       controller.throttle(
-          'test', const Duration(milliseconds: 100), () => callCount++);
+        'test',
+        const Duration(milliseconds: 100),
+        () => callCount++,
+      );
       expect(callCount, 1);
 
       // Wait for cool down
@@ -48,10 +63,13 @@ void main() {
 
       // Can run again
       controller.throttle(
-          'test', const Duration(milliseconds: 100), () => callCount++);
+        'test',
+        const Duration(milliseconds: 100),
+        () => callCount++,
+      );
       expect(callCount, 2);
 
-      controller.onClose();
+      await controller.onClose();
     });
 
     test('Countdown logic works', () async {
@@ -69,7 +87,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 150));
       expect(countdown.remaining.value < const Duration(seconds: 3), isTrue);
 
-      controller.onClose();
+      await controller.onClose();
     });
 
     test('Countdown finishes on the zero tick', () async {
@@ -91,7 +109,7 @@ void main() {
       expect(lastTick, Duration.zero);
       expect(finished, 1);
 
-      controller.onClose();
+      await controller.onClose();
     });
 
     test('Countdown pause, resume, and stop control remaining time', () async {
@@ -117,7 +135,7 @@ void main() {
       countdown.stop();
       expect(countdown.remaining.value, const Duration(milliseconds: 300));
 
-      controller.onClose();
+      await controller.onClose();
     });
   });
 }

@@ -11,13 +11,16 @@ void main() {
 
       // Using a local StreamTransformer (built-in style)
       LxWorker(
-          query.transform((stream) =>
-              stream.transform(_debounceBuiltIn(Duration(milliseconds: 50)))),
-          (status) {
-        if (status is LxSuccess<String>) {
-          values.add(status.value);
-        }
-      });
+        query.transform(
+          (stream) =>
+              stream.transform(_debounceBuiltIn(Duration(milliseconds: 50))),
+        ),
+        (status) {
+          if (status is LxSuccess<String>) {
+            values.add(status.value);
+          }
+        },
+      );
 
       query.value = 'a';
       query.value = 'ab';
@@ -34,12 +37,13 @@ void main() {
       // Using RxDart's DebounceStreamTransformer
       // Note: LxReactive.transform(transformer) expects StreamTransformer<T, R>
       LxWorker(
-          query.transform((s) => s.debounceTime(Duration(milliseconds: 50))),
-          (status) {
-        if (status is LxSuccess<String>) {
-          values.add(status.value);
-        }
-      });
+        query.transform((s) => s.debounceTime(Duration(milliseconds: 50))),
+        (status) {
+          if (status is LxSuccess<String>) {
+            values.add(status.value);
+          }
+        },
+      );
 
       query.value = 'a';
       query.value = 'ab';
@@ -76,35 +80,33 @@ void main() {
 // Simple built-in debounce transformer helper
 StreamTransformer<T, T> _debounceBuiltIn<T>(Duration d) {
   Timer? timer;
-  return StreamTransformer<T, T>(
-    (Stream<T> input, bool cancelOnError) {
-      late StreamController<T> controller;
-      StreamSubscription<T>? subscription;
+  return StreamTransformer<T, T>((Stream<T> input, bool cancelOnError) {
+    late StreamController<T> controller;
+    StreamSubscription<T>? subscription;
 
-      controller = StreamController<T>(
-        onListen: () {
-          subscription = input.listen(
-            (data) {
-              timer?.cancel();
-              timer = Timer(d, () => controller.add(data));
-            },
-            onError: controller.addError,
-            onDone: () {
-              timer?.cancel();
-              controller.close();
-            },
-            cancelOnError: cancelOnError,
-          );
-        },
-        onPause: () => subscription?.pause(),
-        onResume: () => subscription?.resume(),
-        onCancel: () {
-          timer?.cancel();
-          return subscription?.cancel();
-        },
-        sync: true,
-      );
-      return controller.stream.listen(null);
-    },
-  );
+    controller = StreamController<T>(
+      onListen: () {
+        subscription = input.listen(
+          (data) {
+            timer?.cancel();
+            timer = Timer(d, () => controller.add(data));
+          },
+          onError: controller.addError,
+          onDone: () {
+            timer?.cancel();
+            controller.close();
+          },
+          cancelOnError: cancelOnError,
+        );
+      },
+      onPause: () => subscription?.pause(),
+      onResume: () => subscription?.resume(),
+      onCancel: () {
+        timer?.cancel();
+        return subscription?.cancel();
+      },
+      sync: true,
+    );
+    return controller.stream.listen(null);
+  });
 }

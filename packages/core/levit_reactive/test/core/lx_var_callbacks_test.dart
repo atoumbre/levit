@@ -7,8 +7,11 @@ void main() {
     bool listened = false;
     bool cancelled = false;
 
-    final count = LxVar(0,
-        onListen: () => listened = true, onCancel: () => cancelled = true);
+    final count = LxVar(
+      0,
+      onListen: () => listened = true,
+      onCancel: () => cancelled = true,
+    );
     final sub = count.stream.listen((_) {});
     await Future.delayed(Duration.zero);
     expect(listened, isTrue);

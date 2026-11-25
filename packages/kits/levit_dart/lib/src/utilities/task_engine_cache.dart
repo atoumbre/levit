@@ -17,8 +17,9 @@ Future<_TaskCacheHit<T>?> _readCachedTaskResult<T>({
   final cachedJson = await cacheProvider.read(cacheKey);
   if (cachedJson == null) return null;
 
-  final expiresAt =
-      DateTime.fromMillisecondsSinceEpoch(cachedJson['expiresAt'] as int);
+  final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+    cachedJson['expiresAt'] as int,
+  );
   if (DateTime.now().isAfter(expiresAt)) {
     await cacheProvider.delete(cacheKey);
     return null;

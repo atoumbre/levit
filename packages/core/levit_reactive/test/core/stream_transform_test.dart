@@ -125,8 +125,9 @@ void main() {
     });
 
     test('LxFuture converts to LxStream', () async {
-      final future =
-          LxFuture(Future.delayed(const Duration(milliseconds: 10), () => 42));
+      final future = LxFuture(
+        Future.delayed(const Duration(milliseconds: 10), () => 42),
+      );
       final stream = future.asLxStream;
       stream.addListener(() {}); // Activate
 

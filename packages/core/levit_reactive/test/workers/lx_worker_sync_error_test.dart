@@ -6,6 +6,8 @@ class TestReactive<T> extends LxVar<T> {
 }
 
 void main() {
+  setUp(() => Lx.enableWatchMonitoring = true);
+  tearDown(() => Lx.enableWatchMonitoring = false);
   test('LxWorker handles synchronous error', () {
     final reactive = TestReactive<int>(0);
     final watch = LxWorker(reactive, (val) => throw 'Sync Error');
@@ -23,11 +25,7 @@ void main() {
   test('LxWorker uses stream listener when onError is supplied', () async {
     final reactive = TestReactive<int>(0);
     final values = <int>[];
-    final watch = LxWorker(
-      reactive,
-      values.add,
-      onError: (_, __) {},
-    );
+    final watch = LxWorker(reactive, values.add, onError: (_, __) {});
 
     final emitted = expectLater(reactive.stream, emits(1));
     reactive.value = 1;

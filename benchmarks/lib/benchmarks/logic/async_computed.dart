@@ -31,6 +31,10 @@ class AsyncComputedBenchmark extends Benchmark {
       'Measures sequential async recomputation using each framework\'s closest async primitive.';
 
   @override
+  String implementationLabel(Framework framework) =>
+      framework == Framework.bloc ? 'RxDart' : framework.label;
+
+  @override
   BenchmarkImplementation createImplementation(Framework framework) {
     switch (framework) {
       case Framework.levit:
@@ -49,6 +53,9 @@ class AsyncComputedBenchmark extends Benchmark {
 
 // --- Levit ---
 class LevitAsyncComputedBenchmark extends BenchmarkImplementation {
+  LevitAsyncComputedBenchmark({this.staticDeps = true});
+
+  final bool staticDeps;
   late LxVar<int> source;
   late LxAsyncComputed<String> asyncComputed;
   late VoidCallback listener;
@@ -61,7 +68,7 @@ class LevitAsyncComputedBenchmark extends BenchmarkImplementation {
       final val = source.value;
       await Future<void>.delayed(Duration.zero);
       return 'Result: $val';
-    }, staticDeps: true);
+    }, staticDeps: staticDeps);
 
     listener = () {};
     asyncComputed.addListener(listener);
@@ -82,15 +89,16 @@ class LevitAsyncComputedBenchmark extends BenchmarkImplementation {
     final value = asyncComputed.valueOrNull;
     if (value != 'Result: $expectedSource') {
       throw StateError(
-          'Levit async mismatch: expected Result: $expectedSource, got $value');
+        'Levit async mismatch: expected Result: $expectedSource, got $value',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
     asyncComputed.removeListener(listener);
-    asyncComputed.close();
-    source.close();
+    await asyncComputed.close();
+    await source.close();
   }
 }
 
@@ -131,7 +139,8 @@ class VanillaAsyncComputedBenchmark extends BenchmarkImplementation {
   Future<void> verify() async {
     if (result.value != 'Result: $expectedSource') {
       throw StateError(
-          'Vanilla async mismatch: expected Result: $expectedSource, got ${result.value}');
+        'Vanilla async mismatch: expected Result: $expectedSource, got ${result.value}',
+      );
     }
   }
 
@@ -174,7 +183,8 @@ class GetXAsyncComputedBenchmark extends BenchmarkImplementation {
   Future<void> verify() async {
     if (result.value != 'Result: $expectedSource') {
       throw StateError(
-          'GetX async mismatch: expected Result: $expectedSource, got ${result.value}');
+        'GetX async mismatch: expected Result: $expectedSource, got ${result.value}',
+      );
     }
   }
 
@@ -214,7 +224,8 @@ class RiverpodAsyncComputedBenchmark extends BenchmarkImplementation {
       final value = await container.read(asyncProvider.future);
       if (value != 'Result: $expectedSource') {
         throw StateError(
-            'Riverpod async mismatch: expected Result: $expectedSource, got $value');
+          'Riverpod async mismatch: expected Result: $expectedSource, got $value',
+        );
       }
     }
   }
@@ -224,7 +235,8 @@ class RiverpodAsyncComputedBenchmark extends BenchmarkImplementation {
     final value = await container.read(asyncProvider.future);
     if (value != 'Result: $expectedSource') {
       throw StateError(
-          'Riverpod async verification failed: expected Result: $expectedSource, got $value');
+        'Riverpod async verification failed: expected Result: $expectedSource, got $value',
+      );
     }
   }
 
@@ -269,7 +281,8 @@ class BlocAsyncComputedBenchmark extends BenchmarkImplementation {
   Future<void> verify() async {
     if (latestResult != 'Result: $expectedSource') {
       throw StateError(
-          'BLoC async mismatch: expected Result: $expectedSource, got $latestResult');
+        'BLoC async mismatch: expected Result: $expectedSource, got $latestResult',
+      );
     }
   }
 

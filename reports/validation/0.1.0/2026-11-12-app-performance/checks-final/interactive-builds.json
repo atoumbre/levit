@@ -1,0 +1,14 @@
+[
+  {
+    "mode": "profile",
+    "sourceRevision": "cecdfff2b8d212e13ee5a248bd9c652c1db6e9c697297d7ce24ec3a135b149dd",
+    "exitCode": 0,
+    "seconds": 28.68261694908142
+  },
+  {
+    "mode": "release",
+    "sourceRevision": "cecdfff2b8d212e13ee5a248bd9c652c1db6e9c697297d7ce24ec3a135b149dd",
+    "exitCode": 0,
+    "seconds": 24.687843799591064
+  }
+]

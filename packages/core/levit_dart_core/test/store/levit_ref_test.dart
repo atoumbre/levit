@@ -5,8 +5,13 @@ class InstanceCaptureMiddleware implements LevitScopeMiddleware {
   dynamic lastInstance;
 
   @override
-  void Function() onDependencyInit<S>(void Function() onInit, S instance,
-      LevitScope scope, String key, LevitDependency info) {
+  void Function() onDependencyInit<S>(
+    void Function() onInit,
+    S instance,
+    LevitScope scope,
+    String key,
+    LevitDependency info,
+  ) {
     if (key.contains('ls_value_')) {
       lastInstance = instance;
     }
@@ -15,20 +20,38 @@ class InstanceCaptureMiddleware implements LevitScopeMiddleware {
 
   @override
   void onDependencyDelete(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
   @override
   void onDependencyRegister(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
   @override
   void onDependencyResolve(
-      int scopeId, String scopeName, String key, LevitDependency info,
-      {required String source, int? parentScopeId}) {}
+    int scopeId,
+    String scopeName,
+    String key,
+    LevitDependency info, {
+    required String source,
+    int? parentScopeId,
+  }) {}
   @override
-  S Function() onDependencyCreate<S>(S Function() builder, LevitScope scope,
-          String key, LevitDependency info) =>
-      builder;
+  S Function() onDependencyCreate<S>(
+    S Function() builder,
+    LevitScope scope,
+    String key,
+    LevitDependency info,
+  ) => builder;
   @override
   void onScopeCreate(int scopeId, String scopeName, int? parentScopeId) {}
   @override
@@ -51,7 +74,7 @@ void main() {
     await Levit.reset(force: true);
   });
 
-  group('LevitRef Coverage', () {
+  group('Store reference lookup and disposal', () {
     test('scope accessor', () {
       final state = LevitStore((ref) {
         expect(ref.scope, isNotNull);
@@ -124,10 +147,10 @@ void main() {
       await Levit.delete<_MockScopeDisposable>(force: true);
       expect(mock.closed, true);
 
-      // Directly test via autoDispose to hit L280 specifically via _levitDisposeItem
+      // Directly test via own to hit L280 specifically via _levitDisposeItem
       final mock2 = _MockScopeDisposable();
       final store = LevitStore((ref) {
-        ref.autoDispose(mock2);
+        ref.own(mock2);
         return 'ok';
       });
       store.find();

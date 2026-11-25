@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:levit_monitor/levit_monitor.dart';
+import 'package:levit_monitor/levit_monitor_io.dart';
 import 'package:logger/logger.dart' as logger;
 import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
@@ -110,15 +110,11 @@ void main() {
       () => transport.send(_event(level: logger.Level.all)),
       throwsArgumentError,
     );
-    transport.send(_event(
-      level: logger.Level.error,
-      error: StateError('failed'),
-    ));
-
-    expect(
-      printer.messages,
-      contains(contains('CUSTOM levit.task:finished')),
+    transport.send(
+      _event(level: logger.Level.error, error: StateError('failed')),
     );
+
+    expect(printer.messages, contains(contains('CUSTOM levit.task:finished')));
     expect(printer.messages.last, contains('Error: Bad state: failed'));
   });
 
@@ -139,7 +135,10 @@ void main() {
 
   test('websocket transport categorizes custom events', () async {
     final channel = _WebSocketChannel();
-    final transport = WebSocketTransport(channel);
+    final transport = WebSocketTransport(
+      channel,
+      requireAcknowledgement: false,
+    );
     addTearDown(() async {
       await transport.close();
       await channel.incoming.close();

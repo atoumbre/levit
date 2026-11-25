@@ -29,7 +29,7 @@ Bootstrap (Flutter)
 -------------------
 
 Call Levit.enableAutoLinking() in main() before runApp.
-Still autoDispose non-reactive resources and reactives created outside
+Still own non-reactive resources and reactives created outside
 controller init.
 
 
@@ -62,16 +62,16 @@ Do not manually create/dispose scopes in normal widget code.
 Reactive State
 --------------
 
-- 0.lx — reactive value; read/write via count() or count.value
+- 0.lx — reactive value; read via count() or count.value; write via count.value
 - .named('label') — diagnostics
 - LxList / LxMap / LxSet or <T>[].lx — collections
 - LxComputed(() => ...) — derived state
 - LxComputed.async(() async => ...) — async derived state
 - LxAsyncConcurrency.exhaustLatest — one running + one coalesced trailing run
 - LxStream completionPolicy: retain — preserve/rebind a completed source
-- LxFamily<K, R> — lazy keyed reactive resources with explicit eviction
+- LxMap/LxList.entry — borrowed key/position; LxResource — one owned producer; LevitAsyncMap — keyed task-backed data
 - LxStatus<T> + LStatusBuilder — async UI states
-- LxWorker — side effects (prefer autoDispose(LxWorker(...)) for reload)
+- LxWorker — side effects (prefer own(LxWorker(...)) for reload)
 - Levit.batch / Levit.batchAsync — coalesce multiple updates
 
 
@@ -79,12 +79,13 @@ Controllers
 -----------
 
 Extend LevitController for feature/screen logic. Keep widgets thin.
-Use own / autoDispose for resources; cleanup is awaited, LIFO, and idempotent.
+Use own for resources; cleanup is awaited, LIFO, and idempotent.
 Use LevitResourceOwnership on non-controller LevitScopeDisposable resources.
-Always call super.onInit / await super.onClose in overrides.
+Always delegate super.onInit, super.onBeforeClose, and super.onClose in overrides.
+Await asynchronous cleanup.
 Reload on context changes:
 
-  autoDispose(LxWorker(contextVar, (_) async { await reload(); }));
+  own(LxWorker(contextVar, (_) async { await reload(); }));
 
 
 Flutter Widgets
@@ -96,6 +97,9 @@ Flutter Widgets
 - LBuilder / LSelectorBuilder / LStatusBuilder — page UI kits
 - LView / LAsyncView — consume existing scope dependency
 - LScopedView.put or subclass + onConfigScope — create scope + controller
+
+Borrow Flutter APIs with source.asValueListenable(); retain/own the adapter outside
+build. Disposal unsubscribes without closing the source.
 
 Kit extras (levit_flutter): showLevitDialog, showLevitModalBottomSheet,
 LKeepAlive, LevitAppLifecycleMixin.
@@ -143,7 +147,7 @@ levit_monitor remains independent of levit_dart. Bridge task events through
 LevitMonitor.emitCustomEvent in the application composition layer.
 
 Enable optional levit_lints in analysis_options.yaml for lifecycle, ownership,
-registration, and reactive-status diagnostics (Dart 3.10+).
+registration, and reactive-status diagnostics (Dart 3.12+).
 
 
 Anti-Patterns
@@ -171,3 +175,29 @@ melos run ci --no-select
 ```
 
 Update DartDoc and package README when changing public APIs.
+
+
+0.1.0 contracts
+----------------
+- Reactive call() only reads. Use .value for writes.
+- Register using builders; consuming LView/LAsyncView have no .put constructor.
+- Factories own disposable results in the registering scope, including async
+  results arriving during removal. Always await deletion before replacement.
+- batchAsync is context-local notification batching, not value isolation.
+- Store lookups inherit by default; localOnly: true creates/reuses local state.
+- View resolver identity never refetches by itself; use args or scope changes.
+- Task engine disposal waits for runners. Task mixins drain in onBeforeClose
+  before owned resources close; delegate super in lifecycle overrides.
+- Monitoring does not enable auto-linking. Bootstrap explicitly.
+- levit_lints 0.1.0 is publishable; use native root plugins configuration.
+  Before publication, use the checkout path. See its README for rule limits.
+
+Runtime boundary
+----------------
+Persistence codecs, migrations, storage and persistent task-cache/restoration
+adapters belong to the independent ecosystem roadmap, not runtime packages.
+See reports/release_0.1.0_plan.md and reports/ecosystem_roadmap.md.
+
+Onboarding: docs/ONBOARDING.md (scopes → owners → state → widgets).
+Advanced selection/time, numeric helpers, LKeepAlive, staticDeps and batchAsync:
+docs/ADVANCED.md. All runtime/tool packages target 0.1.0; Dart 3.12+, Flutter 3.44+.

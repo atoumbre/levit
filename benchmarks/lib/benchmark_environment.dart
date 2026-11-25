@@ -28,6 +28,11 @@ class BenchmarkDisplayMetrics {
 }
 
 class BenchmarkEnvironment {
+  /// Supply a source digest/revision when building a reproducible comparison.
+  static const sourceRevision = String.fromEnvironment(
+    'BENCHMARK_REVISION',
+    defaultValue: 'unrecorded',
+  );
   final DateTime capturedAt;
   final String executionContext;
   final String buildMode;
@@ -44,6 +49,7 @@ class BenchmarkEnvironment {
   final String locale;
   final String? hostName;
   final BenchmarkDisplayMetrics? displayMetrics;
+  final double? refreshRate;
 
   const BenchmarkEnvironment({
     required this.capturedAt,
@@ -62,7 +68,33 @@ class BenchmarkEnvironment {
     required this.locale,
     required this.hostName,
     required this.displayMetrics,
+    this.refreshRate,
   });
+
+  Map<String, Object?> toJson() => {
+    'capturedAt': capturedAt.toIso8601String(),
+    'sourceRevision': sourceRevision,
+    'executionContext': executionContext,
+    'buildMode': buildMode,
+    'benchmarkProfile': benchmarkProfile,
+    'iterations': iterations,
+    'warmupIterations': warmupIterations,
+    'frameworks': frameworks,
+    'benchmarks': benchmarks,
+    'frameworkOrderRotation': frameworkOrderRotation,
+    'operatingSystem': operatingSystem,
+    'operatingSystemVersion': operatingSystemVersion,
+    'dartVersion': dartVersion,
+    'processorCount': processorCount,
+    'refreshRate': refreshRate,
+    'display': displayMetrics == null
+        ? null
+        : {
+            'logicalWidth': displayMetrics!.logicalWidth,
+            'logicalHeight': displayMetrics!.logicalHeight,
+            'devicePixelRatio': displayMetrics!.devicePixelRatio,
+          },
+  };
 
   static BenchmarkEnvironment capture({
     required String executionContext,
@@ -78,7 +110,7 @@ class BenchmarkEnvironment {
     final view = dispatcher == null
         ? null
         : dispatcher.implicitView ??
-            (dispatcher.views.isNotEmpty ? dispatcher.views.first : null);
+              (dispatcher.views.isNotEmpty ? dispatcher.views.first : null);
 
     return BenchmarkEnvironment(
       capturedAt: DateTime.now(),
@@ -96,6 +128,7 @@ class BenchmarkEnvironment {
       processorCount: Platform.numberOfProcessors,
       locale: dispatcher?.locale.toLanguageTag() ?? Platform.localeName,
       hostName: includeHostName ? _safeHostName() : null,
+      refreshRate: view?.display.refreshRate,
       displayMetrics: view == null
           ? null
           : BenchmarkDisplayMetrics(

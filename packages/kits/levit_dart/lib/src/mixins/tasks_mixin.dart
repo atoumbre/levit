@@ -12,13 +12,15 @@ LevitTaskEngine _resolveTasksEngine(
 }) {
   var engine = _taskEngines[controller];
   if (engine == null) {
-    final created = controller.own(LevitTaskEngine(
-      maxConcurrent: maxConcurrentTasks,
-      cacheProvider: cacheProvider,
-      onTaskError: onTaskError,
-      onTaskEvent: onTaskEvent,
-      ownerPath: controller.ownerPath,
-    ));
+    final created = controller.own(
+      LevitTaskEngine(
+        maxConcurrent: maxConcurrentTasks,
+        cacheProvider: cacheProvider,
+        onTaskError: onTaskError,
+        onTaskEvent: onTaskEvent,
+        ownerPath: controller.ownerPath,
+      ),
+    );
     _taskEngines[controller] = created;
     return created;
   }
@@ -60,12 +62,15 @@ LevitTaskEngine _tasksEngineFor(
 mixin LevitTasksMixin on LevitController {
   /// The controller-owned task engine.
   LevitTaskEngine get tasksEngine => _tasksEngineFor(
-        this,
-        maxConcurrentTasks: maxConcurrentTasks,
-        cacheProvider: taskCacheProvider,
-        onTaskError: onTaskError,
-        onTaskEvent: onTaskEvent,
-      );
+    this,
+    maxConcurrentTasks: maxConcurrentTasks,
+    cacheProvider: taskCacheProvider,
+    onTaskError: onTaskError,
+    onTaskEvent: onTaskEvent,
+  );
+
+  /// Supervisor boundary for independent workflows owned by this controller.
+  LevitTaskGroup get taskGroup => tasksEngine.rootGroup;
 
   /// Optional default error handler for terminal failures.
   void Function(Object error, StackTrace stackTrace)? get onTaskError => null;
@@ -77,17 +82,17 @@ mixin LevitTasksMixin on LevitController {
   LevitTaskCacheProvider? get taskCacheProvider => null;
 
   /// Maximum number of concurrent task executions.
-  int get maxConcurrentTasks => 100000;
+  int get maxConcurrentTasks => 8;
 
   /// Runs a task using this controller's owned engine.
-  Future<T?> runTask<T>(
+  Future<T> runTask<T>(
     FutureOr<T> Function(LevitTaskContext context) task, {
     String? id,
     TaskPriority priority = TaskPriority.normal,
     TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
-    int retries = 0,
-    Duration? retryDelay,
-    bool useExponentialBackoff = true,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
     void Function(Object, StackTrace)? onError,
     TaskCachePolicy<T>? cachePolicy,
     LevitTaskMetadata? metadata,
@@ -98,9 +103,9 @@ mixin LevitTasksMixin on LevitController {
       id: id,
       priority: priority,
       conflictPolicy: conflictPolicy,
-      retries: retries,
-      retryDelay: retryDelay,
-      useExponentialBackoff: useExponentialBackoff,
+      retryPolicy: retryPolicy,
+      group: group,
+      deadline: deadline,
       onError: onError,
       cachePolicy: cachePolicy,
       metadata: metadata,
@@ -109,15 +114,15 @@ mixin LevitTasksMixin on LevitController {
   }
 
   /// Runs a top-level/static task in a new isolate.
-  Future<T?> runIsolateTask<I, T>(
+  Future<T> runIsolateTask<I, T>(
     LevitIsolateTask<I, T> task,
     I input, {
     String? id,
     TaskPriority priority = TaskPriority.normal,
     TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
-    int retries = 0,
-    Duration? retryDelay,
-    bool useExponentialBackoff = true,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
     void Function(Object, StackTrace)? onError,
     TaskCachePolicy<T>? cachePolicy,
     LevitTaskMetadata? metadata,
@@ -129,9 +134,9 @@ mixin LevitTasksMixin on LevitController {
       id: id,
       priority: priority,
       conflictPolicy: conflictPolicy,
-      retries: retries,
-      retryDelay: retryDelay,
-      useExponentialBackoff: useExponentialBackoff,
+      retryPolicy: retryPolicy,
+      group: group,
+      deadline: deadline,
       onError: onError,
       cachePolicy: cachePolicy,
       metadata: metadata,
@@ -153,9 +158,9 @@ mixin LevitTasksMixin on LevitController {
   }
 
   @override
-  FutureOr<void> onClose() {
-    _taskEngines[this]?.cancelAll();
-    return super.onClose();
+  FutureOr<void> onBeforeClose() async {
+    await _taskEngines[this]?.dispose();
+    await super.onBeforeClose();
   }
 }
 
@@ -163,15 +168,17 @@ mixin LevitTasksMixin on LevitController {
 mixin LevitReactiveTasksMixin on LevitController {
   /// The controller-owned task engine.
   LevitTaskEngine get tasksEngine => _tasksEngineFor(
-        this,
-        maxConcurrentTasks: maxConcurrentTasks,
-        cacheProvider: taskCacheProvider,
-        onTaskError: onTaskError,
-        onTaskEvent: onTaskEvent,
-      );
+    this,
+    maxConcurrentTasks: maxConcurrentTasks,
+    cacheProvider: taskCacheProvider,
+    onTaskError: onTaskError,
+    onTaskEvent: onTaskEvent,
+  );
+
+  LevitTaskGroup get taskGroup => tasksEngine.rootGroup;
 
   /// Maximum number of concurrent task executions.
-  int get maxConcurrentTasks => 100000;
+  int get maxConcurrentTasks => 8;
 
   /// Maximum number of terminal logical task entries retained.
   int get maxTaskHistory => 50;
@@ -253,11 +260,17 @@ mixin LevitReactiveTasksMixin on LevitController {
     if (status == null) return LxIdle<T>();
     final lastValue = status.lastValue as T?;
     return switch (status) {
-      LxIdle() => LxIdle<T>(lastValue),
-      LxWaiting() => LxWaiting<T>(lastValue),
+      LxIdle() =>
+        status.hasLastValue ? LxIdle<T>.retained(lastValue as T) : LxIdle<T>(),
+      LxWaiting() =>
+        status.hasLastValue
+            ? LxWaiting<T>.retained(lastValue as T)
+            : LxWaiting<T>(),
       LxSuccess(:final value) => LxSuccess<T>(value as T),
       LxError(:final error, :final stackTrace) =>
-        LxError<T>(error, stackTrace, lastValue),
+        status.hasLastValue
+            ? LxError<T>.retained(error, lastValue as T, stackTrace)
+            : LxError<T>(error, stackTrace),
     };
   }
 
@@ -273,10 +286,7 @@ mixin LevitReactiveTasksMixin on LevitController {
   double taskProgress(String id) => tasks[id]?.progress ?? 0;
 
   /// Whether matching tasks contain any queued or running work.
-  bool isBusyWhere({
-    String? category,
-    bool? blocksUserInteraction,
-  }) {
+  bool isBusyWhere({String? category, bool? blocksUserInteraction}) {
     return tasks.values.any((details) {
       if (!_matchesTaskFilter(
         details,
@@ -290,10 +300,7 @@ mixin LevitReactiveTasksMixin on LevitController {
   }
 
   /// Weighted progress across tasks matching category/blocking filters.
-  double progressWhere({
-    String? category,
-    bool? blocksUserInteraction,
-  }) {
+  double progressWhere({String? category, bool? blocksUserInteraction}) {
     var progress = 0.0;
     var weight = 0.0;
     for (final details in tasks.values) {
@@ -342,6 +349,10 @@ mixin LevitReactiveTasksMixin on LevitController {
     _updateExecution(event.taskId, event.executionId, (current) {
       return current.copyWith(
         ownerPath: event.ownerPath,
+        groupId: event.groupId,
+        parentGroupId: event.parentGroupId,
+        deadline: event.deadline,
+        cancellationReason: event.cancellationReason,
         phase: event.phase,
         metadata: event.metadata,
         priority: event.priority,
@@ -376,14 +387,14 @@ mixin LevitReactiveTasksMixin on LevitController {
   }
 
   /// Executes [task] and tracks the latest execution for its logical ID.
-  Future<T?> runTask<T>(
+  Future<T> runTask<T>(
     FutureOr<T> Function(LevitTaskContext context) task, {
     String? id,
     TaskPriority priority = TaskPriority.normal,
     TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
-    int retries = 0,
-    Duration? retryDelay,
-    bool useExponentialBackoff = true,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
     double weight = 1.0,
     void Function(Object error, StackTrace stackTrace)? onError,
     TaskCachePolicy<T>? cachePolicy,
@@ -396,7 +407,8 @@ mixin LevitReactiveTasksMixin on LevitController {
     }
 
     final taskId = id ?? LevitTaskEngine._generateTaskId();
-    final taskMetadata = metadata ??
+    final taskMetadata =
+        metadata ??
         (debugName == null
             ? LevitTaskMetadata.none
             : LevitTaskMetadata(debugName: debugName));
@@ -408,9 +420,9 @@ mixin LevitReactiveTasksMixin on LevitController {
       id: taskId,
       priority: priority,
       conflictPolicy: conflictPolicy,
-      retries: retries,
-      retryDelay: retryDelay,
-      useExponentialBackoff: useExponentialBackoff,
+      retryPolicy: retryPolicy,
+      group: group,
+      deadline: deadline,
       cachePolicy: cachePolicy,
       metadata: taskMetadata,
       onEvent: (event) {
@@ -419,10 +431,7 @@ mixin LevitReactiveTasksMixin on LevitController {
       },
       onSuccess: (result) {
         _updateExecution(taskId, execution.executionId, (current) {
-          return current.copyWith(
-            status: LxSuccess<T>(result),
-            progress: 1,
-          );
+          return current.copyWith(status: LxSuccess<T>(result), progress: 1);
         });
       },
       onProgress: (progress) {
@@ -433,10 +442,10 @@ mixin LevitReactiveTasksMixin on LevitController {
       onError: (error, stackTrace) {
         _updateExecution(taskId, execution.executionId, (current) {
           return current.copyWith(
-            status: LxError<Object>(
+            status: LxError<dynamic>.fromPrevious(
               error,
               stackTrace,
-              current.status.lastValue,
+              current.status,
             ),
           );
         });
@@ -445,7 +454,7 @@ mixin LevitReactiveTasksMixin on LevitController {
       onCancel: () {
         _updateExecution(taskId, execution.executionId, (current) {
           return current.copyWith(
-            status: LxIdle<dynamic>(current.status.lastValue),
+            status: LxIdle<dynamic>.fromPrevious(current.status),
           );
         });
       },
@@ -460,9 +469,15 @@ mixin LevitReactiveTasksMixin on LevitController {
     _pruneTaskHistoryFor(taskId);
     final initialEvent = queuedEvent;
     tasks[taskId] = TaskDetails(
-      status: LxWaiting<dynamic>(tasks[taskId]?.status.lastValue),
+      status: LxWaiting<dynamic>.fromPrevious(
+        tasks[taskId]?.status ?? LxIdle<dynamic>(),
+      ),
       executionId: execution.executionId,
       ownerPath: initialEvent?.ownerPath ?? ownerPath,
+      groupId: initialEvent?.groupId,
+      parentGroupId: initialEvent?.parentGroupId,
+      deadline: initialEvent?.deadline,
+      cancellationReason: initialEvent?.cancellationReason,
       phase: initialEvent?.phase ?? LevitTaskPhase.queued,
       metadata: taskMetadata,
       priority: priority,
@@ -476,15 +491,15 @@ mixin LevitReactiveTasksMixin on LevitController {
   }
 
   /// Executes a top-level/static isolate task and tracks its state.
-  Future<T?> runIsolateTask<I, T>(
+  Future<T> runIsolateTask<I, T>(
     LevitIsolateTask<I, T> task,
     I input, {
     String? id,
     TaskPriority priority = TaskPriority.normal,
     TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
-    int retries = 0,
-    Duration? retryDelay,
-    bool useExponentialBackoff = true,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
     double weight = 1.0,
     void Function(Object error, StackTrace stackTrace)? onError,
     TaskCachePolicy<T>? cachePolicy,
@@ -497,9 +512,9 @@ mixin LevitReactiveTasksMixin on LevitController {
       id: id,
       priority: priority,
       conflictPolicy: conflictPolicy,
-      retries: retries,
-      retryDelay: retryDelay,
-      useExponentialBackoff: useExponentialBackoff,
+      retryPolicy: retryPolicy,
+      group: group,
+      deadline: deadline,
       weight: weight,
       onError: onError,
       cachePolicy: cachePolicy,
@@ -508,15 +523,15 @@ mixin LevitReactiveTasksMixin on LevitController {
     );
   }
 
-  Future<T?> _runTrackedIsolateTask<I, T>(
+  Future<T> _runTrackedIsolateTask<I, T>(
     LevitIsolateTask<I, T> task,
     I input, {
     String? id,
     required TaskPriority priority,
     required TaskConflictPolicy conflictPolicy,
-    required int retries,
-    required Duration? retryDelay,
-    required bool useExponentialBackoff,
+    required LevitRetryPolicy? retryPolicy,
+    required LevitTaskGroup? group,
+    required DateTime? deadline,
     required double weight,
     void Function(Object error, StackTrace stackTrace)? onError,
     TaskCachePolicy<T>? cachePolicy,
@@ -529,7 +544,8 @@ mixin LevitReactiveTasksMixin on LevitController {
     }
 
     final taskId = id ?? LevitTaskEngine._generateTaskId();
-    final taskMetadata = metadata ??
+    final taskMetadata =
+        metadata ??
         (debugName == null
             ? LevitTaskMetadata.none
             : LevitTaskMetadata(debugName: debugName));
@@ -541,9 +557,9 @@ mixin LevitReactiveTasksMixin on LevitController {
       id: taskId,
       priority: priority,
       conflictPolicy: conflictPolicy,
-      retries: retries,
-      retryDelay: retryDelay,
-      useExponentialBackoff: useExponentialBackoff,
+      retryPolicy: retryPolicy,
+      group: group,
+      deadline: deadline,
       cachePolicy: cachePolicy,
       metadata: taskMetadata,
       onEvent: (event) {
@@ -552,10 +568,7 @@ mixin LevitReactiveTasksMixin on LevitController {
       },
       onSuccess: (result) {
         _updateExecution(taskId, execution.executionId, (current) {
-          return current.copyWith(
-            status: LxSuccess<T>(result),
-            progress: 1,
-          );
+          return current.copyWith(status: LxSuccess<T>(result), progress: 1);
         });
       },
       onProgress: (progress) {
@@ -566,10 +579,10 @@ mixin LevitReactiveTasksMixin on LevitController {
       onError: (error, stackTrace) {
         _updateExecution(taskId, execution.executionId, (current) {
           return current.copyWith(
-            status: LxError<Object>(
+            status: LxError<dynamic>.fromPrevious(
               error,
               stackTrace,
-              current.status.lastValue,
+              current.status,
             ),
           );
         });
@@ -578,7 +591,7 @@ mixin LevitReactiveTasksMixin on LevitController {
       onCancel: () {
         _updateExecution(taskId, execution.executionId, (current) {
           return current.copyWith(
-            status: LxIdle<dynamic>(current.status.lastValue),
+            status: LxIdle<dynamic>.fromPrevious(current.status),
           );
         });
       },
@@ -593,9 +606,15 @@ mixin LevitReactiveTasksMixin on LevitController {
     _pruneTaskHistoryFor(taskId);
     final initialEvent = queuedEvent;
     tasks[taskId] = TaskDetails(
-      status: LxWaiting<dynamic>(tasks[taskId]?.status.lastValue),
+      status: LxWaiting<dynamic>.fromPrevious(
+        tasks[taskId]?.status ?? LxIdle<dynamic>(),
+      ),
       executionId: execution.executionId,
       ownerPath: initialEvent?.ownerPath ?? ownerPath,
+      groupId: initialEvent?.groupId,
+      parentGroupId: initialEvent?.parentGroupId,
+      deadline: initialEvent?.deadline,
+      cancellationReason: initialEvent?.cancellationReason,
       phase: initialEvent?.phase ?? LevitTaskPhase.queued,
       metadata: taskMetadata,
       priority: priority,
@@ -608,9 +627,9 @@ mixin LevitReactiveTasksMixin on LevitController {
   void _pruneTaskHistoryFor(String taskId) {
     if (tasks.length < maxTaskHistory || tasks.containsKey(taskId)) return;
     final removable = tasks.keys.cast<String?>().firstWhere(
-          (key) => key != null && tasks[key]?.phase == LevitTaskPhase.completed,
-          orElse: () => null,
-        );
+      (key) => key != null && tasks[key]?.phase == LevitTaskPhase.completed,
+      orElse: () => null,
+    );
     if (removable != null) clearTask(removable);
   }
 
@@ -644,12 +663,14 @@ mixin LevitReactiveTasksMixin on LevitController {
 
   /// Clears all terminal tracked entries.
   void clearCompleted() {
-    final keys = tasks.keys.where((id) {
-      final details = tasks[id];
-      return details != null &&
-          details.phase == LevitTaskPhase.completed &&
-          details.status is! LxWaiting;
-    }).toList(growable: false);
+    final keys = tasks.keys
+        .where((id) {
+          final details = tasks[id];
+          return details != null &&
+              details.phase == LevitTaskPhase.completed &&
+              details.status is! LxWaiting;
+        })
+        .toList(growable: false);
     for (final id in keys) {
       clearTask(id);
     }
@@ -662,12 +683,12 @@ mixin LevitReactiveTasksMixin on LevitController {
   void cancelAllTasks() => tasksEngine.cancelAll();
 
   @override
-  FutureOr<void> onClose() {
-    _taskEngines[this]?.cancelAll();
+  FutureOr<void> onBeforeClose() async {
+    await _taskEngines[this]?.dispose();
     for (final timer in _cleanupTimers.values) {
       timer.cancel();
     }
     _cleanupTimers.clear();
-    return super.onClose();
+    await super.onBeforeClose();
   }
 }

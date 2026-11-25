@@ -28,15 +28,12 @@ void main() {
       final child = root.createScope('child_order');
       child.put(() => 2);
 
-      expect(
-        calls,
-        [
-          'first:root_order:put',
-          'second:root_order:put',
-          'first:child_order:put',
-          'second:child_order:put',
-        ],
-      );
+      expect(calls, [
+        'first:root_order:put',
+        'second:root_order:put',
+        'first:child_order:put',
+        'second:child_order:put',
+      ]);
     });
 
     test('token replacement preserves middleware slot ordering', () {
@@ -65,7 +62,7 @@ void main() {
       expect(calls, [
         'first:slot_root:put',
         'replace_new:slot_root:put',
-        'last:slot_root:put'
+        'last:slot_root:put',
       ]);
     });
   });

@@ -5,8 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
-  setUp(() {
-    Levit.reset(force: true);
+  setUp(() async {
+    await Levit.reset(force: true);
   });
 
   group('LWatch', () {
@@ -14,9 +14,7 @@ void main() {
       final count = 0.lx;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: LWatch(() => Text('Count: ${count.value}')),
-        ),
+        MaterialApp(home: LWatch(() => Text('Count: ${count.value}'))),
       );
 
       expect(find.text('Count: 0'), findsOneWidget);
@@ -32,9 +30,7 @@ void main() {
       final b = 2.lx;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: LWatch(() => Text('Sum: ${a.value + b.value}')),
-        ),
+        MaterialApp(home: LWatch(() => Text('Sum: ${a.value + b.value}'))),
       );
 
       expect(find.text('Sum: 3'), findsOneWidget);
@@ -54,9 +50,11 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: LWatch(() => showWatch.value
-              ? LWatch(() => Text('Count: ${count.value}'))
-              : const Text('Hidden')),
+          home: LWatch(
+            () => showWatch.value
+                ? LWatch(() => Text('Count: ${count.value}'))
+                : const Text('Hidden'),
+          ),
         ),
       );
 
@@ -93,8 +91,9 @@ void main() {
       expect(find.text('Count: 1'), findsOneWidget);
     });
 
-    testWidgets('dedupes duplicate LxStream emits when reading lastValue',
-        (tester) async {
+    testWidgets('dedupes duplicate LxStream emits when reading lastValue', (
+      tester,
+    ) async {
       final controller = StreamController<int>.broadcast();
       final stream = LxStream<int>(controller.stream);
       var buildCount = 0;
@@ -128,35 +127,36 @@ void main() {
     });
 
     testWidgets(
-        'stabilizes logical dependency when getter recreates named reactive',
-        (tester) async {
-      final source = _UnstableNamedStreamSource();
+      'stabilizes logical dependency when getter recreates named reactive',
+      (tester) async {
+        final source = _UnstableNamedStreamSource();
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: LWatch(() {
-            final last = source.mediaLibrary.value.lastValue;
-            return Text('Last: ${last ?? -1}');
-          }),
-        ),
-      );
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LWatch(() {
+              final last = source.mediaLibrary.value.lastValue;
+              return Text('Last: ${last ?? -1}');
+            }),
+          ),
+        );
 
-      expect(find.text('Last: -1'), findsOneWidget);
+        expect(find.text('Last: -1'), findsOneWidget);
 
-      source.add(1);
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-      expect(find.text('Last: 1'), findsOneWidget);
+        source.add(1);
+        await tester.pump();
+        await tester.pump();
+        await tester.pump();
+        expect(find.text('Last: 1'), findsOneWidget);
 
-      source.add(2);
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-      expect(find.text('Last: 2'), findsOneWidget);
+        source.add(2);
+        await tester.pump();
+        await tester.pump();
+        await tester.pump();
+        expect(find.text('Last: 2'), findsOneWidget);
 
-      await source.close();
-    });
+        await source.close();
+      },
+    );
   });
 
   group('LWatchVar', () {
@@ -191,23 +191,25 @@ void main() {
     });
   });
 
-  group('LWatch coverage', () {
+  group('LWatch dependency tracking', () {
     testWidgets('removes unused dependencies', (tester) async {
       final rxA = 0.lx;
       final rxB = 0.lx;
       bool useB = true;
 
-      await tester.pumpWidget(Directionality(
-        textDirection: TextDirection.ltr,
-        child: LWatch(() {
-          final a = rxA.value;
-          if (useB) {
-            final b = rxB.value;
-            return Text('$a-$b');
-          }
-          return Text('$a');
-        }),
-      ));
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: LWatch(() {
+            final a = rxA.value;
+            if (useB) {
+              final b = rxB.value;
+              return Text('$a-$b');
+            }
+            return Text('$a');
+          }),
+        ),
+      );
 
       expect(find.text('0-0'), findsOneWidget);
 
@@ -225,8 +227,9 @@ void main() {
       expect(find.text('1'), findsOneWidget);
     });
 
-    testWidgets('handles ambiguous logical keys in multi dependency mode',
-        (tester) async {
+    testWidgets('handles ambiguous logical keys in multi dependency mode', (
+      tester,
+    ) async {
       final left = 1.lx
         ..ownerId = 'shared-owner'
         ..name = 'shared-name';

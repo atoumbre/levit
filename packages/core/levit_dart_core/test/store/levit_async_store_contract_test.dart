@@ -3,8 +3,8 @@ import 'package:test/test.dart';
 
 void main() {
   group('LevitAsyncStore contract', () {
-    tearDown(() {
-      Levit.reset(force: true);
+    tearDown(() async {
+      await Levit.reset(force: true);
     });
 
     test('find APIs expose single-await Future<T> semantics', () async {
@@ -42,65 +42,62 @@ void main() {
       expect(buildCount, 1);
     });
 
-    test('failed async value is stable until store instance is deleted',
-        () async {
-      final scope = LevitScope.root('failure_scope');
-      int buildCount = 0;
+    test(
+      'failed async value is stable until store instance is deleted',
+      () async {
+        final scope = LevitScope.root('failure_scope');
+        int buildCount = 0;
 
-      final store = LevitStore.async((_) async {
-        buildCount++;
-        await Future.delayed(Duration.zero);
-        throw StateError('boom-$buildCount');
-      });
+        final store = LevitStore.async((_) async {
+          buildCount++;
+          await Future.delayed(Duration.zero);
+          throw StateError('boom-$buildCount');
+        });
 
-      await expectLater(
-        store.findIn(scope),
-        throwsA(
-          predicate((e) => e is StateError && '$e'.contains('boom-1')),
-        ),
-      );
+        await expectLater(
+          store.findIn(scope),
+          throwsA(predicate((e) => e is StateError && '$e'.contains('boom-1'))),
+        );
 
-      await expectLater(
-        store.findAsyncIn(scope),
-        throwsA(
-          predicate((e) => e is StateError && '$e'.contains('boom-1')),
-        ),
-      );
+        await expectLater(
+          store.findAsyncIn(scope),
+          throwsA(predicate((e) => e is StateError && '$e'.contains('boom-1'))),
+        );
 
-      expect(buildCount, 1);
+        expect(buildCount, 1);
 
-      expect(await store.deleteIn(scope, force: true), isTrue);
+        expect(await store.deleteIn(scope, force: true), isTrue);
 
-      await expectLater(
-        store.findIn(scope),
-        throwsA(
-          predicate((e) => e is StateError && '$e'.contains('boom-2')),
-        ),
-      );
+        await expectLater(
+          store.findIn(scope),
+          throwsA(predicate((e) => e is StateError && '$e'.contains('boom-2'))),
+        );
 
-      expect(buildCount, 2);
-    });
+        expect(buildCount, 2);
+      },
+    );
 
     test(
-        'isRegistered/isInstantiated and delete helpers delegate to inner store',
-        () async {
-      final scope = LevitScope.root('introspection_scope');
-      final store = LevitStore.async((_) async => 7);
+      'isRegistered/isInstantiated and delete helpers delegate to inner store',
+      () async {
+        final scope = LevitScope.root('introspection_scope');
+        final store = LevitStore.async((_) async => 7);
 
-      expect(store.isRegisteredIn(scope), isFalse);
-      expect(store.isInstantiatedIn(scope), isFalse);
+        expect(store.isRegisteredIn(scope), isFalse);
+        expect(store.isInstantiatedIn(scope), isFalse);
 
-      expect(await store.findIn(scope), 7);
-      expect(store.isRegisteredIn(scope), isTrue);
-      expect(store.isInstantiatedIn(scope), isTrue);
+        expect(await store.findIn(scope), 7);
+        expect(store.isRegisteredIn(scope), isTrue);
+        expect(store.isInstantiatedIn(scope), isTrue);
 
-      await scope.run(() async {
-        // Covers LevitAsyncStore.delete() which relies on Ls.currentScope.
-        expect(await store.delete(force: true), isTrue);
-      });
+        await scope.run(() async {
+          // Covers LevitAsyncStore.delete() which relies on Ls.currentScope.
+          expect(await store.delete(force: true), isTrue);
+        });
 
-      expect(store.isRegisteredIn(scope), isFalse);
-      expect(store.isInstantiatedIn(scope), isFalse);
-    });
+        expect(store.isRegisteredIn(scope), isFalse);
+        expect(store.isInstantiatedIn(scope), isFalse);
+      },
+    );
   });
 }

@@ -1,0 +1,18 @@
+00:00 +0: loading test/core/awaited_monitor_contract_test.dart
+00:00 +0: test/core/awaited_monitor_contract_test.dart: capture freezes redaction and nested payloads before queues and history
+00:00 +1: test/core/awaited_monitor_contract_test.dart: capture freezes redaction and nested payloads before queues and history
+00:00 +2: test/core/awaited_monitor_contract_test.dart: capture freezes redaction and nested payloads before queues and history
+00:00 +3: test/transports/websocket_transport_test.dart: WebSocketTransport send (LogEvent) sends correct JSON with category "log"
+00:00 +4: test/core/awaited_monitor_contract_test.dart: history defaults off and bounded queues report dropped events
+00:00 +5: test/core/awaited_monitor_contract_test.dart: history defaults off and bounded queues report dropped events
+00:00 +6: test/transports/websocket_transport_test.dart: WebSocketTransport close closes the connection
+00:00 +7: test/transports/websocket_transport_test.dart: WebSocketTransport close closes the connection
+00:00 +8: test/transports/websocket_transport_test.dart: WebSocketTransport close closes the connection
+00:00 +9: test/transports/websocket_transport_test.dart: WebSocketTransport close closes the connection
+00:00 +10: test/core/awaited_monitor_contract_test.dart: update attribution and optional task adapter do not retain owned work
+00:00 +11: test/core/awaited_monitor_contract_test.dart: update attribution and optional task adapter do not retain owned work
+00:00 +12: test/transports/websocket_transport_test.dart: WebSocketTransport handles message acknowledgment from server
+00:00 +13: test/transports/websocket_transport_test.dart: WebSocketTransport handles message acknowledgment from server
+00:00 +14: test/transports/websocket_transport_test.dart: WebSocketTransport handles message acknowledgment from server
+00:00 +15: test/transports/websocket_transport_test.dart: WebSocketTransport handles stream errors gracefully
+00:00 +16: All tests passed!

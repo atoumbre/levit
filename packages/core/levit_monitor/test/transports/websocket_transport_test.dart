@@ -12,6 +12,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class MockWebSocketSink implements WebSocketSink {
   final StreamController<dynamic> controller;
   MockWebSocketSink(this.controller);
+  bool failClose = false;
+  bool closed = false;
 
   @override
   void add(dynamic data) => controller.add(data);
@@ -24,7 +26,10 @@ class MockWebSocketSink implements WebSocketSink {
   Future addStream(Stream<dynamic> stream) => controller.addStream(stream);
 
   @override
-  Future close([int? closeCode, String? closeReason]) async {}
+  Future close([int? closeCode, String? closeReason]) async {
+    closed = true;
+    if (failClose) throw StateError("socket close failed");
+  }
 
   @override
   Future get done => Future.value();
@@ -64,7 +69,10 @@ void main() {
 
     setUp(() {
       mockChannel = MockWebSocketChannel();
-      transport = WebSocketTransport(mockChannel);
+      transport = WebSocketTransport(
+        mockChannel,
+        requireAcknowledgement: false,
+      );
     });
 
     tearDown(() {
@@ -96,10 +104,7 @@ void main() {
 
     test('send (ReactiveEvent) sends correct JSON with category', () async {
       final reactive = 0.lx.named('counter');
-      final event = ReactiveInitEvent(
-        sessionId: 's1',
-        reactive: reactive,
-      );
+      final event = ReactiveInitEvent(sessionId: 's1', reactive: reactive);
 
       final future = mockChannel.outgoing.stream.first;
       transport.send(event);
@@ -130,6 +135,25 @@ void main() {
       expect(data['data'], 'a web socket log');
     });
 
+    test(
+      'disconnect captures asynchronous cleanup errors and awaits release',
+      () async {
+        mockChannel._sink.failClose = true;
+        await mockChannel.ready;
+        await mockChannel.incoming.close();
+        await Future<void>.delayed(Duration.zero);
+        expect(mockChannel._sink.closed, isTrue);
+        await expectLater(
+          transport.flush(),
+          throwsA(isA<LevitMonitorException>()),
+        );
+        await expectLater(
+          transport.close(),
+          throwsA(isA<LevitMonitorException>()),
+        );
+      },
+    );
+
     test('close closes the connection', () async {
       await transport.close();
 
@@ -152,8 +176,11 @@ void main() {
         return mockChannel;
       };
 
-      final t = WebSocketTransport.connect('ws://localhost',
-          appId: '123', channelBuilder: builder);
+      final t = WebSocketTransport.connect(
+        'ws://localhost',
+        appId: '123',
+        channelBuilder: builder,
+      );
 
       expect(t, isA<WebSocketTransport>());
       expect(capturedUri?.queryParameters['appId'], '123');

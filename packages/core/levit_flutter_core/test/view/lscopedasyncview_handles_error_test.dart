@@ -4,13 +4,18 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 
 void main() {
   testWidgets('LScopedAsyncView handles error state', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-        home: LScopedAsyncView<String>.put(() async {
-      await Future.delayed(const Duration(milliseconds: 10));
-      throw Exception('Test Error');
-    },
-            error: (context, error) => Text('Error: $error'),
-            builder: (context, controller) => const SizedBox())));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LScopedAsyncView<String>.put(
+          () async {
+            await Future.delayed(const Duration(milliseconds: 10));
+            throw Exception('Test Error');
+          },
+          error: (context, error) => Text('Error: $error'),
+          builder: (context, controller) => const SizedBox(),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.textContaining('Test Error'), findsOneWidget);
   });

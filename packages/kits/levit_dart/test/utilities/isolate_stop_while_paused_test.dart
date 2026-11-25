@@ -8,7 +8,7 @@ void _fastLoopBody() {}
 class TestLoopController extends LevitController with LevitLoopExecutionMixin {}
 
 void main() {
-  group('LevitLoopExecutionMixin Isolate Coverage', () {
+  group('Isolate loop pause, resume, and stop', () {
     test('pause requested immediately keeps isolate loop waiting', () async {
       final controller = TestLoopController();
       controller.onInit();
@@ -27,8 +27,8 @@ void main() {
         isA<LxWaiting<dynamic>>(),
       );
 
-      controller.loopEngine.stopService('paused_before_ready');
-      controller.onClose();
+      await controller.loopEngine.stopService('paused_before_ready');
+      await controller.onClose();
     });
 
     test('stop an isolate loop while it is paused', () async {
@@ -36,8 +36,11 @@ void main() {
       controller.onInit();
 
       // Start an isolate loop
-      controller.loopEngine.startIsolateLoop('test_loop', _noopLoopBody,
-          delay: const Duration(milliseconds: 10));
+      controller.loopEngine.startIsolateLoop(
+        'test_loop',
+        _noopLoopBody,
+        delay: const Duration(milliseconds: 10),
+      );
 
       // Wait for it to start
       await Future.delayed(const Duration(milliseconds: 50));
@@ -47,11 +50,11 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 20));
 
       // Stop it while paused (This should hit the cleanup path for pauseCompleter in isolate)
-      controller.loopEngine.stopService('test_loop');
+      await controller.loopEngine.stopService('test_loop');
 
       expect(controller.loopEngine.getServiceStatus('test_loop'), isNull);
 
-      controller.onClose();
+      await controller.onClose();
     });
 
     test('resume an isolate loop after pausing it', () async {
@@ -75,8 +78,8 @@ void main() {
         isNot(isA<LxIdle<dynamic>>()),
       );
 
-      controller.loopEngine.stopService('resume_loop');
-      controller.onClose();
+      await controller.loopEngine.stopService('resume_loop');
+      await controller.onClose();
     });
   });
 }

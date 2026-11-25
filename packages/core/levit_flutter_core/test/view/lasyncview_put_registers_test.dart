@@ -4,16 +4,22 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 import '../helpers.dart';
 
 void main() {
-  testWidgets('LAsyncView.put registers and resolves async', (tester) async {
-    Levit.reset(force: true);
-    await tester.pumpWidget(MaterialApp(
-        home: LAsyncView<TestController>.put(() async {
-      await Future.delayed(const Duration(milliseconds: 10));
-      return TestController()..count = 42;
-    },
-            loading: (_) => const Text('Loading...'),
-            builder: (context, controller) =>
-                Text('Count: ${controller.count}'))));
+  testWidgets('LScopedAsyncView.put registers and resolves async', (
+    tester,
+  ) async {
+    await Levit.reset(force: true);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LScopedAsyncView<TestController>.put(
+          () async {
+            await Future.delayed(const Duration(milliseconds: 10));
+            return TestController()..count = 42;
+          },
+          loading: (_) => const Text('Loading...'),
+          builder: (context, controller) => Text('Count: ${controller.count}'),
+        ),
+      ),
+    );
     expect(find.text('Loading...'), findsOneWidget);
     await tester.pumpAndSettle();
     expect(find.text('Count: 42'), findsOneWidget);

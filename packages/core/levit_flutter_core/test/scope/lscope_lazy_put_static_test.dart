@@ -5,12 +5,17 @@ import '../helpers.dart';
 
 void main() {
   testWidgets('LScope.lazyPut static factory', (tester) async {
-    await tester.pumpWidget(LScope.lazyPut<TestController>(
+    await tester.pumpWidget(
+      LScope.lazyPut<TestController>(
         () => TestController()..count = 456,
         child: MaterialApp(
-            home: Builder(
-                builder: (context) => Text(
-                    'Count: ${context.levit.find<TestController>().count}')))));
+          home: Builder(
+            builder: (context) =>
+                Text('Count: ${context.levit.find<TestController>().count}'),
+          ),
+        ),
+      ),
+    );
     expect(find.text('Count: 456'), findsOneWidget);
   });
 }

@@ -1,0 +1,28 @@
+{
+  "retainedRuntimeSha256": "c7538ac985bc2760c43e724d524dcbb4ed62044f4f43c83248a8745edf1a701d",
+  "retainedRuntimeSource": "retained-computed.dart.txt",
+  "baselineRoot": "/private/tmp/levit-20261112-before-vdalnd4n",
+  "initialOrderedCapture": {
+    "source": "iteration1-computed.dart.txt",
+    "fullComparison": "release",
+    "gridComparison": "grid-isolated",
+    "chainComparison": "chain-isolated",
+    "status": "superseded: chain regression confirmed"
+  },
+  "plainReadPathExperiment": {
+    "source": "rejected-read-path.dart.txt",
+    "profilePrefix": "profiles/rejected-read-path-off-chain",
+    "status": "not retained; profile throughput alone not sufficient for release conclusions"
+  },
+  "recomputeNoInlineExperiment": {
+    "comparison": "chain-no-inline",
+    "status": "not retained: chain regression remained"
+  },
+  "retainedCompactGetter": {
+    "chainComparison": "chain-compact-getter",
+    "validation": "checks-final",
+    "fullComparison": "release-final",
+    "gridComparison": "grid-final",
+    "status": "final validation and matched comparisons complete; overall performance sign-off remains open for other timing signals"
+  }
+}

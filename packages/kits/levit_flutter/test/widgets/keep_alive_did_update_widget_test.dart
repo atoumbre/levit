@@ -8,14 +8,19 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(splashFactory: NoSplash.splashFactory),
-        home: StatefulBuilder(builder: (context, setState) {
-          return Column(children: [
-            LKeepAlive(keepAlive: keepAlive, child: const Text('keep')),
-            TextButton(
-                onPressed: () => setState(() => keepAlive = !keepAlive),
-                child: const Text('toggle'))
-          ]);
-        }),
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              children: [
+                LKeepAlive(keepAlive: keepAlive, child: const Text('keep')),
+                TextButton(
+                  onPressed: () => setState(() => keepAlive = !keepAlive),
+                  child: const Text('toggle'),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
     expect(find.text('keep'), findsOneWidget);

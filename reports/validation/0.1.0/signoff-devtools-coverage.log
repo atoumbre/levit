@@ -1,0 +1,34 @@
+Scanning for packages in: packages...
+Excluding example projects (use --include-examples to include).
+Filtering to packages: levit_devtools
+Per-package timeout: 600s
+Coverage threshold: 100.00%
+Found 1 packages: levit_devtools
+
+[levit_devtools] Running tests and generating coverage...
+[levit_devtools] Pure Dart package; using dart test.
+[levit_devtools] Done. (99.1%)
+
+=================================================================
+LEVIT COVERAGE REPORT
+=================================================================
+| Package              | Lines Covered | Total Lines | Coverage |
+|----------------------|---------------|-------------|----------|
+| levit_devtools       |           232 |         234 |   99.15% |
+-----------------------------------------------------------------
+| GLOBAL               |           232 |         234 |   99.15% |
+=================================================================
+
+Uncovered Lines Details:
+
+levit_devtools
+  - packages/tools/levit_devtools/lib/levit_devtools.dart: 75, 105
+
+=================================================================
+
+Skipped report file generation (use --generate-report to enable)
+Coverage threshold failed: expected at least 100.00%.
+Global coverage: 99.15%.
+levit_devtools: 99.15%.
+
+Coverage checks failed. Check logs above.

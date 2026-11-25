@@ -92,21 +92,27 @@ void main() {
       expect(s2.initCalled, isTrue);
     });
 
-    test('putFactoryAsync (Async Factory) returns new instance each time',
-        () async {
-      levit.lazyPutAsync(() async => AsyncService('factory'), isFactory: true);
+    test(
+      'putFactoryAsync (Async Factory) returns new instance each time',
+      () async {
+        levit.lazyPutAsync(
+          () async => AsyncService('factory'),
+          isFactory: true,
+        );
 
-      final s1 = await levit.findAsync<AsyncService>();
-      final s2 = await levit.findAsync<AsyncService>();
+        final s1 = await levit.findAsync<AsyncService>();
+        final s2 = await levit.findAsync<AsyncService>();
 
-      expect(s1, isNot(equals(s2)));
-      expect(s1.initCalled, isTrue);
-    });
+        expect(s1, isNot(equals(s2)));
+        expect(s1.initCalled, isTrue);
+      },
+    );
 
     test('sync put supports async lookup', () async {
       final service = AsyncService('async_put');
-      levit.put(() =>
-          service); // put is synchronous, but takes an already awaited instance
+      levit.put(
+        () => service,
+      ); // put is synchronous, but takes an already awaited instance
       final instance = await levit.findAsync<AsyncService>();
       expect(instance, equals(service));
     });
@@ -128,28 +134,42 @@ void main() {
 
       // 2. Lazy Sync
       levit.lazyPut(() => AsyncService('lazySync'), tag: 'lazySync');
-      expect((await levit.findAsync<AsyncService>(tag: 'lazySync')).value,
-          'lazySync');
+      expect(
+        (await levit.findAsync<AsyncService>(tag: 'lazySync')).value,
+        'lazySync',
+      );
 
       // 3. Factory Sync
-      levit.lazyPut(() => AsyncService('factorySync'),
-          tag: 'factorySync', isFactory: true);
+      levit.lazyPut(
+        () => AsyncService('factorySync'),
+        tag: 'factorySync',
+        isFactory: true,
+      );
       final fs1 = await levit.findAsync<AsyncService>(tag: 'factorySync');
       final fs2 = await levit.findAsync<AsyncService>(tag: 'factorySync');
       expect(fs1, isNot(equals(fs2)));
 
       // 4. Lazy Async
-      levit.lazyPutAsync(() async => AsyncService('lazyAsync'),
-          tag: 'lazyAsync');
-      expect((await levit.findAsync<AsyncService>(tag: 'lazyAsync')).value,
-          'lazyAsync');
+      levit.lazyPutAsync(
+        () async => AsyncService('lazyAsync'),
+        tag: 'lazyAsync',
+      );
+      expect(
+        (await levit.findAsync<AsyncService>(tag: 'lazyAsync')).value,
+        'lazyAsync',
+      );
       // Subsequent call returns same instance (singleton)
-      expect((await levit.findAsync<AsyncService>(tag: 'lazyAsync')).value,
-          'lazyAsync');
+      expect(
+        (await levit.findAsync<AsyncService>(tag: 'lazyAsync')).value,
+        'lazyAsync',
+      );
 
       // 5. Factory Async
-      levit.lazyPutAsync(() async => AsyncService('factoryAsync'),
-          tag: 'factoryAsync', isFactory: true);
+      levit.lazyPutAsync(
+        () async => AsyncService('factoryAsync'),
+        tag: 'factoryAsync',
+        isFactory: true,
+      );
       final fa1 = await levit.findAsync<AsyncService>(tag: 'factoryAsync');
       final fa2 = await levit.findAsync<AsyncService>(tag: 'factoryAsync');
       expect(fa1, isNot(equals(fa2)));
@@ -327,22 +347,24 @@ void main() {
       expect(scope.find<AsyncService>().value, 'global');
     });
 
-    test('findAsync handles nullable values (unreachable default branch)',
-        () async {
-      // This targets the fallback "return info.instance as S" in findAsync
-      // which is only reachable if isInstantiated is false, but check passed?
-      // Actually isInstantiated checks instance != null.
-      // So checking null instance registration.
+    test(
+      'findAsync handles nullable values (unreachable default branch)',
+      () async {
+        // This targets the fallback "return info.instance as S" in findAsync
+        // which is only reachable if isInstantiated is false, but check passed?
+        // Actually isInstantiated checks instance != null.
+        // So checking null instance registration.
 
-      // levit.put<String?>(() => null); // This sets instance to null.
-      // isInstantiated => false.
-      // findAsync falls through all lazy/factory checks.
-      // Hit return info.instance as S.
+        // levit.put<String?>(() => null); // This sets instance to null.
+        // isInstantiated => false.
+        // findAsync falls through all lazy/factory checks.
+        // Hit return info.instance as S.
 
-      levit.put<String?>(() => null);
-      final val = await levit.findAsync<String?>();
-      expect(val, isNull);
-    });
+        levit.put<String?>(() => null);
+        final val = await levit.findAsync<String?>();
+        expect(val, isNull);
+      },
+    );
 
     test('findOrNull finds cached local', () {
       // This is tricky because findOrNull checks registry first.

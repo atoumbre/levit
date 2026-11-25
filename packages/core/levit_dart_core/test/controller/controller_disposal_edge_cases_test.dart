@@ -18,20 +18,20 @@ class ThrowingCloseable {
 
 void main() {
   group('LevitController Disposal Edge Cases', () {
-    test('autoDispose handles Timer and Sink', () {
+    test('own handles Timer and Sink', () async {
       final controller = TestController();
       final timer = Timer(const Duration(hours: 1), () {});
-      controller.autoDispose(timer);
+      controller.own(timer);
 
-      final sc = StreamController<int>();
-      controller.autoDispose(sc.sink);
+      final sc = StreamController<int>.broadcast();
+      controller.own(sc.sink);
 
-      controller.onClose();
+      await controller.onClose();
       expect(timer.isActive, false);
       expect(sc.isClosed, true);
     });
 
-    test('autoDispose handles StreamSubscription', () async {
+    test('own handles StreamSubscription', () async {
       final controller = TestController();
       var cancelCalled = false;
       final streamController = StreamController<int>.broadcast(
@@ -40,21 +40,21 @@ void main() {
         },
       );
       final subscription = streamController.stream.listen((_) {});
-      controller.autoDispose(subscription);
+      controller.own(subscription);
 
-      controller.onClose();
+      await controller.onClose();
       await Future<void>.delayed(Duration.zero);
 
       expect(cancelCalled, isTrue);
       await streamController.close();
     });
 
-    test('autoDispose aggregates exceptions after cleanup', () async {
+    test('own aggregates exceptions after cleanup', () async {
       final controller = TestController();
 
-      controller.autoDispose(ThrowingDisposable());
-      controller.autoDispose(ThrowingCancelable());
-      controller.autoDispose(ThrowingCloseable());
+      controller.own(ThrowingDisposable(), dispose: (value) => value.dispose());
+      controller.own(ThrowingCancelable(), dispose: (value) => value.cancel());
+      controller.own(ThrowingCloseable(), dispose: (value) => value.close());
 
       await expectLater(
         controller.onClose(),
@@ -69,12 +69,12 @@ void main() {
       expect(controller.isClosed, isTrue);
     });
 
-    test('identical objects are not added twice', () {
+    test('identical objects are not added twice', () async {
       final controller = TestController();
       final timer = Timer(Duration.zero, () {});
-      controller.autoDispose(timer);
-      controller.autoDispose(timer);
-      controller.onClose();
+      controller.own(timer);
+      controller.own(timer);
+      await controller.onClose();
     });
   });
 }

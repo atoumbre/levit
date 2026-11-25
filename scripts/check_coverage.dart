@@ -68,11 +68,17 @@ Future<void> main(List<String> args) async {
       found.add(dir);
     }
 
-    found.addAll(dir.listSync(recursive: true).whereType<Directory>().where(
-        (d) =>
-            !d.path.contains('.dart_tool') &&
-            File('${d.path}/pubspec.yaml').existsSync() &&
-            !isExampleDir(d.path)));
+    found.addAll(
+      dir
+          .listSync(recursive: true)
+          .whereType<Directory>()
+          .where(
+            (d) =>
+                !d.path.contains('.dart_tool') &&
+                File('${d.path}/pubspec.yaml').existsSync() &&
+                !isExampleDir(d.path),
+          ),
+    );
 
     packages.addAll(found);
   }
@@ -93,7 +99,8 @@ Future<void> main(List<String> args) async {
       exit(0);
     }
     packages.retainWhere(
-        (dir) => changedPaths.any((path) => path.startsWith(dir.path)));
+      (dir) => changedPaths.any((path) => path.startsWith(dir.path)),
+    );
   }
 
   if (onlyPackages != null && onlyPackages.isNotEmpty) {
@@ -120,6 +127,18 @@ Future<void> main(List<String> args) async {
     final packageName = package.path.split(Platform.pathSeparator).last;
     log('[$packageName] Running tests and generating coverage...');
 
+    // Flutter's collector honors ignore comments internally. Reject them so
+    // both runners measure all instrumented library lines.
+    final ignoredFiles = _coverageIgnoreFiles(package);
+    if (ignoredFiles.isNotEmpty) {
+      print('[$packageName] Remove coverage ignore directives from:');
+      for (final path in ignoredFiles) {
+        print('  $path');
+      }
+      hasFailures = true;
+      continue;
+    }
+
     final testDir = Directory('${package.path}/test');
     if (!testDir.existsSync()) {
       log('[$packageName] No test/ directory found. Skipping.');
@@ -138,8 +157,9 @@ Future<void> main(List<String> args) async {
       continue;
     }
 
-    final timeout =
-        timeoutSeconds == null ? null : Duration(seconds: timeoutSeconds);
+    final timeout = timeoutSeconds == null
+        ? null
+        : Duration(seconds: timeoutSeconds);
 
     // Pure Dart packages should use `dart test` for speed and correctness.
     // Additionally, some tests may import `dart:mirrors`, which is not supported
@@ -171,7 +191,6 @@ Future<void> main(List<String> args) async {
             'run',
             'coverage:format_coverage',
             '--lcov',
-            '--check-ignore',
             '--in=coverage',
             '--out=coverage/lcov.info',
             '--packages=.dart_tool/package_config.json',
@@ -192,16 +211,14 @@ Future<void> main(List<String> args) async {
       // Run tests with coverage (Flutter runner). We suppress output to keep the
       // terminal clean, unless there's an error.
       result = await runProcess(
-        ['flutter', 'test', '--coverage'],
+        ['flutter', 'test', '--coverage', '--concurrency=1'],
         workingDirectory: package.path,
         timeout: timeout,
       );
     }
 
     if (result.timedOut) {
-      print(
-        '[$packageName] Timed out after ${timeoutSeconds}s. Skipping.',
-      );
+      print('[$packageName] Timed out after ${timeoutSeconds}s. Skipping.');
       hasFailures = true;
       continue;
     }
@@ -215,9 +232,8 @@ Future<void> main(List<String> args) async {
 
     final lcovFile = File('${package.path}/coverage/lcov.info');
     if (!lcovFile.existsSync()) {
-      log(
-        '[$packageName] No coverage/lcov.info file generated. Skipping coverage parse.',
-      );
+      log('[$packageName] No coverage/lcov.info file generated.');
+      hasFailures = true;
       continue;
     }
 
@@ -239,10 +255,11 @@ Future<void> main(List<String> args) async {
   await _generateReport(stats, globalStats, generateReportFile, quiet: quiet);
 
   if (failUnder != null) {
-    final failingPackages = stats.values
-        .where((stats) => stats.coveragePercent < failUnder)
-        .toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+    final failingPackages =
+        stats.values
+            .where((stats) => stats.coveragePercent < failUnder)
+            .toList()
+          ..sort((a, b) => a.name.compareTo(b.name));
     if (globalStats.coveragePercent < failUnder || failingPackages.isNotEmpty) {
       print(
         'Coverage threshold failed: expected at least ${failUnder.toStringAsFixed(2)}%.',
@@ -476,11 +493,10 @@ double? _parseDoubleArg(List<String> args, String key) {
 }
 
 Future<Set<String>> _getChangedPaths(String repoRoot) async {
-  final result = await Process.run(
-    'git',
-    ['status', '--porcelain'],
-    workingDirectory: repoRoot,
-  );
+  final result = await Process.run('git', [
+    'status',
+    '--porcelain',
+  ], workingDirectory: repoRoot);
 
   if (result.exitCode != 0) {
     print('⚠️ Warning: Unable to read git status. Skipping changed filter.');
@@ -506,22 +522,17 @@ Future<Set<String>> _getChangedPaths(String repoRoot) async {
 PackageStats _parseLcov(File file, String packageName) {
   final stats = PackageStats(packageName);
 
-  if (!file.existsSync()) return stats;
-
   final lines = file.readAsLinesSync();
   // FilePath -> Map<LineNumber, Hits>
   final fileHits = <String, Map<int, int>>{};
-  final sourceLinesCache = <String, List<String>?>{};
   String? currentFile;
 
   for (final line in lines) {
     if (line.startsWith('SF:')) {
       // SF:lib/src/file.dart
-      // We only want to count lines in lib/, explicitly excluding generated code.
+      // Count every instrumented library line, including generated sources.
       final path = line.substring(3);
-      if (path.contains('lib/') &&
-          !path.endsWith('.g.dart') &&
-          !path.endsWith('.freezed.dart')) {
+      if (path.replaceAll('\\', '/').split('/').contains('lib')) {
         currentFile = path;
       } else {
         currentFile = null;
@@ -548,10 +559,6 @@ PackageStats _parseLcov(File file, String packageName) {
     for (final lineEntry in lineMap.entries) {
       final lineNum = lineEntry.key;
       final hits = lineEntry.value;
-      if (_isStructuralCoverageArtifact(filePath, lineNum, sourceLinesCache)) {
-        continue;
-      }
-
       stats.totalLines++;
       if (hits > 0) {
         stats.coveredLines++;
@@ -562,95 +569,6 @@ PackageStats _parseLcov(File file, String packageName) {
   }
 
   return stats;
-}
-
-bool _isStructuralCoverageArtifact(
-  String filePath,
-  int lineNum,
-  Map<String, List<String>?> sourceLinesCache,
-) {
-  final sourceLines = sourceLinesCache.putIfAbsent(filePath, () {
-    final sourceFile = File(filePath);
-    if (!sourceFile.existsSync()) return null;
-    return sourceFile.readAsLinesSync();
-  });
-  if (sourceLines == null || lineNum <= 0 || lineNum > sourceLines.length) {
-    return false;
-  }
-
-  final trimmed = sourceLines[lineNum - 1].trim();
-  if (trimmed.isEmpty) return true;
-  if (trimmed.startsWith('//') ||
-      trimmed.startsWith('/*') ||
-      trimmed.startsWith('*') ||
-      trimmed == '*/') {
-    return true;
-  }
-  if (trimmed == '{' ||
-      trimmed == '}' ||
-      trimmed == '};' ||
-      trimmed == '),' ||
-      trimmed == ');') {
-    return true;
-  }
-
-  if (_isSignatureContinuationLine(sourceLines, lineNum - 1, trimmed)) {
-    return true;
-  }
-
-  if (trimmed.endsWith(') {') && !_startsWithControlFlow(trimmed)) {
-    return true;
-  }
-
-  return false;
-}
-
-bool _isSignatureContinuationLine(
-  List<String> sourceLines,
-  int lineIndex,
-  String trimmed,
-) {
-  if (_startsWithControlFlow(trimmed)) return false;
-  // Empty closures in arg lists are real executable bodies (VM marks them
-  // uncovered until invoked); do not treat them as signature noise.
-  if (trimmed.contains('() {}') ||
-      trimmed.contains('()=>') ||
-      trimmed.contains('() =>')) {
-    return false;
-  }
-  if (!(trimmed.endsWith(',') || trimmed.endsWith(') {'))) return false;
-
-  for (int i = lineIndex - 1; i >= 0; i--) {
-    final previous = sourceLines[i].trim();
-    if (previous.isEmpty) continue;
-    if (_startsWithControlFlow(previous)) return false;
-    if (previous.endsWith('(')) return true;
-    if (previous.endsWith(',') || previous.endsWith(') {')) continue;
-    return false;
-  }
-
-  return false;
-}
-
-bool _startsWithControlFlow(String line) {
-  const keywords = [
-    'if ',
-    'if(',
-    'for ',
-    'for(',
-    'while ',
-    'while(',
-    'switch ',
-    'switch(',
-    'catch ',
-    'catch(',
-    'else',
-    'do ',
-    'try',
-    'assert ',
-    'assert(',
-  ];
-  return keywords.any(line.startsWith);
 }
 
 void _fixLcovPaths(File lcovFile, String packagePath, String rootPath) {
@@ -683,8 +601,10 @@ void _fixLcovPaths(File lcovFile, String packagePath, String rootPath) {
 
 bool _usesDartMirrors(Directory testDir) {
   try {
-    for (final entity
-        in testDir.listSync(recursive: true, followLinks: false)) {
+    for (final entity in testDir.listSync(
+      recursive: true,
+      followLinks: false,
+    )) {
       if (entity is! File) continue;
       if (!entity.path.endsWith('.dart')) continue;
       final content = entity.readAsStringSync();
@@ -704,10 +624,25 @@ bool _isFlutterPackage(Directory packageDir) {
   if (!pubspec.existsSync()) return true;
   try {
     final content = pubspec.readAsStringSync();
-    return RegExp(r'^\s*sdk:\s*flutter\s*$', multiLine: true)
-            .hasMatch(content) ||
+    return RegExp(
+          r'^\s*sdk:\s*flutter\s*$',
+          multiLine: true,
+        ).hasMatch(content) ||
         RegExp(r'^\s*flutter:\s*$', multiLine: true).hasMatch(content);
   } catch (_) {
     return true;
   }
+}
+
+List<String> _coverageIgnoreFiles(Directory package) {
+  final lib = Directory('${package.path}/lib');
+  if (!lib.existsSync()) return [];
+  final directive = RegExp(r'//\s*coverage:ignore-(?:file|start|end|line)\b');
+  return lib
+      .listSync(recursive: true, followLinks: false)
+      .whereType<File>()
+      .where((file) => file.path.endsWith('.dart'))
+      .where((file) => directive.hasMatch(file.readAsStringSync()))
+      .map((file) => file.path)
+      .toList();
 }

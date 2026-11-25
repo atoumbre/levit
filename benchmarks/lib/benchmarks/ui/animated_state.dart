@@ -6,15 +6,14 @@ import 'package:levit_flutter/levit_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../benchmark_engine.dart';
 
-/// Benchmark for animated state updates at 60fps.
-/// Tests framework overhead during continuous animation.
+/// Benchmark for one state-driven progress-bar rebuild per iteration.
 class AnimatedStateBenchmark extends Benchmark {
   @override
-  String get name => 'Animated State - 60fps (UI)';
+  String get name => 'Progress Bar State Update (UI)';
 
   @override
   String get description =>
-      'State update triggering widget rebuild. Tests per-frame overhead.';
+      'State update triggering widget rebuild. No fixed animation rate is claimed.';
 
   @override
   bool get isUI => true;
@@ -58,13 +57,14 @@ class LevitAnimatedBenchmark extends BenchmarkImplementation {
     final expected = (frameCount % 120) / 120.0;
     if (progress.value != expected) {
       throw StateError(
-          'Levit animation mismatch: expected $expected, got ${progress.value}');
+        'Levit animation mismatch: expected $expected, got ${progress.value}',
+      );
     }
   }
 
   @override
   Future<void> teardown() async {
-    progress.close();
+    await progress.close();
   }
 
   @override
@@ -73,9 +73,7 @@ class LevitAnimatedBenchmark extends BenchmarkImplementation {
       return Container(
         width: 200,
         height: 20,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.blue),
-        ),
+        decoration: BoxDecoration(border: Border.all(color: Colors.blue)),
         child: FractionallySizedBox(
           widthFactor: progress,
           alignment: Alignment.centerLeft,
@@ -108,7 +106,8 @@ class VanillaAnimatedBenchmark extends BenchmarkImplementation {
     final expected = (frameCount % 120) / 120.0;
     if (progress.value != expected) {
       throw StateError(
-          'Vanilla animation mismatch: expected $expected, got ${progress.value}');
+        'Vanilla animation mismatch: expected $expected, got ${progress.value}',
+      );
     }
   }
 
@@ -125,9 +124,7 @@ class VanillaAnimatedBenchmark extends BenchmarkImplementation {
         return Container(
           width: 200,
           height: 20,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-          ),
+          decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
           child: FractionallySizedBox(
             widthFactor: value,
             alignment: Alignment.centerLeft,
@@ -161,7 +158,8 @@ class GetXAnimatedBenchmark extends BenchmarkImplementation {
     final expected = (frameCount % 120) / 120.0;
     if (progress.value != expected) {
       throw StateError(
-          'GetX animation mismatch: expected $expected, got ${progress.value}');
+        'GetX animation mismatch: expected $expected, got ${progress.value}',
+      );
     }
   }
 
@@ -176,9 +174,7 @@ class GetXAnimatedBenchmark extends BenchmarkImplementation {
       return Container(
         width: 200,
         height: 20,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.purple),
-        ),
+        decoration: BoxDecoration(border: Border.all(color: Colors.purple)),
         child: FractionallySizedBox(
           widthFactor: progress.value,
           alignment: Alignment.centerLeft,
@@ -215,7 +211,8 @@ class RiverpodAnimatedBenchmark extends BenchmarkImplementation {
     final value = container.read(_animProgressProvider);
     if (value != expected) {
       throw StateError(
-          'Riverpod animation mismatch: expected $expected, got $value');
+        'Riverpod animation mismatch: expected $expected, got $value',
+      );
     }
   }
 
@@ -234,9 +231,7 @@ class RiverpodAnimatedBenchmark extends BenchmarkImplementation {
           return Container(
             width: 200,
             height: 20,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.teal),
-            ),
+            decoration: BoxDecoration(border: Border.all(color: Colors.teal)),
             child: FractionallySizedBox(
               widthFactor: value,
               alignment: Alignment.centerLeft,
@@ -277,7 +272,8 @@ class BlocAnimatedBenchmark extends BenchmarkImplementation {
     final expected = (frameCount % 120) / 120.0;
     if (cubit.state != expected) {
       throw StateError(
-          'BLoC animation mismatch: expected $expected, got ${cubit.state}');
+        'BLoC animation mismatch: expected $expected, got ${cubit.state}',
+      );
     }
   }
 
@@ -295,9 +291,7 @@ class BlocAnimatedBenchmark extends BenchmarkImplementation {
           return Container(
             width: 200,
             height: 20,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.red),
-            ),
+            decoration: BoxDecoration(border: Border.all(color: Colors.red)),
             child: FractionallySizedBox(
               widthFactor: value,
               alignment: Alignment.centerLeft,

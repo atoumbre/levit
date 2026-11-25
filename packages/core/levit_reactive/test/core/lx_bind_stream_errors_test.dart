@@ -4,16 +4,19 @@ import 'package:levit_reactive/levit_reactive.dart';
 
 class TestRejectMiddleware extends LevitReactiveMiddleware {
   @override
-  LxOnSet? get onSet => (next, reactive, change) => (value) {};
+  LxOnSet? get onSet =>
+      (next, reactive, change) => (value) {};
   @override
   LxOnBatch? get onBatch =>
-      (next, change) => () => throw StateError('Batch rejected');
+      (next, change) =>
+          () => throw StateError('Batch rejected');
 }
 
 class TestSimpleMiddleware extends LevitReactiveMiddleware {
   final List<LevitReactiveChange> changes = [];
   @override
-  LxOnSet? get onSet => (next, reactive, change) => (value) {
+  LxOnSet? get onSet =>
+      (next, reactive, change) => (value) {
         next(value);
         changes.add(change);
       };
@@ -26,8 +29,10 @@ void main() {
     count.bind(controller.stream);
 
     final events = <dynamic>[];
-    final sub = count.stream
-        .listen((v) => events.add(v), onError: (e) => events.add('Error: $e'));
+    final sub = count.stream.listen(
+      (v) => events.add(v),
+      onError: (e) => events.add('Error: $e'),
+    );
 
     controller.addError('Stream Error');
     controller.add(5);

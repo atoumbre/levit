@@ -3,7 +3,7 @@ import 'package:levit_scope/levit_scope.dart';
 import 'dart:async';
 
 void main() {
-  group('Race Condition Coverage', () {
+  group('Concurrent asynchronous dependency resolution', () {
     test('Simultaneous async lookups hit _pendingInit cache', () async {
       final scope = LevitScope.root('race_test');
       int buildCount = 0;

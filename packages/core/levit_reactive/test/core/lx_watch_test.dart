@@ -4,6 +4,8 @@ import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
+  setUp(() => Lx.enableWatchMonitoring = true);
+  tearDown(() => Lx.enableWatchMonitoring = false);
   group('LxWorker', () {
     test('tracks synchronous execution', () async {
       final count = 0.lx;
@@ -42,7 +44,9 @@ void main() {
       expect(watcher.value.isProcessing, isTrue);
       expect(watcher.value.isAsync, isTrue);
       expect(
-          watcher.value.runCount, 0); // Still running? or counts on completion?
+        watcher.value.runCount,
+        0,
+      ); // Still running? or counts on completion?
       // Implementation increments AFTER completion.
 
       completer.complete();
@@ -71,11 +75,15 @@ void main() {
 
     test('captures processing errors', () async {
       final count = 0.lx;
-      final watcher = LxWorker(count, (_) {
-        throw 'oops';
-      }, onProcessingError: (e, s) {
-        // Suppress rethrow for test
-      });
+      final watcher = LxWorker(
+        count,
+        (_) {
+          throw 'oops';
+        },
+        onProcessingError: (e, s) {
+          // Suppress rethrow for test
+        },
+      );
 
       count.value++;
       await Future.delayed(Duration.zero);
@@ -124,31 +132,33 @@ void main() {
       expect(watcher.value.runCount, 1); // Should not increment
     });
 
-    test('close ignores in-flight async completions after stream teardown',
-        () async {
-      final count = 0.lx;
-      final completer = Completer<void>();
-      final watcher = LxWorker(count, (_) async {
-        await completer.future;
-      });
+    test(
+      'close ignores in-flight async completions after stream teardown',
+      () async {
+        final count = 0.lx;
+        final completer = Completer<void>();
+        final watcher = LxWorker(count, (_) async {
+          await completer.future;
+        });
 
-      final sub = watcher.stream.listen((_) {});
-      addTearDown(() async {
-        await sub.cancel();
-      });
+        final sub = watcher.stream.listen((_) {});
+        addTearDown(() async {
+          await sub.cancel();
+        });
 
-      count.value++;
-      await Future.delayed(Duration.zero);
-      expect(watcher.value.isProcessing, isTrue);
+        count.value++;
+        await Future.delayed(Duration.zero);
+        expect(watcher.value.isProcessing, isTrue);
 
-      watcher.close();
-      completer.complete();
-      await Future.delayed(Duration.zero);
-      await Future.delayed(Duration.zero);
+        watcher.close();
+        completer.complete();
+        await Future.delayed(Duration.zero);
+        await Future.delayed(Duration.zero);
 
-      expect(watcher.isDisposed, isTrue);
-      expect(watcher.value.runCount, 0);
-      expect(watcher.value.isProcessing, isTrue);
-    });
+        expect(watcher.isDisposed, isTrue);
+        expect(watcher.value.runCount, 0);
+        expect(watcher.value.isProcessing, isTrue);
+      },
+    );
   });
 }

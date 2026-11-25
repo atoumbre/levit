@@ -7,6 +7,8 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/error/error.dart';
 
+part 'async_rules.dart';
+
 /// Prevents mutable or snapshot of plain `LxStatus` controller fields.
 class AvoidPlainLxStatusFields extends AnalysisRule {
   static const LintCode code = LintCode(
@@ -121,7 +123,7 @@ class MustCallSuperLevitLifecycle extends AnalysisRule {
     'must_call_super_levit_lifecycle',
     'This Levit lifecycle override does not call its super implementation.',
     correctionMessage:
-        'Call super.onInit(), or return/await super.onClose(), as appropriate.',
+        'Delegate to super.onInit(), super.onBeforeClose(), and super.onClose() as appropriate.',
   );
 
   MustCallSuperLevitLifecycle()
@@ -152,7 +154,9 @@ class _LifecycleSuperVisitor extends SimpleAstVisitor<void> {
   @override
   void visitMethodDeclaration(MethodDeclaration node) {
     final name = node.name.lexeme;
-    if (name != 'onInit' && name != 'onClose') return;
+    if (name != 'onInit' && name != 'onBeforeClose' && name != 'onClose') {
+      return;
+    }
     final owner = _enclosingInterfaceElement(node);
     if (owner?.name == 'LevitController') return;
     if (node.isStatic || !node.isComplete || !_isInsideResourceOwner(node)) {
@@ -188,7 +192,7 @@ class UnownedLevitResource extends AnalysisRule {
     'unowned_levit_resource',
     'This lifecycle resource is not owned by its Levit resource owner.',
     correctionMessage:
-        'Wrap the resource in own(...) or autoDispose(...), or return/store it '
+        'Wrap the resource in own(...), or return/store it '
         'behind an explicit lifecycle contract.',
   );
 
@@ -261,9 +265,7 @@ Expression _unwrapParentheses(Expression expression) {
 
 bool _isOwnedExpression(Expression expression) {
   final current = _unwrapParentheses(expression);
-  return current is MethodInvocation &&
-      (current.methodName.name == 'own' ||
-          current.methodName.name == 'autoDispose');
+  return current is MethodInvocation && current.methodName.name == 'own';
 }
 
 bool _endsInStatusRead(Expression expression) {

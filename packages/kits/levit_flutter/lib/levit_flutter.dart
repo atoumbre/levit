@@ -19,4 +19,3 @@ import 'package:levit_dart/levit_dart.dart'
 part 'src/mixins/app_lifecycle_mixin.dart';
 part 'src/mixins/lifecycle_loop_mixin.dart';
 part 'src/widgets/keep_alive.dart';
-part 'src/widgets/list_item_monitor.dart';

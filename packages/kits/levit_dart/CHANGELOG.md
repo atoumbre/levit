@@ -1,3 +1,17 @@
+## 0.1.0-beta.1
+
+- Add `LevitAsyncMap` for observed keyed loads, freshness-aware fetches, and bounded retention. A pending fetch or refresh protects its entry from automatic eviction.
+
+- Measure countdowns from monotonic elapsed time, preserve partial pauses, finish at the exact remaining deadline, and await all countdown cleanup.
+
+## 0.0.12
+
+- Preserve countdown and loop resources while tasks drain, regardless of mixin order.
+
+- **Breaking:** task engine disposal awaits execution runners and cleanup after cancellation.
+- Task mixins drain during `onBeforeClose`, keeping owned resources alive until work finishes.
+- Updated internal runtime constraints to `^0.0.12`.
+
 # Changelog
 
 ## 0.0.11

@@ -1,0 +1,576 @@
+ M .github/actions/setup-levit/action.yml
+ M .github/workflows/checks.yml
+ M .github/workflows/coverage.yml
+ M .github/workflows/pana.yml
+ M .gitignore
+ M LLM-Short.txt
+ M LLM.txt
+ M README.md
+ M WHY_LEVIT.md
+ M benchmarks/README.md
+ M benchmarks/lib/benchmark_engine.dart
+ M benchmarks/lib/benchmark_environment.dart
+ M benchmarks/lib/benchmarks/logic/async_computed.dart
+ M benchmarks/lib/benchmarks/logic/batch_benchmark.dart
+ M benchmarks/lib/benchmarks/logic/complex_graph.dart
+ M benchmarks/lib/benchmarks/logic/computed_chain.dart
+ M benchmarks/lib/benchmarks/logic/fan_in.dart
+ M benchmarks/lib/benchmarks/logic/fan_out.dart
+ M benchmarks/lib/benchmarks/logic/rapid_mutation.dart
+ M benchmarks/lib/benchmarks/logic/scoped_di.dart
+ M benchmarks/lib/benchmarks/ui/animated_state.dart
+ M benchmarks/lib/benchmarks/ui/deep_tree.dart
+ M benchmarks/lib/benchmarks/ui/dynamic_grid.dart
+ M benchmarks/lib/benchmarks/ui/large_list.dart
+ M benchmarks/lib/controllers/benchmark_controller.dart
+ M benchmarks/lib/main.dart
+ M benchmarks/lib/runners/benchmark_reporter.dart
+ M benchmarks/lib/runners/benchmark_runner.dart
+ M benchmarks/lib/ui/dashboard_page.dart
+ M benchmarks/macos/Runner.xcodeproj/project.pbxproj
+ M benchmarks/macos/Runner/MainFlutterWindow.swift
+ M benchmarks/pubspec.yaml
+ M benchmarks/test/benchmark_runner_test.dart
+ M benchmarks/test/headless_benchmark_runner.dart
+ M benchmarks/tool/generate_benchmark_report.dart
+ M examples/README.md
+ M examples/async_catalog/README.md
+ M examples/async_catalog/lib/main.dart
+ M examples/async_catalog/pubspec.yaml
+ M examples/nexus_studio/README.md
+ M examples/nexus_studio/app/lib/controllers.dart
+ M examples/nexus_studio/app/lib/main.dart
+ M examples/nexus_studio/app/pubspec.yaml
+ M examples/nexus_studio/app/test/unit_test.dart
+ M examples/nexus_studio/app/test/widget_test.dart
+ M examples/nexus_studio/server/bin/server.dart
+ M examples/nexus_studio/server/lib/server.dart
+ M examples/nexus_studio/server/pubspec.yaml
+ M examples/nexus_studio/server/test/server_test.dart
+ M examples/nexus_studio/shared/lib/shared.dart
+ M examples/nexus_studio/shared/pubspec.yaml
+ M examples/route_scopes/lib/main.dart
+ M examples/route_scopes/pubspec.yaml
+ M examples/scope_playground/README.md
+ M examples/scope_playground/lib/main.dart
+ M examples/scope_playground/pubspec.yaml
+ M examples/task_board/README.md
+ M examples/task_board/lib/main.dart
+ M examples/task_board/pubspec.yaml
+ M melos.yaml
+ M packages/core/levit_dart_core/CHANGELOG.md
+ M packages/core/levit_dart_core/README.md
+ M packages/core/levit_dart_core/example/main.dart
+ M packages/core/levit_dart_core/lib/src/auto_linking.dart
+ M packages/core/levit_dart_core/lib/src/controller.dart
+ M packages/core/levit_dart_core/lib/src/core.dart
+ M packages/core/levit_dart_core/lib/src/store.dart
+ M packages/core/levit_dart_core/pubspec.yaml
+ M packages/core/levit_dart_core/test/controller/async_oninit_capture_test.dart
+ M packages/core/levit_dart_core/test/controller/controller_disposal_edge_cases_test.dart
+ M packages/core/levit_dart_core/test/controller/controller_test.dart
+ M packages/core/levit_dart_core/test/controller/fast_path_controller_test.dart
+ M packages/core/levit_dart_core/test/controller/levit_controller_edge_cases_test.dart
+ M packages/core/levit_dart_core/test/controller/levit_controller_lifecycle_test.dart
+ M packages/core/levit_dart_core/test/controller/resource_owner_test.dart
+ M packages/core/levit_dart_core/test/controller/run_guarded_async_test.dart
+ M packages/core/levit_dart_core/test/core/async_capture_hook_test.dart
+ M packages/core/levit_dart_core/test/core/async_lookup_test.dart
+ M packages/core/levit_dart_core/test/core/auto_dispose_test.dart
+ M packages/core/levit_dart_core/test/core/auto_linking_assert_test.dart
+ M packages/core/levit_dart_core/test/core/auto_linking_context_owner_test.dart
+ M packages/core/levit_dart_core/test/core/auto_linking_optimization_test.dart
+ M packages/core/levit_dart_core/test/core/auto_linking_test.dart
+ M packages/core/levit_dart_core/test/core/capture_hook_error_test.dart
+ M packages/core/levit_dart_core/test/core/capture_hook_oninit_error_test.dart
+ M packages/core/levit_dart_core/test/core/dependency_management_test.dart
+ M packages/core/levit_dart_core/test/core/generic_disposable_auto_link_test.dart
+ M packages/core/levit_dart_core/test/core/implicit_scope_test.dart
+ M packages/core/levit_dart_core/test/core/levit_core_methods_fallback_test.dart
+ M packages/core/levit_dart_core/test/core/levit_delete_instantiated_test.dart
+ M packages/core/levit_dart_core/test/core/levit_middleware_defaults_test.dart
+ M packages/core/levit_dart_core/test/core/levit_proxy_accessors_test.dart
+ M packages/core/levit_dart_core/test/core/middleware_entry_points_contract_test.dart
+ M packages/core/levit_dart_core/test/core/non_controller_oninit_capture_test.dart
+ M packages/core/levit_dart_core/test/core/observer_registration_test.dart
+ M packages/core/levit_dart_core/test/core/run_in_scope_test.dart
+ M packages/core/levit_dart_core/test/deprecated_api_test.dart
+ M packages/core/levit_dart_core/test/helpers.dart
+ M packages/core/levit_dart_core/test/location_simulation_example.dart
+ M packages/core/levit_dart_core/test/store/levit_async_store_contract_test.dart
+ M packages/core/levit_dart_core/test/store/levit_ref_test.dart
+ M packages/core/levit_dart_core/test/store/levit_state_test.dart
+ M packages/core/levit_dart_core/test/store/levit_store_test.dart
+ M packages/core/levit_dart_core/test/store/state_comprehensive_lookup_test.dart
+ M packages/core/levit_flutter_core/CHANGELOG.md
+ M packages/core/levit_flutter_core/README.md
+ M packages/core/levit_flutter_core/example/lib/main.dart
+ M packages/core/levit_flutter_core/example/pubspec.yaml
+ M packages/core/levit_flutter_core/lib/levit_flutter_core.dart
+ M packages/core/levit_flutter_core/lib/src/builder.dart
+ M packages/core/levit_flutter_core/lib/src/l_async_scope.dart
+ M packages/core/levit_flutter_core/lib/src/l_scope.dart
+ M packages/core/levit_flutter_core/lib/src/levit_provider.dart
+ M packages/core/levit_flutter_core/lib/src/route_scope.dart
+ M packages/core/levit_flutter_core/lib/src/scope.dart
+ M packages/core/levit_flutter_core/lib/src/scoped_view.dart
+ M packages/core/levit_flutter_core/lib/src/view.dart
+ M packages/core/levit_flutter_core/pubspec.yaml
+ M packages/core/levit_flutter_core/test/context_aware_watch_test.dart
+ M packages/core/levit_flutter_core/test/controller/controller_test.dart
+ M packages/core/levit_flutter_core/test/helpers.dart
+ M packages/core/levit_flutter_core/test/scope/dialog_scope_loss_test.dart
+ M packages/core/levit_flutter_core/test/scope/l_async_scope_test.dart
+ M packages/core/levit_flutter_core/test/scope/levit_provider_resolves_store_test.dart
+ M packages/core/levit_flutter_core/test/scope/lscope_lazy_put_async_static_test.dart
+ M packages/core/levit_flutter_core/test/scope/lscope_lazy_put_static_test.dart
+ M packages/core/levit_flutter_core/test/scope/lscope_lifecycle_test.dart
+ M packages/core/levit_flutter_core/test/scope/lscope_put_static_factory_test.dart
+ M packages/core/levit_flutter_core/test/scope/lscope_put_static_test.dart
+ M packages/core/levit_flutter_core/test/scope/lscope_update_behavior_test.dart
+ M packages/core/levit_flutter_core/test/scope/route_scope_test.dart
+ M packages/core/levit_flutter_core/test/scope/scope_default_name_test.dart
+ M packages/core/levit_flutter_core/test/scope/scope_reparenting_test.dart
+ M packages/core/levit_flutter_core/test/scope/scope_test.dart
+ M packages/core/levit_flutter_core/test/scope/scope_update_test.dart
+ M packages/core/levit_flutter_core/test/scope_bridging_test.dart
+ M packages/core/levit_flutter_core/test/view/async_scoped_view_autowatch_off_test.dart
+ M packages/core/levit_flutter_core/test/view/compatibility_test.dart
+ M packages/core/levit_flutter_core/test/view/l_view_test.dart
+ M packages/core/levit_flutter_core/test/view/lasyncview_anonymous_closure_warning_test.dart
+ M packages/core/levit_flutter_core/test/view/lasyncview_args_update_test.dart
+ M packages/core/levit_flutter_core/test/view/lasyncview_corner_cases_test.dart
+ M packages/core/levit_flutter_core/test/view/lasyncview_edge_cases_test.dart
+ M packages/core/levit_flutter_core/test/view/lasyncview_error_handling_helpers_test.dart
+ M packages/core/levit_flutter_core/test/view/lasyncview_put_constructor_test.dart
+ M packages/core/levit_flutter_core/test/view/lasyncview_put_registers_test.dart
+ M packages/core/levit_flutter_core/test/view/lasyncview_resolve_existing_async_test.dart
+ M packages/core/levit_flutter_core/test/view/lasyncview_store_initialization_test.dart
+ M packages/core/levit_flutter_core/test/view/lscopedasyncview_error_handling_test.dart
+ M packages/core/levit_flutter_core/test/view/lscopedasyncview_handles_error_test.dart
+ M packages/core/levit_flutter_core/test/view/lscopedasyncview_put_tags_test.dart
+ M packages/core/levit_flutter_core/test/view/lscopedasyncview_store_resolves_test.dart
+ M packages/core/levit_flutter_core/test/view/lscopedview_behavior_test.dart
+ M packages/core/levit_flutter_core/test/view/lscopedview_put_tags_test.dart
+ M packages/core/levit_flutter_core/test/view/lscopedview_put_works_tags_test.dart
+ M packages/core/levit_flutter_core/test/view/lscopedview_store_initialization_test.dart
+ M packages/core/levit_flutter_core/test/view/lview_in_scope_test.dart
+ M packages/core/levit_flutter_core/test/view/lview_put_constructor_test.dart
+ M packages/core/levit_flutter_core/test/view/lview_put_registers_test.dart
+ M packages/core/levit_flutter_core/test/view/lview_resolve_existing_test.dart
+ M packages/core/levit_flutter_core/test/view/scoped_view_renders_or_else_when_controller_null_test.dart
+ M packages/core/levit_flutter_core/test/view/scoped_view_throws_when_controller_null_test.dart
+ M packages/core/levit_flutter_core/test/view/shorthand_test.dart
+ M packages/core/levit_flutter_core/test/view/test_async_view_behavior.dart
+ M packages/core/levit_flutter_core/test/view/test_lscoped_view_nullable_resolution.dart
+ M packages/core/levit_flutter_core/test/view/test_lview_nullable_resolution.dart
+ M packages/core/levit_flutter_core/test/view/test_scoped_view_consistency.dart
+ M packages/core/levit_flutter_core/test/view/view_test.dart
+ M packages/core/levit_flutter_core/test/view/view_widget_update_test.dart
+ M packages/core/levit_flutter_core/test/watch/l_watch_test.dart
+ M packages/core/levit_flutter_core/test/watch/lwatch_cleanup_dependency_removed_test.dart
+ M packages/core/levit_flutter_core/test/watch/lwatch_cleanup_strategies_test.dart
+ M packages/core/levit_flutter_core/test/watch/lwatch_dependency_tracking_test.dart
+ M packages/core/levit_flutter_core/test/watch/lwatch_subscription_transitions_test.dart
+ M packages/core/levit_flutter_core/test/watch/watch_resets_proxy_on_reentrant_build_test.dart
+ M packages/core/levit_flutter_core/test/watch/watch_test.dart
+ M packages/core/levit_flutter_core/test/watch_status_test.dart
+ M packages/core/levit_flutter_core/test/widgets/l_select_builder_test.dart
+ M packages/core/levit_flutter_core/test/widgets/lbuilder_subscription_update_test.dart
+ M packages/core/levit_flutter_core/test/widgets/lbuilder_update_behavior_test.dart
+ M packages/core/levit_flutter_core/test/widgets/levit_context_lazy_put_async_finder_test.dart
+ M packages/core/levit_flutter_core/test/widgets/levit_context_put_or_find_all_test.dart
+ M packages/core/levit_flutter_core/test/widgets/levit_provider_lazy_put_test.dart
+ M packages/core/levit_flutter_core/test/widgets/levit_provider_store_key_test.dart
+ M packages/core/levit_flutter_core/test/widgets/widget_edge_cases_test.dart
+ M packages/core/levit_monitor/CHANGELOG.md
+ M packages/core/levit_monitor/README.md
+ M packages/core/levit_monitor/example/levit_monitor_example.dart
+ M packages/core/levit_monitor/lib/levit_monitor.dart
+ M packages/core/levit_monitor/lib/src/core.dart
+ M packages/core/levit_monitor/lib/src/event.dart
+ M packages/core/levit_monitor/lib/src/middleware.dart
+ M packages/core/levit_monitor/lib/src/snapshot.dart
+ M packages/core/levit_monitor/lib/src/transports/console_transport.dart
+ M packages/core/levit_monitor/lib/src/transports/file_transport.dart
+ M packages/core/levit_monitor/lib/src/transports/interface.dart
+ M packages/core/levit_monitor/lib/src/transports/multi_transport.dart
+ M packages/core/levit_monitor/lib/src/transports/websocket_transport.dart
+ M packages/core/levit_monitor/pubspec.yaml
+ M packages/core/levit_monitor/pubspec_overrides.yaml
+ M packages/core/levit_monitor/test/core/detach_cleanup_test.dart
+ M packages/core/levit_monitor/test/core/event_test.dart
+ M packages/core/levit_monitor/test/core/identity_test.dart
+ M packages/core/levit_monitor/test/core/monitor_comprehensive_test.dart
+ M packages/core/levit_monitor/test/core/monitor_emits_log_events_test.dart
+ M packages/core/levit_monitor/test/core/monitor_error_test.dart
+ M packages/core/levit_monitor/test/core/monitor_filter_test.dart
+ M packages/core/levit_monitor/test/core/transport_close_test.dart
+ M packages/core/levit_monitor/test/event/custom_monitor_event_test.dart
+ M packages/core/levit_monitor/test/event/log_event_serialization_test.dart
+ M packages/core/levit_monitor/test/middleware/middleware_sync_on_connect_test.dart
+ M packages/core/levit_monitor/test/middleware/monitor_close_has_listener_test.dart
+ M packages/core/levit_monitor/test/middleware/monitor_close_test.dart
+ M packages/core/levit_monitor/test/middleware/monitor_listener_test.dart
+ M packages/core/levit_monitor/test/middleware/monitor_middleware_test.dart
+ M packages/core/levit_monitor/test/middleware/monitor_onconnect_cleanup_test.dart
+ M packages/core/levit_monitor/test/middleware/monitor_scope_lifecycle_test.dart
+ M packages/core/levit_monitor/test/monitor_simulation_example.dart
+ M packages/core/levit_monitor/test/snapshot/apply_snapshot_events_test.dart
+ M packages/core/levit_monitor/test/snapshot/debug_shadow_state_test.dart
+ M packages/core/levit_monitor/test/snapshot/shadow_state_batch_test.dart
+ M packages/core/levit_monitor/test/snapshot/shadow_state_cache_test.dart
+ M packages/core/levit_monitor/test/snapshot/shadow_state_disposal_test.dart
+ M packages/core/levit_monitor/test/test_sensitive_data_protection_test.dart
+ M packages/core/levit_monitor/test/transports/console_transport_comprehensive_formatting_test.dart
+ M packages/core/levit_monitor/test/transports/console_transport_event_logging_test.dart
+ M packages/core/levit_monitor/test/transports/console_transport_formats_listener_events_test.dart
+ M packages/core/levit_monitor/test/transports/console_transport_test.dart
+ M packages/core/levit_monitor/test/transports/custom_event_transport_test.dart
+ M packages/core/levit_monitor/test/transports/file_transport_test.dart
+ M packages/core/levit_monitor/test/transports/multi_transport_test.dart
+ M packages/core/levit_monitor/test/transports/websocket_fault_test.dart
+ M packages/core/levit_monitor/test/transports/websocket_integration_test.dart
+ M packages/core/levit_monitor/test/transports/websocket_transport_test.dart
+ M packages/core/levit_reactive/CHANGELOG.md
+ M packages/core/levit_reactive/README.md
+ M packages/core/levit_reactive/lib/levit_reactive.dart
+ M packages/core/levit_reactive/lib/src/async_status.dart
+ M packages/core/levit_reactive/lib/src/async_types.dart
+ M packages/core/levit_reactive/lib/src/base_types.dart
+ M packages/core/levit_reactive/lib/src/collections.dart
+ M packages/core/levit_reactive/lib/src/computed.dart
+ M packages/core/levit_reactive/lib/src/core.dart
+ M packages/core/levit_reactive/lib/src/family.dart
+ M packages/core/levit_reactive/lib/src/global_accessor.dart
+ M packages/core/levit_reactive/lib/src/middlewares.dart
+ M packages/core/levit_reactive/lib/src/workers.dart
+ M packages/core/levit_reactive/pubspec.yaml
+ M packages/core/levit_reactive/test/async/lx_async_concurrency_test.dart
+ M packages/core/levit_reactive/test/async_types/buffering_test.dart
+ M packages/core/levit_reactive/test/async_types/lx_async_status_wait_test.dart
+ M packages/core/levit_reactive/test/async_types/lx_future_test.dart
+ M packages/core/levit_reactive/test/async_types/lx_future_unexpected_state_test.dart
+ M packages/core/levit_reactive/test/async_types/lx_stream_completion_policy_test.dart
+ M packages/core/levit_reactive/test/async_types/lx_stream_reactivation_test.dart
+ M packages/core/levit_reactive/test/async_types/lx_stream_restart_test.dart
+ M packages/core/levit_reactive/test/base_types/lx_num_test.dart
+ M packages/core/levit_reactive/test/collections/assign_test.dart
+ M packages/core/levit_reactive/test/collections/deep_reactivity_repro_test.dart
+ M packages/core/levit_reactive/test/collections/lx_list_test.dart
+ M packages/core/levit_reactive/test/computed/async_computed_extra_test.dart
+ M packages/core/levit_reactive/test/computed/async_computed_test.dart
+ M packages/core/levit_reactive/test/computed/computed_deferred_test.dart
+ M packages/core/levit_reactive/test/computed/computed_glitch_test.dart
+ M packages/core/levit_reactive/test/computed/lx_async_computed_static_deps_error_test.dart
+ M packages/core/levit_reactive/test/computed/lx_computed_async_zone_behavior_test.dart
+ M packages/core/levit_reactive/test/computed/lx_computed_stack_trace_preservation_test.dart
+ M packages/core/levit_reactive/test/computed/lx_computed_static_deps_error_test.dart
+ M packages/core/levit_reactive/test/computed/lx_derived_test.dart
+ M packages/core/levit_reactive/test/computed/memo_async_test.dart
+ M packages/core/levit_reactive/test/computed/repro_async_zone_test.dart
+ M packages/core/levit_reactive/test/core/batch_async_test.dart
+ M packages/core/levit_reactive/test/core/batch_middleware_test.dart
+ M packages/core/levit_reactive/test/core/batch_test.dart
+ M packages/core/levit_reactive/test/core/composite_change_metadata_test.dart
+ M packages/core/levit_reactive/test/core/consistency_test.dart
+ D packages/core/levit_reactive/test/core/history_middleware_changes_of_type_test.dart
+ D packages/core/levit_reactive/test/core/history_middleware_clear_print_test.dart
+ D packages/core/levit_reactive/test/core/history_middleware_composite_change_test.dart
+ D packages/core/levit_reactive/test/core/history_middleware_edge_cases_test.dart
+ D packages/core/levit_reactive/test/core/history_middleware_empty_undo_redo_test.dart
+ D packages/core/levit_reactive/test/core/history_middleware_print_output_test.dart
+ D packages/core/levit_reactive/test/core/history_middleware_redo_changes_test.dart
+ M packages/core/levit_reactive/test/core/levit_reactive_batch_properties_test.dart
+ M packages/core/levit_reactive/test/core/levit_reactive_batch_stop_propagation_test.dart
+ M packages/core/levit_reactive/test/core/levit_reactive_change_string_test.dart
+ M packages/core/levit_reactive/test/core/levit_reactive_edge_cases_test.dart
+ M packages/core/levit_reactive/test/core/lifecycle_middleware_hooks_test.dart
+ M packages/core/levit_reactive/test/core/lx_base_refresh_behavior_test.dart
+ M packages/core/levit_reactive/test/core/lx_basic_test.dart
+ M packages/core/levit_reactive/test/core/lx_batch_exception_handling_test.dart
+ M packages/core/levit_reactive/test/core/lx_bind_stream_errors_test.dart
+ M packages/core/levit_reactive/test/core/lx_convenience_methods_test.dart
+ M packages/core/levit_reactive/test/core/lx_future_extension_test.dart
+ M packages/core/levit_reactive/test/core/lx_nullable_test.dart
+ M packages/core/levit_reactive/test/core/lx_run_with_context_middleware_test.dart
+ M packages/core/levit_reactive/test/core/lx_stream_init_observer_test.dart
+ M packages/core/levit_reactive/test/core/lx_var_callbacks_test.dart
+ M packages/core/levit_reactive/test/core/lx_watch_test.dart
+ M packages/core/levit_reactive/test/core/lx_worker_stream_listener_test.dart
+ M packages/core/levit_reactive/test/core/memory_leak_test.dart
+ M packages/core/levit_reactive/test/core/middleware_cancellation_test.dart
+ M packages/core/levit_reactive/test/core/middleware_chain_test.dart
+ M packages/core/levit_reactive/test/core/middleware_defaults_test.dart
+ M packages/core/levit_reactive/test/core/middleware_flags_test.dart
+ M packages/core/levit_reactive/test/core/nested_batch_test.dart
+ M packages/core/levit_reactive/test/core/notifier_disposal_behavior_test.dart
+ M packages/core/levit_reactive/test/core/notifier_listener_management_test.dart
+ M packages/core/levit_reactive/test/core/reactive_lifecycle_edge_cases_test.dart
+ M packages/core/levit_reactive/test/core/read_resolver_delegates_to_different_reactive_test.dart
+ M packages/core/levit_reactive/test/core/rxdart_interop_test.dart
+ M packages/core/levit_reactive/test/core/select_test.dart
+ M packages/core/levit_reactive/test/core/stream_transform_test.dart
+ M packages/core/levit_reactive/test/core/watch_test.dart
+ M packages/core/levit_reactive/test/family/lx_family_test.dart
+ M packages/core/levit_reactive/test/helpers.dart
+ M packages/core/levit_reactive/test/lx_state_test.dart
+ M packages/core/levit_reactive/test/middleware_error_test.dart
+ M packages/core/levit_reactive/test/middlewares/basic_middleware_test.dart
+ M packages/core/levit_reactive/test/middlewares/batch_middleware_test.dart
+ D packages/core/levit_reactive/test/middlewares/devtools_test.dart
+ D packages/core/levit_reactive/test/middlewares/filtered_middleware_test.dart
+ M packages/core/levit_reactive/test/middlewares/granular_check_test.dart
+ M packages/core/levit_reactive/test/middlewares/inconsistent_token_state_test.dart
+ M packages/core/levit_reactive/test/middlewares/middleware_bypass_test.dart
+ M packages/core/levit_reactive/test/middlewares/middleware_propagation_test.dart
+ M packages/core/levit_reactive/test/middlewares/mutation_test.dart
+ M packages/core/levit_reactive/test/middlewares/registration_idempotency_test.dart
+ M packages/core/levit_reactive/test/worker/processing_error_test.dart
+ M packages/core/levit_reactive/test/worker/transition_helpers_test.dart
+ M packages/core/levit_reactive/test/workers/lx_worker_async_error_test.dart
+ M packages/core/levit_reactive/test/workers/lx_worker_async_test.dart
+ M packages/core/levit_reactive/test/workers/lx_worker_sync_error_test.dart
+ M packages/core/levit_reactive/test/workers/worker_exception_test.dart
+ M packages/core/levit_scope/CHANGELOG.md
+ M packages/core/levit_scope/README.md
+ M packages/core/levit_scope/example/levit_scope_example.dart
+ M packages/core/levit_scope/lib/levit_scope.dart
+ M packages/core/levit_scope/lib/src/core.dart
+ D packages/core/levit_scope/lib/src/extensions.dart
+ M packages/core/levit_scope/lib/src/global_accessor.dart
+ M packages/core/levit_scope/lib/src/middleware.dart
+ M packages/core/levit_scope/pubspec.yaml
+ M packages/core/levit_scope/test/core/advanced_di_test.dart
+ M packages/core/levit_scope/test/core/async_di_test.dart
+ M packages/core/levit_scope/test/core/async_disposal_and_alias_test.dart
+ M packages/core/levit_scope/test/core/hooks_test.dart
+ M packages/core/levit_scope/test/core/init_hook_test.dart
+ M packages/core/levit_scope/test/core/ls_create_scope_test.dart
+ M packages/core/levit_scope/test/core/ls_lazy_put_proxy_test.dart
+ M packages/core/levit_scope/test/core/ls_methods_proxy_test.dart
+ M packages/core/levit_scope/test/core/ls_registered_metadata_test.dart
+ M packages/core/levit_scope/test/core/ls_run_zone_test.dart
+ M packages/core/levit_scope/test/core/middleware_chain_test.dart
+ M packages/core/levit_scope/test/core/middleware_inconsistent_state_test.dart
+ M packages/core/levit_scope/test/core/middleware_ordering_contract_test.dart
+ M packages/core/levit_scope/test/core/middleware_registration_idempotency_test.dart
+ M packages/core/levit_scope/test/core/observer_test.dart
+ M packages/core/levit_scope/test/core/optimization_test.dart
+ M packages/core/levit_scope/test/core/scope_cache_fallback_test.dart
+ M packages/core/levit_scope/test/core/scope_cache_test.dart
+ M packages/core/levit_scope/test/core/scope_disposal_invariants_test.dart
+ M packages/core/levit_scope/test/core/scope_duplicate_name_warning_test.dart
+ M packages/core/levit_scope/test/core/scope_hierarchy_test.dart
+ M packages/core/levit_scope/test/core/scope_lazy_put_async_disposed_test.dart
+ M packages/core/levit_scope/test/core/scope_test.dart
+ M packages/core/levit_scope/test/core/simple_di_test.dart
+ M packages/core/levit_scope/test/extensions/async_extensions_test.dart
+ M packages/core/levit_scope/test/extensions/put_extensions_test.dart
+ M packages/core/levit_scope/test/middleware/lx_scope_middleware_chain_test.dart
+ M packages/kits/levit/CHANGELOG.md
+ M packages/kits/levit/README.md
+ M packages/kits/levit/pubspec.yaml
+ M packages/kits/levit/test/levit_import_test.dart
+ M packages/kits/levit_dart/CHANGELOG.md
+ M packages/kits/levit_dart/README.md
+ M packages/kits/levit_dart/example/main.dart
+ M packages/kits/levit_dart/lib/levit_dart.dart
+ M packages/kits/levit_dart/lib/src/mixins/execution_loop_mixin.dart
+ M packages/kits/levit_dart/lib/src/mixins/selection_mixin.dart
+ M packages/kits/levit_dart/lib/src/mixins/tasks_mixin.dart
+ M packages/kits/levit_dart/lib/src/mixins/time_mixin.dart
+ M packages/kits/levit_dart/lib/src/utilities/levit_loop_engine.dart
+ M packages/kits/levit_dart/lib/src/utilities/levit_task_engine.dart
+ M packages/kits/levit_dart/lib/src/utilities/task_engine_cache.dart
+ M packages/kits/levit_dart/lib/src/utilities/task_engine_models.dart
+ M packages/kits/levit_dart/lib/src/utilities/task_engine_queue.dart
+ M packages/kits/levit_dart/pubspec.yaml
+ M packages/kits/levit_dart/test/mixins/execution_loop_mixin_behavior_test.dart
+ M packages/kits/levit_dart/test/mixins/mixins_test.dart
+ M packages/kits/levit_dart/test/mixins/orphan_mixin_test.dart
+ M packages/kits/levit_dart/test/mixins/reactive_task_selectors_test.dart
+ M packages/kits/levit_dart/test/mixins/tasks_engine_access_test.dart
+ M packages/kits/levit_dart/test/mixins/tasks_mixin_behavior_test.dart
+ M packages/kits/levit_dart/test/mixins/tasks_mixin_isolate_behavior_test.dart
+ M packages/kits/levit_dart/test/mixins/time_mixin_test.dart
+ M packages/kits/levit_dart/test/mixins/utility_mixins_test.dart
+ M packages/kits/levit_dart/test/utilities/cache_provider_override_test.dart
+ M packages/kits/levit_dart/test/utilities/isolate_loop_cleanup_race_test.dart
+ M packages/kits/levit_dart/test/utilities/isolate_loop_spawn_failure_test.dart
+ M packages/kits/levit_dart/test/utilities/isolate_stop_while_paused_test.dart
+ M packages/kits/levit_dart/test/utilities/levit_state_engine_test.dart
+ M packages/kits/levit_dart/test/utilities/loop_executor_stop_test.dart
+ M packages/kits/levit_dart/test/utilities/loop_service_pause_stop_test.dart
+ M packages/kits/levit_dart/test/utilities/task_cache_test.dart
+ M packages/kits/levit_dart/test/utilities/task_conflict_policy_test.dart
+ M packages/kits/levit_dart/test/utilities/task_coverage_contract_test.dart
+ M packages/kits/levit_dart/test/utilities/task_engine_config_test.dart
+ M packages/kits/levit_dart/test/utilities/task_engine_instrumentation_test.dart
+ M packages/kits/levit_dart/test/utilities/task_engine_queue_test.dart
+ M packages/kits/levit_dart/test/utilities/task_middleware_tracker_test.dart
+ M packages/kits/levit_dart/test/utilities/tasks_cleanup_test.dart
+ M packages/kits/levit_flutter/CHANGELOG.md
+ M packages/kits/levit_flutter/README.md
+ M packages/kits/levit_flutter/example/README.md
+ M packages/kits/levit_flutter/example/lib/main.dart
+ M packages/kits/levit_flutter/example/pubspec.yaml
+ M packages/kits/levit_flutter/lib/levit_flutter.dart
+ M packages/kits/levit_flutter/lib/src/mixins/lifecycle_loop_mixin.dart
+ M packages/kits/levit_flutter/lib/src/overlays.dart
+ M packages/kits/levit_flutter/lib/src/widgets/keep_alive.dart
+ D packages/kits/levit_flutter/lib/src/widgets/list_item_monitor.dart
+ M packages/kits/levit_flutter/pubspec.yaml
+ M packages/kits/levit_flutter/test/mixins/app_lifecycle_mixin_test.dart
+ M packages/kits/levit_flutter/test/mixins/lifecycle_loop_mixin_state_restoration_test.dart
+ M packages/kits/levit_flutter/test/overlays_test.dart
+ M packages/kits/levit_flutter/test/widgets/keep_alive_did_update_widget_test.dart
+ M packages/kits/levit_flutter/test/widgets/keep_alive_test.dart
+ M packages/kits/levit_flutter/test/widgets/list_item_monitor_test.dart
+ M packages/tools/levit_lints/CHANGELOG.md
+ M packages/tools/levit_lints/README.md
+ M packages/tools/levit_lints/lib/main.dart
+ M packages/tools/levit_lints/lib/src/rules.dart
+ M packages/tools/levit_lints/pubspec.yaml
+ M packages/tools/levit_lints/test/rules_test.dart
+ M proposals/ergonomics_pack.md
+ M proposals/structured_concurrency.md
+ M pubspec.yaml
+ M reports/bench_mark_report.md
+ M reports/packages_test_coverage.md
+ M reports/stress_test_report.md
+ M scripts/check_coverage.dart
+ M scripts/ci.dart
+ M scripts/publish_dry_run.dart
+ M scripts/stress_test.dart
+ M stress_tests/lib/levit_flutter/lscope_stress_test.dart
+ M stress_tests/lib/levit_flutter/lview_stress_test.dart
+ M stress_tests/lib/levit_flutter/lwatch_stress_test.dart
+ M stress_tests/lib/levit_flutter/status_builder_stress_test.dart
+ M stress_tests/lib/levit_reactive/async_stress_test.dart
+ M stress_tests/lib/levit_reactive/collection_stress_test.dart
+ M stress_tests/lib/levit_reactive/computed_stress_test.dart
+ M stress_tests/lib/levit_reactive/lx_core_stress_test.dart
+ M stress_tests/lib/levit_reactive/middleware_stress_test.dart
+ M stress_tests/lib/levit_reactive/watcher_stress_test.dart
+ M stress_tests/lib/levit_scope/lifecycle_stress_test.dart
+ M stress_tests/lib/levit_scope/registration_stress_test.dart
+ M stress_tests/lib/levit_scope/scope_stress_test.dart
+ M stress_tests/pubspec.yaml
+?? MIGRATION_0.0.12.md
+?? MIGRATION_0.1.0.md
+?? benchmarks/lib/app_harness.dart
+?? benchmarks/lib/benchmark_observer.dart
+?? benchmarks/lib/compare_app_workloads.dart
+?? benchmarks/lib/compare_chain_workload.dart
+?? benchmarks/lib/compare_computed_modes.dart
+?? benchmarks/lib/compare_grid_workload.dart
+?? benchmarks/lib/compare_published_release.dart
+?? benchmarks/lib/computed_mode_benchmarks.dart
+?? benchmarks/lib/measured_frames.dart
+?? benchmarks/lib/performance_monitor.dart
+?? benchmarks/lib/profile_app_workloads.dart
+?? benchmarks/lib/profile_runtime.dart
+?? benchmarks/lib/release_performance.dart
+?? benchmarks/lib/verify_app_benchmarks.dart
+?? benchmarks/test/computed_mode_benchmarks_test.dart
+?? benchmarks/test/dashboard_surface_test.dart
+?? benchmarks/test/measured_frames_test.dart
+?? benchmarks/test/performance_monitor_test.dart
+?? benchmarks/test/runner_failure_test.dart
+?? benchmarks/test/workload_contract_test.dart
+?? benchmarks/tool/compare_release_performance.py
+?? docs/
+?? examples/async_catalog/lib/catalog.dart
+?? examples/async_catalog/test/
+?? examples/async_catalog/web/
+?? examples/nexus_studio/server/test/two_client_undo_test.dart
+?? examples/nexus_studio/shared/lib/commands.dart
+?? examples/nexus_studio/shared/test/command_history_test.dart
+?? examples/scope_playground/lib/session_replacement.dart
+?? examples/scope_playground/test/
+?? examples/scope_playground/web/
+?? examples/task_board/lib/save_upload.dart
+?? examples/task_board/test/
+?? examples/task_board/web/
+?? packages/core/levit_dart_core/lib/levit_testing.dart
+?? packages/core/levit_dart_core/test/controller/async_owner_contract_test.dart
+?? packages/core/levit_dart_core/test/controller/cleanup_acceptance_test.dart
+?? packages/core/levit_dart_core/test/controller/initialization_boundary_test.dart
+?? packages/core/levit_dart_core/test/core/public_surface_contract_test.dart
+?? packages/core/levit_dart_core/test/store/local_store_contract_test.dart
+?? packages/core/levit_dart_core/test/store/store_identity_override_test.dart
+?? packages/core/levit_flutter_core/lib/src/scope_lifecycle.dart
+?? packages/core/levit_flutter_core/lib/src/value_listenable.dart
+?? packages/core/levit_flutter_core/test/value_listenable_test.dart
+?? packages/core/levit_flutter_core/test/view/local_store_contract_test.dart
+?? packages/core/levit_flutter_core/test/watch/nullable_read_contract_test.dart
+?? packages/core/levit_flutter_core/test/widgets/family_refresh_test.dart
+?? packages/core/levit_flutter_core/test/widgets/lifecycle_acceptance_test.dart
+?? packages/core/levit_flutter_core/test/widgets/scope_replacement_contract_test.dart
+?? packages/core/levit_monitor/example/task_adapter.dart
+?? packages/core/levit_monitor/lib/levit_monitor_io.dart
+?? packages/core/levit_monitor/lib/levit_monitor_protocol.dart
+?? packages/core/levit_monitor/test/core/awaited_monitor_contract_test.dart
+?? packages/core/levit_monitor/test/core/bootstrap_contract_test.dart
+?? packages/core/levit_monitor/test/core/envelope_copy_contract_test.dart
+?? packages/core/levit_monitor/test/core/event_capture_hot_path_test.dart
+?? packages/core/levit_monitor/test/core/monitor_failure_acceptance_test.dart
+?? packages/core/levit_monitor/test/middleware/monitor_mixed_delivery_test.dart
+?? packages/core/levit_monitor/test/middleware/scope_progress_dedup_test.dart
+?? packages/core/levit_monitor/test/transports/websocket_cleanup_acceptance_test.dart
+?? packages/core/levit_reactive/lib/src/async_lifecycle.dart
+?? packages/core/levit_reactive/test/async/retained_status_test.dart
+?? packages/core/levit_reactive/test/computed/dynamic_dependency_reuse_test.dart
+?? packages/core/levit_reactive/test/core/async_batch_isolation_test.dart
+?? packages/core/levit_reactive/test/core/async_lifetime_contract_test.dart
+?? packages/core/levit_reactive/test/core/cleanup_failure_acceptance_test.dart
+?? packages/core/levit_reactive/test/core/nullable_read_contract_test.dart
+?? packages/core/levit_reactive/test/family/family_failure_acceptance_test.dart
+?? packages/core/levit_scope/lib/src/description.dart
+?? packages/core/levit_scope/test/core/awaited_lifetime_contract_test.dart
+?? packages/core/levit_scope/test/core/cleanup_failure_acceptance_test.dart
+?? packages/core/levit_scope/test/core/disposed_observation_test.dart
+?? packages/core/levit_scope/test/core/factory_ownership_contract_test.dart
+?? packages/core/levit_scope/test/core/initialization_boundary_test.dart
+?? packages/core/levit_scope/test/core/observation_contract_test.dart
+?? packages/kits/levit/lib/levit_testing.dart
+?? packages/kits/levit/test/documentation_contract_test.dart
+?? packages/kits/levit/tool/
+?? packages/kits/levit_dart/lib/levit_testing.dart
+?? packages/kits/levit_dart/lib/src/utilities/query_family.dart
+?? packages/kits/levit_dart/lib/src/utilities/task_group.dart
+?? packages/kits/levit_dart/test/mixins/countdown_elapsed_test.dart
+?? packages/kits/levit_dart/test/utilities/loop_lifetime_contract_test.dart
+?? packages/kits/levit_dart/test/utilities/query_cleanup_acceptance_test.dart
+?? packages/kits/levit_dart/test/utilities/query_family_test.dart
+?? packages/kits/levit_dart/test/utilities/structured_task_contract_test.dart
+?? packages/kits/levit_dart/test/utilities/task_group_acceptance_test.dart
+?? packages/kits/levit_dart/test/utilities/task_hot_path_contract_test.dart
+?? packages/kits/levit_dart/test/utilities/task_pending_accounting_test.dart
+?? packages/kits/levit_dart/test/utilities/task_shutdown_contract_test.dart
+?? packages/kits/levit_flutter/example/lib/countdown_interop.dart
+?? packages/kits/levit_flutter/example/lib/mount_observer.dart
+?? packages/kits/levit_flutter/example/web/
+?? packages/kits/levit_flutter/lib/levit_testing.dart
+?? packages/kits/levit_flutter/test/documentation_contract_test.dart
+?? packages/kits/levit_flutter/test/value_listenable_kit_test.dart
+?? packages/tools/levit_devtools/
+?? packages/tools/levit_devtools_ui/
+?? packages/tools/levit_lints/lib/src/async_rules.dart
+?? packages/tools/levit_lints/test/async_rules_test.dart
+?? reports/ecosystem_roadmap.md
+?? reports/feature_set_audit.md
+?? reports/feature_usefulness_audit_2026-09-15.md
+?? reports/release_0.0.12_validation.md
+?? reports/release_0.1.0_plan.md
+?? reports/release_0.1.0_progress.md
+?? reports/validation/
+?? scripts/__pycache__/
+?? scripts/build_devtools.dart
+?? scripts/check_browser_builds.dart
+?? scripts/check_lint_plugin.dart
+?? scripts/compare_app_performance.py
+?? scripts/compare_computed_modes.py
+?? scripts/compare_published_performance.py
+?? scripts/summarize_app_performance.py

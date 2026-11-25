@@ -1,0 +1,21 @@
+00:00 +0: loading test/io_failure_acceptance_test.dart
+00:00 +0: test/io_failure_acceptance_test.dart: embedded asset resolution reports missing package mappings
+00:00 +1: test/relay_test.dart: compact ownership is complete without earlier lifecycle events
+00:00 +2: test/relay_test.dart: compact ownership is complete without earlier lifecycle events
+00:00 +3: test/relay_test.dart: compact ownership is complete without earlier lifecycle events
+00:00 +4: test/relay_test.dart: compact ownership is complete without earlier lifecycle events
+00:00 +5: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +6: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +7: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +8: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +9: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +10: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +11: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +12: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +13: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +14: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +15: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:00 +16: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:01 +17: test/packaged_cli_test.dart: bundled assets are complete and CLI serves them without Flutter installed
+00:01 +18: test/relay_test.dart: slow unselected viewer recovers session membership and times out without ack
+00:05 +19: All tests passed!

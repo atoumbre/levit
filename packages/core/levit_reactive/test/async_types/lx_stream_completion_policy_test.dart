@@ -17,35 +17,37 @@ void main() {
     expect(stream.isDisposed, isTrue);
   });
 
-  test('retain preserves the final value and permits explicit restart',
-      () async {
-    final first = StreamController<int>();
-    final second = StreamController<int>();
-    final stream = LxStream<int>(
-      first.stream,
-      completionPolicy: LxStreamCompletionPolicy.retain,
-    );
-    final statuses = <LxStatus<int>>[];
-    void listener() => statuses.add(stream.status);
-    stream.addListener(listener);
+  test(
+    'retain preserves the final value and permits explicit restart',
+    () async {
+      final first = StreamController<int>();
+      final second = StreamController<int>();
+      final stream = LxStream<int>(
+        first.stream,
+        completionPolicy: LxStreamCompletionPolicy.retain,
+      );
+      final statuses = <LxStatus<int>>[];
+      void listener() => statuses.add(stream.status);
+      stream.addListener(listener);
 
-    first.add(1);
-    await first.close();
-    await Future<void>.delayed(Duration.zero);
+      first.add(1);
+      await first.close();
+      await Future<void>.delayed(Duration.zero);
 
-    expect(stream.isDisposed, isFalse);
-    expect(stream.status, const LxSuccess<int>(1));
+      expect(stream.isDisposed, isFalse);
+      expect(stream.status, const LxSuccess<int>(1));
 
-    stream.restart(second.stream);
-    second.add(2);
-    await Future<void>.delayed(Duration.zero);
+      stream.restart(second.stream);
+      second.add(2);
+      await Future<void>.delayed(Duration.zero);
 
-    expect(stream.status, const LxSuccess<int>(2));
-    expect(statuses.whereType<LxSuccess<int>>().map((s) => s.value), [1, 2]);
+      expect(stream.status, const LxSuccess<int>(2));
+      expect(statuses.whereType<LxSuccess<int>>().map((s) => s.value), [1, 2]);
 
-    await second.close();
-    stream.close();
-  });
+      await second.close();
+      stream.close();
+    },
+  );
 
   test('retain becomes idle when a source completes without a value', () async {
     final controller = StreamController<int>();
@@ -64,24 +66,26 @@ void main() {
     stream.close();
   });
 
-  test('stale completion from an old binding cannot close a restarted stream',
-      () async {
-    final first = StreamController<int>();
-    final second = StreamController<int>();
-    final stream = LxStream<int>(
-      first.stream,
-      completionPolicy: LxStreamCompletionPolicy.retain,
-    );
-    void listener() {}
-    stream.addListener(listener);
+  test(
+    'stale completion from an old binding cannot close a restarted stream',
+    () async {
+      final first = StreamController<int>();
+      final second = StreamController<int>();
+      final stream = LxStream<int>(
+        first.stream,
+        completionPolicy: LxStreamCompletionPolicy.retain,
+      );
+      void listener() {}
+      stream.addListener(listener);
 
-    stream.restart(second.stream);
-    await first.close();
-    second.add(3);
-    await Future<void>.delayed(Duration.zero);
+      stream.restart(second.stream);
+      await first.close();
+      second.add(3);
+      await Future<void>.delayed(Duration.zero);
 
-    expect(stream.status, const LxSuccess<int>(3));
-    await second.close();
-    stream.close();
-  });
+      expect(stream.status, const LxSuccess<int>(3));
+      await second.close();
+      stream.close();
+    },
+  );
 }

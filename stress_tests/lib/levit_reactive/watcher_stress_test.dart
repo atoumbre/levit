@@ -5,7 +5,8 @@ void main() {
   group('Stress Test: Watchers (LxWorker)', () {
     test('LxWorker Subscribe/Unsubscribe Churn - 10k cycles', () {
       print(
-          '[Description] Tests efficiency of creating and disposing LxWorker subscriptions.');
+        '[Description] Tests efficiency of creating and disposing LxWorker subscriptions.',
+      );
       final source = 0.lx;
       const cycles = 10000;
 
@@ -18,15 +19,17 @@ void main() {
 
       final opsPerMs = cycles / sw.elapsedMilliseconds;
       print(
-          'Performed $cycles LxWorker create/dispose cycles in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)');
+        'Performed $cycles LxWorker create/dispose cycles in ${sw.elapsedMilliseconds}ms (${opsPerMs.toStringAsFixed(0)} ops/ms)',
+      );
 
       source.close();
     });
 
     test('LxWorker Callback Flood - 100k rapid updates', () async {
       print(
-          '[Description] Tests LxWorker callback performance under flood conditions.');
-      final source = 0.lx;
+        '[Description] Tests LxWorker callback performance under flood conditions.',
+      );
+      final source = (-1).lx;
       const updates = 100000;
 
       var callbackCount = 0;
@@ -66,7 +69,8 @@ void main() {
 
       print('Toggled $toggles times in ${sw.elapsedMilliseconds}ms');
       print(
-          'LxWorker.isTrue fired: $trueCount, LxWorker.isFalse fired: $falseCount');
+        'LxWorker.isTrue fired: $trueCount, LxWorker.isFalse fired: $falseCount',
+      );
 
       expect(trueCount, toggles ~/ 2);
       expect(falseCount, toggles ~/ 2);

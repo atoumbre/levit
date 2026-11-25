@@ -9,8 +9,8 @@ final class _Implementation implements _Port {}
 
 void main() {
   group('Levit Dependency Management', () {
-    setUp(() {
-      Levit.reset(force: true);
+    setUp(() async {
+      await Levit.reset(force: true);
     });
 
     test('Levit.delete removes dependency', () async {
@@ -58,9 +58,9 @@ void main() {
       final found = Levit.findOrNull<Service>();
       expect(found, service);
     });
-    test('toBuilder extension works', () {
+    test('explicit builder registration resolves its value', () {
       final service = Service();
-      final builder = service.toBuilder;
+      final builder = () => service;
       expect(builder(), service);
     });
 

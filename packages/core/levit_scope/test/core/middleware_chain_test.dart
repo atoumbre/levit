@@ -21,9 +21,9 @@ void main() {
 
       middleware.onDependencyInitCallback =
           (onInit, instance, scope, key, info) {
-        initCalled = true;
-        return onInit;
-      };
+            initCalled = true;
+            return onInit;
+          };
 
       // Trigger middleware chain
       scope.put(() => TestService());

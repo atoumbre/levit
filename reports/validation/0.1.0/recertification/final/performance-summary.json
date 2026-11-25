@@ -1,0 +1,722 @@
+[
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "notify_10000",
+    "roundMediansUs": {
+      "reference": [
+        147.0,
+        222.5,
+        249.0,
+        161.5,
+        243.5,
+        138.0
+      ],
+      "candidate": [
+        341.5,
+        395.0,
+        193.0,
+        143.5,
+        330.5,
+        178.0
+      ],
+      "before": [
+        383.0,
+        140.0,
+        139.0,
+        166.0,
+        329.5,
+        225.0
+      ]
+    },
+    "referenceUs": 192.0,
+    "candidateUs": 261.75,
+    "changePercent": 36.328125,
+    "beforeOptimizationUs": 195.5,
+    "optimizationChangePercent": 33.887468030690535
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "fanout_128_x_100",
+    "roundMediansUs": {
+      "reference": [
+        3211.5,
+        3265.0,
+        3142.0,
+        3095.5,
+        3039.0,
+        2978.0
+      ],
+      "candidate": [
+        3080.0,
+        3140.0,
+        3104.0,
+        3038.5,
+        3033.0,
+        3090.0
+      ],
+      "before": [
+        3165.0,
+        3092.5,
+        3126.5,
+        2942.5,
+        3022.0,
+        2919.0
+      ]
+    },
+    "referenceUs": 3118.75,
+    "candidateUs": 3085.0,
+    "changePercent": -1.0821643286573202,
+    "beforeOptimizationUs": 3057.25,
+    "optimizationChangePercent": 0.9076784692125361
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "scope_lifetime_100",
+    "roundMediansUs": {
+      "reference": [
+        252.0,
+        257.0,
+        252.0,
+        244.0,
+        248.0,
+        247.5
+      ],
+      "candidate": [
+        352.5,
+        348.5,
+        336.5,
+        343.0,
+        341.5,
+        335.5
+      ],
+      "before": [
+        404.5,
+        354.5,
+        357.0,
+        350.0,
+        353.5,
+        350.5
+      ]
+    },
+    "referenceUs": 250.0,
+    "candidateUs": 342.25,
+    "changePercent": 36.9,
+    "beforeOptimizationUs": 354.0,
+    "optimizationChangePercent": -3.319209039548021
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "tasks_100",
+    "roundMediansUs": {
+      "reference": [
+        159.5,
+        170.0,
+        162.0,
+        158.0,
+        158.0,
+        160.0
+      ],
+      "candidate": [
+        262.0,
+        268.0,
+        259.0,
+        256.0,
+        253.0,
+        252.0
+      ],
+      "before": [
+        480.0,
+        487.5,
+        476.5,
+        469.0,
+        492.5,
+        474.0
+      ]
+    },
+    "referenceUs": 159.75,
+    "candidateUs": 257.5,
+    "changePercent": 61.18935837245696,
+    "beforeOptimizationUs": 478.25,
+    "optimizationChangePercent": -46.1578672242551
+  },
+  {
+    "mode": "profile",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "roundMediansUs": {
+      "reference": [
+        8277.0,
+        8234.5,
+        8306.0,
+        8327.5,
+        8326.5,
+        8336.5
+      ],
+      "candidate": [
+        8275.0,
+        8295.0,
+        8287.5,
+        8313.0,
+        8333.5,
+        8323.5
+      ],
+      "before": [
+        8248.5,
+        8305.5,
+        8300.5,
+        8324.0,
+        8328.5,
+        8313.5
+      ]
+    },
+    "referenceUs": 8316.25,
+    "candidateUs": 8304.0,
+    "changePercent": -0.14730196903652848,
+    "beforeOptimizationUs": 8309.5,
+    "optimizationChangePercent": -0.06618930140200874
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "notify_10000",
+    "roundMediansUs": {
+      "reference": [
+        42753.0,
+        43676.0,
+        43973.5,
+        42110.5,
+        44429.5,
+        42007.0
+      ],
+      "candidate": [
+        86946.0,
+        87504.0,
+        87924.5,
+        81075.5,
+        82970.0,
+        81600.0
+      ],
+      "before": [
+        127814.0,
+        126441.5,
+        125192.0,
+        132644.5,
+        123645.0,
+        123899.0
+      ]
+    },
+    "referenceUs": 43214.5,
+    "candidateUs": 84958.0,
+    "changePercent": 96.59604993694246,
+    "beforeOptimizationUs": 125816.75,
+    "optimizationChangePercent": -32.474809594112074
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "fanout_128_x_100",
+    "roundMediansUs": {
+      "reference": [
+        59460.5,
+        60280.0,
+        59410.5,
+        57595.5,
+        57895.0,
+        58469.5
+      ],
+      "candidate": [
+        115249.5,
+        117728.0,
+        116441.0,
+        108457.0,
+        109301.0,
+        108926.0
+      ],
+      "before": [
+        169526.5,
+        168424.5,
+        172658.0,
+        167858.5,
+        168658.0,
+        167172.5
+      ]
+    },
+    "referenceUs": 58940.0,
+    "candidateUs": 112275.25,
+    "changePercent": 90.49075330844927,
+    "beforeOptimizationUs": 168541.25,
+    "optimizationChangePercent": -33.38411219805241
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "scope_lifetime_100",
+    "roundMediansUs": {
+      "reference": [
+        3903.0,
+        3845.5,
+        3909.5,
+        3946.5,
+        3843.5,
+        3701.0
+      ],
+      "candidate": [
+        15524.5,
+        15335.0,
+        14622.0,
+        14148.5,
+        14271.5,
+        14360.0
+      ],
+      "before": [
+        23471.5,
+        23801.5,
+        23603.5,
+        22963.5,
+        23119.5,
+        22713.5
+      ]
+    },
+    "referenceUs": 3874.25,
+    "candidateUs": 14491.0,
+    "changePercent": 274.03368393882687,
+    "beforeOptimizationUs": 23295.5,
+    "optimizationChangePercent": -37.794853083213496
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "tasks_100",
+    "roundMediansUs": {
+      "reference": [
+        163.0,
+        165.5,
+        176.0,
+        158.0,
+        158.0,
+        169.0
+      ],
+      "candidate": [
+        275.0,
+        267.5,
+        293.5,
+        262.0,
+        267.0,
+        264.0
+      ],
+      "before": [
+        483.5,
+        488.0,
+        487.5,
+        475.5,
+        484.5,
+        490.5
+      ]
+    },
+    "referenceUs": 164.25,
+    "candidateUs": 267.25,
+    "changePercent": 62.70928462709284,
+    "beforeOptimizationUs": 486.0,
+    "optimizationChangePercent": -45.01028806584362
+  },
+  {
+    "mode": "profile",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "roundMediansUs": {
+      "reference": [
+        8227.0,
+        8284.5,
+        8283.0,
+        8288.5,
+        8311.0,
+        8282.0
+      ],
+      "candidate": [
+        8326.5,
+        8313.5,
+        8320.5,
+        8339.5,
+        8318.5,
+        8312.5
+      ],
+      "before": [
+        8226.0,
+        8279.0,
+        8308.5,
+        8353.5,
+        8312.0,
+        8332.5
+      ]
+    },
+    "referenceUs": 8283.75,
+    "candidateUs": 8319.5,
+    "changePercent": 0.4315678285800484,
+    "beforeOptimizationUs": 8310.25,
+    "optimizationChangePercent": 0.11130832405763513
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "notify_10000",
+    "roundMediansUs": {
+      "reference": [
+        375.0,
+        179.0,
+        141.0,
+        147.0,
+        333.0,
+        163.0
+      ],
+      "candidate": [
+        170.0,
+        212.0,
+        147.5,
+        144.0,
+        376.0,
+        334.0
+      ],
+      "before": [
+        146.0,
+        145.0,
+        179.5,
+        150.0,
+        145.5,
+        289.5
+      ]
+    },
+    "referenceUs": 171.0,
+    "candidateUs": 191.0,
+    "changePercent": 11.695906432748536,
+    "beforeOptimizationUs": 148.0,
+    "optimizationChangePercent": 29.054054054054056
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "fanout_128_x_100",
+    "roundMediansUs": {
+      "reference": [
+        2772.5,
+        2927.5,
+        2918.5,
+        2963.0,
+        2773.5,
+        2746.5
+      ],
+      "candidate": [
+        2914.5,
+        3013.0,
+        3046.5,
+        2894.0,
+        2875.5,
+        2837.5
+      ],
+      "before": [
+        3030.5,
+        3138.0,
+        3014.5,
+        2841.5,
+        2891.0,
+        2830.0
+      ]
+    },
+    "referenceUs": 2846.0,
+    "candidateUs": 2904.25,
+    "changePercent": 2.046732255797612,
+    "beforeOptimizationUs": 2952.75,
+    "optimizationChangePercent": -1.6425366184065648
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "scope_lifetime_100",
+    "roundMediansUs": {
+      "reference": [
+        234.0,
+        234.0,
+        241.5,
+        247.5,
+        236.0,
+        243.0
+      ],
+      "candidate": [
+        347.0,
+        360.0,
+        354.5,
+        359.0,
+        359.5,
+        338.0
+      ],
+      "before": [
+        359.5,
+        407.0,
+        363.5,
+        358.0,
+        336.5,
+        338.0
+      ]
+    },
+    "referenceUs": 238.75,
+    "candidateUs": 356.75,
+    "changePercent": 49.4240837696335,
+    "beforeOptimizationUs": 358.75,
+    "optimizationChangePercent": -0.5574912891986084
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "tasks_100",
+    "roundMediansUs": {
+      "reference": [
+        154.0,
+        155.0,
+        158.5,
+        160.5,
+        154.0,
+        159.0
+      ],
+      "candidate": [
+        253.0,
+        262.0,
+        258.0,
+        251.5,
+        260.5,
+        247.0
+      ],
+      "before": [
+        491.5,
+        498.5,
+        475.0,
+        483.5,
+        456.5,
+        457.0
+      ]
+    },
+    "referenceUs": 156.75,
+    "candidateUs": 255.5,
+    "changePercent": 62.998405103668254,
+    "beforeOptimizationUs": 479.25,
+    "optimizationChangePercent": -46.68753260302556
+  },
+  {
+    "mode": "release",
+    "diagnostics": false,
+    "workload": "list_1000_frame",
+    "roundMediansUs": {
+      "reference": [
+        8334.5,
+        8258.5,
+        8371.5,
+        8291.0,
+        8342.0,
+        8323.0
+      ],
+      "candidate": [
+        8313.5,
+        8343.5,
+        8332.0,
+        8312.5,
+        8324.5,
+        8343.5
+      ],
+      "before": [
+        8324.5,
+        8322.0,
+        8342.5,
+        8313.5,
+        8306.5,
+        8336.0
+      ]
+    },
+    "referenceUs": 8328.75,
+    "candidateUs": 8328.25,
+    "changePercent": -0.006003301815993289,
+    "beforeOptimizationUs": 8323.25,
+    "optimizationChangePercent": 0.06007268795242826
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "notify_10000",
+    "roundMediansUs": {
+      "reference": [
+        45385.5,
+        44867.0,
+        43981.0,
+        44039.5,
+        42564.5,
+        42303.5
+      ],
+      "candidate": [
+        81319.0,
+        81776.5,
+        81477.0,
+        83853.0,
+        85600.0,
+        84432.5
+      ],
+      "before": [
+        117889.5,
+        119282.5,
+        120603.5,
+        148910.5,
+        124136.0,
+        122739.5
+      ]
+    },
+    "referenceUs": 44010.25,
+    "candidateUs": 82814.75,
+    "changePercent": 88.1715055015593,
+    "beforeOptimizationUs": 121671.5,
+    "optimizationChangePercent": -31.93578611260649
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "fanout_128_x_100",
+    "roundMediansUs": {
+      "reference": [
+        62424.0,
+        60350.0,
+        59620.5,
+        58254.0,
+        57218.0,
+        60665.5
+      ],
+      "candidate": [
+        109264.5,
+        109988.0,
+        109205.0,
+        109811.5,
+        116827.5,
+        114530.0
+      ],
+      "before": [
+        154990.5,
+        155084.0,
+        158768.5,
+        171836.0,
+        161903.0,
+        160081.5
+      ]
+    },
+    "referenceUs": 59985.25,
+    "candidateUs": 109899.75,
+    "changePercent": 83.21128944198782,
+    "beforeOptimizationUs": 159425.0,
+    "optimizationChangePercent": -31.064920809157915
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "scope_lifetime_100",
+    "roundMediansUs": {
+      "reference": [
+        4171.5,
+        3976.5,
+        3785.0,
+        3804.5,
+        3791.5,
+        3916.0
+      ],
+      "candidate": [
+        14593.0,
+        14434.5,
+        14667.0,
+        14588.0,
+        15068.5,
+        15336.5
+      ],
+      "before": [
+        22607.0,
+        21850.0,
+        22245.5,
+        23309.0,
+        23668.0,
+        23651.0
+      ]
+    },
+    "referenceUs": 3860.25,
+    "candidateUs": 14630.0,
+    "changePercent": 278.990997992358,
+    "beforeOptimizationUs": 22958.0,
+    "optimizationChangePercent": -36.27493684118826
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "tasks_100",
+    "roundMediansUs": {
+      "reference": [
+        157.0,
+        156.0,
+        162.5,
+        153.0,
+        153.0,
+        161.0
+      ],
+      "candidate": [
+        264.0,
+        260.0,
+        269.0,
+        266.0,
+        266.5,
+        275.5
+      ],
+      "before": [
+        471.0,
+        472.0,
+        471.0,
+        490.0,
+        521.0,
+        480.5
+      ]
+    },
+    "referenceUs": 156.5,
+    "candidateUs": 266.25,
+    "changePercent": 70.12779552715655,
+    "beforeOptimizationUs": 476.25,
+    "optimizationChangePercent": -44.09448818897638
+  },
+  {
+    "mode": "release",
+    "diagnostics": true,
+    "workload": "list_1000_frame",
+    "roundMediansUs": {
+      "reference": [
+        8297.0,
+        8302.0,
+        8337.5,
+        8331.5,
+        8308.0,
+        8327.5
+      ],
+      "candidate": [
+        8312.5,
+        8325.0,
+        8318.0,
+        8315.5,
+        8333.0,
+        8295.0
+      ],
+      "before": [
+        8328.0,
+        8318.0,
+        8328.0,
+        8311.0,
+        8327.5,
+        8323.0
+      ]
+    },
+    "referenceUs": 8317.75,
+    "candidateUs": 8316.75,
+    "changePercent": -0.012022482041418314,
+    "beforeOptimizationUs": 8325.25,
+    "optimizationChangePercent": -0.10209903606498427
+  }
+]
