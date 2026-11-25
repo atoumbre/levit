@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart_core/spi.dart';
 
 final class _Owner extends LevitScopeDisposable with LevitResourceOwnership {
   Iterable<Object> get resources => ownedResources;

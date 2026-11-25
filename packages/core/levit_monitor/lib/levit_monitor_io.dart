@@ -1,4 +1,4 @@
-/// IO-only file transport. Use levit_monitor.dart in browser applications.
+/// IO-only file transport. Use `levit_monitor.dart` in browser applications.
 library;
 
 export 'levit_monitor.dart';

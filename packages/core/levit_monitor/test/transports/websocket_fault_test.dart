@@ -5,6 +5,7 @@ import 'package:levit_monitor/levit_monitor.dart';
 import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:levit_monitor/spi.dart';
 
 class _MockSink implements WebSocketSink {
   bool closed = false;
@@ -103,13 +104,13 @@ class _MockChannelWithReadyError extends _MockChannel {
 }
 
 void main() {
-  group('WebSocketTransport Fault Handling', () {
+  group('LevitWebSocketTransport Fault Handling', () {
     test(
       'Handles invalid URL connection failure by scheduling reconnect',
       () async {
         int channelBuilderCalls = 0;
 
-        final transport = WebSocketTransport.connect(
+        final transport = LevitWebSocketTransport.connect(
           'ws://invalid-url',
           allowInsecureRemote: true,
           channelBuilder: (uri) {
@@ -126,7 +127,7 @@ void main() {
 
     test('Triggers onReady callback when ready future completes', () async {
       int onReadyCalls = 0;
-      final transport = WebSocketTransport.connect(
+      final transport = LevitWebSocketTransport.connect(
         'ws://localhost',
         channelBuilder: (uri) => _MockChannel(),
         onReady: (t) {
@@ -141,7 +142,7 @@ void main() {
 
     test('Handles ready future error and triggers onError callback', () async {
       int onErrorCalls = 0;
-      final transport = WebSocketTransport.connect(
+      final transport = LevitWebSocketTransport.connect(
         'ws://localhost',
         channelBuilder: (uri) => _MockChannelWithReadyError(),
         onError: (e) {
@@ -159,7 +160,7 @@ void main() {
       final mockChannel = _MockChannel();
       int connectCount = 0;
 
-      final transport = WebSocketTransport.connect(
+      final transport = LevitWebSocketTransport.connect(
         'ws://localhost',
         channelBuilder: (uri) {
           connectCount++;
@@ -172,7 +173,7 @@ void main() {
       mockChannel._sink.closed = true;
 
       final rx = 0.lx.named('test');
-      transport.send(ReactiveInitEvent(sessionId: 's', reactive: rx));
+      transport.send(LevitReactiveInitEvent(sessionId: 's', reactive: rx));
 
       await Future.delayed(Duration(milliseconds: 1100));
       expect(connectCount, greaterThanOrEqualTo(2));

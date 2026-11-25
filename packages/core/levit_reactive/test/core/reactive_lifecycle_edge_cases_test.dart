@@ -109,7 +109,7 @@ class _SetCountMiddleware extends LevitReactiveMiddleware {
   int setCount = 0;
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     return (value) {
       setCount++;
       next(value);

@@ -14,9 +14,10 @@ test), then pick the matching scope widget or Levit.createScope.
 Imports
 -------
 
-- Flutter: package:levit_flutter/levit_flutter.dart
-- Pure Dart: package:levit/levit.dart
-- Core packages only when kits are insufficient.
+- Flutter: package:levit_flutter/levit_flutter.dart (+ package:levit_flutter/tasks.dart for advanced task engine/groups/cache/middleware)
+- Pure Dart: package:levit/levit.dart (+ package:levit/tasks.dart for advanced task orchestration)
+- Kits hide low-level `Lx` and `Ls` facades; use `Levit` (`Levit.currentScope`, `Levit.untracked`, `Levit.batch`, `Levit.isBatching`, `Levit.put`/`find`).
+- Core packages only when kits are insufficient; cross-package runtime hooks live in `package:<pkg>/spi.dart`.
 
 Layering: levit_flutter → levit_flutter_core + levit_dart → levit_dart_core →
 levit_scope + levit_reactive. Add levit_monitor only for diagnostics.
@@ -53,7 +54,7 @@ Always await Levit.delete, Levit.reset, scope.dispose, and Levit.runInScope.
 An instantiated registration must be deleted and awaited before replacement.
 
 Flutter scope widgets: LScope, LAsyncScope, LScope.put, LScopedView,
-LScopedAsyncView, LRouteScope, LAsyncRouteScope, LScope.capture,
+LAsyncScopedView, LRouteScope, LAsyncRouteScope, LScope.capture,
 showLevitDialog / showLevitModalBottomSheet (kit).
 Omitted name/scopeName values are auto-unique; set them only for stable labels.
 Do not manually create/dispose scopes in normal widget code.
@@ -96,7 +97,7 @@ Flutter Widgets
   do not wrap the entire return in LWatch
 - LBuilder / LSelectorBuilder / LStatusBuilder — page UI kits
 - LView / LAsyncView — consume existing scope dependency
-- LScopedView.put or subclass + onConfigScope — create scope + controller
+- LScopedView.put or subclass + onConfigureScope — create scope + controller
 
 Borrow Flutter APIs with source.asValueListenable(); retain/own the adapter outside
 build. Disposal unsubscribes without closing the source.
@@ -111,7 +112,7 @@ route-tied ownership (examples/route_scopes).
 Widget tests
 ------------
 
-Mount LScope + dependencyFactory; capture scope in the factory and await
+Mount LScope + configure; capture scope in the factory and await
 scope disposal. Prefer isolated scopes over global reset.
 
 
@@ -127,12 +128,12 @@ Tasks (levit_dart)
 
 - LevitReactiveTasksMixin — runTask, task selectors, blocking/progress state
 - LevitTasksMixin — engine-only scheduling/retries
-- TaskConflictPolicy — reject (default), join, drop, restart, enqueue,
+- LevitTaskConflictPolicy — reject (default), join, drop, restart, enqueue,
   coalesceLatest
 - LevitTaskContext — cooperative cancellation, progress, execution metadata
 - LevitTaskMiddleware / LevitTaskTracker — structured events / aggregate state
 - scheduleIsolate / submitIsolate / runIsolateTask — explicit isolate work
-- LevitTimeMixin, LevitSelectionMixin, LevitLoopExecutionMixin
+- LevitTimeMixin, LevitSelectionMixin, LevitLoopMixin
 
 
 Middleware

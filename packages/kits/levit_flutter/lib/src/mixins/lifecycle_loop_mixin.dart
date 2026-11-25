@@ -5,9 +5,8 @@ part of '../../levit_flutter.dart';
 /// Automatically pauses all tasks in the [loopEngine] when the app enters the
 /// background, and resumes them when the app returns to the foreground.
 ///
-/// Requires [LevitLoopExecutionMixin].
-mixin LevitLoopExecutionLifecycleMixin
-    on LevitController, LevitLoopExecutionMixin {
+/// Requires [LevitLoopMixin].
+mixin LevitLoopLifecycleMixin on LevitController, LevitLoopMixin {
   _LifecycleLoopObserver? _lifecycleObserver;
 
   void _detachLifecycleObserver() {
@@ -39,14 +38,14 @@ mixin LevitLoopExecutionLifecycleMixin
     return super.onClose();
   }
 
-  /// Whether to pause services marked as "permanent" during the app backgrounding.
+  /// Whether to pause services marked as "permanent" when the app is backgrounded.
   ///
   /// Defaults to `false` (permanent services continue running).
-  bool get pauseLifecycleServicesForce => false;
+  bool get pausePermanentServicesOnBackground => false;
 }
 
 class _LifecycleLoopObserver with WidgetsBindingObserver {
-  final LevitLoopExecutionLifecycleMixin _mixin;
+  final LevitLoopLifecycleMixin _mixin;
 
   _LifecycleLoopObserver(this._mixin);
 
@@ -56,7 +55,7 @@ class _LifecycleLoopObserver with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.resumed:
         _mixin.loopEngine.resumeAllServices(
-          force: _mixin.pauseLifecycleServicesForce,
+          force: _mixin.pausePermanentServicesOnBackground,
         );
         break;
       case AppLifecycleState.paused:
@@ -64,7 +63,7 @@ class _LifecycleLoopObserver with WidgetsBindingObserver {
       case AppLifecycleState.hidden:
       case AppLifecycleState.detached:
         _mixin.loopEngine.pauseAllServices(
-          force: _mixin.pauseLifecycleServicesForce,
+          force: _mixin.pausePermanentServicesOnBackground,
         );
         break;
     }

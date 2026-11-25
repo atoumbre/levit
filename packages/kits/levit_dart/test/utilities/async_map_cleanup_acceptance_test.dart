@@ -3,6 +3,7 @@ import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
 import 'task_group_acceptance_test.dart' show ReactiveTaskOwner;
+import 'package:levit_dart/tasks.dart';
 
 void main() {
   test(
@@ -122,7 +123,7 @@ void main() {
         LxWaiting<Object?>.retained(null),
         LxError<Object?>.retained(error, null),
       ]) {
-        owner.tasks['nullable'] = TaskDetails(status: status);
+        owner.tasks['nullable'] = LevitTaskDetails(status: status);
         final selected = owner.taskStatus<String?>('nullable');
         expect(selected.hasLastValue, isTrue);
         expect(selected.lastValue, isNull);

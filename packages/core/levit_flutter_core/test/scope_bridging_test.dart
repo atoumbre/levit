@@ -21,7 +21,7 @@ void main() {
     // 2. Widget Tree with LScope
     await tester.pumpWidget(
       LScope(
-        dependencyFactory: (scope) {
+        configure: (scope) {
           scope.put(() => TestService('Scoped'), tag: 'test');
         },
         child: LWatch(() {
@@ -59,7 +59,7 @@ void main() {
 
     await tester.pumpWidget(
       LScope(
-        dependencyFactory: (scope) {
+        configure: (scope) {
           scope.put(() => TestService('Scoped'), tag: 'test');
         },
         child: LBuilder(count, (val) {

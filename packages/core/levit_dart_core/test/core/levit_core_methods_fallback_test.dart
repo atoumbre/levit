@@ -1,5 +1,6 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart_core/spi.dart';
 
 void main() {
   group('Dependency lookup and reactive capture', () {
@@ -51,7 +52,7 @@ void main() {
         Levit.enableAutoLinking();
 
         // runCaptured without ownerId (auto_linking.dart line 60)
-        runCapturedForTesting(() => 1);
+        LevitAutoLinkSpi.runCaptured(() => 1);
 
         // Chained capture and Adoption in processInstance (auto_linking.dart 184-185)
         Levit.put(() {

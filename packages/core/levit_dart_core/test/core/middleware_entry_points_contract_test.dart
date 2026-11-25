@@ -96,16 +96,16 @@ class _ReactiveRecordingMiddleware implements LevitReactiveMiddleware {
   _ReactiveRecordingMiddleware(this.id, this.calls);
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     calls.add(id);
     return next;
   };
 
   @override
-  LxOnBatch? get onBatch => null;
+  LevitReactiveOnBatch? get onBatch => null;
 
   @override
-  LxOnDispose? get onDispose => null;
+  LevitReactiveOnDispose? get onDispose => null;
 
   @override
   void Function(LxReactive)? get onInit => null;

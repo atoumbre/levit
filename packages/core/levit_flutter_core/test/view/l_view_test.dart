@@ -33,7 +33,7 @@ void main() {
           Directionality(
             textDirection: TextDirection.ltr,
             child: LScope(
-              dependencyFactory: (s) => s.put<int>(() => 42),
+              configure: (s) => s.put<int>(() => 42),
               child: const CustomView(),
             ),
           ),
@@ -50,7 +50,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put<int>(() => 0),
+            configure: (s) => s.put<int>(() => 0),
             child: const ThrowingView(),
           ),
         ),
@@ -70,7 +70,7 @@ void main() {
           child: LScopedView<int>(
             key: const ValueKey('scoped_view_root'),
             args: [argsValue],
-            dependencyFactory: (s) {
+            configure: (s) {
               initCount++;
               s.put<int>(() => argsValue);
             },

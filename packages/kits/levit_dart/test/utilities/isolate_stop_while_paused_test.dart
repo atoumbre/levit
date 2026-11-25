@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 void _noopLoopBody() {}
 void _fastLoopBody() {}
 
-class TestLoopController extends LevitController with LevitLoopExecutionMixin {}
+class TestLoopController extends LevitController with LevitLoopMixin {}
 
 void main() {
   group('Isolate loop pause, resume, and stop', () {

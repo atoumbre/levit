@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 class TestTasksController extends LevitController with LevitReactiveTasksMixin {
   @override
@@ -90,7 +91,7 @@ void main() {
     test('onTaskError setter reconfigures an existing task engine', () async {
       final errors = <Object>[];
 
-      controller.tasksEngine;
+      controller.taskEngine;
       controller.onTaskError = (error, _) => errors.add(error);
 
       await expectLater(
@@ -110,7 +111,7 @@ void main() {
 
       expect(
         () => controller.runTask((_) async => 'duplicate', id: 'dup'),
-        throwsA(isA<TaskConflictException>()),
+        throwsA(isA<LevitTaskConflictException>()),
       );
 
       completer.complete();
@@ -181,7 +182,7 @@ void main() {
     test(
       'caching policy handles expiration and deserialization failure',
       () async {
-        final cachePolicy = TaskCachePolicy<int>(
+        final cachePolicy = LevitTaskCachePolicy<int>(
           ttl: const Duration(seconds: 1),
           toJson: (v) => {'v': v},
           fromJson: (json) {
@@ -206,7 +207,7 @@ void main() {
         expect(result, 42, reason: 'Should return cached value');
 
         // 2. Deserialization failure
-        await controller.tasksEngine.cacheProvider.write('cache_fail', {
+        await controller.taskEngine.cacheProvider.write('cache_fail', {
           'expiresAt': DateTime.now()
               .add(const Duration(hours: 1))
               .millisecondsSinceEpoch,
@@ -224,7 +225,7 @@ void main() {
         );
 
         // 3. Expiration
-        await controller.tasksEngine.cacheProvider.write('cache_expire', {
+        await controller.taskEngine.cacheProvider.write('cache_expire', {
           'expiresAt': DateTime.now()
               .subtract(const Duration(hours: 1))
               .millisecondsSinceEpoch,
@@ -259,7 +260,7 @@ void main() {
       final task = controller.runTask((_) => completer.future, id: 'cancel_me');
       await Future<void>.delayed(Duration.zero);
 
-      controller.tasksEngine.cancel('cancel_me');
+      controller.taskEngine.cancel('cancel_me');
       completer.complete('done');
 
       await expectLater(task, throwsA(isA<LevitTaskCancelledException>()));
@@ -276,20 +277,20 @@ void main() {
       final controller = SimpleTasksController();
       controller.onInit();
 
-      final cachePolicy = TaskCachePolicy<String>(
+      final cachePolicy = LevitTaskCachePolicy<String>(
         ttl: const Duration(hours: 1),
         toJson: (v) => {'data': v},
         fromJson: (j) => j['data'] as String,
       );
 
-      final r1 = await controller.tasksEngine.schedule(
+      final r1 = await controller.taskEngine.schedule(
         (_) async => 'hello',
         id: 't1',
         cachePolicy: cachePolicy,
       );
       expect(r1, 'hello');
 
-      final r2 = await controller.tasksEngine.schedule(
+      final r2 = await controller.taskEngine.schedule(
         (_) async => 'world',
         id: 't1',
         cachePolicy: cachePolicy,

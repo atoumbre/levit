@@ -1,20 +1,21 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class MockController extends LevitController {}
 
 void main() {
   group('Snapshot dependency disposal and serialization', () {
-    late StateSnapshot state;
+    late LevitStateSnapshot state;
     final sid = 'test-session';
 
     setUp(() {
-      state = StateSnapshot();
+      state = LevitStateSnapshot();
     });
 
     test('Apply Scope Events', () {
-      final event = ScopeCreateEvent(
+      final event = LevitScopeCreateEvent(
         sessionId: sid,
         scopeId: 1,
         scopeName: 'child',
@@ -24,7 +25,7 @@ void main() {
       expect(state.scopes[1]?.name, 'child');
       expect(event.toJson()['type'], 'scope_create');
 
-      final dispose = ScopeDisposeEvent(
+      final dispose = LevitScopeDisposeEvent(
         sessionId: sid,
         scopeId: 1,
         scopeName: 'child',
@@ -33,9 +34,12 @@ void main() {
       expect(dispose.toJson()['type'], 'scope_dispose');
       expect(state.scopes.containsKey(1), isFalse);
 
-      // Test ConsoleTransport and serialization coverage
-      final events = <MonitorEvent>[event, dispose]; // Use MonitorEvent
-      final transport = ConsoleTransport();
+      // Test LevitConsoleTransport and serialization coverage
+      final events = <LevitMonitorEvent>[
+        event,
+        dispose,
+      ]; // Use LevitMonitorEvent
+      final transport = LevitConsoleTransport();
       final rx = 0.lx; // Define rx for the transportWithOverrides part
 
       for (final e in events) {
@@ -47,17 +51,17 @@ void main() {
       }
 
       // Cover overrides (line 226, 228)
-      final transportWithOverrides = ConsoleTransport(
+      final transportWithOverrides = LevitConsoleTransport(
         levelOverrides: LevitLogLevelConfig(
           listenerAdd: LevitLogLevel.info,
           listenerRemove: LevitLogLevel.info,
         ),
       );
       transportWithOverrides.send(
-        ReactiveListenerAddedEvent(sessionId: sid, reactive: rx),
+        LevitReactiveListenerAddedEvent(sessionId: sid, reactive: rx),
       );
       transportWithOverrides.send(
-        ReactiveListenerRemovedEvent(sessionId: sid, reactive: rx),
+        LevitReactiveListenerRemovedEvent(sessionId: sid, reactive: rx),
       );
       transportWithOverrides.close();
     });
@@ -65,7 +69,7 @@ void main() {
     test('Apply Dependency Events', () {
       final info = LevitDependency(isLazy: true, isFactory: false);
       state.applyEvent(
-        DependencyRegisterEvent(
+        LevitDependencyRegisterEvent(
           sessionId: sid,
           scopeId: 10,
           scopeName: 'Scope10',
@@ -76,7 +80,7 @@ void main() {
       );
 
       state.applyEvent(
-        DependencyInstanceReadyEvent(
+        LevitDependencyInstanceReadyEvent(
           sessionId: sid,
           scopeId: 10,
           scopeName: 'Scope10',
@@ -91,7 +95,7 @@ void main() {
       expect(state.dependencies['10:DepA']?.toJson(), isNotEmpty);
 
       state.applyEvent(
-        DependencyDeleteEvent(
+        LevitDependencyDeleteEvent(
           sessionId: sid,
           scopeId: 10,
           scopeName: 'Scope10',
@@ -103,10 +107,10 @@ void main() {
       expect(state.dependencies.containsKey('10:DepA'), isFalse);
     });
 
-    test('DependencyType detection', () {
+    test('LevitDependencyType detection', () {
       final sid = 'sid';
       state.applyEvent(
-        DependencyRegisterEvent(
+        LevitDependencyRegisterEvent(
           sessionId: sid,
           scopeId: 1,
           scopeName: 's1',
@@ -117,7 +121,7 @@ void main() {
       );
 
       state.applyEvent(
-        DependencyInstanceReadyEvent(
+        LevitDependencyInstanceReadyEvent(
           sessionId: sid,
           scopeId: 1,
           scopeName: 's1',
@@ -127,7 +131,10 @@ void main() {
         ),
       );
 
-      expect(state.dependencies['1:ctrl']?.type, DependencyType.controller);
+      expect(
+        state.dependencies['1:ctrl']?.type,
+        LevitDependencyType.controller,
+      );
     });
 
     test('Apply Reactive Events', () {
@@ -135,26 +142,26 @@ void main() {
       rx.name = 'counter';
       rx.ownerId = '1:ctrl';
 
-      state.applyEvent(ReactiveInitEvent(sessionId: sid, reactive: rx));
+      state.applyEvent(LevitReactiveInitEvent(sessionId: sid, reactive: rx));
       expect(state.variables[rx.id]?.toJson(), isNotEmpty);
 
       state.applyEvent(
-        ReactiveListenerAddedEvent(sessionId: sid, reactive: rx),
+        LevitReactiveListenerAddedEvent(sessionId: sid, reactive: rx),
       );
       expect(state.variables[rx.id]?.listenerCount, 1);
 
       // Update owner info (line 155-156)
       rx.ownerId = '2:new_ctrl';
-      state.applyEvent(ReactiveInitEvent(sessionId: sid, reactive: rx));
+      state.applyEvent(LevitReactiveInitEvent(sessionId: sid, reactive: rx));
       expect(state.variables[rx.id]?.scopeId, 2);
 
       state.applyEvent(
-        ReactiveListenerRemovedEvent(sessionId: sid, reactive: rx),
+        LevitReactiveListenerRemovedEvent(sessionId: sid, reactive: rx),
       );
       expect(state.variables[rx.id]?.listenerCount, 0);
 
       state.applyEvent(
-        ReactiveChangeEvent(
+        LevitReactiveChangeEvent(
           sessionId: sid,
           reactive: rx,
           change: LevitReactiveChange(
@@ -166,14 +173,14 @@ void main() {
         ),
       );
 
-      state.applyEvent(ReactiveDisposeEvent(sessionId: sid, reactive: rx));
+      state.applyEvent(LevitReactiveDisposeEvent(sessionId: sid, reactive: rx));
       expect(state.variables.containsKey(rx.id), isFalse);
     });
 
     test('disposing a scope removes its dependencies from the snapshot', () {
       final sid = 'sid';
       state.applyEvent(
-        ScopeCreateEvent(
+        LevitScopeCreateEvent(
           sessionId: sid,
           scopeId: 1,
           scopeName: 's1',
@@ -181,7 +188,7 @@ void main() {
         ),
       );
       state.applyEvent(
-        DependencyRegisterEvent(
+        LevitDependencyRegisterEvent(
           sessionId: sid,
           scopeId: 1,
           scopeName: 's1',
@@ -193,7 +200,7 @@ void main() {
       expect(state.dependencies.containsKey('1:k1'), isTrue);
 
       state.applyEvent(
-        ScopeDisposeEvent(sessionId: sid, scopeId: 1, scopeName: 's1'),
+        LevitScopeDisposeEvent(sessionId: sid, scopeId: 1, scopeName: 's1'),
       );
       expect(state.dependencies.containsKey('1:k1'), isFalse);
     });
@@ -227,19 +234,19 @@ void main() {
         ],
       };
 
-      final event = SnapshotEvent(sessionId: sid, state: snapshot);
+      final event = LevitSnapshotEvent(sessionId: sid, state: snapshot);
       state.applyEvent(event);
       expect(event.toJson()['type'], 'snapshot');
 
-      // Cover StateSnapshot full toJson
+      // Cover LevitStateSnapshot full toJson
       expect(state.toJson()['scopes'], isNotEmpty);
     });
 
-    test('ReactiveModel parseOwnerId variants', () {
-      final m1 = ReactiveModel(id: 1, name: 'n', ownerId: 'my_ctrl');
+    test('LevitReactiveModel parseOwnerId variants', () {
+      final m1 = LevitReactiveModel(id: 1, name: 'n', ownerId: 'my_ctrl');
       expect(m1.toJson()['ownerKey'], 'my_ctrl');
 
-      final m2 = ReactiveModel(id: 2, name: 'n', ownerId: '5:my_ctrl');
+      final m2 = LevitReactiveModel(id: 2, name: 'n', ownerId: '5:my_ctrl');
       expect(m2.scopeId, 5);
       expect(m2.toJson()['scopeId'], 5);
     });

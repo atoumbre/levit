@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:levit_flutter/levit_flutter.dart';
+import 'package:levit_monitor/spi.dart';
 
 /// Identical JSON serialization sink for both sides of a release comparison.
 /// It counts bytes without retaining payloads or measuring external IO.
@@ -11,7 +12,7 @@ class PerformanceSink extends LevitTransport {
   int bytes = 0;
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     bytes += utf8.encode(jsonEncode(event.toJson())).length;
     events++;
   }
@@ -32,7 +33,7 @@ class PerformanceMonitor {
   Future<void> flush() => middleware.flush();
   int get dropped => middleware.droppedEvents;
   bool get isAttached =>
-      Lx.containsMiddleware(middleware) ||
+      Levit.containsStateMiddleware(middleware) ||
       LevitScope.containsMiddleware(middleware);
 
   Future<void> close() async {

@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:levit_reactive/levit_reactive.dart';
+import 'package:levit_reactive/spi.dart';
 
 void main() {
   group('LevitReactiveNotifier', () {

@@ -7,13 +7,13 @@ class TestReactiveTasksController extends LevitController
     with LevitReactiveTasksMixin {}
 
 void main() {
-  group('LevitTasksMixin tasksEngine access', () {
+  group('LevitTasksMixin taskEngine access', () {
     test(
       'lazy-inits engine before onInit for manual test construction',
       () async {
         final controller = TestTasksController();
 
-        final result = await controller.tasksEngine.schedule((_) async => 'ok');
+        final result = await controller.taskEngine.schedule((_) async => 'ok');
 
         expect(result, 'ok');
         await controller.onClose();
@@ -24,13 +24,13 @@ void main() {
       'onInit reconfigures an engine created before initialization',
       () async {
         final controller = TestTasksController();
-        final engine = controller.tasksEngine;
+        final engine = controller.taskEngine;
         expect(engine.ownerPath, '?');
 
         controller.didAttachToScope(LevitScope.root('test'), key: 'test');
         controller.onInit();
 
-        expect(controller.tasksEngine, same(engine));
+        expect(controller.taskEngine, same(engine));
         expect(engine.ownerPath, controller.ownerPath);
         expect(engine.maxConcurrent, controller.maxConcurrentTasks);
 
@@ -44,25 +44,25 @@ void main() {
       await controller.onClose();
 
       expect(
-        () => controller.tasksEngine,
+        () => controller.taskEngine,
         throwsA(
           isA<StateError>().having(
             (e) => e.message,
             'message',
-            'tasksEngine accessed after the controller was closed.',
+            'taskEngine accessed after the controller was closed.',
           ),
         ),
       );
     });
   });
 
-  group('LevitReactiveTasksMixin tasksEngine access', () {
+  group('LevitReactiveTasksMixin taskEngine access', () {
     test(
       'lazy-inits engine before onInit for manual test construction',
       () async {
         final controller = TestReactiveTasksController();
 
-        final result = await controller.tasksEngine.schedule((_) async => 42);
+        final result = await controller.taskEngine.schedule((_) async => 42);
 
         expect(result, 42);
         await controller.onClose();
@@ -82,7 +82,7 @@ void main() {
       'onInit reconfigures an engine created before initialization',
       () async {
         final controller = TestReactiveTasksController();
-        final engine = controller.tasksEngine;
+        final engine = controller.taskEngine;
         expect(engine.ownerPath, '?');
 
         controller.didAttachToScope(
@@ -91,7 +91,7 @@ void main() {
         );
         controller.onInit();
 
-        expect(controller.tasksEngine, same(engine));
+        expect(controller.taskEngine, same(engine));
         expect(engine.ownerPath, controller.ownerPath);
         expect(engine.maxConcurrent, controller.maxConcurrentTasks);
 

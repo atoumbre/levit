@@ -1,4 +1,10 @@
-part of '../levit_scope.dart';
+part of 'scope_library.dart';
+
+/// Low-level runtime hooks exposed via `package:levit_scope/spi.dart`.
+abstract final class LsSpi {
+  /// The [Zone] key used to identify the active [LevitScope].
+  static final Object zoneScopeKey = Object();
+}
 
 /// The global entry point for accessing the [LevitScope] system.
 ///
@@ -14,16 +20,13 @@ part of '../levit_scope.dart';
 class Ls {
   static final _root = LevitScope.root();
 
-  /// The [Zone] key used to identifying the active [LevitScope].
-  static final Object zoneScopeKey = Object();
-
   /// Returns the currently active [LevitScope].
   ///
   /// If run within a [LevitScopeImplicitScopeExtension.run] zone, returns that
   /// scope.
   /// Otherwise, returns the global root scope.
   static LevitScope get currentScope {
-    final implicit = Zone.current[Ls.zoneScopeKey];
+    final implicit = Zone.current[LsSpi.zoneScopeKey];
     if (implicit is LevitScope) return implicit;
     return _root;
   }
@@ -183,6 +186,6 @@ extension LevitScopeImplicitScopeExtension on LevitScope {
   ///
   /// Returns the result of [callback].
   R run<R>(R Function() callback) {
-    return runZoned(callback, zoneValues: {Ls.zoneScopeKey: this});
+    return runZoned(callback, zoneValues: {LsSpi.zoneScopeKey: this});
   }
 }

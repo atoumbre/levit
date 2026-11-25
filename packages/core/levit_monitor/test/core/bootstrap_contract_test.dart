@@ -8,10 +8,10 @@ class Owner extends LevitController {
 }
 
 class RecordingTransport extends LevitTransport {
-  final events = <MonitorEvent>[];
+  final events = <LevitMonitorEvent>[];
   final received = Completer<void>();
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     events.add(event);
     if (event.toJson()['type'] == 'state_change' && !received.isCompleted) {
       received.complete();
@@ -28,7 +28,8 @@ void main() {
   test('documented bootstrap and monitor filtering pattern', () async {
     Levit.enableAutoLinking();
     LevitMonitor.setFilter(
-      (event) => event is! ReactiveEvent || event.toJson()['name'] != 'secret',
+      (event) =>
+          event is! LevitReactiveEvent || event.toJson()['name'] != 'secret',
     );
     final transport = RecordingTransport();
     await LevitMonitor.attach(transport: transport);

@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 /// Cooperative cancellation and completion for a reactive producer.
 abstract interface class LxAsyncResource {

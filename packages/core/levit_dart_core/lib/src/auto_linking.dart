@@ -1,4 +1,4 @@
-part of '../levit_dart_core.dart';
+part of 'dart_core_library.dart';
 
 final class _CaptureState {
   bool active = true;
@@ -25,8 +25,7 @@ class _AutoLinkScope {
     void Function(Future<void> operation)? onSettled,
   }) {
     R core() {
-      if (_activeCaptureScopes == 0 &&
-          !LevitReactiveMiddleware.hasInitMiddlewares) {
+      if (_activeCaptureScopes == 0 && !LxSpi.hasInitMiddlewares) {
         final result = builder();
         if (result is Future && onSettled != null) {
           onSettled(
@@ -96,7 +95,7 @@ class _AutoLinkScope {
     }
 
     if (ownerId != null) {
-      return Lx.runWithOwner(ownerId, core);
+      return LxSpi.runWithOwner(ownerId, core);
     }
     return core();
   }
@@ -151,7 +150,7 @@ class _AutoLinkScope {
       final state = _CaptureState();
       try {
         // `onInit` may return `Future` despite the static `void` signature.
-        final dynamic result = Lx.runWithOwner(
+        final dynamic result = LxSpi.runWithOwner(
           key,
           () => runZoned(
             () => instance is LevitResourceOwnership
@@ -208,14 +207,17 @@ class _AutoLinkMiddleware extends LevitReactiveMiddleware {
   @override
   void Function(LxReactive)? get onInit => (reactive) {
     // Fast exit when neither capture nor owner context is active.
-    final context = Lx.listenerContext;
+    final context = LxSpi.listenerContext;
     final hasOwnerContext = context != null && context.type == 'Owner';
 
     if (_AutoLinkScope._activeCaptureScopes == 0 && !hasOwnerContext) {
       return;
     }
 
-    if (!Lx.deferAutoLink(reactive, () => _captureReactiveIfNeeded(reactive))) {
+    if (!LxSpi.deferAutoLink(
+      reactive,
+      () => _captureReactiveIfNeeded(reactive),
+    )) {
       _captureReactiveIfNeeded(reactive);
     }
     _assignReactiveOwnerIfNeeded(reactive, context, hasOwnerContext);
@@ -342,14 +344,17 @@ class _LiveCaptureList extends ListBase<LxReactive> {
   }
 }
 
-@visibleForTesting
-Object get autoLinkCaptureKeyForTesting => _AutoLinkScope.captureKey;
+/// Internal auto-linking hooks exposed via `package:levit_dart_core/spi.dart`.
+abstract final class LevitAutoLinkSpi {
+  /// The [Zone] key used to store the active auto-link capture list.
+  static Object get captureKey => _AutoLinkScope.captureKey;
 
-@visibleForTesting
-R runCapturedForTesting<R>(R Function() builder, [String? ownerId]) {
-  return _AutoLinkScope.runCaptured(
-    builder,
-    (captured, result) {},
-    ownerId: ownerId,
-  );
+  /// Runs [builder] inside an auto-link capture zone without adopting results.
+  static R runCaptured<R>(R Function() builder, [String? ownerId]) {
+    return _AutoLinkScope.runCaptured(
+      builder,
+      (captured, result) {},
+      ownerId: ownerId,
+    );
+  }
 }

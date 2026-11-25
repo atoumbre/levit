@@ -149,8 +149,8 @@ class _RouteBindingState extends State<_RouteBinding> {
 /// This is useful when route lifetime, not just subtree lifetime, is the
 /// meaningful ownership boundary.
 class LRouteScope extends StatelessWidget {
-  /// An optional factory to register dependencies in this scope.
-  final LScopeDependencyFactory? dependencyFactory;
+  /// Optional callback to register dependencies in this scope.
+  final void Function(LevitScope scope)? configure;
 
   /// The widget subtree that will have access to this scope.
   final Widget child;
@@ -170,7 +170,7 @@ class LRouteScope extends StatelessWidget {
   /// Creates a route-bound dependency scope.
   const LRouteScope({
     super.key,
-    this.dependencyFactory,
+    this.configure,
     required this.child,
     this.name,
     this.args,
@@ -191,7 +191,7 @@ class LRouteScope extends StatelessWidget {
       key: key,
       name: name,
       args: args,
-      dependencyFactory: (s) {
+      configure: (s) {
         s.put<S>(builder, tag: tag, permanent: permanent);
       },
       child: child,
@@ -214,7 +214,7 @@ class LRouteScope extends StatelessWidget {
       key: key,
       name: name,
       args: args,
-      dependencyFactory: (s) {
+      configure: (s) {
         s.lazyPut<S>(
           builder,
           tag: tag,
@@ -242,7 +242,7 @@ class LRouteScope extends StatelessWidget {
       key: key,
       name: name,
       args: args,
-      dependencyFactory: (s) {
+      configure: (s) {
         s.lazyPutAsync<S>(
           builder,
           tag: tag,
@@ -287,7 +287,7 @@ class LRouteScope extends StatelessWidget {
         return LScope(
           name: resolvedName,
           args: scopeArgs,
-          dependencyFactory: dependencyFactory,
+          configure: configure,
           child: child,
         );
       },
@@ -301,8 +301,8 @@ class LRouteScope extends StatelessWidget {
 /// but resets that local scope when the current [ModalRoute] identity changes.
 /// Descendants can observe the current route visibility through [visibilityOf].
 class LAsyncRouteScope extends StatelessWidget {
-  /// An async factory to register dependencies.
-  final LAsyncScopeDependencyFactory dependencyFactory;
+  /// An async callback to register dependencies.
+  final FutureOr<void> Function(LevitScope scope) configure;
 
   /// The widget subtree to render after initialization.
   final Widget child;
@@ -327,7 +327,7 @@ class LAsyncRouteScope extends StatelessWidget {
 
   const LAsyncRouteScope({
     super.key,
-    required this.dependencyFactory,
+    required this.configure,
     required this.child,
     this.name,
     this.loading,
@@ -366,7 +366,7 @@ class LAsyncRouteScope extends StatelessWidget {
         return LAsyncScope(
           name: resolvedName,
           args: scopeArgs,
-          dependencyFactory: dependencyFactory,
+          configure: configure,
           loading: loading,
           error: error,
           child: child,

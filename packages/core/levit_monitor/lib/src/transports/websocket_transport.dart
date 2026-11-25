@@ -1,15 +1,15 @@
-part of '../../levit_monitor.dart';
+part of '../monitor_library.dart';
 
 /// Bounded WebSocket delivery to the local inspector. The relay acknowledges
 /// events by sequence number. Disconnection drops queued events with accounting;
 /// a reconnect snapshot restores state without claiming complete history.
-class WebSocketTransport extends LevitTransport {
+class LevitWebSocketTransport extends LevitTransport {
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
   final String? _url;
   final String? _appId;
   final WebSocketChannel Function(Uri)? _channelBuilder;
-  final void Function(WebSocketTransport)? _onReady;
+  final void Function(LevitWebSocketTransport)? _onReady;
   final void Function(Object)? _onError;
   final int capacity;
   final Duration acknowledgementTimeout;
@@ -28,7 +28,7 @@ class WebSocketTransport extends LevitTransport {
   int _retryAttempts = 0;
   int _dropped = 0;
 
-  WebSocketTransport(
+  LevitWebSocketTransport(
     WebSocketChannel channel, {
     this.capacity = 256,
     this.acknowledgementTimeout = const Duration(seconds: 5),
@@ -42,7 +42,7 @@ class WebSocketTransport extends LevitTransport {
     _validate();
     _adopt(channel);
   }
-  WebSocketTransport._(
+  LevitWebSocketTransport._(
     this._url,
     this._appId,
     this._channelBuilder,
@@ -93,17 +93,17 @@ class WebSocketTransport extends LevitTransport {
         normalized == '[::1]';
   }
 
-  static WebSocketTransport connect(
+  static LevitWebSocketTransport connect(
     String serverUrl, {
     String? appId,
     WebSocketChannel Function(Uri)? channelBuilder,
-    void Function(WebSocketTransport)? onReady,
+    void Function(LevitWebSocketTransport)? onReady,
     void Function(Object)? onError,
     int capacity = 256,
     Duration acknowledgementTimeout = const Duration(seconds: 5),
     bool requireAcknowledgement = true,
     bool allowInsecureRemote = false,
-  }) => WebSocketTransport._(
+  }) => LevitWebSocketTransport._(
     serverUrl,
     appId,
     channelBuilder,
@@ -237,7 +237,7 @@ class WebSocketTransport extends LevitTransport {
   }
 
   @override
-  Future<void> send(MonitorEvent event) {
+  Future<void> send(LevitMonitorEvent event) {
     if (_closing) return Future.value();
     final frozen = event.freeze();
     if (_channel == null) {

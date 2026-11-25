@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 void main() {
   test(
@@ -53,7 +54,10 @@ void main() {
       final cancelled = group.cancelled;
       expect(group.cancelled, same(cancelled));
       await cancelled;
-      expect(group.cancellationReason!.kind, LevitCancellationKind.requested);
+      expect(
+        group.cancellationReason!.kind,
+        LevitTaskCancellationKind.requested,
+      );
       await group.dispose();
       await engine.dispose();
     },
@@ -75,7 +79,7 @@ void main() {
         (await failure.outcome as LevitTaskFailure<int>).error,
         same(error),
       );
-      expect(await cancelled.outcome, isA<LevitTaskCancellation<int>>());
+      expect(await cancelled.outcome, isA<LevitTaskCancelled<int>>());
       expect(failure.outcome, same(failure.outcome));
       await expectLater(failure.result, throwsA(same(error)));
       await engine.dispose();
@@ -93,7 +97,7 @@ void main() {
       });
       expect(ran, isFalse);
       work.cancel();
-      expect(await work.outcome, isA<LevitTaskCancellation<int>>());
+      expect(await work.outcome, isA<LevitTaskCancelled<int>>());
       expect(ran, isFalse);
       await engine.dispose();
     },

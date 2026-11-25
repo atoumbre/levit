@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 void main() {
   group('LevitTaskEngine instrumentation', () {
@@ -16,13 +16,13 @@ void main() {
           return 'first';
         },
         id: 'first',
-        priority: TaskPriority.normal,
+        priority: LevitTaskPriority.normal,
       );
 
       final second = engine.schedule(
         (_) async => 'second',
         id: 'second',
-        priority: TaskPriority.high,
+        priority: LevitTaskPriority.high,
       );
 
       await Future<void>.delayed(Duration.zero);
@@ -83,7 +83,7 @@ void main() {
     test('emits skipped(cacheHit) when result is served from cache', () async {
       final events = <LevitTaskEvent>[];
       final engine = LevitTaskEngine(maxConcurrent: 1, onTaskEvent: events.add);
-      final policy = TaskCachePolicy<int>(
+      final policy = LevitTaskCachePolicy<int>(
         ttl: const Duration(minutes: 1),
         toJson: (value) => {'value': value},
         fromJson: (json) => json['value'] as int,
@@ -107,7 +107,7 @@ void main() {
           (event) =>
               event.taskId == 'cached_task' &&
               event.type == LevitTaskEventType.skipped &&
-              event.skipReason == TaskSkipReason.cacheHit,
+              event.skipReason == LevitTaskSkipReason.cacheHit,
         ),
         isTrue,
       );
@@ -144,7 +144,7 @@ void main() {
             (event) =>
                 event.taskId == 'queued_task' &&
                 event.type == LevitTaskEventType.skipped &&
-                event.skipReason == TaskSkipReason.cancelledWhileQueued,
+                event.skipReason == LevitTaskSkipReason.cancelledWhileQueued,
           ),
           isTrue,
         );
@@ -173,7 +173,7 @@ void main() {
             (event) =>
                 event.taskId == 'cancelled_before_start' &&
                 event.type == LevitTaskEventType.skipped &&
-                event.skipReason == TaskSkipReason.cancelledBeforeStart,
+                event.skipReason == LevitTaskSkipReason.cancelledBeforeStart,
           ),
           isTrue,
         );
@@ -206,7 +206,7 @@ void main() {
           (event) =>
               event.taskId == 'cancelled_active_task' &&
               event.type == LevitTaskEventType.skipped &&
-              event.skipReason == TaskSkipReason.cancelledAfterRun,
+              event.skipReason == LevitTaskSkipReason.cancelledAfterRun,
         ),
         isTrue,
       );
@@ -236,7 +236,7 @@ void main() {
             (event) =>
                 event.taskId == 'cancelled_failed_task' &&
                 event.type == LevitTaskEventType.skipped &&
-                event.skipReason == TaskSkipReason.cancelledAfterRun &&
+                event.skipReason == LevitTaskSkipReason.cancelledAfterRun &&
                 event.error is StateError,
           ),
           isTrue,

@@ -5,6 +5,7 @@ import 'package:test/test.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../core/monitor_failure_acceptance_test.dart' show envelope;
+import 'package:levit_monitor/spi.dart';
 
 class SocketSink implements WebSocketSink {
   Object? error;
@@ -45,10 +46,15 @@ class Channel implements WebSocketChannel {
 
 void main() {
   test('bounds validate before connecting', () {
-    expect(() => WebSocketTransport(Channel(), capacity: 0), throwsRangeError);
     expect(
-      () =>
-          WebSocketTransport(Channel(), acknowledgementTimeout: Duration.zero),
+      () => LevitWebSocketTransport(Channel(), capacity: 0),
+      throwsRangeError,
+    );
+    expect(
+      () => LevitWebSocketTransport(
+        Channel(),
+        acknowledgementTimeout: Duration.zero,
+      ),
       throwsArgumentError,
     );
   });
@@ -57,10 +63,12 @@ void main() {
     'queue overflow drops oldest pending events and flush awaits acknowledgement',
     () async {
       final channel = Channel();
-      final transport = WebSocketTransport(channel, capacity: 2);
-      final first = transport.send(FrozenMonitorEvent(envelope('first')));
-      final second = transport.send(FrozenMonitorEvent(envelope('second')));
-      final third = transport.send(FrozenMonitorEvent(envelope('third')));
+      final transport = LevitWebSocketTransport(channel, capacity: 2);
+      final first = transport.send(LevitFrozenMonitorEvent(envelope('first')));
+      final second = transport.send(
+        LevitFrozenMonitorEvent(envelope('second')),
+      );
+      final third = transport.send(LevitFrozenMonitorEvent(envelope('third')));
       await first;
       expect(transport.droppedEvents, 1);
       channel.connected.complete();
@@ -78,7 +86,7 @@ void main() {
       await third;
       await flushing;
       await transport.close();
-      await transport.send(FrozenMonitorEvent(envelope('closed')));
+      await transport.send(LevitFrozenMonitorEvent(envelope('closed')));
       expect(channel.sink.sent.length, 2);
       await channel.input.close();
     },
@@ -88,18 +96,18 @@ void main() {
     'full in-flight slot drops new events and timeout disconnects with accounting',
     () async {
       final channel = Channel()..connected.complete();
-      final transport = WebSocketTransport(
+      final transport = LevitWebSocketTransport(
         channel,
         capacity: 1,
         acknowledgementTimeout: const Duration(milliseconds: 20),
       );
       await Future<void>.delayed(Duration.zero);
-      final first = transport.send(FrozenMonitorEvent(envelope('first')));
-      await transport.send(FrozenMonitorEvent(envelope('dropped')));
+      final first = transport.send(LevitFrozenMonitorEvent(envelope('first')));
+      await transport.send(LevitFrozenMonitorEvent(envelope('dropped')));
       expect(transport.droppedEvents, 1);
       await first;
       expect(transport.droppedEvents, 2);
-      await transport.send(FrozenMonitorEvent(envelope('offline')));
+      await transport.send(LevitFrozenMonitorEvent(envelope('offline')));
       expect(transport.droppedEvents, 3);
       await transport.close();
       await channel.input.close();
@@ -108,11 +116,11 @@ void main() {
 
   test('acknowledgement-free transport drains without relay support', () async {
     final channel = Channel()..connected.complete();
-    final transport = WebSocketTransport(
+    final transport = LevitWebSocketTransport(
       channel,
       requireAcknowledgement: false,
     );
-    await transport.send(FrozenMonitorEvent(envelope('event')));
+    await transport.send(LevitFrozenMonitorEvent(envelope('event')));
     await transport.close();
     expect(channel.sink.sent, hasLength(1));
     await channel.input.close();
@@ -128,7 +136,7 @@ void main() {
           cancelGate: gate,
         )..connected.complete();
         channel.sink.error = StateError('socket');
-        final transport = WebSocketTransport(channel);
+        final transport = LevitWebSocketTransport(channel);
         await Future<void>.delayed(Duration.zero);
         if (disconnect) channel.input.addError(StateError('lost connection'));
         await Future<void>.delayed(Duration.zero);
@@ -161,8 +169,10 @@ void main() {
     () async {
       final channel = Channel(cancelError: StateError('subscription'));
       channel.sink.error = StateError('socket');
-      final transport = WebSocketTransport(channel);
-      final sending = transport.send(FrozenMonitorEvent(envelope('pending')));
+      final transport = LevitWebSocketTransport(channel);
+      final sending = transport.send(
+        LevitFrozenMonitorEvent(envelope('pending')),
+      );
       await expectLater(
         transport.close(),
         throwsA(

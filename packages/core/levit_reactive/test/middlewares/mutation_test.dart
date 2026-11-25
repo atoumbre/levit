@@ -5,7 +5,7 @@ class TestMutationMiddleware extends LevitReactiveMiddleware {
   int changeCount = 0;
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     return (value) {
       next(value);
       changeCount++;

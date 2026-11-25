@@ -1,9 +1,9 @@
-part of '../../levit_dart.dart';
+part of '../kit_library.dart';
 
 /// Sibling failure behavior. Controller roots supervise unrelated work.
 enum LevitTaskGroupPolicy { cancelOnError, supervisor }
 
-enum LevitCancellationKind {
+enum LevitTaskCancellationKind {
   requested,
   ownerClosed,
   parentCancelled,
@@ -14,7 +14,7 @@ enum LevitCancellationKind {
 
 /// Machine-readable cancellation metadata; cancellation never implies completion.
 final class LevitTaskCancellationReason {
-  final LevitCancellationKind kind;
+  final LevitTaskCancellationKind kind;
   final String? message;
   const LevitTaskCancellationReason(this.kind, [this.message]);
   @override
@@ -75,37 +75,37 @@ final class LevitTaskSupersededException extends LevitTaskCancelledException {
   const LevitTaskSupersededException(super.taskId, super.executionId)
     : super(
         reason: const LevitTaskCancellationReason(
-          LevitCancellationKind.superseded,
+          LevitTaskCancellationKind.superseded,
         ),
       );
 }
 
-sealed class LevitExecutionOutcome<T> {
-  const LevitExecutionOutcome();
+sealed class LevitTaskResult<T> {
+  const LevitTaskResult();
 }
 
-final class LevitTaskSuccess<T> extends LevitExecutionOutcome<T> {
+final class LevitTaskSuccess<T> extends LevitTaskResult<T> {
   final T value;
   const LevitTaskSuccess(this.value);
 }
 
-final class LevitTaskFailure<T> extends LevitExecutionOutcome<T> {
+final class LevitTaskFailure<T> extends LevitTaskResult<T> {
   final Object error;
   final StackTrace stackTrace;
   const LevitTaskFailure(this.error, this.stackTrace);
 }
 
-final class LevitTaskCancellation<T> extends LevitExecutionOutcome<T> {
+final class LevitTaskCancelled<T> extends LevitTaskResult<T> {
   final LevitTaskCancellationReason reason;
-  const LevitTaskCancellation(this.reason);
+  const LevitTaskCancelled(this.reason);
 }
 
-final class LevitTaskDropping<T> extends LevitExecutionOutcome<T> {
-  const LevitTaskDropping();
+final class LevitTaskDropped<T> extends LevitTaskResult<T> {
+  const LevitTaskDropped();
 }
 
-final class LevitTaskSupersession<T> extends LevitExecutionOutcome<T> {
-  const LevitTaskSupersession();
+final class LevitTaskSuperseded<T> extends LevitTaskResult<T> {
+  const LevitTaskSuperseded();
 }
 
 final class LevitTaskGroupException implements Exception {
@@ -165,7 +165,7 @@ final class LevitTaskGroup
         limit.difference(DateTime.now()),
         () => cancel(
           const LevitTaskCancellationReason(
-            LevitCancellationKind.deadlineExceeded,
+            LevitTaskCancellationKind.deadlineExceeded,
           ),
         ),
       );
@@ -211,7 +211,7 @@ final class LevitTaskGroup
     if (deadline != null && !DateTime.now().isBefore(deadline!)) {
       cancel(
         const LevitTaskCancellationReason(
-          LevitCancellationKind.deadlineExceeded,
+          LevitTaskCancellationKind.deadlineExceeded,
         ),
       );
       throw LevitTaskCancelledException(name, id, reason: cancellationReason!);
@@ -245,7 +245,9 @@ final class LevitTaskGroup
     _failures.add(AsyncError(error, stack));
     if (policy == LevitTaskGroupPolicy.cancelOnError) {
       cancel(
-        const LevitTaskCancellationReason(LevitCancellationKind.siblingFailed),
+        const LevitTaskCancellationReason(
+          LevitTaskCancellationKind.siblingFailed,
+        ),
       );
     }
   }
@@ -313,11 +315,11 @@ final class LevitTaskGroup
   LevitTaskExecution<T> submit<T>(
     FutureOr<T> Function(LevitTaskContext) body, {
     String? id,
-    TaskPriority priority = TaskPriority.normal,
-    TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitTaskConflictPolicy conflictPolicy = LevitTaskConflictPolicy.reject,
     LevitRetryPolicy? retryPolicy,
     DateTime? deadline,
-    TaskCachePolicy<T>? cachePolicy,
+    LevitTaskCachePolicy<T>? cachePolicy,
     LevitTaskMetadata? metadata,
   }) => engine.submit(
     body,
@@ -334,11 +336,11 @@ final class LevitTaskGroup
   Future<T> schedule<T>(
     FutureOr<T> Function(LevitTaskContext) body, {
     String? id,
-    TaskPriority priority = TaskPriority.normal,
-    TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitTaskConflictPolicy conflictPolicy = LevitTaskConflictPolicy.reject,
     LevitRetryPolicy? retryPolicy,
     DateTime? deadline,
-    TaskCachePolicy<T>? cachePolicy,
+    LevitTaskCachePolicy<T>? cachePolicy,
     LevitTaskMetadata? metadata,
   }) => submit(
     body,
@@ -353,7 +355,7 @@ final class LevitTaskGroup
 
   void cancel([
     LevitTaskCancellationReason reason = const LevitTaskCancellationReason(
-      LevitCancellationKind.requested,
+      LevitTaskCancellationKind.requested,
     ),
   ]) {
     if (_complete || isCancelled) return;
@@ -364,7 +366,7 @@ final class LevitTaskGroup
     for (final task in _tasks.toList()) {
       engine._cancelExecution(
         task,
-        TaskSkipReason.cancelledWhileQueued,
+        LevitTaskSkipReason.cancelledWhileQueued,
         reason: reason,
       );
     }

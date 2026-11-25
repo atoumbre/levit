@@ -1,8 +1,8 @@
-part of '../../levit_monitor.dart';
+part of '../monitor_library.dart';
 
 /// Interface for dispatching diagnostic events to external sinks.
 ///
-/// [LevitTransport] defines how [MonitorEvent]s are delivered to developers,
+/// [LevitTransport] defines how [LevitMonitorEvent]s are delivered to developers,
 /// logs, or visualization tools. Implementations can range from simple
 /// console printing to complex network-based telemetry.
 abstract class LevitTransport {
@@ -10,7 +10,7 @@ abstract class LevitTransport {
   ///
   /// This method is called by the monitor whenever an event passes through
   /// the active filtering pipeline.
-  FutureOr<void> send(MonitorEvent event);
+  FutureOr<void> send(LevitMonitorEvent event);
 
   /// Completes when all admitted sends have reached the destination buffer.
   Future<void> flush() async {}

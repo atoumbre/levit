@@ -54,7 +54,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScopedView<TestController>(
-            dependencyFactory: (s) =>
+            configure: (s) =>
                 s.put<TestController>(() => TestController()..count = 123),
             builder: (context, controller) =>
                 Text('Scoped: ${controller.count}'),
@@ -73,7 +73,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LAsyncScope(
-            dependencyFactory: (s) async {
+            configure: (s) async {
               await Future.delayed(const Duration(milliseconds: 10));
               s.put(() => TestController()..count = 789);
             },

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:levit_scope/levit_scope.dart';
 import 'package:test/test.dart';
+import 'package:levit_scope/spi.dart';
 
 class Work extends LevitScopeDisposable
     implements LevitDrainable, LevitExecutionBoundary {

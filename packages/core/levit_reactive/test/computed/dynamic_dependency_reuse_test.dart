@@ -1,5 +1,6 @@
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_reactive/spi.dart';
 
 class _Graphs extends LevitReactiveMiddleware {
   final events = <List<LxReactive>>[];
@@ -87,10 +88,10 @@ void main() {
     final derived = LxComputed(() => source.value);
     derived.addListener(() => derived.value);
     expect(derived.graphDepth, 1);
-    source.graphDepth = 7;
+    LxSpi.setGraphDepth(source, 7);
     source.value++;
     expect(derived.graphDepth, 8);
-    source.graphDepth = 0;
+    LxSpi.setGraphDepth(source, 0);
     source.value++;
     expect(derived.graphDepth, 1);
     await derived.close();

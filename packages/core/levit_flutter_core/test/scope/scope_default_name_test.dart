@@ -14,7 +14,7 @@ class _ShellPage extends LScopedView<_ShellController> {
   final Widget child;
 
   @override
-  void onConfigScope(LevitScope scope) {
+  void onConfigureScope(LevitScope scope) {
     scope.put(() => _ShellController());
   }
 
@@ -26,7 +26,7 @@ class _FeaturePage extends LScopedView<_PageController> {
   const _FeaturePage();
 
   @override
-  void onConfigScope(LevitScope scope) {
+  void onConfigureScope(LevitScope scope) {
     scope.put(() => _PageController());
   }
 
@@ -130,7 +130,7 @@ void main() {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => LRouteScope(
-                            dependencyFactory: (scope) {
+                            configure: (scope) {
                               capturedScopeName = scope.name;
                             },
                             child: const Text('route-fallback'),
@@ -180,7 +180,7 @@ void main() {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => LAsyncRouteScope(
-                            dependencyFactory: (scope) async {
+                            configure: (scope) async {
                               capturedScopeName = scope.name;
                             },
                             child: const Text('async-route-fallback'),

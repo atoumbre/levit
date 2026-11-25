@@ -1,5 +1,6 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart_core/spi.dart';
 
 void main() {
   group('Levit facade delegates reactive configuration and operations', () {
@@ -53,14 +54,14 @@ void main() {
       expect(Levit.containsStateMiddleware(mw), isFalse);
     });
 
-    test('Levit.runWithContext proxies', () {
+    test('LxSpi.runWithContext proxies', () {
       final context = LxListenerContext(type: 'test', id: 1, data: null);
-      final result = Levit.runWithContext(context, () => 'done');
+      final result = LxSpi.runWithContext(context, () => 'done');
       expect(result, 'done');
     });
 
     test('RxNamingExtension.register works', () {
-      final rx = 0.lx.register('owner');
+      final rx = 0.lx.ownedBy('owner');
       expect(rx.ownerId, 'owner');
     });
   });

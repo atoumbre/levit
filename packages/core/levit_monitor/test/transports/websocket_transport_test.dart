@@ -3,10 +3,10 @@ import 'dart:convert';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:logger/logger.dart' hide LogEvent;
 import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:levit_monitor/spi.dart';
 
 // Mock implementations
 class MockWebSocketSink implements WebSocketSink {
@@ -63,13 +63,13 @@ class MockWebSocketChannel extends StreamChannelMixin
 }
 
 void main() {
-  group('WebSocketTransport', () {
+  group('LevitWebSocketTransport', () {
     late MockWebSocketChannel mockChannel;
-    late WebSocketTransport transport;
+    late LevitWebSocketTransport transport;
 
     setUp(() {
       mockChannel = MockWebSocketChannel();
-      transport = WebSocketTransport(
+      transport = LevitWebSocketTransport(
         mockChannel,
         requireAcknowledgement: false,
       );
@@ -80,60 +80,72 @@ void main() {
       mockChannel.outgoing.close();
     });
 
-    test('send (DependencyEvent) sends correct JSON with category', () async {
-      final info = LevitDependency(builder: () => 42);
-      final event = DependencyRegisterEvent(
-        sessionId: 's1',
-        scopeId: 1,
-        scopeName: 'root',
-        key: 'Service',
-        info: info,
-        source: 'test',
-      );
+    test(
+      'send (LevitDependencyEvent) sends correct JSON with category',
+      () async {
+        final info = LevitDependency(builder: () => 42);
+        final event = LevitDependencyRegisterEvent(
+          sessionId: 's1',
+          scopeId: 1,
+          scopeName: 'root',
+          key: 'Service',
+          info: info,
+          source: 'test',
+        );
 
-      final future = mockChannel.outgoing.stream.first;
-      transport.send(event);
-      final sentJson = await future;
+        final future = mockChannel.outgoing.stream.first;
+        transport.send(event);
+        final sentJson = await future;
 
-      final data = jsonDecode(sentJson as String);
+        final data = jsonDecode(sentJson as String);
 
-      expect(data['category'], 'di');
-      expect(data['type'], 'di_register');
-      expect(data['key'], 'Service');
-    });
+        expect(data['category'], 'di');
+        expect(data['type'], 'di_register');
+        expect(data['key'], 'Service');
+      },
+    );
 
-    test('send (ReactiveEvent) sends correct JSON with category', () async {
-      final reactive = 0.lx.named('counter');
-      final event = ReactiveInitEvent(sessionId: 's1', reactive: reactive);
+    test(
+      'send (LevitReactiveEvent) sends correct JSON with category',
+      () async {
+        final reactive = 0.lx.named('counter');
+        final event = LevitReactiveInitEvent(
+          sessionId: 's1',
+          reactive: reactive,
+        );
 
-      final future = mockChannel.outgoing.stream.first;
-      transport.send(event);
-      final sentJson = await future;
+        final future = mockChannel.outgoing.stream.first;
+        transport.send(event);
+        final sentJson = await future;
 
-      final data = jsonDecode(sentJson as String);
+        final data = jsonDecode(sentJson as String);
 
-      expect(data['category'], 'state');
-      expect(data['type'], 'reactive_init');
-      expect(data['name'], 'counter');
-    });
+        expect(data['category'], 'state');
+        expect(data['type'], 'reactive_init');
+        expect(data['name'], 'counter');
+      },
+    );
 
-    test('send (LogEvent) sends correct JSON with category "log"', () async {
-      final event = LogEvent(
-        sessionId: 's1',
-        level: Level.info,
-        data: 'a web socket log',
-      );
+    test(
+      'send (LevitLogEvent) sends correct JSON with category "log"',
+      () async {
+        final event = LevitLogEvent(
+          sessionId: 's1',
+          level: LevitLogLevel.info,
+          data: 'a web socket log',
+        );
 
-      final future = mockChannel.outgoing.stream.first;
-      transport.send(event);
-      final sentJson = await future;
+        final future = mockChannel.outgoing.stream.first;
+        transport.send(event);
+        final sentJson = await future;
 
-      final data = jsonDecode(sentJson as String);
+        final data = jsonDecode(sentJson as String);
 
-      expect(data['category'], 'log');
-      expect(data['type'], 'log');
-      expect(data['data'], 'a web socket log');
-    });
+        expect(data['category'], 'log');
+        expect(data['type'], 'log');
+        expect(data['data'], 'a web socket log');
+      },
+    );
 
     test(
       'disconnect captures asynchronous cleanup errors and awaits release',
@@ -161,7 +173,9 @@ void main() {
       final sub = mockChannel.outgoing.stream.listen((_) => received = true);
 
       final reactive = 0.lx;
-      transport.send(ReactiveDisposeEvent(sessionId: 's', reactive: reactive));
+      transport.send(
+        LevitReactiveDisposeEvent(sessionId: 's', reactive: reactive),
+      );
 
       await Future.delayed(Duration(milliseconds: 20));
       await sub.cancel();
@@ -176,19 +190,19 @@ void main() {
         return mockChannel;
       };
 
-      final t = WebSocketTransport.connect(
+      final t = LevitWebSocketTransport.connect(
         'ws://localhost',
         appId: '123',
         channelBuilder: builder,
       );
 
-      expect(t, isA<WebSocketTransport>());
+      expect(t, isA<LevitWebSocketTransport>());
       expect(capturedUri?.queryParameters['appId'], '123');
     });
 
     test('handles message acknowledgment from server', () async {
       final reactive = 0.lx;
-      final event = ReactiveInitEvent(sessionId: 's1', reactive: reactive);
+      final event = LevitReactiveInitEvent(sessionId: 's1', reactive: reactive);
 
       // Send event
       transport.send(event);
@@ -203,7 +217,7 @@ void main() {
 
     test('handles stream errors gracefully', () async {
       final reactive = 0.lx;
-      final event = ReactiveChangeEvent(
+      final event = LevitReactiveChangeEvent(
         sessionId: 's1',
         reactive: reactive,
         change: LevitReactiveChange(

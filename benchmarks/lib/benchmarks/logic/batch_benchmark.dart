@@ -7,7 +7,7 @@ import '../../benchmark_config.dart';
 import '../../benchmark_engine.dart';
 
 /// Benchmark comparing batched vs un-batched updates.
-/// Demonstrates the value of Lx.batch() for bulk operations.
+/// Demonstrates the value of Levit.batch() for bulk operations.
 class BatchVsUnBatchedBenchmark extends Benchmark {
   @override
   String get name => 'Batch vs Un-batched';
@@ -85,7 +85,7 @@ class LevitBatchBenchmark extends BenchmarkImplementation {
     notifyCount = 0;
 
     // Batched: Should trigger only 1 notification
-    Lx.batch(() {
+    Levit.batch(() {
       for (int i = 0; i < BenchmarkConfig.batchIterations; i++) {
         sources[i % 100].value++;
       }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:test/test.dart';
 import 'package:levit_monitor/levit_monitor.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
   test('onConnect does not emit after disable', () async {
@@ -42,13 +43,13 @@ void main() {
 
 class _TestTransport extends LevitTransport {
   final StreamController<void> _controller = StreamController<void>.broadcast();
-  final List<MonitorEvent> _events = [];
+  final List<LevitMonitorEvent> _events = [];
 
   @override
   Stream<void> get onConnect => _controller.stream;
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     _events.add(event);
   }
 

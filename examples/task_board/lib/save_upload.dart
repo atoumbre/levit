@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:levit_flutter/levit_flutter.dart';
+import 'package:levit_flutter/tasks.dart';
 
 void main() {
   Levit.enableAutoLinking();
@@ -61,7 +62,7 @@ class SaveUploadController extends LevitController with LevitTasksMixin {
   Future<void> saveAndUpload() async {
     if (_workflow != null || isClosed) return;
     final group = _workflow = LevitTaskGroup(
-      engine: tasksEngine,
+      engine: taskEngine,
       name: 'save and upload',
     );
     busy.value = true;

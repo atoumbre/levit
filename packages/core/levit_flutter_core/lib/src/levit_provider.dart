@@ -4,12 +4,12 @@ part of '../levit_flutter_core.dart';
 ///
 /// Proxies calls to the nearest [LScope] found in the widget tree.
 /// If no local scope is found, it falls back to the global [Levit] scope.
-class LevitProvider {
+class LevitContext {
   final BuildContext _context;
 
-  LevitProvider(this._context);
+  LevitContext(this._context);
 
-  LevitScope get _scope => _ScopeProvider.of(_context) ?? Ls.currentScope;
+  LevitScope get _scope => _ScopeProvider.of(_context) ?? Levit.currentScope;
 
   /// Resolves a typed dependency through the nearest widget scope.
   S find<S>({Object? tag}) => _scope.find<S>(tag: tag);
@@ -26,12 +26,6 @@ class LevitProvider {
   /// Resolves a store recipe, optionally requiring locally owned state.
   T findStore<T>(LevitStore<T> store, {Object? tag, bool localOnly = false}) =>
       store.findIn(_scope, tag: tag, localOnly: localOnly);
-
-  Future<T> findStoreAsync<T>(
-    LevitStore<T> store, {
-    Object? tag,
-    bool localOnly = false,
-  }) => store.findAsyncIn(_scope, tag: tag, localOnly: localOnly);
 
   Future<T> findAsyncStore<T>(
     LevitAsyncStore<T> store, {
@@ -127,7 +121,7 @@ class LevitProvider {
 }
 
 /// Extensions to access Levit dependency injection directly from [BuildContext].
-extension LevitProviderExtension on BuildContext {
-  /// A [LevitProvider] to interact with the nearest active [LevitScope].
-  LevitProvider get levit => LevitProvider(this);
+extension LevitBuildContextExtension on BuildContext {
+  /// A [LevitContext] to interact with the nearest active [LevitScope].
+  LevitContext get levit => LevitContext(this);
 }

@@ -11,7 +11,7 @@ class _ItemController extends LevitController {
   _ItemController(this.label);
 }
 
-class _CustomScopedAsyncView extends LScopedAsyncView<String> {
+class _CustomScopedAsyncView extends LAsyncScopedView<String> {
   const _CustomScopedAsyncView({super.resolver});
 
   @override
@@ -38,7 +38,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put<String>(() => 'scoped-untagged'),
+            configure: (s) => s.put<String>(() => 'scoped-untagged'),
             child: Column(
               children: [
                 LView<String>(
@@ -110,7 +110,7 @@ void main() {
   );
 
   testWidgets(
-    'LScopedAsyncView delegates to subclass buildView, buildLoading, and buildError overrides',
+    'LAsyncScopedView delegates to subclass buildView, buildLoading, and buildError overrides',
     (tester) async {
       final completer = Completer<String>();
       await tester.pumpWidget(

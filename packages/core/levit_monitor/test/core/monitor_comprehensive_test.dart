@@ -5,10 +5,11 @@ import 'package:levit_monitor/levit_monitor_io.dart';
 import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:levit_monitor/spi.dart';
 
 class ThrowingTransport extends LevitTransport {
   @override
-  void send(MonitorEvent event) {}
+  void send(LevitMonitorEvent event) {}
 
   @override
   Future<void> close() async => throw Exception('close-fail');
@@ -75,13 +76,15 @@ void main() {
     test(
       'monitor attaches multiple transports and accepts events through its filter',
       () async {
-        final t1 = ConsoleTransport();
-        final t2 = ConsoleTransport();
+        final t1 = LevitConsoleTransport();
+        final t2 = LevitConsoleTransport();
 
         await LevitMonitor.attach(transports: [t1, t2]);
         LevitMonitor.setFilter((e) => true);
         expect(
-          LevitMonitor.shouldProcess(SnapshotEvent(sessionId: 's', state: {})),
+          LevitMonitor.shouldProcess(
+            LevitSnapshotEvent(sessionId: 's', state: {}),
+          ),
           true,
         );
 
@@ -89,22 +92,25 @@ void main() {
       },
     );
 
-    test('MultiTransport reports child transport close failures', () async {
-      final tThrow = ThrowingTransport();
-      final multi = MultiTransport([tThrow]);
-      await expectLater(multi.close(), throwsA(isA<LevitMonitorException>()));
-    });
+    test(
+      'LevitMultiTransport reports child transport close failures',
+      () async {
+        final tThrow = ThrowingTransport();
+        final multi = LevitMultiTransport([tThrow]);
+        await expectLater(multi.close(), throwsA(isA<LevitMonitorException>()));
+      },
+    );
 
     test(
-      'FileTransport accepts a snapshot and closes without connection events',
+      'LevitFileTransport accepts a snapshot and closes without connection events',
       () async {
         final file = File('test_monitor.log');
-        final transport = FileTransport(file.path);
+        final transport = LevitFileTransport(file.path);
 
         // Cover onConnect (Line 18)
         expect(await transport.onConnect.isEmpty, true);
 
-        final event = SnapshotEvent(sessionId: 'test', state: {'a': 1});
+        final event = LevitSnapshotEvent(sessionId: 'test', state: {'a': 1});
         transport.send(event);
 
         await transport.close();
@@ -113,14 +119,14 @@ void main() {
     );
 
     test(
-      'WebSocketTransport accepts a snapshot and closes its channel',
+      'LevitWebSocketTransport accepts a snapshot and closes its channel',
       () async {
-        final transport = WebSocketTransport.connect(
+        final transport = LevitWebSocketTransport.connect(
           'ws://localhost:1',
           channelBuilder: (_) => _MockWebSocketChannel(),
         );
 
-        final event = SnapshotEvent(sessionId: 'test', state: {'a': 1});
+        final event = LevitSnapshotEvent(sessionId: 'test', state: {'a': 1});
         transport.send(event);
 
         await transport.close();
@@ -128,7 +134,7 @@ void main() {
     );
 
     test('clearing a rejecting filter restores event processing', () {
-      final event = SnapshotEvent(sessionId: 'test', state: {});
+      final event = LevitSnapshotEvent(sessionId: 'test', state: {});
       LevitMonitor.setFilter((e) => false);
       expect(LevitMonitor.shouldProcess(event), false);
       expect(LevitMonitor.filter, isNotNull);

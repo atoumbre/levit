@@ -173,7 +173,7 @@ void main() {
       await tester.pumpWidget(
         LScope(
           lifecycle: lifecycle,
-          dependencyFactory: (scope) {
+          configure: (scope) {
             scope.put(() => Resource(() => throw StateError('closing')));
           },
           child: const SizedBox(),
@@ -202,7 +202,7 @@ void main() {
         Widget view(LevitScopeLifecycleController lifecycle) => asynchronous
             ? LAsyncScope(
                 lifecycle: lifecycle,
-                dependencyFactory: (_) async {},
+                configure: (_) async {},
                 child: const SizedBox(),
               )
             : LScope(lifecycle: lifecycle, child: const SizedBox());
@@ -244,12 +244,12 @@ void main() {
             children: [
               LScope(
                 lifecycle: left,
-                dependencyFactory: (scope) => scope.put<int>(() => 1),
+                configure: (scope) => scope.put<int>(() => 1),
                 child: onLeft ? view : const SizedBox(),
               ),
               LScope(
                 lifecycle: right,
-                dependencyFactory: (scope) => scope.put<int>(() => 2),
+                configure: (scope) => scope.put<int>(() => 2),
                 child: onLeft ? const SizedBox() : view,
               ),
             ],

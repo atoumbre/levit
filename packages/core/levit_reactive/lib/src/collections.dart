@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 /// A reactive list that notifies observers on modification.
 ///

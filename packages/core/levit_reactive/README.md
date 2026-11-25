@@ -187,7 +187,7 @@ external effect. `latest` cancels previous contexts but drains every started
 callback. Worker convenience callbacks preserve returned futures.
 
 `LxReadable<T>` exposes observation without refresh, close, or metadata setters.
-`LxState.asReactive` now returns this observation-only interface. It does not
+`LxState.asReadable` now returns this observation-only interface. It does not
 make the contained value immutable.
 
 ### Optional diagnostics

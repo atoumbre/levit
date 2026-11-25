@@ -11,6 +11,7 @@ import 'package:levit_flutter/levit_flutter.dart';
 
 import 'performance_monitor.dart';
 import 'measured_frames.dart';
+import 'package:levit_flutter/tasks.dart';
 
 const _samples = 30;
 const _warmups = 5;
@@ -37,7 +38,7 @@ Future<void> main() async {
     await _nextFrame();
     await Future<void>.delayed(const Duration(milliseconds: 300));
     for (var round = 0; round < 3; round++) {
-      Lx.enableWatchMonitoring = enabled;
+      Levit.enableWatchMonitoring = enabled;
       final monitor = enabled ? (PerformanceMonitor()..enable()) : null;
       try {
         Future<void> sample(

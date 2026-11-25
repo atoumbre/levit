@@ -16,8 +16,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) =>
-                s.put<TestController>(() => TestController(42)),
+            configure: (s) => s.put<TestController>(() => TestController(42)),
             child: Builder(
               builder: (context) {
                 initialized = true;
@@ -42,8 +41,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) =>
-                s.put<TestController>(() => TestController(100)),
+            configure: (s) => s.put<TestController>(() => TestController(100)),
             child: Builder(
               builder: (context) {
                 initialized = true;
@@ -64,9 +62,9 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put<int>(() => 1),
+            configure: (s) => s.put<int>(() => 1),
             child: LScope(
-              dependencyFactory: (s) => s.put<String>(() => 'nested'),
+              configure: (s) => s.put<String>(() => 'nested'),
               child: Builder(
                 builder: (context) {
                   final i = context.levit.find<int>();
@@ -87,7 +85,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) {
+            configure: (s) {
               s.put<int>(() => 10);
               s.put<String>(() => 'multi');
             },
@@ -105,7 +103,7 @@ void main() {
       expect(find.text('10 multi'), findsOneWidget);
     });
 
-    testWidgets('LevitProvider fallback to global', (tester) async {
+    testWidgets('LevitContext fallback to global', (tester) async {
       Levit.put<double>(() => 3.14);
 
       await tester.pumpWidget(
@@ -125,12 +123,12 @@ void main() {
       await Levit.reset();
     });
 
-    testWidgets('LevitProvider put works in scope', (tester) async {
+    testWidgets('LevitContext put works in scope', (tester) async {
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put<int>(() => 0),
+            configure: (s) => s.put<int>(() => 0),
             child: Builder(
               builder: (context) {
                 context.levit.put<String>(() => 'dynamic');

@@ -15,7 +15,7 @@
 /// * [LRouteScope] / [LAsyncRouteScope]: Bind a scope to the current
 ///     [ModalRoute] and expose route visibility as reactive state.
 /// * [LView] / [LAsyncView]: Consume dependencies from an existing scope.
-/// * [LScopedView] / [LScopedAsyncView]: Create a child scope and resolve a
+/// * [LScopedView] / [LAsyncScopedView]: Create a child scope and resolve a
 ///     dependency in one widget.
 /// * [LWatch]: The primary proxy-tracked reactive rebuild boundary.
 /// * [LBuilder]: Explicitly rebuild from a single [LxReactive].
@@ -30,6 +30,7 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 export 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
+import 'package:levit_dart_core/spi.dart';
 
 part 'src/scope.dart';
 part 'src/scope_lifecycle.dart';

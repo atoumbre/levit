@@ -13,7 +13,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: LAsyncScope(
-          dependencyFactory: (scope) async {
+          configure: (scope) async {
             await Future.delayed(const Duration(milliseconds: 10));
             scope.put(() => controller);
           },

@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:levit_monitor/levit_monitor.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'export_stub.dart' if (dart.library.js_interop) 'export_web.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() => runApp(const InspectorApp());
 
@@ -37,7 +37,7 @@ class _InspectorScreenState extends State<InspectorScreen> {
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
   Timer? _retry;
-  final _state = StateSnapshot();
+  final _state = LevitStateSnapshot();
   List<Map<String, dynamic>> _sessions = [];
   Map<String, dynamic>? _session;
   final List<Map<String, dynamic>> _events = [];
@@ -319,7 +319,7 @@ class _InspectorScreenState extends State<InspectorScreen> {
   Widget _ownership() {
     final scopes = _state.scopes.values.toList();
     final rendered = <int>{};
-    Widget node(ScopeModel scope, Set<int> seen) {
+    Widget node(LevitScopeModel scope, Set<int> seen) {
       if (seen.contains(scope.id)) return const Text('Scope ancestry cycle');
       rendered.add(scope.id);
       final next = {...seen, scope.id};

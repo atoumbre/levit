@@ -1,5 +1,6 @@
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 class CacheController extends LevitController with LevitTasksMixin {
   int callCount = 0;
@@ -26,14 +27,14 @@ void main() {
       final controller = CacheController();
       controller.onInit();
 
-      final policy = TaskCachePolicy<int>(
+      final policy = LevitTaskCachePolicy<int>(
         ttl: const Duration(minutes: 5),
         toJson: (v) => {'val': v},
         fromJson: (j) => j['val'] as int,
       );
 
       // First call - execution
-      final r1 = await controller.tasksEngine.schedule(
+      final r1 = await controller.taskEngine.schedule(
         (_) => controller.fetchData(),
         id: 'task1',
         cachePolicy: policy,
@@ -43,7 +44,7 @@ void main() {
       expect(controller.callCount, 1);
 
       // Second call - cache hit
-      final r2 = await controller.tasksEngine.schedule(
+      final r2 = await controller.taskEngine.schedule(
         (_) => controller.fetchData(),
         id: 'task1',
         cachePolicy: policy,
@@ -59,13 +60,13 @@ void main() {
       final controller = CacheController();
       controller.onInit();
 
-      final policy = TaskCachePolicy<int>(
+      final policy = LevitTaskCachePolicy<int>(
         ttl: const Duration(milliseconds: 10),
         toJson: (v) => {'val': v},
         fromJson: (j) => j['val'] as int,
       );
 
-      await controller.tasksEngine.schedule(
+      await controller.taskEngine.schedule(
         (_) => controller.fetchData(),
         id: 'task_ttl',
         cachePolicy: policy,
@@ -74,7 +75,7 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 20));
 
-      await controller.tasksEngine.schedule(
+      await controller.taskEngine.schedule(
         (_) => controller.fetchData(),
         id: 'task_ttl',
         cachePolicy: policy,
@@ -90,7 +91,7 @@ void main() {
       final controller = ReactiveCacheController();
       controller.onInit();
 
-      final policy = TaskCachePolicy<int>(
+      final policy = LevitTaskCachePolicy<int>(
         ttl: const Duration(minutes: 5),
         toJson: (v) => {'val': v},
         fromJson: (j) => j['val'] as int,
@@ -136,21 +137,21 @@ void main() {
         final controller = CacheController();
         controller.onInit();
 
-        final policy = TaskCachePolicy<int>(
+        final policy = LevitTaskCachePolicy<int>(
           ttl: const Duration(minutes: 5),
           toJson: (v) => {'val': v},
           fromJson: (j) => throw FormatException('Bad data'),
         );
 
         // First call sets cache
-        await controller.tasksEngine.schedule(
+        await controller.taskEngine.schedule(
           (_) => controller.fetchData(),
           id: 'task_fail',
           cachePolicy: policy,
         );
 
         // Second call fails to deserialize
-        final result = await controller.tasksEngine.schedule(
+        final result = await controller.taskEngine.schedule(
           (_) => controller.fetchData(),
           id: 'task_fail',
           cachePolicy: policy,

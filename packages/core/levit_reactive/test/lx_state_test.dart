@@ -64,9 +64,9 @@ void main() {
       expect(state.value.name, 'Alice');
     });
 
-    test('asReactive exposes read-only interface', () {
+    test('asReadable exposes read-only interface', () {
       final state = CounterState(0);
-      final reactive = state.asReactive;
+      final reactive = state.asReadable;
 
       expect(reactive.value, 0);
       state.increment();

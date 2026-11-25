@@ -1,4 +1,4 @@
-part of '../levit_monitor.dart';
+part of 'monitor_library.dart';
 
 /// The foundational middleware that connects the Levit ecosystem to the monitor.
 ///
@@ -24,9 +24,9 @@ class LevitMonitorMiddleware
   /// The primary destination for captured events.
   LevitTransport transport;
 
-  final StateSnapshot _stateSnapshot;
+  final LevitStateSnapshot _stateSnapshot;
   final int maxPendingEvents;
-  final ListQueue<FrozenMonitorEvent> _pending = ListQueue();
+  final ListQueue<LevitFrozenMonitorEvent> _pending = ListQueue();
   final List<AsyncError> _failures = [];
   final List<Future<void>> _subscriptionCleanup = [];
   StreamSubscription<void>? _connectSubscription;
@@ -54,8 +54,8 @@ class LevitMonitorMiddleware
     String? sessionId,
     this.maxPendingEvents = 1024,
     int historyCapacity = 0,
-  }) : transport = transport ?? ConsoleTransport(),
-       _stateSnapshot = StateSnapshot(maxEvents: historyCapacity) {
+  }) : transport = transport ?? LevitConsoleTransport(),
+       _stateSnapshot = LevitStateSnapshot(maxEvents: historyCapacity) {
     if (maxPendingEvents < 1) {
       throw RangeError.value(maxPendingEvents, 'maxPendingEvents');
     }
@@ -85,7 +85,7 @@ class LevitMonitorMiddleware
     _droppedEvents += _pending.length;
     _pending.clear();
     _enqueue(
-      SnapshotEvent(
+      LevitSnapshotEvent(
         sessionId: sessionId,
         state: {
           ..._stateSnapshot.toJson(),
@@ -169,7 +169,7 @@ class LevitMonitorMiddleware
     if (_failures.length < 32) _failures.add(AsyncError(error, stack));
   }
 
-  void _addToBuffer(MonitorEvent event) {
+  void _addToBuffer(LevitMonitorEvent event) {
     if (_closed || !_enabled || !LevitMonitor.shouldProcess(event)) return;
     try {
       final frozen = event.freeze();
@@ -181,7 +181,7 @@ class LevitMonitorMiddleware
     }
   }
 
-  void _enqueue(FrozenMonitorEvent event) {
+  void _enqueue(LevitFrozenMonitorEvent event) {
     if (_pending.length == maxPendingEvents) {
       _pending.removeFirst();
       _droppedEvents++;
@@ -219,13 +219,8 @@ class LevitMonitorMiddleware
     await _flushQueue();
   }
 
-  Future<void> _flushQueue({bool waitForTransition = true}) async {
-    while (_pumping != null || _pending.isNotEmpty) {
-      if (_paused) {
-        if (!waitForTransition) break;
-        await _transition;
-        continue;
-      }
+  Future<void> _flushQueue() async {
+    while (!_paused && (_pumping != null || _pending.isNotEmpty)) {
       _pump();
       await _pumping;
     }
@@ -247,7 +242,7 @@ class LevitMonitorMiddleware
       final reactiveId = reactive.id.toString();
       _stateSnapshot.scrubSensitiveReactive(reactiveId);
       if (_pending.isNotEmpty) {
-        final scrubbed = ListQueue<FrozenMonitorEvent>(_pending.length);
+        final scrubbed = ListQueue<LevitFrozenMonitorEvent>(_pending.length);
         for (final pending in _pending) {
           final nextEnvelope = _scrubEnvelopeForReactive(
             pending.envelope,
@@ -256,7 +251,10 @@ class LevitMonitorMiddleware
           scrubbed.add(
             identical(nextEnvelope, pending.envelope)
                 ? pending
-                : FrozenMonitorEvent._captured(nextEnvelope, pending.timestamp),
+                : LevitFrozenMonitorEvent._captured(
+                    nextEnvelope,
+                    pending.timestamp,
+                  ),
           );
         }
         _pending
@@ -265,17 +263,17 @@ class LevitMonitorMiddleware
       }
     }
     _addToBuffer(
-      ReactiveMetadataEvent(sessionId: sessionId, reactive: reactive),
+      LevitReactiveMetadataEvent(sessionId: sessionId, reactive: reactive),
     );
   }
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     return (value) {
       final origin = includeStackTrace ? StackTrace.current : null;
       next(value);
       _addToBuffer(
-        ReactiveChangeEvent(
+        LevitReactiveChangeEvent(
           sessionId: sessionId,
           reactive: reactive,
           change: change,
@@ -286,7 +284,7 @@ class LevitMonitorMiddleware
   };
 
   @override
-  LxOnBatch? get onBatch => (next, change) {
+  LevitReactiveOnBatch? get onBatch => (next, change) {
     return () {
       dynamic result;
       try {
@@ -304,20 +302,22 @@ class LevitMonitorMiddleware
   };
 
   void _logBatch(LevitReactiveBatch change) {
-    _addToBuffer(ReactiveBatchEvent(sessionId: sessionId, change: change));
+    _addToBuffer(LevitReactiveBatchEvent(sessionId: sessionId, change: change));
   }
 
   @override
   void Function(LxReactive reactive)? get onInit => (reactive) {
-    _addToBuffer(ReactiveInitEvent(sessionId: sessionId, reactive: reactive));
+    _addToBuffer(
+      LevitReactiveInitEvent(sessionId: sessionId, reactive: reactive),
+    );
   };
 
   @override
-  LxOnDispose? get onDispose => (next, reactive) {
+  LevitReactiveOnDispose? get onDispose => (next, reactive) {
     return () {
       next();
       _addToBuffer(
-        ReactiveDisposeEvent(sessionId: sessionId, reactive: reactive),
+        LevitReactiveDisposeEvent(sessionId: sessionId, reactive: reactive),
       );
     };
   };
@@ -326,7 +326,7 @@ class LevitMonitorMiddleware
   void Function(LxReactive, List<LxReactive>)? get onGraphChange =>
       (computed, dependencies) {
         _addToBuffer(
-          ReactiveGraphChangeEvent(
+          LevitReactiveGraphChangeEvent(
             sessionId: sessionId,
             reactive: computed,
             dependencies: dependencies,
@@ -338,7 +338,7 @@ class LevitMonitorMiddleware
   void Function(LxReactive reactive, LxListenerContext? context)?
   get startedListening => (reactive, context) {
     _addToBuffer(
-      ReactiveListenerAddedEvent(
+      LevitReactiveListenerAddedEvent(
         sessionId: sessionId,
         reactive: reactive,
         context: context,
@@ -350,7 +350,7 @@ class LevitMonitorMiddleware
   void Function(LxReactive reactive, LxListenerContext? context)?
   get stoppedListening => (reactive, context) {
     _addToBuffer(
-      ReactiveListenerRemovedEvent(
+      LevitReactiveListenerRemovedEvent(
         sessionId: sessionId,
         reactive: reactive,
         context: context,
@@ -362,7 +362,7 @@ class LevitMonitorMiddleware
   void Function(Object error, StackTrace? stack, LxReactive? context)?
   get onReactiveError => (error, stack, reactive) {
     _addToBuffer(
-      ReactiveErrorEvent(
+      LevitReactiveErrorEvent(
         sessionId: sessionId,
         reactive: reactive,
         error: error,
@@ -410,7 +410,7 @@ class LevitMonitorMiddleware
   @override
   void onScopeCreate(int scopeId, String scopeName, int? parentScopeId) {
     _addToBuffer(
-      ScopeCreateEvent(
+      LevitScopeCreateEvent(
         sessionId: sessionId,
         scopeId: scopeId,
         scopeName: scopeName,
@@ -422,7 +422,7 @@ class LevitMonitorMiddleware
   @override
   void onScopeDispose(int scopeId, String scopeName) {
     _addToBuffer(
-      ScopeDisposeEvent(
+      LevitScopeDisposeEvent(
         sessionId: sessionId,
         scopeId: scopeId,
         scopeName: scopeName,
@@ -440,7 +440,7 @@ class LevitMonitorMiddleware
     int? parentScopeId,
   }) {
     _addToBuffer(
-      DependencyRegisterEvent(
+      LevitDependencyRegisterEvent(
         sessionId: sessionId,
         scopeId: scopeId,
         scopeName: scopeName,
@@ -461,7 +461,7 @@ class LevitMonitorMiddleware
     int? parentScopeId,
   }) {
     _addToBuffer(
-      DependencyResolveEvent(
+      LevitDependencyResolveEvent(
         sessionId: sessionId,
         scopeId: scopeId,
         scopeName: scopeName,
@@ -482,7 +482,7 @@ class LevitMonitorMiddleware
     int? parentScopeId,
   }) {
     _addToBuffer(
-      DependencyDeleteEvent(
+      LevitDependencyDeleteEvent(
         sessionId: sessionId,
         scopeId: scopeId,
         scopeName: scopeName,
@@ -502,7 +502,7 @@ class LevitMonitorMiddleware
   ) {
     return () {
       _addToBuffer(
-        DependencyInstanceCreateEvent(
+        LevitDependencyInstanceCreateEvent(
           sessionId: sessionId,
           scopeId: scope.id,
           scopeName: scope.name,
@@ -524,7 +524,7 @@ class LevitMonitorMiddleware
   ) {
     return () {
       _addToBuffer(
-        DependencyInstanceReadyEvent(
+        LevitDependencyInstanceReadyEvent(
           sessionId: sessionId,
           scopeId: scope.id,
           scopeName: scope.name,

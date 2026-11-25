@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:levit_dart_core/levit_testing.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart_core/spi.dart';
 
 class Owner extends LevitScopeDisposable with LevitResourceOwnership {
   Owner({this.before});
@@ -160,7 +161,10 @@ void main() {
       final scope = Levit.createScope('expired capture');
       final owner = scope.put(CallbackOwner.new);
       await scope.dispose();
-      expect(() => runCapturedForTesting(owner.callback), throwsStateError);
+      expect(
+        () => LevitAutoLinkSpi.runCaptured(owner.callback),
+        throwsStateError,
+      );
       expect(owner.isDisposed, isTrue);
     },
   );
@@ -343,7 +347,7 @@ void main() {
       final problem = StateError('capture cleanup');
       runZonedGuarded(
         () {
-          final building = runCapturedForTesting<Future<void>>(() async {
+          final building = LevitAutoLinkSpi.runCaptured<Future<void>>(() async {
             FailedReactive(problem);
             throw StateError('builder');
           });
@@ -368,7 +372,7 @@ void main() {
     addTearDown(Levit.disableAutoLinking);
     late LxVar<int> allocated;
     expect(
-      () => runCapturedForTesting(() {
+      () => LevitAutoLinkSpi.runCaptured(() {
         allocated = 0.lx;
         throw StateError('builder');
       }),

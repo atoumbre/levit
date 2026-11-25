@@ -2,23 +2,32 @@ import 'dart:async';
 
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 class TaskOwner extends LevitController with LevitTasksMixin {}
 
 class ReactiveTaskOwner extends LevitController with LevitReactiveTasksMixin {}
 
-class DelayedCache extends InMemoryTaskCacheProvider {
+class DelayedCache implements LevitTaskCacheProvider {
+  final _inner = LevitTaskCacheProvider.inMemory();
   final writing = Completer<void>();
   final release = Completer<void>();
+
   @override
   Future<void> write(String key, Map<String, dynamic> data) async {
     writing.complete();
     await release.future;
-    await super.write(key, data);
+    await _inner.write(key, data);
   }
+
+  @override
+  Future<Map<String, dynamic>?> read(String key) => _inner.read(key);
+
+  @override
+  Future<void> delete(String key) => _inner.delete(key);
 }
 
-class FailingService implements StoppableService {
+class FailingService implements LevitLoopService {
   FailingService(this.error, this.gate);
   final Object error;
   final Completer<void> gate;
@@ -48,7 +57,7 @@ void main() {
       final task = engine.submit(
         (_) => 3,
         onSuccess: (_) => published = true,
-        cachePolicy: TaskCachePolicy<int>(
+        cachePolicy: LevitTaskCachePolicy<int>(
           ttl: const Duration(minutes: 1),
           toJson: (value) => {'value': value},
           fromJson: (json) => json['value'] as int,
@@ -61,7 +70,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(closed, isFalse);
       cache.release.complete();
-      expect(await task.outcome, isA<LevitTaskCancellation<int>>());
+      expect(await task.outcome, isA<LevitTaskCancelled<int>>());
       await closing;
       expect(published, isFalse);
     },
@@ -75,7 +84,7 @@ void main() {
       expect(reactive.taskGroup.policy, LevitTaskGroupPolicy.supervisor);
       await owner.taskGroup.runGroup((group) async {
         expect(
-          await owner.tasksEngine.schedule((ctx) {
+          await owner.taskEngine.schedule((ctx) {
             expect(ctx.group, same(group));
             return 7;
           }),
@@ -117,13 +126,13 @@ void main() {
       );
       expect(
         const LevitTaskCancellationReason(
-          LevitCancellationKind.requested,
+          LevitTaskCancellationKind.requested,
         ).toString(),
         'requested',
       );
       expect(
         const LevitTaskCancellationReason(
-          LevitCancellationKind.requested,
+          LevitTaskCancellationKind.requested,
           'user',
         ).toString(),
         'requested: user',
@@ -150,7 +159,7 @@ void main() {
           await context.cancelled;
           expect(
             context.cancellationReason?.kind,
-            LevitCancellationKind.deadlineExceeded,
+            LevitTaskCancellationKind.deadlineExceeded,
           );
           context.throwIfCancelled();
         });
@@ -160,7 +169,7 @@ void main() {
       await expectLater(result, throwsA(isA<LevitTaskCancelledException>()));
       expect(
         group.cancellationReason?.kind,
-        LevitCancellationKind.deadlineExceeded,
+        LevitTaskCancellationKind.deadlineExceeded,
       );
       await group.drain();
       await group.dispose();
@@ -188,7 +197,7 @@ void main() {
     () async {
       final engine = LevitTaskEngine(maxConcurrent: 1);
       const reason = LevitTaskCancellationReason(
-        LevitCancellationKind.parentCancelled,
+        LevitTaskCancellationKind.parentCancelled,
       );
       final cancelled = LevitTaskGroup(engine: engine);
       await expectLater(

@@ -1,12 +1,14 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
+import 'package:levit_dart_core/spi.dart';
 
 class MockTransport extends LevitTransport {
-  final List<MonitorEvent> events = [];
+  final List<LevitMonitorEvent> events = [];
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     events.add(event);
   }
 
@@ -40,7 +42,7 @@ void main() {
         data: {'test_key': 'test_value'},
       );
 
-      Lx.runWithContext(ctx, () {
+      LxSpi.runWithContext(ctx, () {
         reactive.addListener(() {});
       });
 
@@ -62,7 +64,7 @@ void main() {
         data: {'ctx': 'add'},
       );
 
-      Lx.runWithContext(addCtx, () {
+      LxSpi.runWithContext(addCtx, () {
         reactive.addListener(listener);
       });
 
@@ -74,7 +76,7 @@ void main() {
         id: 2,
         data: {'ctx': 'remove'},
       );
-      Lx.runWithContext(removeCtx, () {
+      LxSpi.runWithContext(removeCtx, () {
         reactive.removeListener(listener);
       });
 
@@ -92,8 +94,8 @@ void main() {
       final outerCtx = const LxListenerContext(type: 'Outer', id: 1);
       final innerCtx = const LxListenerContext(type: 'Inner', id: 2);
 
-      Lx.runWithContext(outerCtx, () {
-        Lx.runWithContext(innerCtx, () {
+      LxSpi.runWithContext(outerCtx, () {
+        LxSpi.runWithContext(innerCtx, () {
           reactive.addListener(() {});
         });
       });

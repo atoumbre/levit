@@ -3,13 +3,13 @@ import 'package:fake_async/fake_async.dart';
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
-LxCountdown countdown(
+LevitCountdown countdown(
   FakeAsync time, {
   Duration duration = const Duration(seconds: 5),
   Duration interval = const Duration(seconds: 1),
   void Function(Duration)? onTick,
   void Function()? onFinish,
-}) => LxCountdown(
+}) => LevitCountdown(
   totalDuration: duration,
   interval: interval,
   stopwatch: time.getClock(DateTime(2026)).stopwatch(),
@@ -176,7 +176,7 @@ void main() {
       fakeAsync((time) {
         var ticks = 0;
         var finishes = 0;
-        late LxCountdown timer;
+        late LevitCountdown timer;
         timer = countdown(
           time,
           duration: const Duration(seconds: 1),

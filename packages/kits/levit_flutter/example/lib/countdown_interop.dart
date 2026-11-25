@@ -10,7 +10,7 @@ void main() {
 
 /// The feature owns the countdown and adapter. The adapter borrows the duration.
 class CountdownInteropController extends LevitController with LevitTimeMixin {
-  late final LxCountdown countdown;
+  late final LevitCountdown countdown;
   late final ValueListenable<Duration> display;
 
   @override

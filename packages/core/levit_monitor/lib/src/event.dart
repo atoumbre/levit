@@ -1,10 +1,10 @@
-part of '../levit_monitor.dart';
+part of 'monitor_library.dart';
 
 /// The base class for all diagnostic events in the Levit ecosystem.
 ///
-/// [MonitorEvent] provides a common schema for both state changes and
+/// [LevitMonitorEvent] provides a common schema for both state changes and
 /// dependency injection events, ensuring they can be serialized and correlated.
-sealed class MonitorEvent {
+sealed class LevitMonitorEvent {
   /// A monotonically increasing sequence number within the current session.
   final int seq;
 
@@ -15,9 +15,12 @@ sealed class MonitorEvent {
   final String sessionId;
 
   /// Internal constructor for monitor events.
-  MonitorEvent({required this.sessionId, DateTime? timestamp, int? sequence})
-    : timestamp = timestamp ?? DateTime.now(),
-      seq = sequence ?? _nextSeq++;
+  LevitMonitorEvent({
+    required this.sessionId,
+    DateTime? timestamp,
+    int? sequence,
+  }) : timestamp = timestamp ?? DateTime.now(),
+       seq = sequence ?? _nextSeq++;
 
   static int _nextSeq = 0;
   late final String _timestampJson = timestamp.toIso8601String();
@@ -33,8 +36,8 @@ sealed class MonitorEvent {
         ..['sessionId'] = sessionId;
 
   /// Captures redaction and serialization now, before buffering or retaining.
-  FrozenMonitorEvent freeze() {
-    if (this is FrozenMonitorEvent) return this as FrozenMonitorEvent;
+  LevitFrozenMonitorEvent freeze() {
+    if (this is LevitFrozenMonitorEvent) return this as LevitFrozenMonitorEvent;
     final envelope = LevitEventEnvelope.capture(
       (fields) {
         final previous = _captureFields;
@@ -46,19 +49,19 @@ sealed class MonitorEvent {
         }
       },
       category: switch (this) {
-        DependencyEvent() => 'di',
+        LevitDependencyEvent() => 'di',
         _ScopeProgressEvent() => 'di',
-        SnapshotEvent() => 'snapshot',
-        LogEvent() => 'log',
-        CustomMonitorEvent() => 'custom',
+        LevitSnapshotEvent() => 'snapshot',
+        LevitLogEvent() => 'log',
+        LevitCustomMonitorEvent() => 'custom',
         _ => 'state',
       },
     );
     // Preserve custom toJson overrides while avoiding timestamp parsing for the
     // ordinary capture path. DateTime and the encoded timestamp are immutable.
     return envelope.data['timestamp'] == _timestampJson
-        ? FrozenMonitorEvent._captured(envelope, timestamp)
-        : FrozenMonitorEvent(envelope);
+        ? LevitFrozenMonitorEvent._captured(envelope, timestamp)
+        : LevitFrozenMonitorEvent(envelope);
   }
 
   /// Safeguard for converting arbitrary objects to string representations.
@@ -111,11 +114,11 @@ sealed class MonitorEvent {
 // ============================================================================
 
 /// Base class for events related to the reactive state engine ([Lx]).
-sealed class ReactiveEvent extends MonitorEvent {
+sealed class LevitReactiveEvent extends LevitMonitorEvent {
   /// The reactive object that triggered the event.
   final LxReactive reactive;
 
-  ReactiveEvent({required super.sessionId, required this.reactive});
+  LevitReactiveEvent({required super.sessionId, required this.reactive});
 
   @override
   Map<String, dynamic> toJson() => super.toJson()
@@ -126,14 +129,14 @@ sealed class ReactiveEvent extends MonitorEvent {
 }
 
 /// Event triggered when a new reactive variable is instantiated.
-class ReactiveInitEvent extends ReactiveEvent {
-  ReactiveInitEvent({required super.sessionId, required super.reactive});
+class LevitReactiveInitEvent extends LevitReactiveEvent {
+  LevitReactiveInitEvent({required super.sessionId, required super.reactive});
   @override
   Map<String, dynamic> toJson() => {
     ...super.toJson(),
     'type': 'reactive_init',
     'valueType': reactive.value?.runtimeType.toString() ?? 'dynamic',
-    'initialValue': MonitorEvent._stringify(
+    'initialValue': LevitMonitorEvent._stringify(
       reactive.value,
       isSensitive: reactive.isSensitive,
     ),
@@ -141,8 +144,11 @@ class ReactiveInitEvent extends ReactiveEvent {
 }
 
 /// Event triggered when a reactive object's lifecycle ends.
-class ReactiveDisposeEvent extends ReactiveEvent {
-  ReactiveDisposeEvent({required super.sessionId, required super.reactive});
+class LevitReactiveDisposeEvent extends LevitReactiveEvent {
+  LevitReactiveDisposeEvent({
+    required super.sessionId,
+    required super.reactive,
+  });
   @override
   Map<String, dynamic> toJson() => {
     ...super.toJson(),
@@ -151,14 +157,14 @@ class ReactiveDisposeEvent extends ReactiveEvent {
 }
 
 /// Event triggered by a single state mutation.
-class ReactiveChangeEvent extends ReactiveEvent {
+class LevitReactiveChangeEvent extends LevitReactiveEvent {
   /// The change record intercepted from the middleware.
   final LevitReactiveChange change;
 
   /// Optional call stack captured at the write boundary for update attribution.
   final StackTrace? stackTrace;
 
-  ReactiveChangeEvent({
+  LevitReactiveChangeEvent({
     required super.sessionId,
     required super.reactive,
     required this.change,
@@ -166,10 +172,10 @@ class ReactiveChangeEvent extends ReactiveEvent {
   });
 
   @override
-  FrozenMonitorEvent freeze() {
+  LevitFrozenMonitorEvent freeze() {
     // External subclasses may customize serialization; retain that contract.
-    if (runtimeType != ReactiveChangeEvent) return super.freeze();
-    return FrozenMonitorEvent._captured(
+    if (runtimeType != LevitReactiveChangeEvent) return super.freeze();
+    return LevitFrozenMonitorEvent._captured(
       LevitEventEnvelope.stateChange(
         sessionId: sessionId,
         seq: seq,
@@ -179,13 +185,13 @@ class ReactiveChangeEvent extends ReactiveEvent {
         ownerId: reactive.ownerId,
         isSensitive: reactive.isSensitive,
         oldValue:
-            MonitorEvent._stringify(
+            LevitMonitorEvent._stringify(
                   change.oldValue,
                   isSensitive: reactive.isSensitive,
                 )
                 as String?,
         newValue:
-            MonitorEvent._stringify(
+            LevitMonitorEvent._stringify(
                   change.newValue,
                   isSensitive: reactive.isSensitive,
                 )
@@ -193,7 +199,7 @@ class ReactiveChangeEvent extends ReactiveEvent {
         valueType: change.valueType.toString(),
         stackTrace: stackTrace == null
             ? null
-            : MonitorEvent._stringify(
+            : LevitMonitorEvent._stringify(
                     stackTrace,
                     isSensitive: reactive.isSensitive,
                   )
@@ -207,18 +213,18 @@ class ReactiveChangeEvent extends ReactiveEvent {
   Map<String, dynamic> toJson() {
     final data = super.toJson()
       ..['type'] = 'state_change'
-      ..['oldValue'] = MonitorEvent._stringify(
+      ..['oldValue'] = LevitMonitorEvent._stringify(
         change.oldValue,
         isSensitive: reactive.isSensitive,
       )
-      ..['newValue'] = MonitorEvent._stringify(
+      ..['newValue'] = LevitMonitorEvent._stringify(
         change.newValue,
         isSensitive: reactive.isSensitive,
       )
       ..['valueType'] = change.valueType.toString()
       ..['isBatch'] = false;
     if (stackTrace != null) {
-      data['stackTrace'] = MonitorEvent._stringify(
+      data['stackTrace'] = LevitMonitorEvent._stringify(
         stackTrace,
         isSensitive: reactive.isSensitive,
       );
@@ -228,11 +234,11 @@ class ReactiveChangeEvent extends ReactiveEvent {
 }
 
 /// Event triggered at the completion of a reactive batch.
-class ReactiveBatchEvent extends MonitorEvent {
+class LevitReactiveBatchEvent extends LevitMonitorEvent {
   /// The batch record containing all mutations occurred within the scope.
   final LevitReactiveBatch change;
 
-  ReactiveBatchEvent({required super.sessionId, required this.change});
+  LevitReactiveBatchEvent({required super.sessionId, required this.change});
 
   @override
   Map<String, dynamic> toJson() => {
@@ -246,11 +252,11 @@ class ReactiveBatchEvent extends MonitorEvent {
             'reactiveId': e.$1.id.toString(),
             'name': e.$1.name,
             'isSensitive': e.$1.isSensitive,
-            'oldValue': MonitorEvent._stringify(
+            'oldValue': LevitMonitorEvent._stringify(
               e.$2.oldValue,
               isSensitive: e.$1.isSensitive,
             ),
-            'newValue': MonitorEvent._stringify(
+            'newValue': LevitMonitorEvent._stringify(
               e.$2.newValue,
               isSensitive: e.$1.isSensitive,
             ),
@@ -262,11 +268,11 @@ class ReactiveBatchEvent extends MonitorEvent {
 }
 
 /// Event triggered when a computed value's dependency graph is updated.
-class ReactiveGraphChangeEvent extends ReactiveEvent {
+class LevitReactiveGraphChangeEvent extends LevitReactiveEvent {
   /// The current set of dependencies for the reactive object.
   final List<LxReactive> dependencies;
 
-  ReactiveGraphChangeEvent({
+  LevitReactiveGraphChangeEvent({
     required super.sessionId,
     required super.reactive,
     required this.dependencies,
@@ -283,11 +289,11 @@ class ReactiveGraphChangeEvent extends ReactiveEvent {
 }
 
 /// Event triggered when a new listener subscribes to a reactive object.
-class ReactiveListenerAddedEvent extends ReactiveEvent {
+class LevitReactiveListenerAddedEvent extends LevitReactiveEvent {
   /// Context data about the listener (e.g., Widget label, runtimeType).
   final LxListenerContext? context;
 
-  ReactiveListenerAddedEvent({
+  LevitReactiveListenerAddedEvent({
     required super.sessionId,
     required super.reactive,
     this.context,
@@ -304,11 +310,11 @@ class ReactiveListenerAddedEvent extends ReactiveEvent {
 }
 
 /// Event triggered when a listener unsubscribes from a reactive object.
-class ReactiveListenerRemovedEvent extends ReactiveEvent {
+class LevitReactiveListenerRemovedEvent extends LevitReactiveEvent {
   /// Context data about the listener.
   final LxListenerContext? context;
 
-  ReactiveListenerRemovedEvent({
+  LevitReactiveListenerRemovedEvent({
     required super.sessionId,
     required super.reactive,
     this.context,
@@ -325,7 +331,7 @@ class ReactiveListenerRemovedEvent extends ReactiveEvent {
 }
 
 /// Event triggered when an unhandled exception occurs in a reactive listener.
-class ReactiveErrorEvent extends MonitorEvent {
+class LevitReactiveErrorEvent extends LevitMonitorEvent {
   /// The reactive object context where the error occurred (optional).
   final LxReactive? reactive;
 
@@ -335,7 +341,7 @@ class ReactiveErrorEvent extends MonitorEvent {
   /// The stack trace associated with the error.
   final StackTrace? stack;
 
-  ReactiveErrorEvent({
+  LevitReactiveErrorEvent({
     required super.sessionId,
     this.reactive,
     required this.error,
@@ -349,11 +355,11 @@ class ReactiveErrorEvent extends MonitorEvent {
     'reactiveId': reactive?.id.toString(),
     'name': reactive?.name,
     'isSensitive': reactive?.isSensitive ?? false,
-    'error': MonitorEvent._stringify(
+    'error': LevitMonitorEvent._stringify(
       error,
       isSensitive: reactive?.isSensitive ?? false,
     ),
-    'stack': MonitorEvent._stringify(
+    'stack': LevitMonitorEvent._stringify(
       stack,
       isSensitive: reactive?.isSensitive ?? false,
     ),
@@ -365,7 +371,7 @@ class ReactiveErrorEvent extends MonitorEvent {
 // ============================================================================
 
 /// Base class for events related to the dependency injection system ([Levit]).
-sealed class DependencyEvent extends MonitorEvent {
+sealed class LevitDependencyEvent extends LevitMonitorEvent {
   /// The unique identifier of the scope where the event occurred.
   final int scopeId;
 
@@ -378,7 +384,7 @@ sealed class DependencyEvent extends MonitorEvent {
   /// Metadata about the dependency at the time of the event.
   final LevitDependency info;
 
-  DependencyEvent({
+  LevitDependencyEvent({
     required super.sessionId,
     required this.scopeId,
     required this.scopeName,
@@ -400,10 +406,10 @@ sealed class DependencyEvent extends MonitorEvent {
 
 /// Event triggered when a new scope is created.
 /// Wire metadata describes the scope; dependency-only flags are omitted.
-class ScopeCreateEvent extends DependencyEvent {
+class LevitScopeCreateEvent extends LevitDependencyEvent {
   final int? parentScopeId;
 
-  ScopeCreateEvent({
+  LevitScopeCreateEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -423,8 +429,8 @@ class ScopeCreateEvent extends DependencyEvent {
 
 /// Event triggered when a scope is disposed, after all cleanup attempts finish.
 /// Wire metadata describes the scope; dependency-only flags are omitted.
-class ScopeDisposeEvent extends DependencyEvent {
-  ScopeDisposeEvent({
+class LevitScopeDisposeEvent extends LevitDependencyEvent {
+  LevitScopeDisposeEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -441,9 +447,9 @@ class ScopeDisposeEvent extends DependencyEvent {
 }
 
 /// Event triggered when a dependency is registered with a scope.
-class DependencyRegisterEvent extends DependencyEvent {
+class LevitDependencyRegisterEvent extends LevitDependencyEvent {
   final String source;
-  DependencyRegisterEvent({
+  LevitDependencyRegisterEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -459,9 +465,9 @@ class DependencyRegisterEvent extends DependencyEvent {
 }
 
 /// Event triggered when a dependency instance creation begins.
-class DependencyInstanceCreateEvent extends DependencyEvent {
-  /// Creates a new [DependencyInstanceCreateEvent].
-  DependencyInstanceCreateEvent({
+class LevitDependencyInstanceCreateEvent extends LevitDependencyEvent {
+  /// Creates a new [LevitDependencyInstanceCreateEvent].
+  LevitDependencyInstanceCreateEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -475,12 +481,12 @@ class DependencyInstanceCreateEvent extends DependencyEvent {
 }
 
 /// Event triggered when a dependency instance is fully initialized and ready.
-class DependencyInstanceReadyEvent extends DependencyEvent {
+class LevitDependencyInstanceReadyEvent extends LevitDependencyEvent {
   /// The resulting instance.
   final dynamic instance;
 
-  /// Creates a new [DependencyInstanceReadyEvent].
-  DependencyInstanceReadyEvent({
+  /// Creates a new [LevitDependencyInstanceReadyEvent].
+  LevitDependencyInstanceReadyEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -491,7 +497,7 @@ class DependencyInstanceReadyEvent extends DependencyEvent {
 
   @override
   Map<String, dynamic> toJson() {
-    final type = MonitorEvent._instanceType(instance);
+    final type = LevitMonitorEvent._instanceType(instance);
     return super.toJson()
       ..['type'] = 'di_instance_init'
       ..['instance'] = '<$type>'
@@ -505,9 +511,9 @@ class DependencyInstanceReadyEvent extends DependencyEvent {
 }
 
 /// Event triggered when a dependency is successfully resolved.
-class DependencyResolveEvent extends DependencyEvent {
+class LevitDependencyResolveEvent extends LevitDependencyEvent {
   final String source;
-  DependencyResolveEvent({
+  LevitDependencyResolveEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -518,7 +524,7 @@ class DependencyResolveEvent extends DependencyEvent {
 
   @override
   Map<String, dynamic> toJson() {
-    final type = MonitorEvent._instanceType(info.instance);
+    final type = LevitMonitorEvent._instanceType(info.instance);
     return super.toJson()
       ..['type'] = 'di_resolve'
       ..['source'] = source
@@ -528,12 +534,12 @@ class DependencyResolveEvent extends DependencyEvent {
 }
 
 /// Event triggered when a dependency is removed from a scope.
-class DependencyDeleteEvent extends DependencyEvent {
+class LevitDependencyDeleteEvent extends LevitDependencyEvent {
   /// The origin or reason for the deletion (e.g., 'manual', 'scope_destroy').
   final String source;
 
-  /// Creates a new [DependencyDeleteEvent].
-  DependencyDeleteEvent({
+  /// Creates a new [LevitDependencyDeleteEvent].
+  LevitDependencyDeleteEvent({
     required super.sessionId,
     required super.scopeId,
     required super.scopeName,
@@ -553,9 +559,9 @@ class DependencyDeleteEvent extends DependencyEvent {
 // ============================================================================
 
 /// Event triggered for custom application logs.
-class LogEvent extends MonitorEvent {
+class LevitLogEvent extends LevitMonitorEvent {
   /// The severity level of the log.
-  final Level level;
+  final LevitLogLevel level;
 
   /// The primary data or message being logged. Can be a string or a serializable object.
   final Object? data;
@@ -569,7 +575,7 @@ class LogEvent extends MonitorEvent {
   /// An optional stack trace associated with the log.
   final StackTrace? stackTrace;
 
-  LogEvent({
+  LevitLogEvent({
     required super.sessionId,
     required this.level,
     this.data,
@@ -588,9 +594,12 @@ class LogEvent extends MonitorEvent {
         ? (data == null ? null : LevitMonitor.obfuscate(data))
         : _serializeData(data),
     if (error != null)
-      'error': MonitorEvent._stringify(error, isSensitive: sensitive),
+      'error': LevitMonitorEvent._stringify(error, isSensitive: sensitive),
     if (stackTrace != null)
-      'stackTrace': MonitorEvent._stringify(stackTrace, isSensitive: sensitive),
+      'stackTrace': LevitMonitorEvent._stringify(
+        stackTrace,
+        isSensitive: sensitive,
+      ),
   };
 
   static dynamic _serializeData(Object? data) {
@@ -600,7 +609,7 @@ class LogEvent extends MonitorEvent {
     }
     if (data is num || data is String || data is bool) return data;
     final sanitized = data is Map || data is Iterable
-        ? MonitorEvent._redactNested(data)
+        ? LevitMonitorEvent._redactNested(data)
         : data;
     try {
       // Attempt to encode to check if serializable or if it has `toJson()`
@@ -610,7 +619,7 @@ class LogEvent extends MonitorEvent {
       try {
         return (sanitized as dynamic).toJson();
       } catch (_) {
-        return MonitorEvent._stringify(sanitized);
+        return LevitMonitorEvent._stringify(sanitized);
       }
     }
   }
@@ -623,7 +632,7 @@ class LogEvent extends MonitorEvent {
 // Versioned, self-contained progress records avoid repeating field names for
 // every registration at every lifecycle boundary. They are never deltas: a
 // receiver can recover full ownership metadata even if earlier events dropped.
-final class _ScopeProgressEvent extends MonitorEvent {
+final class _ScopeProgressEvent extends LevitMonitorEvent {
   final List<Object?> scope;
   _ScopeProgressEvent({required super.sessionId, required this.scope});
 
@@ -667,7 +676,7 @@ final class _ScopeProgressEvent extends MonitorEvent {
 ///
 /// Custom events let optional packages bridge their own event models into the
 /// monitor without making `levit_monitor` depend on those packages.
-class CustomMonitorEvent extends MonitorEvent {
+class LevitCustomMonitorEvent extends LevitMonitorEvent {
   /// Stable namespace owned by the event producer.
   final String namespace;
 
@@ -675,7 +684,7 @@ class CustomMonitorEvent extends MonitorEvent {
   final String name;
 
   /// Severity used by transports that support log levels.
-  final Level level;
+  final LevitLogLevel level;
 
   /// Low-cardinality, structured event attributes.
   final Map<String, Object?> attributes;
@@ -690,11 +699,11 @@ class CustomMonitorEvent extends MonitorEvent {
   final StackTrace? stackTrace;
 
   /// Creates a structured custom event.
-  CustomMonitorEvent({
+  LevitCustomMonitorEvent({
     required super.sessionId,
     required this.namespace,
     required this.name,
-    this.level = Level.info,
+    this.level = LevitLogLevel.info,
     Map<String, Object?> attributes = const {},
     this.sensitive = false,
     this.error,
@@ -720,10 +729,13 @@ class CustomMonitorEvent extends MonitorEvent {
           ? LevitMonitor.obfuscate(attributes)
           : _serializeAttributes(attributes);
     if (error != null) {
-      data['error'] = MonitorEvent._stringify(error, isSensitive: sensitive);
+      data['error'] = LevitMonitorEvent._stringify(
+        error,
+        isSensitive: sensitive,
+      );
     }
     if (stackTrace != null) {
-      data['stackTrace'] = MonitorEvent._stringify(
+      data['stackTrace'] = LevitMonitorEvent._stringify(
         stackTrace,
         isSensitive: sensitive,
       );
@@ -752,7 +764,7 @@ class CustomMonitorEvent extends MonitorEvent {
     if (value is Map) {
       return value.map(
         (key, nested) => MapEntry(
-          MonitorEvent._stringify(key).toString(),
+          LevitMonitorEvent._stringify(key).toString(),
           _serializeValue(nested),
         ),
       );
@@ -760,7 +772,7 @@ class CustomMonitorEvent extends MonitorEvent {
     if (value is Iterable) {
       return value.map(_serializeValue).toList(growable: false);
     }
-    return MonitorEvent._stringify(value);
+    return LevitMonitorEvent._stringify(value);
   }
 }
 
@@ -769,10 +781,10 @@ class CustomMonitorEvent extends MonitorEvent {
 // ============================================================================
 
 /// Event containing a full state snapshot for reconnection.
-class SnapshotEvent extends MonitorEvent {
+class LevitSnapshotEvent extends LevitMonitorEvent {
   final Map<String, dynamic> state;
 
-  SnapshotEvent({required super.sessionId, required this.state});
+  LevitSnapshotEvent({required super.sessionId, required this.state});
 
   @override
   Map<String, dynamic> toJson() => {
@@ -783,18 +795,18 @@ class SnapshotEvent extends MonitorEvent {
 }
 
 /// The only event form retained by monitor queues and passed to transports.
-final class FrozenMonitorEvent extends MonitorEvent {
+final class LevitFrozenMonitorEvent extends LevitMonitorEvent {
   final LevitEventEnvelope envelope;
   // Capture already owns the DateTime. Reparsing its wire representation adds
   // a regexp/date conversion to every event without strengthening immutability.
-  FrozenMonitorEvent._captured(this.envelope, DateTime timestamp)
+  LevitFrozenMonitorEvent._captured(this.envelope, DateTime timestamp)
     : super(
         sessionId: envelope.sessionId,
         sequence: envelope.seq,
         timestamp: timestamp,
       );
 
-  FrozenMonitorEvent(this.envelope)
+  LevitFrozenMonitorEvent(this.envelope)
     : super(
         sessionId: envelope.sessionId,
         sequence: envelope.seq,
@@ -805,8 +817,11 @@ final class FrozenMonitorEvent extends MonitorEvent {
 }
 
 /// Name, ownership or sensitivity changed without changing the reactive value.
-final class ReactiveMetadataEvent extends ReactiveEvent {
-  ReactiveMetadataEvent({required super.sessionId, required super.reactive});
+final class LevitReactiveMetadataEvent extends LevitReactiveEvent {
+  LevitReactiveMetadataEvent({
+    required super.sessionId,
+    required super.reactive,
+  });
   @override
   Map<String, dynamic> toJson() => {
     ...super.toJson(),

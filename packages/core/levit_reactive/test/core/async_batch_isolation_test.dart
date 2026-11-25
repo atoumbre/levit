@@ -247,9 +247,9 @@ void main() {
 
 class _PassThroughMiddleware extends LevitReactiveMiddleware {
   @override
-  LxOnSet get onSet =>
+  LevitReactiveOnSet get onSet =>
       (next, reactive, change) => next;
   @override
-  LxOnBatch get onBatch =>
+  LevitReactiveOnBatch get onBatch =>
       (next, change) => next;
 }

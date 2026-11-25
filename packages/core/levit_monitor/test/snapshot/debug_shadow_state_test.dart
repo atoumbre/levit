@@ -1,13 +1,13 @@
-import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
   test('Debug Scope Remove', () {
-    final state = StateSnapshot();
+    final state = LevitStateSnapshot();
     final sid = 'sid';
 
     state.applyEvent(
-      ScopeCreateEvent(
+      LevitScopeCreateEvent(
         sessionId: sid,
         scopeId: 1,
         scopeName: 's1',
@@ -19,7 +19,7 @@ void main() {
     expect(state.scopes.containsKey(1), isTrue);
 
     state.applyEvent(
-      ScopeDisposeEvent(sessionId: sid, scopeId: 1, scopeName: 's1'),
+      LevitScopeDisposeEvent(sessionId: sid, scopeId: 1, scopeName: 's1'),
     );
 
     print('After dispose: ${state.scopes.keys}');

@@ -1,11 +1,12 @@
-import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
+import 'package:levit_reactive/spi.dart';
+import 'package:test/test.dart';
 
 class SetOnlyMiddleware extends LevitReactiveMiddleware {
   int setCallCount = 0;
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     return (value) {
       setCallCount++;
       next(value);
@@ -32,47 +33,29 @@ void main() {
       Lx.clearMiddlewares();
     });
 
-    test('hasSetMiddlewares is true only when SetOnlyMiddleware is added', () {
-      expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
-      expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
+    test('init hook stays inactive when only SetOnlyMiddleware is added', () {
+      expect(LxSpi.hasInitMiddlewares, isFalse);
 
       final mw = SetOnlyMiddleware();
       Lx.addMiddleware(mw);
 
-      expect(LevitReactiveMiddleware.hasSetMiddlewares, isTrue);
-      expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
+      expect(LxSpi.hasInitMiddlewares, isFalse);
+      final value = 0.lx;
+      value.value = 1;
+      expect(mw.setCallCount, 1);
     });
 
-    test(
-      'hasInitMiddlewares is true only when InitOnlyMiddleware is added',
-      () {
-        expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
-        expect(LevitReactiveMiddleware.hasInitMiddlewares, isFalse);
+    test('init hook activates only when InitOnlyMiddleware is added', () {
+      expect(LxSpi.hasInitMiddlewares, isFalse);
+      expect(LxSpi.hasListenerMiddlewares, isFalse);
 
-        final mw = InitOnlyMiddleware();
-        Lx.addMiddleware(mw);
+      final mw = InitOnlyMiddleware();
+      Lx.addMiddleware(mw);
 
-        expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
-        expect(LevitReactiveMiddleware.hasInitMiddlewares, isTrue);
-      },
-    );
-
-    test('events are skipped if flag is false', () {
-      // 1. Add only Set listener
-      final setMw = SetOnlyMiddleware();
-      Lx.addMiddleware(setMw);
-
-      // 2. Create reactive (triggers onInit)
-      // Since hasInitMiddlewares is false, onInit logic should be skipped entirely.
-      final val = 0.lx;
-
-      // We can't easily assert that internal core skipped the call
-      // other than checking side effects on a middleware that WOULD have listened if we added it?
-      // But here we only have SetMw.
-
-      // 3. Trigger Set
-      val.value = 1;
-      expect(setMw.setCallCount, equals(1));
+      expect(LxSpi.hasInitMiddlewares, isTrue);
+      expect(LxSpi.hasListenerMiddlewares, isFalse);
+      final _ = 0.lx;
+      expect(mw.initCallCount, 1);
     });
   });
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:levit_scope/levit_scope.dart';
 import 'package:test/test.dart';
 import 'cleanup_failure_acceptance_test.dart' show Progress;
+import 'package:levit_scope/spi.dart';
 
 class FactoryWork implements LevitDisposable, LevitDrainable {
   FactoryWork({this.failure});

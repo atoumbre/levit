@@ -4,11 +4,11 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 import '../helpers.dart';
 
 void main() {
-  testWidgets('LScopedAsyncView.put works with tags', (tester) async {
+  testWidgets('LAsyncScopedView.put works with tags', (tester) async {
     await Levit.reset(force: true);
     await tester.pumpWidget(
       MaterialApp(
-        home: LScopedAsyncView<TestController>.put(
+        home: LAsyncScopedView<TestController>.put(
           () async {
             await Future.delayed(const Duration(milliseconds: 10));
             return TestController()..count = 42;

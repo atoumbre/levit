@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'dart:async';
 import 'package:levit_reactive/levit_reactive.dart';
+import 'package:levit_reactive/spi.dart';
 // Note: test should not import src/core.dart if possible, but Lx provides what we need
 
 class _ResolverObserver
@@ -32,10 +33,10 @@ void main() {
     final replacement = 2.lx;
     final observer = _ResolverObserver(original, replacement);
 
-    Lx.proxy = observer;
+    LxSpi.proxy = observer;
     // Reading original should hit proxy and defer to replacement.value
     final val = original.value;
-    Lx.proxy = null;
+    LxSpi.proxy = null;
 
     expect(val, 2);
     // When graphing is enabled (which it typically is not explicitly here without middleware),
@@ -50,11 +51,11 @@ void main() {
     int? resolvedVal;
 
     // Simulate _asyncZoneDepth > 0
-    Lx.enterAsyncScope();
+    LxSpi.enterAsyncScope();
     runZoned(() {
       resolvedVal = original.value; // Hits lines 640-645 in core.dart
-    }, zoneValues: {Lx.asyncComputedTrackerZoneKey: observer});
-    Lx.exitAsyncScope();
+    }, zoneValues: {LxSpi.asyncComputedTrackerZoneKey: observer});
+    LxSpi.exitAsyncScope();
 
     expect(resolvedVal, 20);
   });

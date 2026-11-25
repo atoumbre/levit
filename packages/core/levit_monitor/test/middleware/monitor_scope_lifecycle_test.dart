@@ -1,6 +1,6 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
-import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 import 'monitor_middleware_test.dart'; // Reuse MockTransport
 

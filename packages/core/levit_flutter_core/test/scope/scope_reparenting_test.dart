@@ -26,7 +26,7 @@ Widget _buildMovedChildScope({
         Expanded(
           child: LScope(
             name: 'left_parent',
-            dependencyFactory: (scope) =>
+            configure: (scope) =>
                 scope.put<_TestController>(() => _TestController('left')),
             child: moved ? const SizedBox.shrink() : buildChild(key),
           ),
@@ -34,7 +34,7 @@ Widget _buildMovedChildScope({
         Expanded(
           child: LScope(
             name: 'right_parent',
-            dependencyFactory: (scope) =>
+            configure: (scope) =>
                 scope.put<_TestController>(() => _TestController('right')),
             child: moved ? buildChild(key) : const SizedBox.shrink(),
           ),
@@ -52,7 +52,7 @@ void main() {
       return MaterialApp(
         home: LScope(
           name: 'parent_$label',
-          dependencyFactory: (scope) =>
+          configure: (scope) =>
               scope.put<_TestController>(() => _TestController(label)),
           child: LScope(
             name: 'child',
@@ -83,7 +83,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: LScope(
-          dependencyFactory: (scope) {
+          configure: (scope) {
             scope.put(() => _TestController('x', onClosed: () => closed++));
             throw StateError('boom');
           },
@@ -105,7 +105,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: LAsyncScope(
-          dependencyFactory: (scope) async {
+          configure: (scope) async {
             scope.put(() => _TestController('x', onClosed: () => closed++));
             await Future<void>.delayed(Duration.zero);
             throw StateError('boom');
@@ -127,7 +127,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LAsyncScope(
-            dependencyFactory: (scope) async {
+            configure: (scope) async {
               scope.put(() => _TestController('local'));
             },
             child: LView<_TestController>(
@@ -154,10 +154,10 @@ void main() {
       return MaterialApp(
         home: LScope(
           name: 'parent_$label',
-          dependencyFactory: (scope) =>
+          configure: (scope) =>
               scope.put<_TestController>(() => _TestController(label)),
           child: LAsyncScope(
-            dependencyFactory: (_) async {},
+            configure: (_) async {},
             child: Builder(
               builder: (context) {
                 final controller = context.levit.find<_TestController>();
@@ -221,7 +221,7 @@ void main() {
       Widget buildChild(Key key) {
         return LAsyncScope(
           key: key,
-          dependencyFactory: (_) async {},
+          configure: (_) async {},
           child: Builder(
             builder: (context) {
               final controller = context.levit.find<_TestController>();

@@ -24,7 +24,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScope(
-            dependencyFactory: (s) => s.put<String>(() => 'captured-value'),
+            configure: (s) => s.put<String>(() => 'captured-value'),
             child: LWatch(() {
               if (!showLauncher.value) {
                 return const Scaffold(body: Text('replaced'));

@@ -24,7 +24,7 @@ void main() {
       root.put<String>(() => 'root', tag: 't');
       final child = root.createScope('child');
       final unrelated = LevitScope.root('unrelated');
-      _setResolutionCache(child, LevitScopeKey.of<String>(tag: 't'), unrelated);
+      _setResolutionCache(child, _scopeKey(child, String, tag: 't'), unrelated);
       expect(child.find<String>(tag: 't'), 'root');
     });
 
@@ -46,7 +46,7 @@ void main() {
       final root = LevitScope.root('root_or_null');
       root.put<String>(() => 'root', tag: 't');
       final child = root.createScope('child_or_null');
-      _setResolutionCache(child, LevitScopeKey.of<String>(tag: 't'), child);
+      _setResolutionCache(child, _scopeKey(child, String, tag: 't'), child);
       expect(child.findOrNull<String>(tag: 't'), 'root');
     });
 
@@ -54,7 +54,7 @@ void main() {
       final root = LevitScope.root('root_or_null_cached');
       root.put<String>(() => 'root', tag: 't');
       final child = root.createScope('child_or_null_cached');
-      final key = LevitScopeKey.of<String>(tag: 't');
+      final key = _scopeKey(child, String, tag: 't');
 
       expect(child.findOrNull<String>(tag: 't'), 'root');
       expect(_resolutionCache(child).containsKey(key), isTrue);
@@ -67,7 +67,7 @@ void main() {
         final root = LevitScope.root('root_or_null_stale');
         root.put<String>(() => 'root', tag: 't');
         final child = root.createScope('child_or_null_stale');
-        final key = LevitScopeKey.of<String>(tag: 't');
+        final key = _scopeKey(child, String, tag: 't');
 
         expect(child.findOrNull<String>(tag: 't'), 'root');
         expect(_resolutionCache(child).containsKey(key), isTrue);
@@ -83,7 +83,7 @@ void main() {
       final root = LevitScope.root('root_async');
       root.put<String>(() => 'root', tag: 't');
       final child = root.createScope('child_async');
-      _setResolutionCache(child, LevitScopeKey.of<String>(tag: 't'), child);
+      _setResolutionCache(child, _scopeKey(child, String, tag: 't'), child);
       expect(await child.findAsync<String>(tag: 't'), 'root');
     });
 
@@ -111,7 +111,7 @@ void main() {
         final root = LevitScope.root('root_or_null_async');
         root.put<String>(() => 'root', tag: 't');
         final child = root.createScope('child_or_null_async');
-        _setResolutionCache(child, LevitScopeKey.of<String>(tag: 't'), child);
+        _setResolutionCache(child, _scopeKey(child, String, tag: 't'), child);
         expect(await child.findOrNullAsync<String>(tag: 't'), 'root');
       },
     );
@@ -139,17 +139,21 @@ void main() {
   });
 }
 
-void _setResolutionCache(
-  LevitScope scope,
-  LevitScopeKey key,
-  LevitScope cached,
-) {
+Object _scopeKey(LevitScope scope, Type type, {Object? tag}) {
+  final lib = reflect(scope).type.owner as LibraryMirror;
+  final keyClass =
+      lib.declarations[MirrorSystem.getSymbol('_LevitScopeKey', lib)]
+          as ClassMirror;
+  return keyClass.newInstance(Symbol.empty, [type, tag]).reflectee as Object;
+}
+
+void _setResolutionCache(LevitScope scope, Object key, LevitScope cached) {
   _resolutionCache(scope)[key] = cached;
 }
 
-Map<LevitScopeKey, LevitScope> _resolutionCache(LevitScope scope) {
+Map<Object, LevitScope> _resolutionCache(LevitScope scope) {
   final mirror = reflect(scope);
   final lib = mirror.type.owner as LibraryMirror;
   final symbol = MirrorSystem.getSymbol('_resolutionCache', lib);
-  return mirror.getField(symbol).reflectee as Map<LevitScopeKey, LevitScope>;
+  return mirror.getField(symbol).reflectee as Map<Object, LevitScope>;
 }

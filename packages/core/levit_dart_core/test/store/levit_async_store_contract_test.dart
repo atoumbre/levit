@@ -12,14 +12,10 @@ void main() {
       final store = LevitStore.async((_) async => 7);
 
       final Future<int> fromFind = store.find();
-      final Future<int> fromFindAsync = store.findAsync();
       final Future<int> fromFindIn = store.findIn(scope);
-      final Future<int> fromFindAsyncIn = store.findAsyncIn(scope);
 
       expect(await fromFind, 7);
-      expect(await fromFindAsync, 7);
       expect(await fromFindIn, 7);
-      expect(await fromFindAsyncIn, 7);
     });
 
     test('concurrent lookups in same scope run builder once', () async {
@@ -35,7 +31,7 @@ void main() {
       final results = await Future.wait([
         store.findIn(scope),
         store.findIn(scope),
-        store.findAsyncIn(scope),
+        store.findIn(scope),
       ]);
 
       expect(results, ['ok', 'ok', 'ok']);
@@ -60,7 +56,7 @@ void main() {
         );
 
         await expectLater(
-          store.findAsyncIn(scope),
+          store.findIn(scope),
           throwsA(predicate((e) => e is StateError && '$e'.contains('boom-1'))),
         );
 

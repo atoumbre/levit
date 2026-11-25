@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'package:test/test.dart';
 import 'package:levit_monitor/levit_monitor.dart';
+import 'package:levit_monitor/spi.dart';
 
 class MockTransport extends LevitTransport {
-  final List<MonitorEvent> sentEvents = [];
+  final List<LevitMonitorEvent> sentEvents = [];
   bool isClosed = false;
   final StreamController<void> _connectController =
       StreamController<void>.broadcast();
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     if (isClosed) throw StateError('Transport is closed');
     sentEvents.add(event);
   }
@@ -30,7 +31,7 @@ class MockTransport extends LevitTransport {
 
 class FailingTransport extends LevitTransport {
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     throw Exception('Send failed');
   }
 
@@ -42,18 +43,18 @@ class FailingTransport extends LevitTransport {
 }
 
 void main() {
-  MonitorEvent createEvent() => ScopeCreateEvent(
+  LevitMonitorEvent createEvent() => LevitScopeCreateEvent(
     sessionId: 's1',
     scopeId: 1,
     scopeName: 'test',
     parentScopeId: null,
   );
 
-  group('MultiTransport', () {
+  group('LevitMultiTransport', () {
     test('broadcasts events to all transports', () async {
       final t1 = MockTransport();
       final t2 = MockTransport();
-      final multi = MultiTransport([t1, t2]);
+      final multi = LevitMultiTransport([t1, t2]);
       final event = createEvent();
 
       await multi.send(event);
@@ -66,7 +67,7 @@ void main() {
       final t1 = MockTransport();
       final t2 = FailingTransport(); // Should fail
       final t3 = MockTransport();
-      final multi = MultiTransport([t1, t2, t3]);
+      final multi = LevitMultiTransport([t1, t2, t3]);
       final event = createEvent();
 
       // Should not throw
@@ -82,7 +83,7 @@ void main() {
     test('closes all transports', () async {
       final t1 = MockTransport();
       final t2 = MockTransport();
-      final multi = MultiTransport([t1, t2]);
+      final multi = LevitMultiTransport([t1, t2]);
 
       await multi.close();
 
@@ -93,7 +94,7 @@ void main() {
     test('re-emits onConnect from any transport', () async {
       final t1 = MockTransport();
       final t2 = MockTransport();
-      final multi = MultiTransport([t1, t2]);
+      final multi = LevitMultiTransport([t1, t2]);
 
       bool connected = false;
       final sub = multi.onConnect.listen((_) => connected = true);

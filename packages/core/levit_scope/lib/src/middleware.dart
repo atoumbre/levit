@@ -1,4 +1,4 @@
-part of '../levit_scope.dart';
+part of 'scope_library.dart';
 
 /// Interface for observing and intercepting [LevitScope] lifecycle events.
 ///

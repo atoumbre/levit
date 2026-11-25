@@ -1,4 +1,4 @@
-part of '../levit_dart_core.dart';
+part of 'dart_core_library.dart';
 
 /// A lifecycle boundary that owns arbitrary cleanup resources.
 abstract interface class LevitResourceOwner {
@@ -361,7 +361,11 @@ abstract class LevitController extends LevitScopeDisposable
     with LevitResourceOwnership {
   bool _initialized = false;
 
-  /// Whether the controller has been disposed and closed.
+  /// Whether this controller has started closing or has finished disposing.
+  ///
+  /// Equivalent to `isClosing || isDisposed`. Use this for cooperative async
+  /// guards after `await`; inspect [isClosing] or [isDisposed] when you need to
+  /// distinguish active teardown from completed disposal.
   bool get isClosed => isClosing || isDisposed;
 
   /// Whether the initialization phase is complete.

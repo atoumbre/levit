@@ -79,7 +79,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LAsyncScope(
-            dependencyFactory: (_) async {},
+            configure: (_) async {},
             child: LView.store(state, builder: (context, value) => Text(value)),
           ),
         ),
@@ -126,7 +126,7 @@ void main() {
             context.levit.put(() => 'global');
             context.levit.lazyPutAsync(() async => 'global_async');
             final state = LevitStore((ref) => 1);
-            context.levit.findStoreAsync(state);
+            context.levit.findStore(state);
             context.levit.isStoreRegistered(state);
             context.levit.isStoreInstantiated(state);
             return const SizedBox();

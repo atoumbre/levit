@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:levit_reactive/levit_reactive.dart';
+import 'package:levit_reactive/spi.dart';
 
 class User {
   final String name;
@@ -30,7 +31,7 @@ class TestMiddleware extends LevitReactiveMiddleware {
   TestMiddleware({this.onAfter, this.allowChange = true});
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     if (!allowChange) {
       return (value) {}; // Do nothing, blocking change
     }
@@ -46,7 +47,7 @@ class MinimalMiddleware extends LevitReactiveMiddleware {
   final List<LevitReactiveChange> changes = [];
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     return (value) {
       next(value);
       changes.add(change);

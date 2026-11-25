@@ -3,6 +3,7 @@ import 'dart:isolate';
 
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 List<bool> _inspectIsolateContext(
   Object? input,
@@ -77,7 +78,7 @@ final class _BasicController extends LevitController with LevitTasksMixin {}
 final class _ReactiveController extends LevitController
     with LevitReactiveTasksMixin {}
 
-TaskCachePolicy<int> get _cachePolicy => TaskCachePolicy<int>(
+LevitTaskCachePolicy<int> get _cachePolicy => LevitTaskCachePolicy<int>(
   ttl: const Duration(minutes: 1),
   toJson: (value) => <String, dynamic>{'value': value},
   fromJson: (json) => json['value'] as int,
@@ -98,7 +99,7 @@ void main() {
     );
     expect(event.debugName, 'compatibility');
     expect(event.runInIsolate, isTrue);
-    expect(TaskConflictException('task').toString(), contains('"task"'));
+    expect(LevitTaskConflictException('task').toString(), contains('"task"'));
   });
 
   test('submission validates retry settings and progress', () {
@@ -181,7 +182,7 @@ void main() {
     final tail = engine.submit(
       (_) => 2,
       id: 'coalesced-cancel',
-      conflictPolicy: TaskConflictPolicy.coalesceLatest,
+      conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
     );
 
     tail.cancel();
@@ -200,12 +201,12 @@ void main() {
     final firstTail = engine.schedule(
       (_) => 1,
       id: 'coalesced-schedule',
-      conflictPolicy: TaskConflictPolicy.coalesceLatest,
+      conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
     );
     final latestTail = engine.schedule(
       (_) => 2,
       id: 'coalesced-schedule',
-      conflictPolicy: TaskConflictPolicy.coalesceLatest,
+      conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
     );
 
     blocker.complete();
@@ -225,13 +226,13 @@ void main() {
       _delayedIsolate,
       1,
       id: 'coalesced-isolate',
-      conflictPolicy: TaskConflictPolicy.coalesceLatest,
+      conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
     );
     final latestTail = engine.submitIsolate(
       _delayedIsolate,
       1,
       id: 'coalesced-isolate',
-      conflictPolicy: TaskConflictPolicy.coalesceLatest,
+      conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
     );
 
     expect(latestTail.executionId, firstTail.executionId);
@@ -299,12 +300,12 @@ void main() {
         final normalJoined = controller.runTask(
           (_) => 'ignored',
           id: 'normal-conflict',
-          conflictPolicy: TaskConflictPolicy.join,
+          conflictPolicy: LevitTaskConflictPolicy.join,
         );
         final normalDropped = controller.runTask(
           (_) => 'ignored',
           id: 'normal-conflict',
-          conflictPolicy: TaskConflictPolicy.drop,
+          conflictPolicy: LevitTaskConflictPolicy.drop,
         );
         normalGate.complete();
         expect(await normalJoined, 'normal');
@@ -364,13 +365,13 @@ void main() {
           _delayedIsolate,
           1,
           id: 'isolate-conflict',
-          conflictPolicy: TaskConflictPolicy.join,
+          conflictPolicy: LevitTaskConflictPolicy.join,
         );
         final dropped = controller.runIsolateTask(
           _delayedIsolate,
           1,
           id: 'isolate-conflict',
-          conflictPolicy: TaskConflictPolicy.drop,
+          conflictPolicy: LevitTaskConflictPolicy.drop,
         );
         expect(await joined, 'done');
         await expectLater(dropped, throwsA(isA<LevitTaskDroppedException>()));

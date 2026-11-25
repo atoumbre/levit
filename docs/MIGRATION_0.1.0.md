@@ -42,12 +42,13 @@ This guide covers the coordinated breaking release, including the unpublished
   to observe cleanup failures; `closed` only signals completion. `settled`
   observes replacement completion; inspect `error` before using the scope.
 - Store keys are definition identity plus variant. Install typed `overrideWith`
-  recipes with `scope.applyOverrides` before local resolution. Use `findStore`,
-  `findStoreAsync`, or `findAsyncStore` on `context.levit`/`LevitRef`; dynamic `key:`
-  lookup is removed. `localOnly: true` explicitly creates local state.
+  recipes with `scope.applyOverrides` before local resolution. Use `findStore`
+  or `findAsyncStore` on `context.levit`/`LevitRef`; dynamic `key:` lookup and
+  redundant `findStoreAsync`/`*.findAsync` wrappers are removed. `localOnly: true`
+  explicitly creates local state.
 - Optional DI lookup returns null only for an absent registration. Construction
   and type errors now propagate.
-- Builders/selectors accept `LxReadable<T>`. `LxState.asReactive` exposes observation
+- Builders/selectors accept `LxReadable<T>`. `LxState.asReadable` exposes observation
   without setters, refresh or disposal. Scope descriptions omit values/raw tags.
 
 ## Direct removals
@@ -144,9 +145,9 @@ external resources require explicit ownership and cleanup.
 
 Removed: `LView.put` and `LAsyncView.put`.
 
-- For a view-owned dependency, use `LScopedView.put` or `LScopedAsyncView.put`.
+- For a view-owned dependency, use `LScopedView.put` or `LAsyncScopedView.put`.
 - For a shared dependency, register it in the existing owning scope’s
-  `dependencyFactory` and consume it through `LView` or `LAsyncView`.
+  `configure` callback and consume it through `LView` or `LAsyncView`.
 
 Choose the migration according to the intended lifetime. Changing a shared
 registration to a scoped view intentionally shortens its lifetime.
@@ -272,18 +273,21 @@ and `enableWorkerStatistics: true` for inspector sessions; add `includeStackTrac
 true` to inspect write origins. Bounded queues expose drops, and reconnect snapshots
 restore current state without claiming an uninterrupted timeline.
 
-Transports now receive immutable, redacted `FrozenMonitorEvent` data. Inspect
-`event.toJson()['type']` or `event.envelope` after narrowing to `FrozenMonitorEvent`,
+Transports now receive immutable, redacted `LevitFrozenMonitorEvent` data. Inspect
+`event.toJson()['type']` or `event.envelope` after narrowing to `LevitFrozenMonitorEvent`,
 rather than downcasting captured events to runtime event classes. Extend
 `LevitTransport` and preserve returned futures from buffered send/flush/close.
 Filters still run on the original typed event before it is frozen.
 
-Move `FileTransport` imports to `package:levit_monitor/levit_monitor_io.dart`.
+Move `LevitFileTransport` imports to `package:levit_monitor/levit_monitor_io.dart`.
 The default monitor import and `levit_monitor_protocol.dart` now compile for web.
+`LevitMonitor` log levels now use `LevitLogLevel` consistently instead of `package:logger`'s `Level`.
+Inspector/DevTools shadow models (`LevitStateSnapshot`, `LevitScopeModel`, `LevitMonitorMiddleware`,
+and granular `Levit*Event` subtypes) are exported from `package:levit_monitor/spi.dart`.
 
 Scope lifecycle progress uses versioned `scope_progress` records. Each record
 contains complete ownership metadata in a compact wire layout; it does not rely
-on earlier events. `StateSnapshot.applyEnvelope` expands the record to named
+on earlier events. `LevitStateSnapshot.applyEnvelope` expands the record to named
 fields, and reconnect snapshots retain the expanded form. Custom protocol
 consumers should use that decoder or the schema in `levit_monitor/README.md`.
 Use the matching 0.1.0 inspector bundle when upgrading a producer.
@@ -320,11 +324,22 @@ full-duration run, while `stop()` resets without finishing. `resume()` does not 
 an idle/completed timer. Zero duration finishes asynchronously; negative durations
 and non-positive intervals throw `ArgumentError`.
 
-Await standalone `LxCountdown.dispose()` or register it with `own`. The time mixin
+Await standalone `LevitCountdown.dispose()` or register it with `own`. The time mixin
 owns countdowns it creates and awaits their cleanup after task draining. Controls
 on a disposed countdown and new countdowns on a closing controller throw
 `StateError`. Callback execution stays synchronous; callbacks that stop/restart/
 dispose the countdown suppress remaining callbacks from the obsolete run.
+
+## Public exposure surface & naming cleanup (0.1.0)
+
+- **Kit facade unification:** `levit`, `levit_dart`, and `levit_flutter` hide low-level `Lx` and `Ls` facades. Use `Levit` everywhere in app code (`Levit.currentScope`, `Levit.untracked`, `Levit.isBatching`, `Levit.containsStateMiddlewareToken` were added for full parity).
+- **Opt-in `tasks.dart` entrypoint:** Everyday task mixins and configs (`LevitTasksMixin`, `LevitReactiveTasksMixin`, `LevitTaskContext`, `LevitTaskPriority`, `LevitTaskConflictPolicy`, `LevitRetryPolicy`, `LevitTaskCancelledException`, `LevitTaskDetails`, `LevitTaskPhase`) remain in default kit barrels. Import `package:levit/tasks.dart`, `package:levit_dart/tasks.dart`, or `package:levit_flutter/tasks.dart` for `LevitTaskEngine`, `LevitTaskGroup`, caching, middleware, trackers, isolate tasks, and `LevitTaskResult` subtypes.
+- **Cross-package SPI (`spi.dart`):** Observer/notifier/boundary/ownership/inspector plumbing moved to `package:levit_reactive/spi.dart`, `package:levit_scope/spi.dart`, `package:levit_dart_core/spi.dart`, and `package:levit_monitor/spi.dart`.
+- **Clean-cut renames:**
+  - Flutter widgets/context: `LScopedAsyncView` → `LAsyncScopedView`, `LevitProvider` → `LevitContext`, `dependencyFactory:` → `configure:`, `onConfigScope` → `onConfigureScope`.
+  - Reactive/core: `value.lxVar(named:)` → `value.lxVar(name:)`, `LxState.asReactive` → `LxState.asReadable`, `LxNamingExtension.register` → `ownedBy`, `LxOnSet`/`LxOnBatch`/`LxOnDispose` → `LevitReactiveOnSet`/`LevitReactiveOnBatch`/`LevitReactiveOnDispose`, removed `findStoreAsync` / `*.findAsync` / `*.findAsyncIn`.
+  - Dart & Flutter kits: `LxCountdown` → `LevitCountdown`, `StoppableService` → `LevitLoopService`, `LevitLoopExecutionMixin` → `LevitLoopMixin`, `LevitLoopExecutionLifecycleMixin` → `LevitLoopLifecycleMixin`, `pauseLifecycleServicesForce` → `pausePermanentServicesOnBackground`, `tasksEngine` → `taskEngine`, `TaskPriority` → `LevitTaskPriority`, `TaskConflictPolicy` → `LevitTaskConflictPolicy`, `TaskSkipReason` → `LevitTaskSkipReason`, `TaskConflictException` → `LevitTaskConflictException`, `TaskCachePolicy` → `LevitTaskCachePolicy`, `InMemoryTaskCacheProvider()` → `LevitTaskCacheProvider.inMemory()`, `TaskDetails` → `LevitTaskDetails`, `LevitCancellationKind` → `LevitTaskCancellationKind`, `LevitExecutionOutcome` (`LevitTaskCancellation`/`LevitTaskDropping`/`LevitTaskSupersession`) → `LevitTaskResult` (`LevitTaskCancelled`/`LevitTaskDropped`/`LevitTaskSuperseded`).
+  - Monitor: `ConsoleTransport` / `FileTransport` / `MultiTransport` / `WebSocketTransport` → `Levit*Transport`, `MonitorEvent` + subtypes → `Levit*Event`, `StateSnapshot` + models → `Levit*` in `levit_monitor/spi.dart`, and `LevitLogLevel` replaces `package:logger`'s `Level` across `LevitMonitor`.
 
 ## M8: tooling and upgrade checklist
 

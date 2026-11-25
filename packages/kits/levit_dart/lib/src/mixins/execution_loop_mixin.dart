@@ -1,7 +1,7 @@
-part of '../../levit_dart.dart';
+part of '../kit_library.dart';
 
 /// Controller-owned repeated work. Cancellation begins before resource cleanup.
-mixin LevitLoopExecutionMixin on LevitController {
+mixin LevitLoopMixin on LevitController {
   late final LevitLoopEngine loopEngine = own(LevitLoopEngine());
 
   @override

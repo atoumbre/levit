@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 void main() {
   test(
@@ -13,30 +13,30 @@ void main() {
       final joined = engine.submit(
         (_) => 2,
         id: 'queued',
-        conflictPolicy: TaskConflictPolicy.join,
+        conflictPolicy: LevitTaskConflictPolicy.join,
       );
       final tail = engine.submit(
         (_) => 3,
         id: 'active',
-        conflictPolicy: TaskConflictPolicy.coalesceLatest,
+        conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
       );
       final replacement = engine.submit(
         (_) => 4,
         id: 'active',
-        conflictPolicy: TaskConflictPolicy.coalesceLatest,
+        conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
       );
       expect(engine.pendingCount, 2);
       expect(tail.executionId, replacement.executionId);
       queued.cancel();
       expect(engine.pendingCount, 1);
-      expect(await joined.outcome, isA<LevitTaskCancellation<int>>());
+      expect(await joined.outcome, isA<LevitTaskCancelled<int>>());
       final restarted = engine.submit(
         (_) => 5,
         id: 'active',
-        conflictPolicy: TaskConflictPolicy.restart,
+        conflictPolicy: LevitTaskConflictPolicy.restart,
       );
       expect(engine.pendingCount, 1);
-      expect(await tail.outcome, isA<LevitTaskSupersession<int>>());
+      expect(await tail.outcome, isA<LevitTaskSuperseded<int>>());
       release.complete();
       await active.outcome;
       expect(await restarted.result, 5);
@@ -47,7 +47,7 @@ void main() {
       expect(engine.pendingCount, 1);
       final closing = engine.dispose();
       expect(engine.pendingCount, 0);
-      expect(await remaining.outcome, isA<LevitTaskCancellation<int>>());
+      expect(await remaining.outcome, isA<LevitTaskCancelled<int>>());
       secondRelease.complete();
       await second.outcome;
       await closing;

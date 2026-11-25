@@ -62,7 +62,7 @@ class SyncController extends LevitController with LevitReactiveTasksMixin {
 
 | Mixin | Use when | Primary API |
 | :-- | :-- | :-- |
-| `LevitTasksMixin` | You need scheduling, retries, caching, or cancellation without UI-facing reactive task state. | `tasksEngine.schedule(...)` |
+| `LevitTasksMixin` | You need scheduling, retries, caching, or cancellation without UI-facing reactive task state. | `taskEngine.schedule(...)` |
 | `LevitReactiveTasksMixin` | You want reactive task details, busy state, and progress that can be observed by other runtime code or UI. | `runTask(...)`, `tasks`, `isBusy`, `totalProgress` |
 
 Both mixins own one `LevitTaskEngine`; there is no separate action lifecycle or
@@ -74,7 +74,7 @@ Use a stable logical `id` whenever callers can overlap:
 
 | Policy | Behavior |
 | :-- | :-- |
-| `reject` | Default. Fail the new submission with `TaskConflictException`. |
+| `reject` | Default. Fail the new submission with `LevitTaskConflictException`. |
 | `join` | Share the result of the latest outstanding execution. |
 | `drop` | Complete with `LevitTaskDroppedException` without running the submission. |
 | `restart` | Cooperatively cancel outstanding work and admit the replacement. |
@@ -86,7 +86,7 @@ cooperative: await `context.cancelled` or call `throwIfCancelled()` at safe
 points.
 
 ```dart
-final execution = controller.tasksEngine.submit(
+final execution = controller.taskEngine.submit(
   (context) async {
     final result = await repository.sync(
       onProgress: context.reportProgress,
@@ -95,7 +95,7 @@ final execution = controller.tasksEngine.submit(
     return result;
   },
   id: 'sync-drain',
-  conflictPolicy: TaskConflictPolicy.join,
+  conflictPolicy: LevitTaskConflictPolicy.join,
   metadata: const LevitTaskMetadata(
     debugName: 'sync drain',
     category: 'sync',
@@ -186,7 +186,7 @@ Keep this adapter in the application composition layer. Do not add
 
 ## Awaited task shutdown
 
-`await tasksEngine.dispose()` closes admission, signals cancellation, and waits for running execution bodies and cleanup. Both task mixins drain in `onBeforeClose`, before other controller-owned resources are released. `cancelAll()` only signals cancellation.
+`await taskEngine.dispose()` closes admission, signals cancellation, and waits for running execution bodies and cleanup. Both task mixins drain in `onBeforeClose`, before other controller-owned resources are released. `cancelAll()` only signals cancellation.
 
 There is no implicit timeout or hard cancellation. Uncooperative work delays disposal. An application timeout does not complete the underlying cleanup. Tasks must not await disposal of their own engine or controller; release task-local resources in their own `finally` blocks. Put dependent resource cleanup under `own` so the preparation hook runs first.
 
@@ -240,9 +240,9 @@ sustained contention. Controller task mixins default to 8 execution slots; overr
 
 Retries use `LevitRetryPolicy` with a required `shouldRetry(error, stack)` classifier,
 `maxRetries`, `initialDelay`, `maxDelay`, and bounded jitter. Cancellation/deadline
-errors are never retried. `tasksEngine.taskTree` exposes immutable reactive group
+errors are never retried. `taskEngine.taskTree` exposes immutable reactive group
 metadata, pending/running counts and cancellation reasons. Event summaries and
-`TaskDetails` retain group/deadline/reason metadata without task dependency values.
+`LevitTaskDetails` retain group/deadline/reason metadata without task dependency values.
 Dedicated `submitIsolate`/`scheduleIsolate` entrypoints accept `group:` and propagate
 its cancellation reason through the isolate channel, awaiting actual isolate exit.
 
@@ -253,7 +253,7 @@ Own a `LevitAsyncMap<K, T>` at the feature boundary:
 ```dart
 final results = own(LevitAsyncMap<String, List<Item>>(
   (search, task) => repository.search(search, cancelled: task.cancelled),
-  engine: tasksEngine,
+  engine: taskEngine,
 ));
 final view = results.entry('flutter'); // Stable until eviction.
 final status = results['flutter'];     // First read starts a missing load.
@@ -308,7 +308,7 @@ a paused run. Stopping/restarting/disposing during a notification prevents obsol
 callbacks from continuing. Callbacks are synchronous; use the task engine for async
 work. The published `remaining` value is output, not a deadline-setting API.
 
-Standalone `LxCountdown` implements `LevitDisposable`: use `own(countdown)` or await
+Standalone `LevitCountdown` implements `LevitDisposable`: use `own(countdown)` or await
 `countdown.dispose()` yourself. Disposal cancels timing immediately and drains
 reactive cleanup; repeats share the completion. New controls after disposal throw.
 The mixin waits for tracked task cleanup, cancels all countdowns, then awaits their

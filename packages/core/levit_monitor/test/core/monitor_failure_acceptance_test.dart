@@ -3,11 +3,12 @@ import 'package:levit/levit.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:logger/logger.dart' as logger;
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class Sink extends LevitTransport {
   Sink({this.failure});
   final Object? failure;
-  final events = <MonitorEvent>[];
+  final events = <LevitMonitorEvent>[];
   late final connection = StreamController<void>(
     onCancel: () async {
       if (failure != null) throw failure!;
@@ -18,7 +19,7 @@ class Sink extends LevitTransport {
   @override
   int get droppedEvents => 2;
   @override
-  void send(MonitorEvent event) => events.add(event);
+  void send(LevitMonitorEvent event) => events.add(event);
   @override
   Future<void> flush() async {
     if (failure != null) throw failure!;
@@ -111,7 +112,7 @@ void main() {
     'multi-transport drop totals and disabled subscription failures are retained',
     () async {
       final sinks = [Sink(), Sink()];
-      final multi = MultiTransport(sinks);
+      final multi = LevitMultiTransport(sinks);
       expect(multi.droppedEvents, 4);
       final failed = Sink(failure: StateError('cancel'));
       final monitor = LevitMonitorMiddleware(transport: failed)..enable();
@@ -123,7 +124,7 @@ void main() {
   test(
     'snapshots bound task owners, restore trees, and redact metadata transitions',
     () {
-      final snapshot = StateSnapshot();
+      final snapshot = LevitStateSnapshot();
       for (var i = 0; i < 257; i++) {
         snapshot.applyEnvelope(
           envelope('custom', {
@@ -138,7 +139,7 @@ void main() {
       }
       expect(snapshot.taskTrees.length, 256);
       expect(snapshot.taskTrees.containsKey('owner0'), isFalse);
-      final restored = StateSnapshot()
+      final restored = LevitStateSnapshot()
         ..applyEnvelope(envelope('snapshot', {'state': snapshot.toJson()}));
       expect(restored.taskTrees, snapshot.taskTrees);
       restored.applyEnvelope(
@@ -160,7 +161,7 @@ void main() {
     'frozen events keep console severity and configured overrides',
     () async {
       final printer = Printer();
-      final transport = ConsoleTransport(printer: printer);
+      final transport = LevitConsoleTransport(printer: printer);
       final types = <String, logger.Level>{
         'state_change': logger.Level.trace,
         'batch': logger.Level.debug,
@@ -178,23 +179,25 @@ void main() {
         'unknown': logger.Level.debug,
       };
       for (final entry in types.entries) {
-        transport.send(FrozenMonitorEvent(envelope(entry.key)));
+        transport.send(LevitFrozenMonitorEvent(envelope(entry.key)));
         expect(printer.levels.last, entry.value, reason: entry.key);
       }
-      transport.send(FrozenMonitorEvent(envelope('log', {'level': 'warning'})));
+      transport.send(
+        LevitFrozenMonitorEvent(envelope('log', {'level': 'warning'})),
+      );
       expect(printer.levels.last, logger.Level.warning);
       transport.send(
-        FrozenMonitorEvent(envelope('log', {'level': 'future-level'})),
+        LevitFrozenMonitorEvent(envelope('log', {'level': 'future-level'})),
       );
       expect(printer.levels.last, logger.Level.info);
       await transport.close();
-      final overridden = ConsoleTransport(
+      final overridden = LevitConsoleTransport(
         printer: printer,
         levelOverrides: const LevitLogLevelConfig(
           stateChange: LevitLogLevel.error,
         ),
       );
-      overridden.send(FrozenMonitorEvent(envelope('state_change')));
+      overridden.send(LevitFrozenMonitorEvent(envelope('state_change')));
       expect(printer.levels.last, logger.Level.error);
       await overridden.close();
     },

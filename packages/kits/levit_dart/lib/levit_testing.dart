@@ -1,5 +1,5 @@
-/// Isolated scopes and typed overrides for Dart tests.
+/// Testing helpers for `levit_dart`.
 library;
 
-export 'package:levit_dart_core/levit_testing.dart';
+export 'package:levit_dart_core/levit_testing.dart' hide Ls, Lx;
 export 'levit_dart.dart';

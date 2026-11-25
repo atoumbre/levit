@@ -183,18 +183,18 @@ class _LWatchElement extends ComponentElement
 
     _newNotifiers = null;
 
-    final previousProxy = Lx.proxy;
+    final previousProxy = LxSpi.proxy;
     if (identical(previousProxy, this)) {
       // Force-reset read dedupe cache for a fresh dependency capture cycle.
-      Lx.proxy = null;
+      LxSpi.proxy = null;
     }
-    Lx.proxy = this;
+    LxSpi.proxy = this;
 
     final Widget result;
     try {
       result = LScope.runBridged(this, () => (widget as LWatch).builder());
     } finally {
-      Lx.proxy = previousProxy;
+      LxSpi.proxy = previousProxy;
     }
 
     _updateSubscriptions(_newNotifiers);
@@ -263,8 +263,8 @@ class _LWatchElement extends ComponentElement
   }
 
   void _runWithContext(void Function() fn) {
-    if (LevitReactiveMiddleware.hasListenerMiddlewares) {
-      Lx.runWithContext(_buildContext(), fn);
+    if (LxSpi.hasListenerMiddlewares) {
+      LxSpi.runWithContext(_buildContext(), fn);
     } else {
       fn();
     }

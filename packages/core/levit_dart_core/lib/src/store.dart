@@ -1,4 +1,4 @@
-part of '../levit_dart_core.dart';
+part of 'dart_core_library.dart';
 
 /// A bridge for interacting with the dependency injection system from a [LevitStore].
 ///
@@ -30,18 +30,6 @@ abstract class LevitRef {
   ///
   /// Throws if the store cannot be created or resolved.
   R findStore<R>(LevitStore<R> store, {Object? tag, bool localOnly = false});
-
-  /// Asynchronously finds the value of [store] within the current [scope].
-  ///
-  /// Uses optional [tag] to select a store instance variant.
-  /// With [localOnly], ancestor instances are ignored.
-  ///
-  /// Throws if the store cannot be created or resolved.
-  Future<R> findStoreAsync<R>(
-    LevitStore<R> store, {
-    Object? tag,
-    bool localOnly = false,
-  });
 
   /// Asynchronously finds and resolves the value of async [store] within the current [scope].
   ///
@@ -118,12 +106,9 @@ class LevitStore<T> {
 
   /// Overrides this recipe in a receiving scope, before its first lookup there.
   /// Override builders use the same ownership rules as ordinary store builders.
-  LevitStoreOverride<T> overrideWith(
-    T Function(LevitRef ref) builder, {
-    Object? tag,
-  }) {
+  LevitOverride overrideWith(T Function(LevitRef ref) builder, {Object? tag}) {
     final key = tag == null ? _defaultKey : _LevitStoreKey(this, tag);
-    return LevitStoreOverride<T>._((scope) {
+    return _LevitStoreOverride<T>._((scope) {
       if (scope.isRegisteredLocally<_LevitStoreInstance>(tag: key)) {
         throw StateError(
           'Install a store override before its first local resolution.',
@@ -163,35 +148,6 @@ class LevitStore<T> {
     return instance.value as T;
   }
 
-  /// Asynchronously finds or creates the store instance within [scope].
-  ///
-  /// Uses optional [tag] to isolate independent instances of the same store definition.
-  /// With [localOnly], reuse or create only in [scope].
-  ///
-  /// Throws if [builder] throws while creating the store value.
-  Future<T> findAsyncIn(
-    LevitScope scope, {
-    Object? tag,
-    bool localOnly = false,
-  }) async {
-    final instanceKey = tag != null ? _LevitStoreKey(this, tag) : _defaultKey;
-
-    var instance =
-        localOnly &&
-            !scope.isRegisteredLocally<_LevitStoreInstance>(tag: instanceKey)
-        ? null
-        : await scope.findOrNullAsync<_LevitStoreInstance>(tag: instanceKey);
-
-    if (instance == null) {
-      if (!scope.isRegisteredLocally<_LevitStoreInstance>(tag: instanceKey)) {
-        scope.lazyPut(() => _LevitStoreInstance(_builder), tag: instanceKey);
-      }
-      instance = await scope.findAsync<_LevitStoreInstance>(tag: instanceKey);
-    }
-
-    return instance.value as T;
-  }
-
   /// Deletes the store instance from [scope].
   ///
   /// If [force] is `true`, removes even permanent registrations.
@@ -226,14 +182,6 @@ class LevitStore<T> {
   T find({Object? tag, bool localOnly = false}) =>
       findIn(Ls.currentScope, tag: tag, localOnly: localOnly);
 
-  /// Asynchronously finds the value of this store in the active scope.
-  ///
-  /// Uses optional [tag] to select an instance variant.
-  ///
-  /// Throws if no active scope is available or value creation fails.
-  Future<T> findAsync({Object? tag, bool localOnly = false}) =>
-      findAsyncIn(Ls.currentScope, tag: tag, localOnly: localOnly);
-
   /// Removes this store from the active scope.
   ///
   /// If [force] is `true`, removes even permanent registrations.
@@ -260,12 +208,12 @@ class LevitAsyncStore<T> {
     : _inner = LevitStore<Future<T>>(builder);
 
   /// Provides an asynchronous replacement in the receiving scope.
-  LevitStoreOverride<T> overrideWith(
+  LevitOverride overrideWith(
     Future<T> Function(LevitRef ref) builder, {
     Object? tag,
   }) {
     final override = _inner.overrideWith(builder, tag: tag);
-    return LevitStoreOverride<T>._(override.installIn);
+    return _LevitStoreOverride<T>._(override.installIn);
   }
 
   /// Finds or creates and resolves the store value within [scope].
@@ -278,36 +226,11 @@ class LevitAsyncStore<T> {
     return _inner.findIn(scope, tag: tag, localOnly: localOnly);
   }
 
-  /// Asynchronously finds or creates and resolves the store value within [scope].
-  ///
-  /// Uses optional [tag] to isolate independent instances.
-  /// With [localOnly], reuse or create only in [scope].
-  ///
-  /// Throws if initialization fails.
-  Future<T> findAsyncIn(
-    LevitScope scope, {
-    Object? tag,
-    bool localOnly = false,
-  }) async {
-    final future = await _inner.findAsyncIn(
-      scope,
-      tag: tag,
-      localOnly: localOnly,
-    );
-    return await future;
-  }
-
   /// Finds and resolves the store value in the active scope.
   ///
   /// Throws if no active scope is available or initialization fails.
   Future<T> find({Object? tag, bool localOnly = false}) =>
       findIn(Ls.currentScope, tag: tag, localOnly: localOnly);
-
-  /// Asynchronously finds and resolves the store value in the active scope.
-  ///
-  /// Throws if no active scope is available or initialization fails.
-  Future<T> findAsync({Object? tag, bool localOnly = false}) =>
-      findAsyncIn(Ls.currentScope, tag: tag, localOnly: localOnly);
 
   /// Deletes the store instance from [scope].
   Future<bool> deleteIn(LevitScope scope, {Object? tag, bool force = false}) {
@@ -332,18 +255,6 @@ class LevitAsyncStore<T> {
   String toString() => 'LevitAsyncStore<$T>(id: $hashCode)';
 }
 
-/// Returns [scope] or throws when a [LevitRef] is used before scope attachment.
-@visibleForTesting
-LevitScope requireStoreRefScope(LevitScope? scope) {
-  if (scope == null) {
-    throw StateError(
-      'Store ref has no owning scope. Resolve the store via Levit.put/find '
-      'or LevitStore.findIn before using LevitRef APIs.',
-    );
-  }
-  return scope;
-}
-
 /// The actual holder of a [LevitStore] instance within a [LevitScope].
 class _LevitStoreInstance extends LevitController implements LevitRef {
   final dynamic Function(LevitRef ref) _builder;
@@ -354,7 +265,7 @@ class _LevitStoreInstance extends LevitController implements LevitRef {
   _LevitStoreInstance(this._builder);
 
   @override
-  LevitScope get scope => requireStoreRefScope(super.scope);
+  LevitScope get scope => super.scope!;
 
   dynamic get value {
     if (!_builderRun) {
@@ -398,15 +309,6 @@ class _LevitStoreInstance extends LevitController implements LevitRef {
   @override
   R findStore<R>(LevitStore<R> store, {Object? tag, bool localOnly = false}) {
     return store.findIn(scope, tag: tag, localOnly: localOnly);
-  }
-
-  @override
-  Future<R> findStoreAsync<R>(
-    LevitStore<R> store, {
-    Object? tag,
-    bool localOnly = false,
-  }) {
-    return store.findAsyncIn(scope, tag: tag, localOnly: localOnly);
   }
 
   @override
@@ -472,8 +374,8 @@ abstract interface class LevitOverride {
   void installIn(LevitScope scope);
 }
 
-final class LevitStoreOverride<T> implements LevitOverride {
-  LevitStoreOverride._(this._install);
+final class _LevitStoreOverride<T> implements LevitOverride {
+  _LevitStoreOverride._(this._install);
   final void Function(LevitScope) _install;
   @override
   void installIn(LevitScope scope) => _install(scope);

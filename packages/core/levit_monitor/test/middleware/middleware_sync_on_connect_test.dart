@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
   group('LevitMonitorMiddleware', () {
@@ -24,11 +25,11 @@ void main() {
 }
 
 class MockTransport extends LevitTransport {
-  final sentEvents = <MonitorEvent>[];
+  final sentEvents = <LevitMonitorEvent>[];
   final onConnectController = StreamController<void>.broadcast();
 
   @override
-  void send(MonitorEvent event) => sentEvents.add(event);
+  void send(LevitMonitorEvent event) => sentEvents.add(event);
 
   @override
   Stream<void> get onConnect => onConnectController.stream;

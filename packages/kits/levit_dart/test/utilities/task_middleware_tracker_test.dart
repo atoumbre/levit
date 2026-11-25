@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 class _RecordingTaskMiddleware extends LevitTaskMiddleware {
   final events = <LevitTaskEvent>[];

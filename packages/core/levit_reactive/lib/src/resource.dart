@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 final class _ResourceFrame<T> {
   final T? data;
@@ -43,7 +43,7 @@ final class LxResource<T, R extends LxReactive<T>>
     this.name,
     String? ownerId,
     void Function(bool active)? onActivityChanged,
-  }) : _state = Lx.createOwned(
+  }) : _state = LxSpi.createOwned(
          () => LxVar(
            _ResourceFrame<T>(null, false),
            name: name,
@@ -82,7 +82,7 @@ final class LxResource<T, R extends LxReactive<T>>
     R? created;
     _building = true;
     try {
-      final R next = Lx.untracked(() => Lx.createOwned(_create));
+      final R next = Lx.untracked(() => LxSpi.createOwned(_create));
       created = next;
       next.name ??= name;
       next.ownerId ??= _state.ownerId;

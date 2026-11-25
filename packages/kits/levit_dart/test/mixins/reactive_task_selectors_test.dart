@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 class _ReactiveTaskController extends LevitController
     with LevitReactiveTasksMixin {
@@ -62,7 +63,7 @@ void main() {
       final replacement = controller.runTask(
         (_) => 'new',
         id: 'search',
-        conflictPolicy: TaskConflictPolicy.restart,
+        conflictPolicy: LevitTaskConflictPolicy.restart,
       );
 
       expect(await replacement, 'new');

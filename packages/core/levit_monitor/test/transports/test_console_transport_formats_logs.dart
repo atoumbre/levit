@@ -13,14 +13,14 @@ class _MockLogPrinter extends logger.LogPrinter {
 }
 
 void main() {
-  group('ConsoleTransport formats log events', () {
-    test('formats minimal LogEvent correctly', () {
+  group('LevitConsoleTransport formats log events', () {
+    test('formats minimal LevitLogEvent correctly', () {
       final printer = _MockLogPrinter();
-      final transport = lm.ConsoleTransport(printer: printer);
+      final transport = lm.LevitConsoleTransport(printer: printer);
 
-      final event = lm.LogEvent(
+      final event = lm.LevitLogEvent(
         sessionId: 'test-session',
-        level: logger.Level.info,
+        level: lm.LevitLogLevel.info,
         data: 'A simple log message',
       );
 
@@ -28,13 +28,13 @@ void main() {
       expect(printer.lines.last, 'LOG: A simple log message');
     });
 
-    test('formats LogEvent with error and stackTrace', () {
+    test('formats LevitLogEvent with error and stackTrace', () {
       final printer = _MockLogPrinter();
-      final transport = lm.ConsoleTransport(printer: printer);
+      final transport = lm.LevitConsoleTransport(printer: printer);
 
-      final event = lm.LogEvent(
+      final event = lm.LevitLogEvent(
         sessionId: 'test-session',
-        level: logger.Level.error,
+        level: lm.LevitLogLevel.error,
         data: 'Failed operation',
         error: 'Timeout Exception',
         stackTrace: StackTrace.fromString('frame_1\nframe_2'),

@@ -11,7 +11,7 @@ class _CloseTrackingTransport extends LevitTransport {
   Stream<void> get onConnect => const Stream<void>.empty();
 
   @override
-  void send(MonitorEvent event) {}
+  void send(LevitMonitorEvent event) {}
 
   @override
   Future<void> close() async {

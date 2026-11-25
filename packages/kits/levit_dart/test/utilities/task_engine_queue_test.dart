@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:test/test.dart';
-import 'package:levit_dart/levit_dart.dart';
+import 'package:levit_dart/tasks.dart';
 
 void main() {
   test('queued tasks respect priority order with maxConcurrent=1', () async {
@@ -12,15 +12,15 @@ void main() {
     final f1 = engine.schedule((_) async {
       await blocker.future;
       order.add('first');
-    }, priority: TaskPriority.normal);
+    }, priority: LevitTaskPriority.normal);
 
     final f2 = engine.schedule((_) async {
       order.add('high');
-    }, priority: TaskPriority.high);
+    }, priority: LevitTaskPriority.high);
 
     final f3 = engine.schedule((_) async {
       order.add('low');
-    }, priority: TaskPriority.low);
+    }, priority: LevitTaskPriority.low);
 
     blocker.complete();
 

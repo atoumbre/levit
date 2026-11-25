@@ -99,7 +99,7 @@ class LocationController extends LevitController {
 
 Future<void> main(List<String> args) async {
   // Attach Levit Monitor for live debugging
-  await LevitMonitor.attach(transport: ConsoleTransport());
+  await LevitMonitor.attach(transport: LevitConsoleTransport());
 
   print('Starting simulation...');
 

@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 /// Controls admission of overlapping asynchronous reactive computations.
 enum LxAsyncConcurrency {
@@ -92,7 +92,7 @@ class LxComputed<T> extends _ComputedBase<T> {
   static T _computeInitial<T>(String? name, T Function() compute) {
     // Capture first dependency graph during initial compute.
     final tracker = _getTracker();
-    tracker.trackReactives = LevitReactiveMiddleware.hasGraphChangeMiddlewares;
+    tracker.trackReactives = LevitReactiveMiddleware._hasGraphChangeMiddlewares;
 
     final previousProxy = _LevitReactiveCore.proxy;
     _LevitReactiveCore.proxy = tracker;
@@ -320,7 +320,7 @@ class LxComputed<T> extends _ComputedBase<T> {
     }
 
     final tracker = _getTracker();
-    tracker.trackReactives = LevitReactiveMiddleware.hasGraphChangeMiddlewares;
+    tracker.trackReactives = LevitReactiveMiddleware._hasGraphChangeMiddlewares;
     // Verify every read against the last successful order. A changed, repeated,
     // or reordered read falls back to normal dependency capture immediately.
     tracker.expect(_orderedDependencies);
@@ -356,7 +356,7 @@ class LxComputed<T> extends _ComputedBase<T> {
         // Membership is verified by reads, but upstream depth can still change.
         final deps = _orderedDependencies!;
         if (deps.length == 1) {
-          graphDepth = deps.first.graphDepth + 1;
+          _graphDepth = deps.first.graphDepth + 1;
         } else {
           _recalculateGraphDepth(deps);
         }
@@ -389,7 +389,7 @@ class LxComputed<T> extends _ComputedBase<T> {
     // Pull-only values do not subscribe. An outer observer already captures
     // their reads; otherwise only graph diagnostics need a temporary tracker.
     if (_capturingCollection ||
-        !LevitReactiveMiddleware.hasGraphChangeMiddlewares) {
+        !LevitReactiveMiddleware._hasGraphChangeMiddlewares) {
       return _compute();
     }
     return _readWithGraphCapture();
@@ -399,8 +399,8 @@ class LxComputed<T> extends _ComputedBase<T> {
   @pragma('vm:never-inline')
   T _readWithGraphCapture() {
     final tracker = _DependencyTracker()
-      ..trackReactives = LevitReactiveMiddleware.hasGraphChangeMiddlewares;
-    Lx.proxy = tracker;
+      ..trackReactives = LevitReactiveMiddleware._hasGraphChangeMiddlewares;
+    LxSpi.proxy = tracker;
     try {
       final result = _compute();
       if (tracker.reactives.isNotEmpty) {
@@ -408,7 +408,7 @@ class LxComputed<T> extends _ComputedBase<T> {
       }
       return result;
     } finally {
-      Lx.proxy = null;
+      LxSpi.proxy = null;
     }
   }
 
@@ -567,10 +567,10 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
       tracker = _AsyncLiveTracker(
         this,
         myExecutionId,
-        trackReactives: LevitReactiveMiddleware.hasGraphChangeMiddlewares,
+        trackReactives: LevitReactiveMiddleware._hasGraphChangeMiddlewares,
       );
-      final previousProxy = Lx.proxy;
-      Lx.proxy = tracker;
+      final previousProxy = LxSpi.proxy;
+      LxSpi.proxy = tracker;
 
       try {
         future = runZoned(
@@ -583,7 +583,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
         syncStack = st;
         syncFailed = true;
       } finally {
-        Lx.proxy = previousProxy;
+        LxSpi.proxy = previousProxy;
         if (tracker.trackReactives) {
           maybeNotifyGraphChange(tracker.reactives);
         }
@@ -758,7 +758,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     final multiple = _multipleDependencies;
     _soleDependency = null;
     _multipleDependencies = null;
-    graphDepth = 0;
+    _graphDepth = 0;
     if (sole != null) _removeSubscription(sole);
     if (multiple != null) {
       for (final dep in multiple) {
@@ -771,8 +771,8 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
   bool _subscribeTo(LevitReactiveNotifier notifier) {
     if (_isSubscribed(notifier)) return false;
 
-    if (LevitReactiveMiddleware.hasListenerMiddlewares) {
-      Lx.runWithContext(
+    if (LevitReactiveMiddleware._hasListenerMiddlewares) {
+      LxSpi.runWithContext(
         LxListenerContext(
           type: 'LxComputed',
           id: identityHashCode(this),
@@ -798,7 +798,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
 
     final candidateDepth = notifier.graphDepth + 1;
     if (candidateDepth > graphDepth) {
-      graphDepth = candidateDepth;
+      _graphDepth = candidateDepth;
     }
 
     return true;
@@ -815,8 +815,8 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
   }
 
   void _removeSubscription(LevitReactiveNotifier notifier) {
-    if (LevitReactiveMiddleware.hasListenerMiddlewares) {
-      Lx.runWithContext(
+    if (LevitReactiveMiddleware._hasListenerMiddlewares) {
+      LxSpi.runWithContext(
         LxListenerContext(
           type: 'LxComputed',
           id: identityHashCode(this),
@@ -839,7 +839,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
         nextDepth = dependencyDepth;
       }
     }
-    graphDepth = nextDepth;
+    _graphDepth = nextDepth;
   }
 
   /// Reconciles dependencies for sync computed.
@@ -868,7 +868,7 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
       if (candidate > depth) depth = candidate;
     }
     if (same) {
-      graphDepth = depth;
+      _graphDepth = depth;
       _orderedDependencies = newDependencies.toList(growable: false);
       return;
     }

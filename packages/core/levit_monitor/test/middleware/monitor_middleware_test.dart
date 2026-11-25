@@ -2,13 +2,14 @@ import 'dart:async';
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class MockTransport extends LevitTransport {
-  final List<MonitorEvent> events = [];
-  void Function(MonitorEvent)? onSend;
+  final List<LevitMonitorEvent> events = [];
+  void Function(LevitMonitorEvent)? onSend;
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     events.add(event);
     onSend?.call(event);
   }

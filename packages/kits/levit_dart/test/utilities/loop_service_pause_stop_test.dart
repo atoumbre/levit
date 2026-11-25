@@ -55,7 +55,7 @@ void main() {
   );
 }
 
-class _TestService implements StoppableService {
+class _TestService implements LevitLoopService {
   @override
   final status = LxVar<LxStatus<dynamic>>(LxIdle());
 

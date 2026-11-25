@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 /// A sealed hierarchy representing the status of an asynchronous operation.
 ///

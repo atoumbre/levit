@@ -1,5 +1,6 @@
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_reactive/spi.dart';
 
 class ListeningContextMiddleware extends LevitReactiveMiddleware {
   int startCount = 0;
@@ -30,7 +31,7 @@ void main() {
       id: 1,
       data: {'key': 'val'},
     );
-    Lx.runWithContext(ctx, () {
+    LxSpi.runWithContext(ctx, () {
       final v = LxVar(0);
       v.addListener(() {});
     });

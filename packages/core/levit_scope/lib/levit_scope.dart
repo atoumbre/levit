@@ -9,11 +9,9 @@
 /// scope boundaries.
 library;
 
-import 'dart:async';
-import 'dart:collection';
-import 'dart:developer' as dev;
-
-part 'src/core.dart';
-part 'src/description.dart';
-part 'src/middleware.dart';
-part 'src/global_accessor.dart';
+export 'src/scope_library.dart'
+    hide
+        LevitDrainable,
+        LevitExecutionBoundary,
+        LevitScopeProgressObserver,
+        LsSpi;

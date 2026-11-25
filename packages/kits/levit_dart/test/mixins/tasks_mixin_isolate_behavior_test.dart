@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 // Top-level function for Isolate tests
 String _testIsolateTask(Object? input, LevitIsolateTaskContext context) =>
@@ -34,7 +35,7 @@ void main() {
       () async {
         await Levit.runInScope<void>(() async {
           final controller = Levit.put(() => TestIsolateTasksController());
-          final result = await controller.tasksEngine.scheduleIsolate(
+          final result = await controller.taskEngine.scheduleIsolate(
             _testIsolateTask,
             null,
             debugName: 'test_isolate',

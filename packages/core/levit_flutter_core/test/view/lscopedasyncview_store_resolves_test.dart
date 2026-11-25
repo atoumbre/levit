@@ -4,7 +4,7 @@ import 'package:levit_flutter_core/levit_flutter_core.dart';
 import '../helpers.dart';
 
 void main() {
-  testWidgets('LScopedAsyncView.store resolves LevitAsyncState', (
+  testWidgets('LAsyncScopedView.store resolves LevitAsyncState', (
     tester,
   ) async {
     await Levit.reset(force: true);
@@ -14,7 +14,7 @@ void main() {
     });
     await tester.pumpWidget(
       MaterialApp(
-        home: LScopedAsyncView<TestController>.store(
+        home: LAsyncScopedView<TestController>.store(
           state,
           loading: (_) => const Text('Loading...'),
           builder: (context, controller) => Text('Count: ${controller.count}'),

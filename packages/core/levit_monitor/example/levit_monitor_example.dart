@@ -44,7 +44,7 @@ Future<void> main() async {
 
   // 0. Attach monitor
   await LevitMonitor.attach(
-    transport: ConsoleTransport(minLevel: LevitLogLevel.trace),
+    transport: LevitConsoleTransport(minLevel: LevitLogLevel.trace),
   );
 
   // 1. Register the controller

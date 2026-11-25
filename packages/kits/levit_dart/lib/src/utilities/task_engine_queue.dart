@@ -1,4 +1,4 @@
-part of '../../levit_dart.dart';
+part of '../kit_library.dart';
 
 enum _TaskExecutionState { queued, running, completed }
 
@@ -12,7 +12,7 @@ enum _IsolateTaskMessage {
 
 class _TaskExecutionConfig {
   FutureOr<dynamic> Function(LevitTaskContext context) task;
-  TaskPriority priority;
+  LevitTaskPriority priority;
   LevitRetryPolicy? retryPolicy;
   LevitTaskGroup group;
   DateTime? deadline;
@@ -60,7 +60,7 @@ class _TaskExecution {
   int attempt = 0;
   double progress = 0;
   bool detachedByRestart = false;
-  TaskSkipReason? cancellationReason;
+  LevitTaskSkipReason? cancellationReason;
   LevitDisposalFailure? cleanupFailure;
 
   _TaskExecution({
@@ -84,14 +84,14 @@ class _TaskGroup {
 }
 
 Queue<_TaskExecution> _queueForPriority({
-  required TaskPriority priority,
+  required LevitTaskPriority priority,
   required Queue<_TaskExecution> highPriorityQueue,
   required Queue<_TaskExecution> normalPriorityQueue,
   required Queue<_TaskExecution> lowPriorityQueue,
 }) {
   return switch (priority) {
-    TaskPriority.high => highPriorityQueue,
-    TaskPriority.normal => normalPriorityQueue,
-    TaskPriority.low => lowPriorityQueue,
+    LevitTaskPriority.high => highPriorityQueue,
+    LevitTaskPriority.normal => normalPriorityQueue,
+    LevitTaskPriority.low => lowPriorityQueue,
   };
 }

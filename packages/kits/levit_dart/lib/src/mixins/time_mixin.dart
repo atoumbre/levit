@@ -1,4 +1,4 @@
-part of '../../levit_dart.dart';
+part of '../kit_library.dart';
 
 /// A mixin for [LevitController] that centralizes time-based operations like
 /// debouncing, throttling, intervals, and countdowns.
@@ -7,7 +7,7 @@ part of '../../levit_dart.dart';
 /// to ensure consistent lifecycle management and memory safety.
 mixin LevitTimeMixin on LevitController {
   final _timers = <String, Timer>{};
-  final _countdowns = <LxCountdown>[];
+  final _countdowns = <LevitCountdown>[];
 
   /// Debounces a [callback] function.
   ///
@@ -60,14 +60,14 @@ mixin LevitTimeMixin on LevitController {
 
   /// Starts a reactive countdown.
   ///
-  /// Returns an [LxCountdown] object that exposes the [LxCountdown.remaining]
+  /// Returns an [LevitCountdown] object that exposes the [LevitCountdown.remaining]
   /// duration and control methods (pause, resume, stop).
   ///
   /// *   [duration]: The non-negative total duration to count down.
   /// *   [interval]: The positive maximum interval between updates (default: 1 second).
   /// *   [onTick]: Called on each delivered update, including the final zero.
   /// *   [onFinish]: Called when the countdown reaches zero.
-  LxCountdown startCountdown({
+  LevitCountdown startCountdown({
     required Duration duration,
     Duration interval = const Duration(seconds: 1),
     void Function(Duration remaining)? onTick,
@@ -76,7 +76,7 @@ mixin LevitTimeMixin on LevitController {
     if (isClosing || isDisposed) {
       throw StateError('Cannot start a countdown on a closing controller.');
     }
-    final countdown = LxCountdown(
+    final countdown = LevitCountdown(
       totalDuration: duration,
       interval: interval,
       onTick: onTick,
@@ -156,7 +156,7 @@ mixin LevitTimeMixin on LevitController {
 /// [start] begins a new run at [totalDuration]; [stop] resets without finishing.
 /// Callbacks are synchronous. [dispose] cancels timing immediately and awaits
 /// closure of [remaining]. A controller can own a standalone countdown with `own`.
-class LxCountdown implements LevitDisposable {
+class LevitCountdown implements LevitDisposable {
   /// The non-negative duration of each run.
   final Duration totalDuration;
 
@@ -185,7 +185,7 @@ class LxCountdown implements LevitDisposable {
   /// Creates an idle countdown. [stopwatch] optionally supplies a deterministic
   /// clock for testing; this countdown exclusively starts, stops and resets it.
   /// A negative duration or a non-positive interval throws [ArgumentError].
-  LxCountdown({
+  LevitCountdown({
     required this.totalDuration,
     required this.interval,
     this.onTick,

@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 void main() {
   group('task conflict policies', () {
@@ -22,7 +22,7 @@ void main() {
 
         expect(
           () => engine.schedule((_) => 2, id: 'sync'),
-          throwsA(isA<TaskConflictException>()),
+          throwsA(isA<LevitTaskConflictException>()),
         );
         final rejected = events.singleWhere(
           (event) => event.type == LevitTaskEventType.rejected,
@@ -48,7 +48,7 @@ void main() {
         final tail = engine.submit(
           (_) => 2,
           id: 'refresh',
-          conflictPolicy: TaskConflictPolicy.coalesceLatest,
+          conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
         );
         var joinedCallbackRan = false;
         final joined = engine.submit(
@@ -57,7 +57,7 @@ void main() {
             return 3;
           },
           id: 'refresh',
-          conflictPolicy: TaskConflictPolicy.join,
+          conflictPolicy: LevitTaskConflictPolicy.join,
         );
 
         expect(joined.executionId, tail.executionId);
@@ -87,7 +87,7 @@ void main() {
             return 2;
           },
           id: 'submit',
-          conflictPolicy: TaskConflictPolicy.drop,
+          conflictPolicy: LevitTaskConflictPolicy.drop,
         );
 
         await expectLater(dropped, throwsA(isA<LevitTaskDroppedException>()));
@@ -95,7 +95,7 @@ void main() {
         expect(
           events.any(
             (event) =>
-                event.skipReason == TaskSkipReason.dropped &&
+                event.skipReason == LevitTaskSkipReason.dropped &&
                 event.outcome == LevitTaskOutcome.dropped,
           ),
           isTrue,
@@ -113,7 +113,7 @@ void main() {
       final dropped = engine.submit(
         (_) => 2,
         id: 'drop-cancel',
-        conflictPolicy: TaskConflictPolicy.drop,
+        conflictPolicy: LevitTaskConflictPolicy.drop,
       );
 
       expect(dropped.disposition, LevitTaskSubmissionDisposition.dropped);
@@ -147,7 +147,7 @@ void main() {
             return 'new';
           },
           id: 'session',
-          conflictPolicy: TaskConflictPolicy.restart,
+          conflictPolicy: LevitTaskConflictPolicy.restart,
         );
 
         await replacementStarted.future;
@@ -178,19 +178,19 @@ void main() {
         final firstForId = engine.schedule(
           (_) => order.add('x1'),
           id: 'x',
-          priority: TaskPriority.low,
-          conflictPolicy: TaskConflictPolicy.enqueue,
+          priority: LevitTaskPriority.low,
+          conflictPolicy: LevitTaskConflictPolicy.enqueue,
         );
         final secondForId = engine.schedule(
           (_) => order.add('x2'),
           id: 'x',
-          priority: TaskPriority.high,
-          conflictPolicy: TaskConflictPolicy.enqueue,
+          priority: LevitTaskPriority.high,
+          conflictPolicy: LevitTaskConflictPolicy.enqueue,
         );
         final otherId = engine.schedule(
           (_) => order.add('y'),
           id: 'y',
-          priority: TaskPriority.normal,
+          priority: LevitTaskPriority.normal,
         );
 
         blocker.complete();
@@ -219,13 +219,13 @@ void main() {
             return 2;
           },
           id: 'media',
-          conflictPolicy: TaskConflictPolicy.coalesceLatest,
+          conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
         );
         final latestTail = engine.submit(
           (_) => 3,
           id: 'media',
-          priority: TaskPriority.high,
-          conflictPolicy: TaskConflictPolicy.coalesceLatest,
+          priority: LevitTaskPriority.high,
+          conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
         );
 
         expect(latestTail.executionId, firstTail.executionId);

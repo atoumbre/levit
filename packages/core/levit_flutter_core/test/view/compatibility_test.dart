@@ -25,7 +25,7 @@ class ExtendedLScopedView extends LScopedView<TestController> {
   const ExtendedLScopedView({super.key});
 
   @override
-  TestController onConfigScope(LevitScope scope) {
+  TestController onConfigureScope(LevitScope scope) {
     return scope.put(() => TestController());
   }
 
@@ -41,7 +41,7 @@ class ExtendedLAsyncScopeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LAsyncScope(
-      dependencyFactory: (scope) async {
+      configure: (scope) async {
         await Future.delayed(const Duration(milliseconds: 10));
         scope.put(() => TestController());
       },
@@ -97,7 +97,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScopedView<TestController>(
-            dependencyFactory: (scope) =>
+            configure: (scope) =>
                 scope.put<TestController>(() => TestController()),
             builder: (context, c) =>
                 Text('ScopedComposition: ${c.count.value}'),
@@ -118,7 +118,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LAsyncScope(
-            dependencyFactory: (scope) async {
+            configure: (scope) async {
               await Future.delayed(const Duration(milliseconds: 10));
               scope.put(() => TestController());
             },

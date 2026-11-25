@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class _MixedTransport extends LevitTransport {
   final release = Completer<void>();
   final names = <String>[];
   @override
-  FutureOr<void> send(MonitorEvent event) {
+  FutureOr<void> send(LevitMonitorEvent event) {
     final name = event.toJson()['scopeName'] as String;
     names.add(name);
     if (name == 'second') return release.future;

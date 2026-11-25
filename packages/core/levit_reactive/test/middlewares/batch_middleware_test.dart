@@ -13,7 +13,7 @@ class TestBatchFilterMiddleware extends LevitReactiveMiddleware {
   });
 
   @override
-  LxOnBatch? get onBatch => (next, change) {
+  LevitReactiveOnBatch? get onBatch => (next, change) {
     if (!shouldProcessBatchFlag) {
       return next;
     }

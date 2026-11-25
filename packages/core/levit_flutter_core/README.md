@@ -43,10 +43,10 @@ The package ensures widget lifecycle events and DI lifecycle events stay synchro
 | `LSelectorBuilder` | You want a small derived value local to one subtree without promoting it to controller state. | The derived value is shared across widgets or long-lived; move it into a controller/store computed. |
 | `LStatusBuilder` | You are rendering an `LxStatus<T>` with waiting, error, and success branches. | You are not working with `LxStatus`; prefer `LBuilder` or `LWatch`. |
 | `LView` | The controller/service already exists in the nearest scope and you only need to render it. | The widget should create and own a child scope; prefer `LScopedView`. |
-| `LAsyncView` | The dependency resolves asynchronously from the current scope. | You also need to create a new scope boundary or async scope initialization; prefer `LScopedAsyncView` or `LAsyncScope`. |
+| `LAsyncView` | The dependency resolves asynchronously from the current scope. | You also need to create a new scope boundary or async scope initialization; prefer `LAsyncScopedView` or `LAsyncScope`. |
 | `LScopedView` | One widget should create a child scope, register a dependency, and render it. | The scope already exists; prefer `LView`. |
-| `LScopedAsyncView` | One widget should create a child scope and resolve the dependency asynchronously. | You only need an async scope boundary without the view abstraction; prefer `LAsyncScope`. |
-| `LScope` / `LAsyncScope` | You need a scope boundary for a subtree, independent of a specific controller/view widget. | A single controller-view pair is enough; prefer `LScopedView` or `LScopedAsyncView`. |
+| `LAsyncScopedView` | One widget should create a child scope and resolve the dependency asynchronously. | You only need an async scope boundary without the view abstraction; prefer `LAsyncScope`. |
+| `LScope` / `LAsyncScope` | You need a scope boundary for a subtree, independent of a specific controller/view widget. | A single controller-view pair is enough; prefer `LScopedView` or `LAsyncScopedView`. |
 | `LRouteScope` / `LAsyncRouteScope` | Route identity and route coverage are the ownership boundary, and you want current/covered route visibility exposed reactively. | The scope is only subtree-local and does not care about route semantics; prefer `LScope` or `LAsyncScope`. |
 
 ## Getting Started
@@ -165,7 +165,7 @@ content with `LScope.capture` when they need page-local dependencies.
 
 ## View updates and local stores
 
-Consuming views resolve initially, when their bound scope changes, or when explicit `args` change. A new resolver closure alone does not refetch. Scoped views continue recreating their scope when ownership arguments change. Pass `localOnly: true` to `.store` constructors to isolate a store from ancestor instances. Register shared dependencies explicitly in their owning scope; use `LScopedView.put` or `LScopedAsyncView.put` for view-owned dependencies.
+Consuming views resolve initially, when their bound scope changes, or when explicit `args` change. A new resolver closure alone does not refetch. Scoped views continue recreating their scope when ownership arguments change. Pass `localOnly: true` to `.store` constructors to isolate a store from ancestor instances. Register shared dependencies explicitly in their owning scope; use `LScopedView.put` or `LAsyncScopedView.put` for view-owned dependencies.
 
 See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md) before upgrading.
 
@@ -190,12 +190,12 @@ names and result types do not identify stores. Install `store.overrideWith(build
 using `scope.applyOverrides([...])` before local resolution. The receiving scope
 owns override resources; unoverridden lookups inherit an ancestor unless
 `localOnly: true` is supplied. `LevitRef` and `context.levit` offer `findStore`,
-`findStoreAsync`, and `findAsyncStore` with the same typed contract.
+`findStore` and `findAsyncStore` with the same typed contract.
 
 Optional DI lookups return null only for missing registrations. Builder and type
 errors propagate. `scope.describe()` returns immutable ancestry, registration,
 initialization and ownership metadata without dependency values or raw tags.
-Builders and selectors accept `LxReadable<T>`; `LxState.asReactive` exposes this
+Builders and selectors accept `LxReadable<T>`; `LxState.asReadable` exposes this
 observation-only interface.
 
 Tests can import `package:levit/levit_testing.dart` or

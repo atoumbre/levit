@@ -11,19 +11,7 @@
 /// runtime dependencies.
 library;
 
-import 'dart:async';
-import 'dart:collection';
-import 'dart:developer' as dev;
-import 'dart:math' as math;
-
-import 'package:levit_reactive/levit_reactive.dart';
-import 'package:levit_scope/levit_scope.dart';
-import 'package:meta/meta.dart';
-
 export 'package:levit_reactive/levit_reactive.dart';
 export 'package:levit_scope/levit_scope.dart';
-
-part 'src/auto_linking.dart';
-part 'src/controller.dart';
-part 'src/core.dart';
-part 'src/store.dart';
+export 'src/dart_core_library.dart'
+    hide LevitAutoLinkSpi, LevitResourceOwner, LevitResourceOwnership;

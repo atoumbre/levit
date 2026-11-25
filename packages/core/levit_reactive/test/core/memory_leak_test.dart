@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_reactive/spi.dart';
 
 void main() {
   group('Lx Memory Leaks', () {
@@ -205,9 +206,9 @@ void main() {
       final observer = _MockObserver();
 
       // Simulate build
-      Lx.proxy = observer;
+      LxSpi.proxy = observer;
       final _ = lx.value; // Register
-      Lx.proxy = null;
+      LxSpi.proxy = null;
 
       expect(observer.disposers.length, 1);
 

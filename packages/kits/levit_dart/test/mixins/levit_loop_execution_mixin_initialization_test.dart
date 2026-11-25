@@ -1,7 +1,7 @@
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
-class TestLoopController extends LevitController with LevitLoopExecutionMixin {}
+class TestLoopController extends LevitController with LevitLoopMixin {}
 
 void main() {
   test('loop controllers initialize and dispose with their scope', () async {

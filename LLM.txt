@@ -152,7 +152,7 @@ Prefer Levit widgets over manual scope handling:
 
 - LScope, LAsyncScope — subtree-owned lifetimes.
 - LScope.put — create a scope and eagerly register a root dependency.
-- LScopedView, LScopedAsyncView — create a child scope and consume a dependency.
+- LScopedView, LAsyncScopedView — create a child scope and consume a dependency.
 - LRouteScope, LAsyncRouteScope — route identity as the ownership boundary.
 - LScope.capture — re-provide the nearest scope to dialogs and overlays.
   Prefer showLevitDialog / showLevitModalBottomSheet from levit_flutter for
@@ -314,7 +314,7 @@ runApp(
 );
 ```
 
-Screen-owned controller (subclass + onConfigScope is also first-class):
+Screen-owned controller (subclass + onConfigureScope is also first-class):
 
 ```dart
 return LScopedView<CounterController>.put(
@@ -331,7 +331,7 @@ watches yourself.
 Lifetime styles (both valid):
 
 - Page-scoped: LScopedView per route/sheet; put feature controllers in
-  onConfigScope.
+  onConfigureScope.
 - Root-permanent features: register long-lived feature controllers with
   permanent: true on the app/root scope; consume with LView in tabs/shells.
 
@@ -345,8 +345,8 @@ levit_flutter (capture by default).
 
 Widget-test harness with explicit scopes and awaited teardown:
 
-- Mount MaterialApp with LScope(dependencyFactory: ..., child: ...)
-- Capture the scope from dependencyFactory into a test holder
+- Mount MaterialApp with LScope(configure: ..., child: ...)
+- Capture the scope from configure into a test holder
 - Prefer unique / omitted scope names (0.0.9 auto-uniques unnamed scopes)
 - After the surface is cleared, await scope disposal. Prefer an isolated test
   scope over global Levit.reset().
@@ -359,8 +359,8 @@ Widget guide:
 - LStatusBuilder — LxStatus<T> waiting/error/success rendering (page UI kit).
 - LView — dependency already exists in the nearest scope.
 - LAsyncView — async dependency resolution with loading/error builders.
-- LScopedView / LScopedAsyncView — create a child scope and own the dependency
-  (subclass + onConfigScope, or .put / .store DI sugar).
+- LScopedView / LAsyncScopedView — create a child scope and own the dependency
+  (subclass + onConfigureScope, or .put / .store DI sugar).
 - LScope / LAsyncScope — subtree-owned lifetimes.
 - LRouteScope / LAsyncRouteScope — route identity as the ownership boundary.
 - LScope.capture — dialogs and overlays that must keep a page-local scope.
@@ -377,7 +377,7 @@ levit_flutter kit additions (import levit_flutter):
 - LKeepAlive — preserve expensive subtrees in scrollable lists.
 - Mount/unmount hooks: use a local StatefulWidget; see the levit_flutter example recipe.
 - LevitAppLifecycleMixin — react to app pause/resume/detach.
-- LevitLoopExecutionLifecycleMixin — pause/resume loop execution with app lifecycle.
+- LevitLoopLifecycleMixin — pause/resume loop execution with app lifecycle.
 
 Avoid manual scope plumbing in ordinary Flutter widgets. Prefer Levit
 scope/view widgets, and only pass scopes explicitly when crossing route,
@@ -428,7 +428,7 @@ cancellation, caching, progress, or reactive busy state.
 Task mixins:
 
 - LevitTasksMixin — scheduling, retries, caching, cancellation without
-  UI-facing reactive task state (tasksEngine.schedule(...)).
+  UI-facing reactive task state (taskEngine.schedule(...)).
 - LevitReactiveTasksMixin — reactive task details, busy state, and progress
   observable by UI or runtime code (runTask(...), tasks, isBusy, totalProgress,
   category/blocking selectors).
@@ -456,7 +456,7 @@ Other levit_dart mixins:
   paused time, start resets, and stop resets without finishing. Await standalone
   countdown disposal or use own; the mixin drains countdown cleanup automatically.
 - LevitSelectionMixin<T> — single/multi selection state.
-- LevitLoopExecutionMixin — managed periodic/continuous workloads.
+- LevitLoopMixin — managed periodic/continuous workloads.
 
 
 Middleware

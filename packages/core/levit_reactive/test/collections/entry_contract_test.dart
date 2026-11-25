@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_reactive/spi.dart';
 
 class _EntryNames extends LevitReactiveMiddleware {
   final names = <String?>[];
@@ -32,7 +33,7 @@ void main() {
 
   test('mixed depth batch delivers shallow observers first', () async {
     final shallow = 1.lx, deep = 1.lx;
-    deep.graphDepth = 3;
+    LxSpi.setGraphDepth(deep, 3);
     final delivered = <String>[];
     deep.addListener(() => delivered.add('deep'));
     shallow.addListener(() => delivered.add('shallow'));
@@ -423,7 +424,7 @@ class _EntryDisposal extends LevitReactiveMiddleware {
   _EntryDisposal(this.onClose);
   final void Function(LxReactive value) onClose;
   @override
-  LxOnDispose get onDispose =>
+  LevitReactiveOnDispose get onDispose =>
       (next, value) => () {
         next();
         onClose(value);

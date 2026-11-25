@@ -6,7 +6,7 @@ import 'package:nexus_studio_shared/shared.dart';
 Future<void> main() async {
   Levit.enableAutoLinking();
   // Connect to LevitDevTools in debug mode
-  final transport = WebSocketTransport.connect(
+  final transport = LevitWebSocketTransport.connect(
     const String.fromEnvironment(
       'LEVIT_INSPECTOR_URL',
       defaultValue: 'ws://127.0.0.1:9200/ws',

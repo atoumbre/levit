@@ -258,8 +258,8 @@ mixin _LReactiveElementMixin<W extends Widget> on ComponentElement {
   }
 
   void runWithContext(void Function() fn) {
-    if (LevitReactiveMiddleware.hasListenerMiddlewares) {
-      Lx.runWithContext(_buildContext(), fn);
+    if (LxSpi.hasListenerMiddlewares) {
+      LxSpi.runWithContext(_buildContext(), fn);
     } else {
       fn();
     }

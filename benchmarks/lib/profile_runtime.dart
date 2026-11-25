@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 
 import 'performance_monitor.dart';
+import 'package:levit_flutter/tasks.dart';
 
 /// CPU/allocation investigation only. Use release_performance.dart for timings.
 void main() {

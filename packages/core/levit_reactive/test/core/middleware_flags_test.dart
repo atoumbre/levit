@@ -3,10 +3,10 @@ import 'package:test/test.dart';
 
 class TestRejectMiddleware extends LevitReactiveMiddleware {
   @override
-  LxOnSet? get onSet =>
+  LevitReactiveOnSet? get onSet =>
       (next, reactive, change) => (value) {};
   @override
-  LxOnBatch? get onBatch =>
+  LevitReactiveOnBatch? get onBatch =>
       (next, change) =>
           () => throw StateError('Batch rejected');
 }
@@ -14,7 +14,7 @@ class TestRejectMiddleware extends LevitReactiveMiddleware {
 class TestSimpleMiddleware extends LevitReactiveMiddleware {
   final List<LevitReactiveChange> changes = [];
   @override
-  LxOnSet? get onSet =>
+  LevitReactiveOnSet? get onSet =>
       (next, reactive, change) => (value) {
         next(value);
         changes.add(change);
@@ -22,10 +22,19 @@ class TestSimpleMiddleware extends LevitReactiveMiddleware {
 }
 
 void main() {
-  test('hasSetMiddlewares reflects registration of a mutation interceptor', () {
+  test('mutation interceptor observes sets only while registered', () {
     Lx.clearMiddlewares();
-    expect(LevitReactiveMiddleware.hasSetMiddlewares, isFalse);
-    Lx.addMiddleware(TestSimpleMiddleware());
-    expect(LevitReactiveMiddleware.hasSetMiddlewares, isTrue);
+    final mw = TestSimpleMiddleware();
+    final value = 0.lx;
+    value.value = 1;
+    expect(mw.changes, isEmpty);
+
+    Lx.addMiddleware(mw);
+    value.value = 2;
+    expect(mw.changes, hasLength(1));
+
+    Lx.removeMiddleware(mw);
+    value.value = 3;
+    expect(mw.changes, hasLength(1));
   });
 }

@@ -56,7 +56,7 @@ class _SessionReplacementPageState extends State<SessionReplacementPage> {
           child: LAsyncScope(
             lifecycle: lifecycle,
             args: [session],
-            dependencyFactory: (scope) async {
+            configure: (scope) async {
               final label = 'Session $session';
               events.add('opened:$label');
               scope.put(

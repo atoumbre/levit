@@ -9,7 +9,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: LScope(
-          dependencyFactory: (s) => s.put<_TestService>(() => _TestService()),
+          configure: (s) => s.put<_TestService>(() => _TestService()),
           child: LView<_TestService>(
             resolver: (context) => context.levit.find<_TestService>(),
             builder: (context, controller) => const Text('Controller Found'),

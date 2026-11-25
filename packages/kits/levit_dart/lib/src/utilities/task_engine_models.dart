@@ -1,7 +1,7 @@
-part of '../../levit_dart.dart';
+part of '../kit_library.dart';
 
 /// Priority levels for task execution.
-enum TaskPriority {
+enum LevitTaskPriority {
   /// High priority tasks are processed before normal tasks.
   high,
 
@@ -13,8 +13,8 @@ enum TaskPriority {
 }
 
 /// Defines what happens when a logical task ID already has pending work.
-enum TaskConflictPolicy {
-  /// Reject the new submission with [TaskConflictException].
+enum LevitTaskConflictPolicy {
+  /// Reject the new submission with [LevitTaskConflictException].
   reject,
 
   /// Return the result of the latest outstanding execution.
@@ -61,7 +61,7 @@ enum LevitTaskEventType {
 }
 
 /// Reasons why a task execution was skipped.
-enum TaskSkipReason {
+enum LevitTaskSkipReason {
   cacheHit,
   cancelledWhileQueued,
   cancelledBeforeStart,
@@ -71,16 +71,16 @@ enum TaskSkipReason {
 }
 
 /// Describes a logical task conflict rejected by the engine.
-class TaskConflictException implements Exception {
+class LevitTaskConflictException implements Exception {
   /// The logical ID that already has outstanding work.
   final String taskId;
 
   /// Creates a conflict exception for [taskId].
-  const TaskConflictException(this.taskId);
+  const LevitTaskConflictException(this.taskId);
 
   @override
   String toString() =>
-      'TaskConflictException: task "$taskId" already has outstanding work.';
+      'LevitTaskConflictException: task "$taskId" already has outstanding work.';
 }
 
 /// Thrown by [LevitTaskContext.throwIfCancelled] after cancellation.
@@ -98,7 +98,7 @@ class LevitTaskCancelledException implements Exception {
     this.taskId,
     this.executionId, {
     this.reason = const LevitTaskCancellationReason(
-      LevitCancellationKind.requested,
+      LevitTaskCancellationKind.requested,
     ),
   });
 
@@ -153,7 +153,7 @@ class _LevitTaskCancellation {
 
   void cancel([
     LevitTaskCancellationReason reason = const LevitTaskCancellationReason(
-      LevitCancellationKind.requested,
+      LevitTaskCancellationKind.requested,
     ),
   ]) {
     if (_isCancelled) return;
@@ -249,7 +249,9 @@ class LevitIsolateTaskContext {
       _isCancelled = true;
       cancellationReason =
           reason as LevitTaskCancellationReason? ??
-          const LevitTaskCancellationReason(LevitCancellationKind.requested);
+          const LevitTaskCancellationReason(
+            LevitTaskCancellationKind.requested,
+          );
       _cancelled.complete();
     });
   }
@@ -306,7 +308,7 @@ class LevitTaskEvent {
 
   final LevitTaskPhase phase;
   final LevitTaskMetadata metadata;
-  final TaskPriority priority;
+  final LevitTaskPriority priority;
   final int attempt;
   final int maxRetries;
   final DateTime timestamp;
@@ -317,7 +319,7 @@ class LevitTaskEvent {
   final Duration? runDuration;
   final Duration? retryIn;
   final double? progress;
-  final TaskSkipReason? skipReason;
+  final LevitTaskSkipReason? skipReason;
   final LevitTaskOutcome? outcome;
   final Object? error;
   final StackTrace? stackTrace;
@@ -340,7 +342,7 @@ class LevitTaskEvent {
     this.ownerPath = '?',
     LevitTaskPhase? phase,
     LevitTaskMetadata? metadata,
-    this.priority = TaskPriority.normal,
+    this.priority = LevitTaskPriority.normal,
     this.attempt = 0,
     this.maxRetries = 0,
     DateTime? queuedAt,
@@ -464,14 +466,15 @@ class LevitTaskExecution<T> {
   final Future<T> result;
 
   /// Observes every terminal state without throwing.
-  late final Future<LevitExecutionOutcome<T>> outcome = result
-      .then<LevitExecutionOutcome<T>>(
+  late final Future<LevitTaskResult<T>> outcome = result
+      .then<LevitTaskResult<T>>(
         LevitTaskSuccess<T>.new,
         onError: (Object error, StackTrace stack) => switch (error) {
-          LevitTaskSupersededException() => LevitTaskSupersession<T>(),
-          LevitTaskCancelledException(:final reason) =>
-            LevitTaskCancellation<T>(reason),
-          LevitTaskDroppedException() => LevitTaskDropping<T>(),
+          LevitTaskSupersededException() => LevitTaskSuperseded<T>(),
+          LevitTaskCancelledException(:final reason) => LevitTaskCancelled<T>(
+            reason,
+          ),
+          LevitTaskDroppedException() => LevitTaskDropped<T>(),
           _ => LevitTaskFailure<T>(error, stack),
         },
       );
@@ -509,7 +512,7 @@ class LevitTaskExecutionSummary {
   final LevitTaskCancellationReason? cancellationReason;
   final LevitTaskPhase phase;
   final LevitTaskMetadata metadata;
-  final TaskPriority priority;
+  final LevitTaskPriority priority;
   final int attempt;
   final DateTime queuedAt;
   final DateTime? startedAt;
@@ -681,10 +684,13 @@ abstract class LevitTaskCacheProvider {
 
   /// Deletes cached data for [key].
   Future<void> delete(String key);
+
+  /// Creates a default in-memory [LevitTaskCacheProvider].
+  factory LevitTaskCacheProvider.inMemory() = _InMemoryTaskCacheProvider;
 }
 
 /// A default in-memory implementation of [LevitTaskCacheProvider].
-class InMemoryTaskCacheProvider implements LevitTaskCacheProvider {
+class _InMemoryTaskCacheProvider implements LevitTaskCacheProvider {
   final Map<String, Map<String, dynamic>> _cache = {};
 
   @override
@@ -702,7 +708,7 @@ class InMemoryTaskCacheProvider implements LevitTaskCacheProvider {
 }
 
 /// Configuration for caching a task's result.
-class TaskCachePolicy<T> {
+class LevitTaskCachePolicy<T> {
   /// Unique key for the cached result. If null, the task ID is used.
   final String? key;
 
@@ -716,7 +722,7 @@ class TaskCachePolicy<T> {
   final T Function(Map<String, dynamic> json) fromJson;
 
   /// Creates a caching policy.
-  const TaskCachePolicy({
+  const LevitTaskCachePolicy({
     this.key,
     required this.ttl,
     required this.toJson,
@@ -725,7 +731,7 @@ class TaskCachePolicy<T> {
 }
 
 /// Represents the latest tracked execution of a logical task.
-class TaskDetails {
+class LevitTaskDetails {
   /// The current reactive status of the task.
   final LxStatus<dynamic> status;
 
@@ -746,7 +752,7 @@ class TaskDetails {
   final LevitTaskMetadata metadata;
 
   /// Scheduling priority.
-  final TaskPriority priority;
+  final LevitTaskPriority priority;
 
   /// Current one-based attempt number.
   final int attempt;
@@ -770,7 +776,7 @@ class TaskDetails {
   final Duration? runDuration;
 
   /// Creates task details.
-  const TaskDetails({
+  const LevitTaskDetails({
     required this.status,
     this.executionId,
     this.ownerPath = '?',
@@ -780,7 +786,7 @@ class TaskDetails {
     this.cancellationReason,
     this.phase = LevitTaskPhase.completed,
     this.metadata = LevitTaskMetadata.none,
-    this.priority = TaskPriority.normal,
+    this.priority = LevitTaskPriority.normal,
     this.attempt = 0,
     this.outcome,
     this.weight = 1.0,
@@ -794,7 +800,7 @@ class TaskDetails {
   });
 
   /// Creates a copy with selected fields replaced.
-  TaskDetails copyWith({
+  LevitTaskDetails copyWith({
     LxStatus<dynamic>? status,
     String? executionId,
     String? ownerPath,
@@ -804,7 +810,7 @@ class TaskDetails {
     LevitTaskCancellationReason? cancellationReason,
     LevitTaskPhase? phase,
     LevitTaskMetadata? metadata,
-    TaskPriority? priority,
+    LevitTaskPriority? priority,
     int? attempt,
     LevitTaskOutcome? outcome,
     double? weight,
@@ -816,7 +822,7 @@ class TaskDetails {
     Duration? queueDuration,
     Duration? runDuration,
   }) {
-    return TaskDetails(
+    return LevitTaskDetails(
       status: status ?? this.status,
       executionId: executionId ?? this.executionId,
       ownerPath: ownerPath ?? this.ownerPath,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter_core/levit_flutter_core.dart';
+import 'package:levit_dart_core/spi.dart';
 
 void main() {
   testWidgets('LWatch complex subscription transitions', (tester) async {
@@ -23,12 +24,12 @@ void main() {
             // fast path: single notifier
             listenable1.notify(); // access it? No, addNotifier
             // Simulate access manually or via Lx reactive logic.
-            // LWatch uses Lx.proxy
+            // LWatch uses LxSpi.proxy
             // We need to simulate access to reactive objects.
             // But here we are using LevitReactiveNotifier directly?
             // LevitReactiveNotifier.value access doesn't exist.
-            // We need LxVar<T> objects or call Lx.proxy.addNotifier() manually?
-            // Since LWatch sets Lx.proxy, we can manually register deps if we want.
+            // We need LxVar<T> objects or call LxSpi.proxy.addNotifier() manually?
+            // Since LWatch sets LxSpi.proxy, we can manually register deps if we want.
             // But better to use real reactive objects.
           }
           return const Text('Value');

@@ -1,9 +1,9 @@
-part of '../../levit_dart.dart';
+part of '../kit_library.dart';
 
 /// A service that can be started, paused, resumed, and stopped.
 ///
 /// It exposes a reactive [status] for state tracking and error reporting.
-abstract class StoppableService {
+abstract class LevitLoopService {
   /// Reactive status of the service.
   LxReactive<LxStatus<dynamic>> get status;
 
@@ -29,7 +29,7 @@ abstract class StoppableService {
 class LevitLoopEngine
     implements LevitDisposable, LevitDrainable, LevitExecutionBoundary {
   static final Object _executionZone = Object();
-  final Map<String, StoppableService> _services = {};
+  final Map<String, LevitLoopService> _services = {};
   final Set<String> _permanentServices = {};
   final Set<String> _manuallyPaused = {};
   final Set<String> _bulkPaused = {};
@@ -44,7 +44,7 @@ class LevitLoopEngine
   /// If [permanent] is true, the service will resist standard calls to [pauseAllServices].
   /// It will only be paused if [force] is set to true.
   /// However, even permanent services are stopped when the engine is disposed.
-  T registerService<T extends StoppableService>(
+  T registerService<T extends LevitLoopService>(
     String id,
     T service, {
     bool permanent = false,
@@ -312,7 +312,7 @@ class _LoopExecutor {
   }
 }
 
-class _LoopService implements StoppableService, LevitDrainable {
+class _LoopService implements LevitLoopService, LevitDrainable {
   final _status = LxVar<LxStatus<dynamic>>(LxIdle());
   late final _LoopExecutor _executor;
 
@@ -368,7 +368,7 @@ _IsolateSpawner _spawnIsolate =
       );
     };
 
-class _IsolateLoopService implements StoppableService, LevitDrainable {
+class _IsolateLoopService implements LevitLoopService, LevitDrainable {
   final FutureOr<void> Function() _body;
   final Duration? _delay;
   final String? _debugName;

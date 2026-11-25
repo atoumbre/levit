@@ -2,28 +2,29 @@ import 'package:levit_monitor/levit_monitor.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
 
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
   group('Console event logging', () {
     test('handles all monitor events', () async {
-      final transport = ConsoleTransport();
+      final transport = LevitConsoleTransport();
       final sessionId = 'test-session';
       final reactive = 0.lx;
       final scope = LevitScope.root();
       final info = LevitDependency(instance: 42);
 
-      // Trigger ReactiveGraphChangeEvent log level switch case
+      // Trigger LevitReactiveGraphChangeEvent log level switch case
       transport.send(
-        ReactiveGraphChangeEvent(
+        LevitReactiveGraphChangeEvent(
           sessionId: sessionId,
           reactive: reactive,
           dependencies: [reactive],
         ),
       );
 
-      // Trigger DependencyInstanceCreateEvent log level switch case
+      // Trigger LevitDependencyInstanceCreateEvent log level switch case
       transport.send(
-        DependencyInstanceCreateEvent(
+        LevitDependencyInstanceCreateEvent(
           sessionId: sessionId,
           scopeId: scope.id,
           scopeName: scope.name,
@@ -32,9 +33,9 @@ void main() {
         ),
       );
 
-      // Trigger DependencyInstanceReadyEvent log level switch case
+      // Trigger LevitDependencyInstanceReadyEvent log level switch case
       transport.send(
-        DependencyInstanceReadyEvent(
+        LevitDependencyInstanceReadyEvent(
           sessionId: sessionId,
           scopeId: scope.id,
           scopeName: scope.name,
@@ -48,7 +49,7 @@ void main() {
     });
 
     test('handles all monitor events with overrides', () async {
-      final transport = ConsoleTransport(
+      final transport = LevitConsoleTransport(
         levelOverrides: const LevitLogLevelConfig(
           graphChange: LevitLogLevel.info,
           diCreate: LevitLogLevel.info,
@@ -62,7 +63,7 @@ void main() {
 
       // These will hit the 'overrides?.field' part of the expression
       transport.send(
-        ReactiveGraphChangeEvent(
+        LevitReactiveGraphChangeEvent(
           sessionId: sessionId,
           reactive: reactive,
           dependencies: [reactive],
@@ -70,7 +71,7 @@ void main() {
       );
 
       transport.send(
-        DependencyInstanceCreateEvent(
+        LevitDependencyInstanceCreateEvent(
           sessionId: sessionId,
           scopeId: scope.id,
           scopeName: scope.name,
@@ -80,7 +81,7 @@ void main() {
       );
 
       transport.send(
-        DependencyInstanceReadyEvent(
+        LevitDependencyInstanceReadyEvent(
           sessionId: sessionId,
           scopeId: scope.id,
           scopeName: scope.name,

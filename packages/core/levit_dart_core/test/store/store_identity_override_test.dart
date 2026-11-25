@@ -67,7 +67,7 @@ void main() {
       final combined = LevitAsyncStore(
         (ref) async => (
           ref.findStore(a),
-          await ref.findStoreAsync(a, localOnly: true),
+          ref.findStore(a, localOnly: true),
           await ref.findAsyncStore(b, tag: 'variant', localOnly: true),
         ),
       );

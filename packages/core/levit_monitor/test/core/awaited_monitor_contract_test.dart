@@ -4,6 +4,9 @@ import 'package:levit/levit.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
 import '../../example/task_adapter.dart';
+import 'package:levit/tasks.dart';
+import 'package:levit_monitor/spi.dart';
+import 'package:levit_dart_core/spi.dart';
 
 void main() {
   tearDown(() async {
@@ -19,7 +22,7 @@ void main() {
       await LevitMonitor.attach(transport: sink, historyCapacity: 256);
       Levit.enableAutoLinking();
       const rawKey = 'member-private@example.com';
-      final map = Lx.runWithOwner(
+      final map = LxSpi.runWithOwner(
         'catalog-feature',
         () => LevitAsyncMap<String, int>((k, _) => 1, name: 'pages'),
       );
@@ -213,13 +216,13 @@ void main() {
     },
   );
   test('worker statistics are opt in and restored on detach', () async {
-    Lx.enableWatchMonitoring = false;
+    Levit.enableWatchMonitoring = false;
     await LevitMonitor.attach(transport: _Sink());
-    expect(Lx.enableWatchMonitoring, isFalse);
+    expect(Levit.enableWatchMonitoring, isFalse);
     await LevitMonitor.attach(transport: _Sink(), enableWorkerStatistics: true);
-    expect(Lx.enableWatchMonitoring, isTrue);
+    expect(Levit.enableWatchMonitoring, isTrue);
     await LevitMonitor.detach();
-    expect(Lx.enableWatchMonitoring, isFalse);
+    expect(Levit.enableWatchMonitoring, isFalse);
   });
   test(
     'scope progress identifies pending initialization and unfinished cleanup',
@@ -250,10 +253,10 @@ void main() {
 }
 
 class _Sink extends LevitTransport {
-  final events = <MonitorEvent>[];
+  final events = <LevitMonitorEvent>[];
   bool closed = false;
   @override
-  Future<void> send(MonitorEvent event) async {
+  Future<void> send(LevitMonitorEvent event) async {
     events.add(event);
   }
 
@@ -266,7 +269,7 @@ class _Sink extends LevitTransport {
 class _BlockedSink extends _Sink {
   final release = Completer<void>();
   @override
-  Future<void> send(MonitorEvent event) async {
+  Future<void> send(LevitMonitorEvent event) async {
     await release.future;
     await super.send(event);
   }
@@ -274,7 +277,7 @@ class _BlockedSink extends _Sink {
 
 class _FailingSink extends _Sink {
   @override
-  Future<void> send(MonitorEvent event) async {
+  Future<void> send(LevitMonitorEvent event) async {
     throw StateError('send');
   }
 

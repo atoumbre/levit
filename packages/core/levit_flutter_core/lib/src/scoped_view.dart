@@ -3,10 +3,10 @@ part of '../levit_flutter_core.dart';
 /// A widget that manages its own dependency scope and builds a view.
 ///
 /// [LScopedView] creates a new [LevitScope] for its subtree, registers dependencies
-/// via [dependencyFactory] / [onConfigScope], and then builds the UI using [LView].
+/// via [configure] / [onConfigureScope], and then builds the UI using [LView].
 /// When the widget is unmounted, the scope and all its dependencies are disposed.
 ///
-/// Sub-classing with [onConfigScope] is a first-class pattern alongside
+/// Sub-classing with [onConfigureScope] is a first-class pattern alongside
 /// [LScopedView.put]. With [autoWatch] `true` (default), read reactives directly
 /// in [buildView]; do not wrap the entire return in [LWatch].
 ///
@@ -18,8 +18,8 @@ part of '../levit_flutter_core.dart';
 /// );
 /// ```
 class LScopedView<T> extends LView<T> {
-  /// Optional factory to register dependencies in the internal scope.
-  final LScopeDependencyFactory? dependencyFactory;
+  /// Optional callback to register dependencies in the internal scope.
+  final void Function(LevitScope scope)? configure;
 
   /// A descriptive name for the internal scope.
   ///
@@ -30,7 +30,7 @@ class LScopedView<T> extends LView<T> {
 
   const LScopedView({
     super.key,
-    this.dependencyFactory,
+    this.configure,
     super.resolver,
     super.builder,
     super.orElse,
@@ -44,7 +44,7 @@ class LScopedView<T> extends LView<T> {
     LevitStore<T> state, {
     Key? key,
     bool localOnly = false,
-    LScopeDependencyFactory? dependencyFactory,
+    void Function(LevitScope scope)? configure,
     required Widget Function(BuildContext context, T controller) builder,
     Widget Function(BuildContext context)? orElse,
     bool autoWatch = true,
@@ -53,7 +53,7 @@ class LScopedView<T> extends LView<T> {
   }) {
     return LScopedView<T>(
       key: key,
-      dependencyFactory: dependencyFactory,
+      configure: configure,
       resolver: (context) => _resolveStore(context, state, localOnly),
       builder: builder,
       orElse: orElse,
@@ -79,7 +79,7 @@ class LScopedView<T> extends LView<T> {
       key: key,
       scopeName: scopeName,
       args: args,
-      dependencyFactory: (s) {
+      configure: (s) {
         s.put<T>(create, tag: tag, permanent: permanent);
       },
       resolver: (context) => context.levit.findOrNull<T>(tag: tag),
@@ -93,8 +93,8 @@ class LScopedView<T> extends LView<T> {
   ///
   /// Subclasses can override this to register dependencies.
   @protected
-  void onConfigScope(LevitScope scope) {
-    dependencyFactory?.call(scope);
+  void onConfigureScope(LevitScope scope) {
+    configure?.call(scope);
   }
 
   @override
@@ -107,7 +107,7 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
     return LScope(
       name: widget.scopeName ?? _uniqueScopeName(widget, this),
       args: widget.args,
-      dependencyFactory: widget.onConfigScope,
+      configure: widget.onConfigureScope,
       child: Builder(
         builder: (context) {
           final resolver = widget.resolver;
@@ -136,15 +136,15 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
 
 /// A widget that creates a synchronous scope but resolves its controller asynchronously.
 ///
-/// [LScopedAsyncView] initializes the scope immediately with [LScope], then
+/// [LAsyncScopedView] initializes the scope immediately with [LScope], then
 /// uses [LAsyncView] to wait for async controller resolution.
 ///
 /// In short:
 /// - **Sync scope setup**
 /// - **Async controller resolution**
-class LScopedAsyncView<T> extends LAsyncView<T> {
-  /// Optional factory to register dependencies in the internal scope.
-  final LScopeDependencyFactory? dependencyFactory;
+class LAsyncScopedView<T> extends LAsyncView<T> {
+  /// Optional callback to register dependencies in the internal scope.
+  final void Function(LevitScope scope)? configure;
 
   /// A descriptive name for the internal scope.
   ///
@@ -153,9 +153,9 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
   /// label for diagnostics.
   final String? scopeName;
 
-  const LScopedAsyncView({
+  const LAsyncScopedView({
     super.key,
-    this.dependencyFactory,
+    this.configure,
     super.resolver,
     super.builder,
     super.autoWatch = true,
@@ -166,11 +166,11 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
   });
 
   /// Syntax sugar for consuming a [LevitAsyncStore] within a new scope.
-  factory LScopedAsyncView.store(
+  factory LAsyncScopedView.store(
     LevitAsyncStore<T> store, {
     Key? key,
     bool localOnly = false,
-    LScopeDependencyFactory? dependencyFactory,
+    void Function(LevitScope scope)? configure,
     required Widget Function(BuildContext context, T controller) builder,
     bool autoWatch = true,
     Widget Function(BuildContext context)? loading,
@@ -178,9 +178,9 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
     List<Object?>? args,
     String? scopeName,
   }) {
-    return LScopedAsyncView<T>(
+    return LAsyncScopedView<T>(
       key: key,
-      dependencyFactory: dependencyFactory,
+      configure: configure,
       resolver: (context) => _resolveAsyncStore(context, store, localOnly),
       builder: builder,
       autoWatch: autoWatch,
@@ -192,7 +192,7 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
   }
 
   /// Shorthand for creating a scope, registering an async dependency, and consuming it.
-  factory LScopedAsyncView.put(
+  factory LAsyncScopedView.put(
     Future<T> Function() create, {
     Key? key,
     String? tag,
@@ -205,11 +205,11 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
     List<Object?>? args,
     String? scopeName,
   }) {
-    return LScopedAsyncView<T>(
+    return LAsyncScopedView<T>(
       key: key,
       scopeName: scopeName,
       args: args,
-      dependencyFactory: (s) {
+      configure: (s) {
         s.lazyPutAsync<T>(
           create,
           tag: tag,
@@ -227,21 +227,21 @@ class LScopedAsyncView<T> extends LAsyncView<T> {
 
   /// Called when the internal scope is being configured.
   @protected
-  void onConfigScope(LevitScope scope) {
-    dependencyFactory?.call(scope);
+  void onConfigureScope(LevitScope scope) {
+    configure?.call(scope);
   }
 
   @override
-  State<LScopedAsyncView<T>> createState() => _LScopedAsyncViewState<T>();
+  State<LAsyncScopedView<T>> createState() => _LAsyncScopedViewState<T>();
 }
 
-class _LScopedAsyncViewState<T> extends State<LScopedAsyncView<T>> {
+class _LAsyncScopedViewState<T> extends State<LAsyncScopedView<T>> {
   @override
   Widget build(BuildContext context) {
     return LScope(
       name: widget.scopeName ?? _uniqueScopeName(widget, this),
       args: widget.args,
-      dependencyFactory: widget.onConfigScope,
+      configure: widget.onConfigureScope,
       child: Builder(
         builder: (context) {
           return LAsyncView<T>(

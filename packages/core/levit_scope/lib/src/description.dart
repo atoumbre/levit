@@ -1,4 +1,4 @@
-part of '../levit_scope.dart';
+part of 'scope_library.dart';
 
 /// Value-free identity of a scope at the time of a snapshot.
 final class LevitScopeIdentity {

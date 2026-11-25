@@ -4,11 +4,11 @@ import 'package:test/test.dart';
 
 class MyMiddleware implements LevitReactiveMiddleware, LevitScopeMiddleware {
   @override
-  LxOnSet? get onSet => null;
+  LevitReactiveOnSet? get onSet => null;
   @override
-  LxOnBatch? get onBatch => null;
+  LevitReactiveOnBatch? get onBatch => null;
   @override
-  LxOnDispose? get onDispose => null;
+  LevitReactiveOnDispose? get onDispose => null;
   @override
   void Function(LxReactive)? get onInit => null;
   @override

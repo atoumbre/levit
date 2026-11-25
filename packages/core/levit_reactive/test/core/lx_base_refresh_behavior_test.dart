@@ -70,7 +70,7 @@ class RefreshMiddleware extends LevitReactiveMiddleware {
   RefreshMiddleware({this.onBefore, this.onAfter});
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     return (value) {
       if (onBefore != null) {
         final proceed = onBefore!(change);

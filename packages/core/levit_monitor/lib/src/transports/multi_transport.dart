@@ -1,12 +1,12 @@
-part of '../../levit_monitor.dart';
+part of '../monitor_library.dart';
 
 /// A transport that broadcasts events to multiple underlying transports.
-class MultiTransport extends LevitTransport {
+class LevitMultiTransport extends LevitTransport {
   /// The list of active transports.
   final List<LevitTransport> transports;
 
-  /// Creates a [MultiTransport] that delegates to the provided [transports].
-  MultiTransport(this.transports);
+  /// Creates a [LevitMultiTransport] that delegates to the provided [transports].
+  LevitMultiTransport(this.transports);
 
   @override
   int get droppedEvents =>
@@ -24,7 +24,7 @@ class MultiTransport extends LevitTransport {
   }
 
   @override
-  Future<void> send(MonitorEvent event) =>
+  Future<void> send(LevitMonitorEvent event) =>
       _all((transport) => transport.send(event.freeze()));
   @override
   Future<void> flush() => _all((transport) => transport.flush());

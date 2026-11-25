@@ -3,16 +3,16 @@ import 'dart:convert';
 import 'dart:io';
 import '../../levit_monitor.dart';
 
-/// A transport that writes [MonitorEvent]s to a file.
-class FileTransport extends LevitTransport {
+/// A transport that writes [LevitMonitorEvent]s to a file.
+class LevitFileTransport extends LevitTransport {
   final File _file;
   late final IOSink _sink;
   late final Future<void> _sinkDone;
   Future<void>? _closing;
   final List<AsyncError> _failures = [];
 
-  /// Creates a new [FileTransport] writing to [filePath].
-  FileTransport(String filePath) : _file = File(filePath) {
+  /// Creates a new [LevitFileTransport] writing to [filePath].
+  LevitFileTransport(String filePath) : _file = File(filePath) {
     _sink = _file.openWrite(mode: FileMode.append);
     // Observe asynchronous IO failures immediately, even before flush/close.
     _sinkDone = _sink.done.then<void>((_) {}, onError: _recordFailure);
@@ -26,7 +26,7 @@ class FileTransport extends LevitTransport {
   Stream<void> get onConnect => const Stream<void>.empty();
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     if (_closing != null) throw StateError('File transport is closing.');
     _sink.writeln(jsonEncode(event.freeze().toJson()));
   }

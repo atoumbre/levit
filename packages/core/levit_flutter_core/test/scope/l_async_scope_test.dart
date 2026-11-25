@@ -23,8 +23,7 @@ void main() {
           Directionality(
             textDirection: TextDirection.ltr,
             child: LAsyncScope(
-              dependencyFactory: (s) async =>
-                  throw Exception('async create fail'),
+              configure: (s) async => throw Exception('async create fail'),
               loading: (context) => const Text('Loading'),
               error: (context, error) => Text('Error: ${error.toString()}'),
               child: const Text('Inner'),
@@ -48,7 +47,7 @@ void main() {
           child: LAsyncScope(
             key: const ValueKey('async_scope'),
             args: [argsValue],
-            dependencyFactory: (s) async {
+            configure: (s) async {
               createCount++;
               s.put<String>(() => 'Result $argsValue');
             },
@@ -86,7 +85,7 @@ void main() {
           Directionality(
             textDirection: TextDirection.ltr,
             child: LAsyncScope(
-              dependencyFactory: (s) async {
+              configure: (s) async {
                 s.put<DisposeController>(
                   () => DisposeController(() => disposed = true),
                 );
@@ -113,7 +112,7 @@ void main() {
             Directionality(
               textDirection: TextDirection.ltr,
               child: LScope(
-                dependencyFactory: (s) {
+                configure: (s) {
                   s.lazyPutAsync(() async => 'async_val');
                 },
                 child: Builder(

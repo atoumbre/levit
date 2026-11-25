@@ -3,14 +3,15 @@ import 'dart:async';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class _SlowCloseTransport extends LevitTransport {
   final Completer<void> closeStarted = Completer<void>();
   final Completer<void> allowClose = Completer<void>();
-  final List<MonitorEvent> sent = [];
+  final List<LevitMonitorEvent> sent = [];
 
   @override
-  FutureOr<void> send(MonitorEvent event) {
+  FutureOr<void> send(LevitMonitorEvent event) {
     sent.add(event);
   }
 
@@ -22,10 +23,10 @@ class _SlowCloseTransport extends LevitTransport {
 }
 
 class _MemoryTransport extends LevitTransport {
-  final List<MonitorEvent> sent = [];
+  final List<LevitMonitorEvent> sent = [];
 
   @override
-  FutureOr<void> send(MonitorEvent event) {
+  FutureOr<void> send(LevitMonitorEvent event) {
     sent.add(event);
   }
 }

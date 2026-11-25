@@ -1,9 +1,5 @@
 part of '../levit_flutter_core.dart';
 
-typedef LScopeDependencyFactory = void Function(LevitScope scope);
-typedef LAsyncScopeDependencyFactory =
-    FutureOr<void> Function(LevitScope scope);
-
 /// An internal widget that propagates the [LevitScope] down the widget tree.
 class _ScopeProvider extends InheritedWidget {
   final LevitScope scope;

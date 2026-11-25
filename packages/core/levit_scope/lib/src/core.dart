@@ -1,4 +1,4 @@
-part of '../levit_scope.dart';
+part of 'scope_library.dart';
 
 /// An interface for objects that participate in the [LevitScope] lifecycle.
 ///
@@ -219,7 +219,7 @@ class LevitDependency<S> {
 
   Completer<void>? _removalComplete;
   bool _removed = false;
-  LevitScopeKey? _retiringKey;
+  _LevitScopeKey? _retiringKey;
   Future<void>? _cleanupFuture;
   bool get _hasFactoryWork =>
       _factoryInstances.isNotEmpty || _pendingFactories.isNotEmpty;
@@ -246,15 +246,15 @@ class LevitDependency<S> {
 /// This avoids relying on `Type.toString()` (or `S.toString()`) for identity,
 /// which can change under obfuscation/minification. String representations are
 /// kept for debugging/middleware only.
-class LevitScopeKey {
+class _LevitScopeKey {
   static final Map<Type, String> _debugTypeCache = {};
 
   final Type type;
   final Object? tag;
 
-  const LevitScopeKey(this.type, this.tag);
+  const _LevitScopeKey(this.type, this.tag);
 
-  static LevitScopeKey of<S>({Object? tag}) => LevitScopeKey(S, tag);
+  static _LevitScopeKey of<S>({Object? tag}) => _LevitScopeKey(S, tag);
 
   String get debugString {
     final typeString = _debugTypeCache[type] ??= type.toString();
@@ -264,11 +264,8 @@ class LevitScopeKey {
   }
 
   @override
-  String toString() => debugString;
-
-  @override
   bool operator ==(Object other) =>
-      other is LevitScopeKey && other.type == type && other.tag == tag;
+      other is _LevitScopeKey && other.type == type && other.tag == tag;
 
   @override
   int get hashCode => tag == null ? type.hashCode : Object.hash(type, tag);
@@ -303,7 +300,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   final LevitScope? _parentScope;
 
   /// The local registry of dependencies (Key -> Metadata).
-  final Map<LevitScopeKey, LevitDependency> _registry = {};
+  final Map<_LevitScopeKey, LevitDependency> _registry = {};
 
   /// Fast-path registry for tag-less lookups (Type -> Metadata).
   final Map<Type, LevitDependency> _typeRegistry = {};
@@ -312,8 +309,8 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   final Map<Type, dynamic> _instanceCache = {};
 
   /// Cache for resolved keys to speed up parent scope lookups.
-  Map<LevitScopeKey, LevitScope>? _resolutionCacheStorage;
-  Map<LevitScopeKey, LevitScope> get _resolutionCache =>
+  Map<_LevitScopeKey, LevitScope>? _resolutionCacheStorage;
+  Map<_LevitScopeKey, LevitScope> get _resolutionCache =>
       _resolutionCacheStorage ??= {};
 
   /// Fast-path cache for tag-less parent scope lookups.
@@ -322,13 +319,13 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
       _typeResolutionCacheStorage ??= {};
 
   /// Non-owning local aliases (alias key -> canonical local key).
-  Map<LevitScopeKey, LevitScopeKey>? _aliasStorage;
-  Map<LevitScopeKey, LevitScopeKey> get _aliases => _aliasStorage ?? const {};
+  Map<_LevitScopeKey, _LevitScopeKey>? _aliasStorage;
+  Map<_LevitScopeKey, _LevitScopeKey> get _aliases => _aliasStorage ?? const {};
 
   /// Reverse alias index used to invalidate aliases with their canonical key.
-  Map<LevitScopeKey, Set<LevitScopeKey>>? _aliasesByCanonical;
+  Map<_LevitScopeKey, Set<_LevitScopeKey>>? _aliasesByCanonical;
 
-  final Map<LevitScopeKey, LevitDependency> _retiring = {};
+  final Map<_LevitScopeKey, LevitDependency> _retiring = {};
 
   Future<void>? _disposeFuture;
   Completer<void>? _disposedCompleter;
@@ -598,7 +595,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     }
 
     (_aliasStorage ??= {})[aliasKey] = canonicalKey;
-    ((_aliasesByCanonical ??= {})[canonicalKey] ??= <LevitScopeKey>{}).add(
+    ((_aliasesByCanonical ??= {})[canonicalKey] ??= <_LevitScopeKey>{}).add(
       aliasKey,
     );
     _invalidateLookupCaches(aliasKey);
@@ -606,7 +603,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   }
 
   void _registerBinding<S>(
-    LevitScopeKey key,
+    _LevitScopeKey key,
     String keyString,
     LevitDependency<S> info,
     String source, {
@@ -660,7 +657,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
         // Lazy registrations instantiate on first resolve.
         final result = _findLocal<S>(
           info as LevitDependency<S>,
-          LevitScopeKey.of<S>().debugString,
+          _LevitScopeKey.of<S>().debugString,
           null,
         );
         // Factories must never be cached.
@@ -670,7 +667,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
         return result;
       }
 
-      final aliasKey = LevitScopeKey.of<S>();
+      final aliasKey = _LevitScopeKey.of<S>();
       final canonicalKey = _aliases[aliasKey];
       if (canonicalKey != null) {
         final result = _findAliasLocal<S>(
@@ -820,7 +817,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     return result;
   }
 
-  LevitScope? _readCachedScope(LevitScopeKey key) {
+  LevitScope? _readCachedScope(_LevitScopeKey key) {
     final cachedScope = _resolutionCacheStorage?[key];
     if (cachedScope == null) return null;
 
@@ -844,7 +841,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     return false;
   }
 
-  void _cacheScope(LevitScopeKey key, LevitScope scope) {
+  void _cacheScope(_LevitScopeKey key, LevitScope scope) {
     if (_resolutionCache.containsKey(key)) {
       _resolutionCache[key] = scope;
     } else {
@@ -858,7 +855,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   }
 
   // In-flight async singleton initializations keyed by dependency key.
-  Map<LevitScopeKey, Future<dynamic>>? _pendingInit;
+  Map<_LevitScopeKey, Future<dynamic>>? _pendingInit;
   Set<Future<void>>? _pendingInitializationStorage;
   Set<Future<void>> get _pendingInitializations =>
       _pendingInitializationStorage ?? const {};
@@ -888,7 +885,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     ) {
       ancestors.add(LevitScopeIdentity(parent.id, parent.name));
     }
-    String keyId(LevitScopeKey key) {
+    String keyId(_LevitScopeKey key) {
       final tag = key.tag;
       if (tag == null) return '${key.type}#default';
       final ids = _opaqueTagIds ??= <Object, int>{};
@@ -1008,7 +1005,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
 
   Future<S> _findLocalAsync<S>(
     LevitDependency<S> info,
-    LevitScopeKey key,
+    _LevitScopeKey key,
     String keyString,
     Object? tag,
   ) async {
@@ -1075,8 +1072,8 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   }
 
   S _findAliasLocal<S>({
-    required LevitScopeKey aliasKey,
-    required LevitScopeKey canonicalKey,
+    required _LevitScopeKey aliasKey,
+    required _LevitScopeKey canonicalKey,
   }) {
     final info = _registry[canonicalKey]!;
     if (info.isAsync && !info.isInstantiated) {
@@ -1096,8 +1093,8 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   }
 
   Future<S> _findAliasLocalAsync<S>({
-    required LevitScopeKey aliasKey,
-    required LevitScopeKey canonicalKey,
+    required _LevitScopeKey aliasKey,
+    required _LevitScopeKey canonicalKey,
   }) async {
     final info = _registry[canonicalKey]!;
 
@@ -1334,7 +1331,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   /// Dependencies marked as `permanent` are preserved unless [force] is `true`.
   Future<void> reset({bool force = false}) async {
     _ensureUsable();
-    final entriesToRemove = <MapEntry<LevitScopeKey, LevitDependency>>[];
+    final entriesToRemove = <MapEntry<_LevitScopeKey, LevitDependency>>[];
 
     for (final entry in _registry.entries.toList(growable: false)) {
       final info = entry.value;
@@ -1787,7 +1784,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     }
   }
 
-  void _removeCanonicalBinding(LevitScopeKey key) {
+  void _removeCanonicalBinding(_LevitScopeKey key) {
     final removed = _registry.remove(key);
     if (removed != null) {
       removed._removed = true;
@@ -1806,7 +1803,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     }
   }
 
-  void _removeAlias(LevitScopeKey aliasKey) {
+  void _removeAlias(_LevitScopeKey aliasKey) {
     final canonicalKey = _aliasStorage?.remove(aliasKey);
     if (canonicalKey == null) return;
 
@@ -1818,7 +1815,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     _invalidateLookupCaches(aliasKey);
   }
 
-  void _invalidateLookupCaches(LevitScopeKey key) {
+  void _invalidateLookupCaches(_LevitScopeKey key) {
     _resolutionCacheStorage?.remove(key);
     if (key.tag == null) {
       _typeRegistry.remove(key.type);
@@ -1833,13 +1830,13 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     }
   }
 
-  LevitScopeKey _getKey<S>(Object? tag) => LevitScopeKey.of<S>(tag: tag);
+  _LevitScopeKey _getKey<S>(Object? tag) => _LevitScopeKey.of<S>(tag: tag);
 
   /// The number of dependencies registered locally in this scope.
   int get registeredCount => _registry.length + _aliases.length;
 
   /// A list of keys for all locally registered dependencies (for debugging).
-  List<String> get registeredKeys => <LevitScopeKey>[
+  List<String> get registeredKeys => <_LevitScopeKey>[
     ..._registry.keys,
     ..._aliases.keys,
   ].map((k) => k.debugString).toList();

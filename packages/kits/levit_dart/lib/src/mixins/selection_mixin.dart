@@ -1,4 +1,4 @@
-part of '../../levit_dart.dart';
+part of '../kit_library.dart';
 
 /// A mixin for [LevitController] that manages selection state.
 ///

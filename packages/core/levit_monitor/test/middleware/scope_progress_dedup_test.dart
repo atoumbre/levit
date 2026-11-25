@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:levit/levit.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class _Sink extends LevitTransport {
-  final events = <MonitorEvent>[];
+  final events = <LevitMonitorEvent>[];
   @override
-  void send(MonitorEvent event) => events.add(event);
+  void send(LevitMonitorEvent event) => events.add(event);
 }
 
 class _ClosingResource extends LevitScopeDisposable {
@@ -135,7 +136,7 @@ void main() {
       for (var i = 0; i < states.length; i++) {
         // Each event reconstructs the complete state in isolation. Missing older
         // events never turns the compact representation into a partial delta.
-        final replay = StateSnapshot()..applyEvent(sink.events[i]);
+        final replay = LevitStateSnapshot()..applyEvent(sink.events[i]);
         expect(replay.scopes[1]!.progress, states[i].toJson());
         final wire = sink.events[i].toJson();
         expect(wire['type'], 'scope_progress');
@@ -148,7 +149,7 @@ void main() {
         'version': 2,
       });
       expect(
-        () => StateSnapshot().applyEnvelope(unsupported),
+        () => LevitStateSnapshot().applyEnvelope(unsupported),
         throwsFormatException,
       );
       await monitor.close();

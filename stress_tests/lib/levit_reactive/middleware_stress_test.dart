@@ -5,7 +5,7 @@ class _CountingMiddleware implements LevitReactiveMiddleware {
   int onChangeCount = 0;
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     return (value) {
       onChangeCount++;
       next(value);
@@ -13,10 +13,10 @@ class _CountingMiddleware implements LevitReactiveMiddleware {
   };
 
   @override
-  LxOnBatch? get onBatch => null;
+  LevitReactiveOnBatch? get onBatch => null;
 
   @override
-  LxOnDispose? get onDispose => null;
+  LevitReactiveOnDispose? get onDispose => null;
 
   @override
   void Function(LxReactive)? get onInit => null;

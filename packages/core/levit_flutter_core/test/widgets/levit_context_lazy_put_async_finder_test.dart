@@ -9,7 +9,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: LScope(
-          dependencyFactory: (s) => s.put<String>(() => 'dummy'),
+          configure: (s) => s.put<String>(() => 'dummy'),
           child: Builder(
             builder: (context) {
               final finder = context.levit.lazyPutAsync<_TestService>(

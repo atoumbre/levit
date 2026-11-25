@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
+import 'package:levit_reactive/spi.dart';
 
 void main() {
   group('LxStatus sealed class', () {
@@ -364,14 +365,14 @@ void main() {
       final future = LxFuture(completer.future);
 
       final streams = <Stream>[];
-      Lx.proxy = _MockObserver(streams);
+      LxSpi.proxy = _MockObserver(streams);
 
       // Access status to trigger registration
       future.status;
 
-      expect((Lx.proxy as _MockObserver).notifiers.length, 1);
+      expect((LxSpi.proxy as _MockObserver).notifiers.length, 1);
 
-      Lx.proxy = null;
+      LxSpi.proxy = null;
       completer.complete(1);
     });
   });

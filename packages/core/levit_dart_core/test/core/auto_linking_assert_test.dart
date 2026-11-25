@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:test/test.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
+import 'package:levit_dart_core/spi.dart';
 
 void main() {
   setUp(() {
@@ -25,13 +26,13 @@ void main() {
         );
 
         runZoned(() {
-          runCapturedForTesting(() {
+          LevitAutoLinkSpi.runCaptured(() {
             // Now we are inside a capture scope (_activeCaptureScopes > 0)
             // But we need to erase the captureKey from the Zone.
             final erasedZone = Zone.current.fork(
               zoneValues: {
                 // Overwrite the capture list with null
-                autoLinkCaptureKeyForTesting: null,
+                LevitAutoLinkSpi.captureKey: null,
               },
             );
 
@@ -65,10 +66,10 @@ void main() {
         );
 
         runZoned(() {
-          Lx.runWithOwner('context-owner', () {
-            runCapturedForTesting(() {
+          LxSpi.runWithOwner('context-owner', () {
+            LevitAutoLinkSpi.runCaptured(() {
               final erasedZone = Zone.current.fork(
-                zoneValues: {autoLinkCaptureKeyForTesting: null},
+                zoneValues: {LevitAutoLinkSpi.captureKey: null},
               );
 
               erasedZone.run(() {

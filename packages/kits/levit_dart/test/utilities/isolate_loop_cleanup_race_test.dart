@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 
 void _noopBody() {}
 
-class _LoopController extends LevitController with LevitLoopExecutionMixin {}
+class _LoopController extends LevitController with LevitLoopMixin {}
 
 void main() {
   test(

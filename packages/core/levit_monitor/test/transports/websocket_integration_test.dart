@@ -46,7 +46,7 @@ void main() {
     () async {
       // 2. Connect client
       final channel = IOWebSocketChannel.connect('ws://localhost:$port/ws');
-      final transport = WebSocketTransport(channel);
+      final transport = LevitWebSocketTransport(channel);
 
       // 3. Attach Monitor
       await LevitMonitor.attach(transport: transport);

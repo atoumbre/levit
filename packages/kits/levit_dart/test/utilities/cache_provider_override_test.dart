@@ -1,5 +1,6 @@
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 class MockCacheProvider extends LevitTaskCacheProvider {
   final Map<String, Map<String, dynamic>> storage = {};
@@ -44,14 +45,14 @@ void main() {
     final controller = CustomCacheController();
     controller.onInit();
 
-    final policy = TaskCachePolicy<int>(
+    final policy = LevitTaskCachePolicy<int>(
       ttl: const Duration(minutes: 5),
       toJson: (v) => {'val': v},
       fromJson: (j) => j['val'] as int,
     );
 
     // Initial run
-    await controller.tasksEngine.schedule(
+    await controller.taskEngine.schedule(
       (_) async => 100,
       id: 'key1',
       cachePolicy: policy,
@@ -59,7 +60,7 @@ void main() {
     expect(controller.mockCache.writeCount, 1);
 
     // Second run should hit the mock cache
-    final result = await controller.tasksEngine.schedule(
+    final result = await controller.taskEngine.schedule(
       (_) async => 200,
       id: 'key1',
       cachePolicy: policy,
@@ -74,7 +75,7 @@ void main() {
     final controller = CustomReactiveCacheController();
     controller.onInit();
 
-    final policy = TaskCachePolicy<int>(
+    final policy = LevitTaskCachePolicy<int>(
       ttl: const Duration(minutes: 5),
       toJson: (v) => {'val': v},
       fromJson: (j) => j['val'] as int,

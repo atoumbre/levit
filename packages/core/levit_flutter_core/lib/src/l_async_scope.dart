@@ -2,13 +2,13 @@ part of '../levit_flutter_core.dart';
 
 /// An asynchronous version of [LScope].
 ///
-/// Initializes the scope using an asynchronous [dependencyFactory] and
+/// Initializes the scope using an asynchronous [configure] callback and
 /// only renders [child] when initialization completes.
 ///
 /// // Example usage:
 /// ```dart
 /// LAsyncScope(
-///   dependencyFactory: (scope) async {
+///   configure: (scope) async {
 ///     scope.lazyPutAsync(() => DataService.init());
 ///     await scope.findAsync<DataService>();
 ///   },
@@ -17,9 +17,9 @@ part of '../levit_flutter_core.dart';
 /// )
 /// ```
 class LAsyncScope extends StatefulWidget {
-  /// An async factory to register dependencies.
+  /// An async callback to register dependencies.
   /// The child will not render until this Future completes.
-  final LAsyncScopeDependencyFactory dependencyFactory;
+  final FutureOr<void> Function(LevitScope scope) configure;
 
   /// The widget subtree to render after initialization.
   final Widget child;
@@ -45,7 +45,7 @@ class LAsyncScope extends StatefulWidget {
 
   const LAsyncScope({
     super.key,
-    required this.dependencyFactory,
+    required this.configure,
     required this.child,
     this.name,
     this.loading,
@@ -86,12 +86,12 @@ class _LAsyncScopeState extends State<LAsyncScope> {
 
   void _configure() {
     _configured = true;
-    final factory = widget.dependencyFactory;
+    final configure = widget.configure;
     unawaited(
       _lifecycle.replace(
         parent: _parent!,
         name: widget.name ?? _uniqueScopeName(widget, this),
-        initialize: (scope) => factory(scope),
+        initialize: (scope) => configure(scope),
       ),
     );
   }

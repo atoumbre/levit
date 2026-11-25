@@ -58,10 +58,7 @@ class CircleData {
 
 /// A controller that simulates and renders a set of animated circles.
 class CircleController extends LevitController
-    with
-        LevitLoopExecutionMixin,
-        LevitLoopExecutionLifecycleMixin,
-        LevitSelectionMixin<String> {
+    with LevitLoopMixin, LevitLoopLifecycleMixin, LevitSelectionMixin<String> {
   /// The active circles in the simulation.
   final circles = LxList<CircleData>().named('circles');
 
@@ -208,7 +205,7 @@ class CircleCanvasPage extends LScopedView<CircleController> {
 
   /// Creates and registers the controller instance in the view scope.
   @override
-  CircleController onConfigScope(LevitScope scope) {
+  CircleController onConfigureScope(LevitScope scope) {
     return scope.put(() => CircleController());
   }
 

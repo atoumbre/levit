@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 void main() {
   test(
@@ -38,7 +39,7 @@ void main() {
       final map = LevitAsyncMap<int, int>((key, _) => key, name: 'test');
       await map.fetch(1);
       final hook = _FailProducerRelease();
-      Lx.addMiddleware(hook);
+      Levit.addStateMiddleware(hook);
       try {
         final checking = expectLater(
           map.refresh(1),
@@ -51,7 +52,7 @@ void main() {
         await checking;
         await draining;
       } finally {
-        Lx.removeMiddleware(hook);
+        Levit.removeStateMiddleware(hook);
         await map.close();
       }
     },
@@ -310,7 +311,7 @@ void main() {
 
 class _FailProducerRelease extends LevitReactiveMiddleware {
   @override
-  LxOnDispose get onDispose =>
+  LevitReactiveOnDispose get onDispose =>
       (next, source) => () {
         next();
         if (source is LxFuture) throw StateError('producer close');

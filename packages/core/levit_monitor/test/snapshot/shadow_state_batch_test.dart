@@ -1,17 +1,17 @@
-import 'package:levit_monitor/levit_monitor.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
-  test('StateSnapshot should handle ReactiveBatchEvent', () {
-    final state = StateSnapshot();
+  test('LevitStateSnapshot should handle LevitReactiveBatchEvent', () {
+    final state = LevitStateSnapshot();
     final sid = 'test-session';
     final rx = 0.lx; // Create a reactive variable
     rx.name = 'test_rx';
     rx.ownerId = 'scope:ctrl';
 
     // Initialize the reactive in shadow state
-    state.applyEvent(ReactiveInitEvent(sessionId: sid, reactive: rx));
+    state.applyEvent(LevitReactiveInitEvent(sessionId: sid, reactive: rx));
 
     // Assert initialization using correct ID
     expect(
@@ -29,7 +29,7 @@ void main() {
     );
 
     final batch = LevitReactiveBatch([(rx, change)]);
-    final batchEvent = ReactiveBatchEvent(sessionId: sid, change: batch);
+    final batchEvent = LevitReactiveBatchEvent(sessionId: sid, change: batch);
 
     state.applyEvent(batchEvent);
 
@@ -46,12 +46,12 @@ void main() {
     );
   });
 
-  test('StateSnapshot batch keeps sensitive values obfuscated', () {
-    final state = StateSnapshot();
+  test('LevitStateSnapshot batch keeps sensitive values obfuscated', () {
+    final state = LevitStateSnapshot();
     final sid = 'test-session';
-    final rx = 'secret-token'.lxVar(named: 'token', isSensitive: true);
+    final rx = 'secret-token'.lxVar(name: 'token', isSensitive: true);
 
-    state.applyEvent(ReactiveInitEvent(sessionId: sid, reactive: rx));
+    state.applyEvent(LevitReactiveInitEvent(sessionId: sid, reactive: rx));
 
     final change = LevitReactiveChange<String>(
       timestamp: DateTime.now(),
@@ -60,7 +60,7 @@ void main() {
       newValue: 'new-secret-token',
     );
     final batch = LevitReactiveBatch([(rx, change)]);
-    state.applyEvent(ReactiveBatchEvent(sessionId: sid, change: batch));
+    state.applyEvent(LevitReactiveBatchEvent(sessionId: sid, change: batch));
 
     expect(state.variables[rx.id]?.value, '***');
     expect(state.variables[rx.id]?.valueType, 'String');

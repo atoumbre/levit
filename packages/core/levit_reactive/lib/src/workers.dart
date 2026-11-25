@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 /// Performance metrics for an [LxWorker].
 ///

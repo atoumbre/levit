@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 int _batchCounter = 0;
 
@@ -145,39 +145,12 @@ abstract class LevitReactiveMiddleware {
   static final Map<Object, LevitReactiveMiddleware> _middlewaresByToken = {};
 
   static bool _hasSetMiddlewares = false;
-
-  /// Whether any active middleware intercepts setting values.
-  static bool get hasSetMiddlewares => _hasSetMiddlewares;
-
   static bool _hasBatchMiddlewares = false;
-
-  /// Whether any active middleware intercepts batch operations.
-  static bool get hasBatchMiddlewares => _hasBatchMiddlewares;
-
   static bool _hasDisposeMiddlewares = false;
-
-  /// Whether any active middleware observes disposal.
-  static bool get hasDisposeMiddlewares => _hasDisposeMiddlewares;
-
   static bool _hasInitMiddlewares = false;
-
-  /// Whether any active middleware observes initialization.
-  static bool get hasInitMiddlewares => _hasInitMiddlewares;
-
   static bool _hasGraphChangeMiddlewares = false;
-
-  /// Whether any active middleware tracks dependency graph changes.
-  static bool get hasGraphChangeMiddlewares => _hasGraphChangeMiddlewares;
-
   static bool _hasListenerMiddlewares = false;
-
-  /// Whether any active middleware tracks listener attachment/detachment.
-  static bool get hasListenerMiddlewares => _hasListenerMiddlewares;
-
   static bool _hasErrorMiddlewares = false;
-
-  /// Whether any active middleware intercepts errors.
-  static bool get hasErrorMiddlewares => _hasErrorMiddlewares;
 
   static void _updateFlags() {
     _hasSetMiddlewares = false;
@@ -331,14 +304,14 @@ abstract class LevitReactiveMiddleware {
   /// Intercepts value mutations.
   ///
   /// Return a wrapped function to modify or log the set operation.
-  LxOnSet? get onSet => null;
+  LevitReactiveOnSet? get onSet => null;
 
   /// Intercepts batch operations. Await completion only when
   /// [LevitReactiveBatch.isAsync] is true; synchronous boundaries close on return.
-  LxOnBatch? get onBatch => null;
+  LevitReactiveOnBatch? get onBatch => null;
 
   /// Intercepts disposal.
-  LxOnDispose? get onDispose => null;
+  LevitReactiveOnDispose? get onDispose => null;
 
   /// Observes initialization of new reactive objects.
   void Function(LxReactive reactive)? get onInit => null;
@@ -361,7 +334,7 @@ abstract class LevitReactiveMiddleware {
 }
 
 /// Helper typedefs for middleware interception.
-typedef LxOnSet =
+typedef LevitReactiveOnSet =
     void Function(dynamic value) Function(
       void Function(dynamic value) next,
       LxReactive reactive,
@@ -369,14 +342,14 @@ typedef LxOnSet =
     );
 
 /// Helper typedefs for middleware interception.
-typedef LxOnBatch =
+typedef LevitReactiveOnBatch =
     dynamic Function() Function(
       dynamic Function() next,
       LevitReactiveBatch change,
     );
 
 /// Helper typedefs for middleware interception.
-typedef LxOnDispose =
+typedef LevitReactiveOnDispose =
     void Function() Function(void Function() next, LxReactive reactive);
 
 /// Internal utility for applying the middleware chain.
@@ -387,7 +360,7 @@ abstract class _LevitReactiveMiddlewareChain {
     LxReactive reactive,
     LevitReactiveChange<T> change,
   ) {
-    if (!LevitReactiveMiddleware.hasSetMiddlewares) return next;
+    if (!LevitReactiveMiddleware._hasSetMiddlewares) return next;
 
     void Function(dynamic) current = (dynamic v) => next(v as T);
 
@@ -409,7 +382,7 @@ abstract class _LevitReactiveMiddlewareChain {
     dynamic Function() next,
     LevitReactiveBatch change,
   ) {
-    if (!LevitReactiveMiddleware.hasBatchMiddlewares) return next;
+    if (!LevitReactiveMiddleware._hasBatchMiddlewares) return next;
     var current = next;
     for (final mw in LevitReactiveMiddleware._middlewares.reversed) {
       if (mw.onBatch != null) {
@@ -424,7 +397,7 @@ abstract class _LevitReactiveMiddlewareChain {
     void Function() next,
     LxReactive reactive,
   ) {
-    if (!LevitReactiveMiddleware.hasDisposeMiddlewares) return next;
+    if (!LevitReactiveMiddleware._hasDisposeMiddlewares) return next;
     var current = next;
     for (final mw in LevitReactiveMiddleware._middlewares.reversed) {
       if (mw.onDispose != null) {
@@ -436,7 +409,7 @@ abstract class _LevitReactiveMiddlewareChain {
 
   /// Notifies middlewares of a reactive object initialization.
   static void applyOnInit(LxReactive reactive) {
-    if (!LevitReactiveMiddleware.hasInitMiddlewares) return;
+    if (!LevitReactiveMiddleware._hasInitMiddlewares) return;
     for (final mw in LevitReactiveMiddleware._middlewares) {
       mw.onInit?.call(reactive);
     }
@@ -447,7 +420,7 @@ abstract class _LevitReactiveMiddlewareChain {
     LxReactive computed,
     List<LxReactive> dependencies,
   ) {
-    if (!LevitReactiveMiddleware.hasGraphChangeMiddlewares) return;
+    if (!LevitReactiveMiddleware._hasGraphChangeMiddlewares) return;
     for (final mw in LevitReactiveMiddleware._middlewares) {
       mw.onGraphChange?.call(computed, dependencies);
     }
@@ -458,7 +431,7 @@ abstract class _LevitReactiveMiddlewareChain {
     LxReactive reactive,
     LxListenerContext? context,
   ) {
-    if (!LevitReactiveMiddleware.hasListenerMiddlewares) {
+    if (!LevitReactiveMiddleware._hasListenerMiddlewares) {
       return;
     }
     for (final mw in LevitReactiveMiddleware._middlewares) {
@@ -471,7 +444,7 @@ abstract class _LevitReactiveMiddlewareChain {
     LxReactive reactive,
     LxListenerContext? context,
   ) {
-    if (!LevitReactiveMiddleware.hasListenerMiddlewares) return;
+    if (!LevitReactiveMiddleware._hasListenerMiddlewares) return;
     for (final mw in LevitReactiveMiddleware._middlewares) {
       mw.stoppedListening?.call(reactive, context);
     }
@@ -483,7 +456,7 @@ abstract class _LevitReactiveMiddlewareChain {
     StackTrace? stack,
     LxReactive? context,
   ) {
-    if (!LevitReactiveMiddleware.hasErrorMiddlewares) return;
+    if (!LevitReactiveMiddleware._hasErrorMiddlewares) return;
     for (final mw in LevitReactiveMiddleware._middlewares) {
       mw.onReactiveError?.call(error, stack, context);
     }

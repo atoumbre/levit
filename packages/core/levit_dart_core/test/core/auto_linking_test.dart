@@ -1,6 +1,7 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
 import 'dart:async';
+import 'package:levit_dart_core/spi.dart';
 
 void main() {
   setUp(() {
@@ -107,13 +108,13 @@ void main() {
       'a nested capture isolates its allocations and restores the caller',
       () async {
         late LxInt first, nested, last;
-        runCapturedForTesting(() {
+        LevitAutoLinkSpi.runCaptured(() {
           final outer =
-              Zone.current[autoLinkCaptureKeyForTesting] as List<LxReactive>;
+              Zone.current[LevitAutoLinkSpi.captureKey] as List<LxReactive>;
           first = 1.lx;
-          runCapturedForTesting(() {
+          LevitAutoLinkSpi.runCaptured(() {
             nested = 2.lx;
-            expect(Zone.current[autoLinkCaptureKeyForTesting], [nested]);
+            expect(Zone.current[LevitAutoLinkSpi.captureKey], [nested]);
           }, 'inner');
           last = 3.lx;
           expect(outer, [first, last]);
@@ -129,7 +130,7 @@ class InterceptController extends LevitController {
   @override
   void onInit() {
     captureList =
-        Zone.current[autoLinkCaptureKeyForTesting] as List<LxReactive>?;
+        Zone.current[LevitAutoLinkSpi.captureKey] as List<LxReactive>?;
     0.lx; // Create a reactive to populate the list
     super.onInit();
   }

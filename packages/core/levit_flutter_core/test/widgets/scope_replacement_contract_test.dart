@@ -24,7 +24,7 @@ void main() {
     Widget build(int id) => LScope(
       lifecycle: lifecycle,
       args: [id],
-      dependencyFactory: (scope) {
+      configure: (scope) {
         initialized.add(id);
         if (id == 1) scope.put(() => _Resource(release.future));
       },
@@ -54,7 +54,7 @@ void main() {
     Widget build(int id) => LAsyncScope(
       lifecycle: lifecycle,
       args: [id],
-      dependencyFactory: (scope) async {
+      configure: (scope) async {
         scopes.add(scope);
         if (id == 1) await initialize.future;
       },
@@ -80,7 +80,7 @@ void main() {
     await tester.pumpWidget(
       LAsyncScope(
         lifecycle: lifecycle,
-        dependencyFactory: (_) => initialize.future,
+        configure: (_) => initialize.future,
         child: const SizedBox(),
       ),
     );
@@ -103,7 +103,7 @@ void main() {
     Widget build(int id) => LScope(
       lifecycle: lifecycle,
       args: [id],
-      dependencyFactory: (scope) {
+      configure: (scope) {
         initialized++;
         if (id == 1) {
           scope.put(() => _Resource(Future<void>.value(), fail: true));

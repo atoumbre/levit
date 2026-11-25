@@ -1,5 +1,6 @@
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_reactive/spi.dart';
 
 class DefaultObserver extends LevitReactiveObserver {
   @override

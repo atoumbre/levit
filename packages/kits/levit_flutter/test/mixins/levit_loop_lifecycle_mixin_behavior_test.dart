@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 
 class LifecycleLoopController extends LevitController
-    with LevitLoopExecutionMixin, LevitLoopExecutionLifecycleMixin {}
+    with LevitLoopMixin, LevitLoopLifecycleMixin {}
 
 void main() {
   testWidgets('LevitLoopLifecycleMixin state transitions', (tester) async {
@@ -11,7 +11,7 @@ void main() {
     controller.onInit();
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    expect(controller.pauseLifecycleServicesForce, isFalse);
+    expect(controller.pausePermanentServicesOnBackground, isFalse);
     controller.onClose();
   });
 

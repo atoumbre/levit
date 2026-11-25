@@ -34,7 +34,7 @@ void main() {
           );
         }
         return LScope(
-          dependencyFactory: (context) => level,
+          configure: (context) => level,
           child: buildNested(level + 1),
         );
       }
@@ -55,7 +55,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: LScope(
-              dependencyFactory: (context) => _TestController(i),
+              configure: (context) => _TestController(i),
               child: const Text('Scoped'),
             ),
           ),

@@ -7,6 +7,7 @@ import 'package:logger/logger.dart' as logger;
 import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:levit_monitor/spi.dart';
 
 final class _CapturePrinter extends logger.LogPrinter {
   final List<String> messages = <String>[];
@@ -70,11 +71,11 @@ final class _WebSocketChannel extends StreamChannelMixin
   String? get closeReason => null;
 }
 
-CustomMonitorEvent _event({
-  logger.Level level = logger.Level.info,
+LevitCustomMonitorEvent _event({
+  LevitLogLevel level = LevitLogLevel.info,
   Object? error,
 }) {
-  return CustomMonitorEvent(
+  return LevitCustomMonitorEvent(
     sessionId: 'session',
     namespace: 'levit.task',
     name: 'finished',
@@ -87,31 +88,31 @@ CustomMonitorEvent _event({
 void main() {
   test('console maps every custom level and formats errors', () {
     final printer = _CapturePrinter();
-    final transport = ConsoleTransport(
+    final transport = LevitConsoleTransport(
       minLevel: LevitLogLevel.all,
       printer: printer,
     );
 
     expect(
-      () => transport.send(_event(level: logger.Level.off)),
+      () => transport.send(_event(level: LevitLogLevel.off)),
       throwsArgumentError,
     );
-    for (final level in <logger.Level>[
-      logger.Level.fatal,
-      logger.Level.error,
-      logger.Level.warning,
-      logger.Level.info,
-      logger.Level.debug,
-      logger.Level.trace,
+    for (final level in <LevitLogLevel>[
+      LevitLogLevel.fatal,
+      LevitLogLevel.error,
+      LevitLogLevel.warning,
+      LevitLogLevel.info,
+      LevitLogLevel.debug,
+      LevitLogLevel.trace,
     ]) {
       transport.send(_event(level: level));
     }
     expect(
-      () => transport.send(_event(level: logger.Level.all)),
+      () => transport.send(_event(level: LevitLogLevel.all)),
       throwsArgumentError,
     );
     transport.send(
-      _event(level: logger.Level.error, error: StateError('failed')),
+      _event(level: LevitLogLevel.error, error: StateError('failed')),
     );
 
     expect(printer.messages, contains(contains('CUSTOM levit.task:finished')));
@@ -122,7 +123,7 @@ void main() {
     final directory = await Directory.systemTemp.createTemp('levit_custom');
     addTearDown(() => directory.delete(recursive: true));
     final file = File('${directory.path}/events.jsonl');
-    final transport = FileTransport(file.path);
+    final transport = LevitFileTransport(file.path);
 
     transport.send(_event());
     await transport.close();
@@ -135,7 +136,7 @@ void main() {
 
   test('websocket transport categorizes custom events', () async {
     final channel = _WebSocketChannel();
-    final transport = WebSocketTransport(
+    final transport = LevitWebSocketTransport(
       channel,
       requireAcknowledgement: false,
     );

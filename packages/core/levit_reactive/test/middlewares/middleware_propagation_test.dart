@@ -11,7 +11,7 @@ class _TrackingMiddleware extends LevitReactiveMiddleware {
   _TrackingMiddleware(this.id);
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     return (value) {
       // Check propagation flag at RUNTIME (inside closure)
       if (change.isPropagationStopped) {
@@ -50,7 +50,7 @@ class _TrackingMiddleware extends LevitReactiveMiddleware {
   };
 
   @override
-  LxOnBatch? get onBatch =>
+  LevitReactiveOnBatch? get onBatch =>
       (next, change) => next;
 
   void reset() {

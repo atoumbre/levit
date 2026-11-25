@@ -1,10 +1,11 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
-  test('ConsoleTransport formats all events without crashing', () async {
-    final transport = ConsoleTransport();
+  test('LevitConsoleTransport formats all events without crashing', () async {
+    final transport = LevitConsoleTransport();
     final sid = 'session';
     final rx = 0.lx.named('test_rx');
     final change = LevitReactiveChange(
@@ -15,28 +16,40 @@ void main() {
     );
 
     final events = [
-      ReactiveInitEvent(sessionId: sid, reactive: rx),
-      ReactiveChangeEvent(sessionId: sid, reactive: rx, change: change),
-      ReactiveBatchEvent(sessionId: sid, change: LevitReactiveBatch([])),
-      ReactiveDisposeEvent(sessionId: sid, reactive: rx),
-      ReactiveGraphChangeEvent(sessionId: sid, reactive: rx, dependencies: []),
-      ReactiveListenerAddedEvent(sessionId: sid, reactive: rx, context: null),
-      ReactiveListenerRemovedEvent(sessionId: sid, reactive: rx, context: null),
-      ReactiveErrorEvent(
+      LevitReactiveInitEvent(sessionId: sid, reactive: rx),
+      LevitReactiveChangeEvent(sessionId: sid, reactive: rx, change: change),
+      LevitReactiveBatchEvent(sessionId: sid, change: LevitReactiveBatch([])),
+      LevitReactiveDisposeEvent(sessionId: sid, reactive: rx),
+      LevitReactiveGraphChangeEvent(
+        sessionId: sid,
+        reactive: rx,
+        dependencies: [],
+      ),
+      LevitReactiveListenerAddedEvent(
+        sessionId: sid,
+        reactive: rx,
+        context: null,
+      ),
+      LevitReactiveListenerRemovedEvent(
+        sessionId: sid,
+        reactive: rx,
+        context: null,
+      ),
+      LevitReactiveErrorEvent(
         sessionId: sid,
         reactive: rx,
         error: 'err',
         stack: null,
       ),
-      ScopeCreateEvent(
+      LevitScopeCreateEvent(
         sessionId: sid,
         scopeId: 1,
         scopeName: 's',
         parentScopeId: null,
       ),
-      ScopeDisposeEvent(sessionId: sid, scopeId: 1, scopeName: 's'),
-      SnapshotEvent(sessionId: sid, state: {}),
-      DependencyRegisterEvent(
+      LevitScopeDisposeEvent(sessionId: sid, scopeId: 1, scopeName: 's'),
+      LevitSnapshotEvent(sessionId: sid, state: {}),
+      LevitDependencyRegisterEvent(
         sessionId: sid,
         scopeId: 1,
         scopeName: 's',
@@ -44,7 +57,7 @@ void main() {
         info: LevitDependency(),
         source: 'src',
       ),
-      DependencyResolveEvent(
+      LevitDependencyResolveEvent(
         sessionId: sid,
         scopeId: 1,
         scopeName: 's',
@@ -52,7 +65,7 @@ void main() {
         info: LevitDependency(),
         source: 'src',
       ),
-      DependencyDeleteEvent(
+      LevitDependencyDeleteEvent(
         sessionId: sid,
         scopeId: 1,
         scopeName: 's',
@@ -60,14 +73,14 @@ void main() {
         info: LevitDependency(),
         source: 'src',
       ),
-      DependencyInstanceCreateEvent(
+      LevitDependencyInstanceCreateEvent(
         sessionId: sid,
         scopeId: 1,
         scopeName: 's',
         key: 'k',
         info: LevitDependency(),
       ),
-      DependencyInstanceReadyEvent(
+      LevitDependencyInstanceReadyEvent(
         sessionId: sid,
         scopeId: 1,
         scopeName: 's',

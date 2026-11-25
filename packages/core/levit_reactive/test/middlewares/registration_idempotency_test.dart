@@ -92,7 +92,7 @@ class _RecordingMiddleware extends LevitReactiveMiddleware {
   const _RecordingMiddleware(this.id, this.calls);
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     calls.add(id);
     return next;
   };

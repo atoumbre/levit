@@ -1,35 +1,37 @@
-part of '../../levit_monitor.dart';
+part of '../monitor_library.dart';
 
 /// Log levels for Levit Monitor events.
-///
-/// These map to the underlying [Level] from the `logger` package.
 enum LevitLogLevel {
   /// No output.
-  off(Level.off),
+  off(Level.off, 10000),
 
   /// Fatal errors.
-  fatal(Level.fatal),
+  fatal(Level.fatal, 6000),
 
   /// Error level.
-  error(Level.error),
+  error(Level.error, 5000),
 
   /// Warning level.
-  warning(Level.warning),
+  warning(Level.warning, 4000),
 
   /// Info level (default for DI events).
-  info(Level.info),
+  info(Level.info, 3000),
 
   /// Debug level (default for init, dispose, graph changes).
-  debug(Level.debug),
+  debug(Level.debug, 2000),
 
   /// Trace level (default for state changes).
-  trace(Level.trace),
+  trace(Level.trace, 1000),
 
   /// All output.
-  all(Level.all);
+  all(Level.all, 0);
 
-  final Level level;
-  const LevitLogLevel(this.level);
+  final Level _loggerLevel;
+
+  /// Numeric severity matching standard log ordering (`all < trace < ... < off`).
+  final int value;
+
+  const LevitLogLevel(this._loggerLevel, this.value);
 }
 
 /// Configuration for log level overrides per event type.
@@ -37,7 +39,7 @@ enum LevitLogLevel {
 /// This allows fine-grained control over which events are logged at which level.
 ///
 /// ```dart
-/// ConsoleTransport(
+/// LevitConsoleTransport(
 ///   levelOverrides: LevitLogLevelConfig(
 ///     stateChange: LevitLogLevel.debug, // Promote state changes to debug
 ///     diResolve: LevitLogLevel.off,     // Suppress DI resolve logs
@@ -126,16 +128,16 @@ class LevitLogLevelConfig {
 ///
 /// ```dart
 /// // Basic usage with defaults
-/// LevitMonitor.attach(transport: ConsoleTransport());
+/// LevitMonitor.attach(transport: LevitConsoleTransport());
 ///
 /// // Customize minimum log level (hide trace/debug)
 /// LevitMonitor.attach(
-///   transport: ConsoleTransport(minLevel: LevitLogLevel.info),
+///   transport: LevitConsoleTransport(minLevel: LevitLogLevel.info),
 /// );
 ///
 /// // Override specific event levels
 /// LevitMonitor.attach(
-///   transport: ConsoleTransport(
+///   transport: LevitConsoleTransport(
 ///     levelOverrides: LevitLogLevelConfig(
 ///       stateChange: LevitLogLevel.debug,      // Promote state changes
 ///       diResolve: LevitLogLevel.off,          // Suppress resolve logs
@@ -143,7 +145,7 @@ class LevitLogLevelConfig {
 ///   ),
 /// );
 /// ```
-class ConsoleTransport extends LevitTransport {
+class LevitConsoleTransport extends LevitTransport {
   /// The minimum log level to output.
   ///
   /// Events below this level will be suppressed.
@@ -155,18 +157,18 @@ class ConsoleTransport extends LevitTransport {
   /// The underlying logger instance.
   final Logger _logger;
 
-  /// Creates a new [ConsoleTransport].
+  /// Creates a new [LevitConsoleTransport].
   ///
   /// * [minLevel]: Minimum log level to output. Defaults to [LevitLogLevel.trace].
   /// * [levelOverrides]: Optional per-event-type log level overrides.
   /// * [printer]: Optional custom [LogPrinter]. Defaults to [PrettyPrinter].
-  ConsoleTransport({
+  LevitConsoleTransport({
     this.minLevel = LevitLogLevel.trace,
     this.levelOverrides,
     LogPrinter? printer,
   }) : _logger = Logger(
          filter: ProductionFilter(),
-         level: minLevel.level,
+         level: minLevel._loggerLevel,
          printer:
              printer ??
              PrettyPrinter(
@@ -180,7 +182,7 @@ class ConsoleTransport extends LevitTransport {
        );
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     if (!_shouldLog(event)) return;
 
     final level = _levelFor(event);
@@ -188,75 +190,63 @@ class ConsoleTransport extends LevitTransport {
 
     // ignore: unused_local_variable
     final category = switch (event) {
-      LogEvent _ => 'LOG',
-      CustomMonitorEvent _ => 'CUSTOM',
-      ReactiveBatchEvent _ => 'STATE',
-      DependencyEvent _ => 'DI',
-      SnapshotEvent _ => 'SNAPSHOT',
+      LevitLogEvent _ => 'LOG',
+      LevitCustomMonitorEvent _ => 'CUSTOM',
+      LevitReactiveBatchEvent _ => 'STATE',
+      LevitDependencyEvent _ => 'DI',
+      LevitSnapshotEvent _ => 'SNAPSHOT',
       _ => 'OTHER',
     };
 
-    _logger.log(level.level, message);
+    _logger.log(level._loggerLevel, message);
   }
 
-  bool _shouldLog(MonitorEvent event) {
+  bool _shouldLog(LevitMonitorEvent event) {
     final eventLevel = _levelFor(event);
-    return eventLevel.level.index >= minLevel.level.index;
+    return eventLevel._loggerLevel.index >= minLevel._loggerLevel.index;
   }
 
-  LevitLogLevel _levelFor(MonitorEvent event) {
+  LevitLogLevel _levelFor(LevitMonitorEvent event) {
     final overrides = levelOverrides;
 
     return switch (event) {
       _ScopeProgressEvent() => LevitLogLevel.info,
-      FrozenMonitorEvent e => _frozenLevel(e),
-      ReactiveMetadataEvent _ => LevitLogLevel.debug,
-      ReactiveChangeEvent _ => overrides?.stateChange ?? LevitLogLevel.trace,
-      ReactiveBatchEvent _ => overrides?.batch ?? LevitLogLevel.debug,
-      ReactiveInitEvent _ => overrides?.reactiveInit ?? LevitLogLevel.debug,
-      ReactiveDisposeEvent _ =>
+      LevitFrozenMonitorEvent e => _frozenLevel(e),
+      LevitReactiveMetadataEvent _ => LevitLogLevel.debug,
+      LevitReactiveChangeEvent _ =>
+        overrides?.stateChange ?? LevitLogLevel.trace,
+      LevitReactiveBatchEvent _ => overrides?.batch ?? LevitLogLevel.debug,
+      LevitReactiveInitEvent _ =>
+        overrides?.reactiveInit ?? LevitLogLevel.debug,
+      LevitReactiveDisposeEvent _ =>
         overrides?.reactiveDispose ?? LevitLogLevel.debug,
-      ReactiveGraphChangeEvent _ =>
+      LevitReactiveGraphChangeEvent _ =>
         overrides?.graphChange ?? LevitLogLevel.debug,
-      DependencyRegisterEvent _ => overrides?.diRegister ?? LevitLogLevel.info,
-      DependencyResolveEvent _ => overrides?.diResolve ?? LevitLogLevel.debug,
-      DependencyDeleteEvent _ => overrides?.diDelete ?? LevitLogLevel.info,
-      DependencyInstanceCreateEvent _ =>
+      LevitDependencyRegisterEvent _ =>
+        overrides?.diRegister ?? LevitLogLevel.info,
+      LevitDependencyResolveEvent _ =>
+        overrides?.diResolve ?? LevitLogLevel.debug,
+      LevitDependencyDeleteEvent _ => overrides?.diDelete ?? LevitLogLevel.info,
+      LevitDependencyInstanceCreateEvent _ =>
         overrides?.diCreate ?? LevitLogLevel.debug,
-      DependencyInstanceReadyEvent _ =>
+      LevitDependencyInstanceReadyEvent _ =>
         overrides?.diInit ?? LevitLogLevel.debug,
-      ReactiveListenerAddedEvent _ =>
+      LevitReactiveListenerAddedEvent _ =>
         overrides?.listenerAdd ?? LevitLogLevel.debug,
-      ReactiveListenerRemovedEvent _ =>
+      LevitReactiveListenerRemovedEvent _ =>
         overrides?.listenerRemove ?? LevitLogLevel.debug,
-      ReactiveErrorEvent _ => overrides?.reactiveError ?? LevitLogLevel.error,
-      ScopeCreateEvent _ => LevitLogLevel.debug,
-      ScopeDisposeEvent _ => LevitLogLevel.debug,
-      SnapshotEvent _ => LevitLogLevel.debug, // Default for SnapshotEvent
-      CustomMonitorEvent e => switch (e.level) {
-        Level.off => LevitLogLevel.off,
-        Level.fatal => LevitLogLevel.fatal,
-        Level.error => LevitLogLevel.error,
-        Level.warning => LevitLogLevel.warning,
-        Level.info => LevitLogLevel.info,
-        Level.debug => LevitLogLevel.debug,
-        Level.trace => LevitLogLevel.trace,
-        _ => LevitLogLevel.all,
-      },
-      LogEvent e => switch (e.level) {
-        Level.off => LevitLogLevel.off,
-        Level.fatal => LevitLogLevel.fatal,
-        Level.error => LevitLogLevel.error,
-        Level.warning => LevitLogLevel.warning,
-        Level.info => LevitLogLevel.info,
-        Level.debug => LevitLogLevel.debug,
-        Level.trace => LevitLogLevel.trace,
-        _ => LevitLogLevel.all,
-      },
+      LevitReactiveErrorEvent _ =>
+        overrides?.reactiveError ?? LevitLogLevel.error,
+      LevitScopeCreateEvent _ => LevitLogLevel.debug,
+      LevitScopeDisposeEvent _ => LevitLogLevel.debug,
+      LevitSnapshotEvent _ =>
+        LevitLogLevel.debug, // Default for LevitSnapshotEvent
+      LevitCustomMonitorEvent e => e.level,
+      LevitLogEvent e => e.level,
     };
   }
 
-  LevitLogLevel _frozenLevel(FrozenMonitorEvent event) {
+  LevitLogLevel _frozenLevel(LevitFrozenMonitorEvent event) {
     final data = event.toJson();
     final explicit = data['level'];
     if (explicit != null) {
@@ -286,45 +276,45 @@ class ConsoleTransport extends LevitTransport {
     };
   }
 
-  String _formatMessage(MonitorEvent event) {
+  String _formatMessage(LevitMonitorEvent event) {
     String safeValue(dynamic value, {bool sensitive = false}) =>
-        '${MonitorEvent._stringify(value, isSensitive: sensitive)}';
+        '${LevitMonitorEvent._stringify(value, isSensitive: sensitive)}';
 
     return switch (event) {
       _ScopeProgressEvent e => jsonEncode(e.toJson()),
-      FrozenMonitorEvent e => jsonEncode(e.toJson()),
-      ReactiveMetadataEvent e => 'METADATA: ${e.reactive.name}',
-      ReactiveChangeEvent e =>
+      LevitFrozenMonitorEvent e => jsonEncode(e.toJson()),
+      LevitReactiveMetadataEvent e => 'METADATA: ${e.reactive.name}',
+      LevitReactiveChangeEvent e =>
         'VAL: ${e.reactive.name ?? '[anon]'} <${e.change.valueType}> -> ${safeValue(e.change.newValue, sensitive: e.reactive.isSensitive)}',
-      ReactiveBatchEvent e =>
+      LevitReactiveBatchEvent e =>
         'BATCH: ${e.change.batchId} (${e.change.length} changes)',
-      ReactiveInitEvent e =>
+      LevitReactiveInitEvent e =>
         'INIT: ${e.reactive.name ?? '[anon]'} <${e.reactive.runtimeType}> = ${safeValue(e.reactive.value, sensitive: e.reactive.isSensitive)}',
-      ReactiveDisposeEvent e => 'DISPOSE: ${e.reactive.name ?? '[anon]'}',
-      ReactiveGraphChangeEvent e =>
+      LevitReactiveDisposeEvent e => 'DISPOSE: ${e.reactive.name ?? '[anon]'}',
+      LevitReactiveGraphChangeEvent e =>
         'GRAPH: ${e.reactive.name} dependencies changed',
-      DependencyRegisterEvent e =>
+      LevitDependencyRegisterEvent e =>
         'DI REGISTER: ${e.key} in ${e.scopeName}#${e.scopeId} (${e.source})',
-      DependencyResolveEvent e =>
+      LevitDependencyResolveEvent e =>
         'DI RESOLVE: ${e.key} in ${e.scopeName}#${e.scopeId} (${e.source})',
-      DependencyDeleteEvent e =>
+      LevitDependencyDeleteEvent e =>
         'DI DELETE: ${e.key} from ${e.scopeName}#${e.scopeId} (${e.source})',
-      DependencyInstanceCreateEvent e => 'DI CREATE: ${e.key}',
-      DependencyInstanceReadyEvent e => 'DI INIT: ${e.key}',
-      ReactiveListenerAddedEvent e =>
+      LevitDependencyInstanceCreateEvent e => 'DI CREATE: ${e.key}',
+      LevitDependencyInstanceReadyEvent e => 'DI INIT: ${e.key}',
+      LevitReactiveListenerAddedEvent e =>
         'LISTENER ADD: ${e.reactive.name ?? '[anon]'} (Context: ${e.context})',
-      ReactiveListenerRemovedEvent e =>
+      LevitReactiveListenerRemovedEvent e =>
         'Listener removed: ${e.reactive.name} (Context: ${e.context?.type})',
-      ReactiveErrorEvent e =>
+      LevitReactiveErrorEvent e =>
         'ERROR: ${e.reactive?.name ?? '[anon]'} - ${safeValue(e.error, sensitive: e.reactive?.isSensitive ?? false)}',
-      ScopeCreateEvent e =>
+      LevitScopeCreateEvent e =>
         'SCOPE CREATE: ${e.scopeName}#${e.scopeId} (Parent: ${e.parentScopeId})',
-      ScopeDisposeEvent e => 'SCOPE DISPOSE: ${e.scopeName}#${e.scopeId}',
-      SnapshotEvent e => 'Snapshot sent (${e.state.length} items)',
-      CustomMonitorEvent e =>
+      LevitScopeDisposeEvent e => 'SCOPE DISPOSE: ${e.scopeName}#${e.scopeId}',
+      LevitSnapshotEvent e => 'Snapshot sent (${e.state.length} items)',
+      LevitCustomMonitorEvent e =>
         'CUSTOM ${e.namespace}:${e.name} ${safeValue(e.toJson()['attributes'])}'
             '${e.error != null ? '\nError: ${safeValue(e.error, sensitive: e.sensitive)}' : ''}',
-      LogEvent e =>
+      LevitLogEvent e =>
         'LOG: ${safeValue(e.data)}'
             '${e.error != null ? '\nError: ${safeValue(e.error)}' : ''}'
             '${e.stackTrace != null ? '\nStack: \n${e.stackTrace}' : ''}',

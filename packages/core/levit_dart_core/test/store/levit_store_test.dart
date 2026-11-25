@@ -1,5 +1,6 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart_core/spi.dart';
 
 void main() {
   setUp(() async {
@@ -128,21 +129,17 @@ void main() {
       expect(await result.v3, 'asyncVal');
     });
 
-    test(
-      'findAsyncIn does not dispose existing instance on concurrent calls',
-      () async {
-        final scope = LevitScope.root('race_store');
-        int closed = 0;
-        final store = LevitStore((ref) => _TestController(() => closed++));
+    test('repeated findIn returns same instance without disposal', () {
+      final scope = LevitScope.root('race_store');
+      int closed = 0;
+      final store = LevitStore((ref) => _TestController(() => closed++));
 
-        final f1 = store.findAsyncIn(scope);
-        final f2 = store.findAsyncIn(scope);
-        final results = await Future.wait([f1, f2]);
+      final first = store.findIn(scope);
+      final second = store.findIn(scope);
 
-        expect(identical(results[0], results[1]), isTrue);
-        expect(closed, 0);
-      },
-    );
+      expect(identical(first, second), isTrue);
+      expect(closed, 0);
+    });
 
     test('builder error disposes captured reactives', () {
       late LxVar<int> orphan;
@@ -164,15 +161,13 @@ void main() {
       });
 
       expect(await store.find(), 100);
-      expect(await store.findAsync(), 100);
       expect(store.toString(), contains('LevitAsyncStore'));
     });
 
-    test('findAsyncIn resolves with single await', () async {
+    test('findIn resolves with single await', () async {
       final scope = LevitScope.root('async_store_scope');
       final store = LevitStore.async((ref) async => 'ok');
 
-      expect(await store.findAsyncIn(scope), 'ok');
       expect(await store.findIn(scope), 'ok');
     });
 
@@ -186,20 +181,6 @@ void main() {
 
       await expectLater(store.find(), throwsStateError);
       expect(orphan.isDisposed, isTrue);
-    });
-
-    test('store ref scope throws when detached', () {
-      expect(
-        () => requireStoreRefScope(null),
-        throwsA(
-          isA<StateError>().having(
-            (e) => e.message,
-            'message',
-            'Store ref has no owning scope. Resolve the store via Levit.put/find '
-                'or LevitStore.findIn before using LevitRef APIs.',
-          ),
-        ),
-      );
     });
   });
 }

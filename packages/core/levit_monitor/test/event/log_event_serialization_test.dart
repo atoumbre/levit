@@ -1,5 +1,4 @@
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:logger/logger.dart' hide LogEvent;
 import 'package:test/test.dart';
 
 class _TestSerializable {
@@ -12,11 +11,11 @@ class _TestSerializable {
 }
 
 void main() {
-  group('LogEvent serialization', () {
+  group('LevitLogEvent serialization', () {
     test('serializes primitive log data properly', () {
-      final event = LogEvent(
+      final event = LevitLogEvent(
         sessionId: 'test-session',
-        level: Level.info,
+        level: LevitLogLevel.info,
         data: 'Simple message',
       );
 
@@ -27,16 +26,16 @@ void main() {
     });
 
     test('serializes Map and List data properly', () {
-      final eventMap = LogEvent(
+      final eventMap = LevitLogEvent(
         sessionId: 'test-session',
-        level: Level.debug,
+        level: LevitLogLevel.debug,
         data: {'foo': 'bar', 'count': 42},
       );
       expect(eventMap.toJson()['data'], {'foo': 'bar', 'count': 42});
 
-      final eventList = LogEvent(
+      final eventList = LevitLogEvent(
         sessionId: 'test-session',
-        level: Level.debug,
+        level: LevitLogLevel.debug,
         data: [1, 2, 3],
       );
       expect(eventList.toJson()['data'], [1, 2, 3]);
@@ -44,7 +43,11 @@ void main() {
 
     test('serializes object with toJson method', () {
       final obj = _TestSerializable('my-key', 100);
-      final event = LogEvent(sessionId: 'test', level: Level.info, data: obj);
+      final event = LevitLogEvent(
+        sessionId: 'test',
+        level: LevitLogLevel.info,
+        data: obj,
+      );
 
       final jsonOutput = event.toJson();
       expect(jsonOutput['data'], same(obj));
@@ -52,9 +55,9 @@ void main() {
 
     test('falls back to stringification for non-serializable objects', () {
       final obj = Object();
-      final event = LogEvent(
+      final event = LevitLogEvent(
         sessionId: 'test-session',
-        level: Level.debug,
+        level: LevitLogLevel.debug,
         data: obj,
       );
 
@@ -63,9 +66,9 @@ void main() {
     });
 
     test('includes error and stack trace conditionally', () {
-      final event1 = LogEvent(
+      final event1 = LevitLogEvent(
         sessionId: 'test-session',
-        level: Level.error,
+        level: LevitLogLevel.error,
         data: 'Oops',
         error: StateError('Bad state'),
       );
@@ -75,9 +78,9 @@ void main() {
       expect(json1['error'], contains('Bad state'));
       expect(json1.containsKey('stackTrace'), isFalse);
 
-      final event2 = LogEvent(
+      final event2 = LevitLogEvent(
         sessionId: 'test-session',
-        level: Level.error,
+        level: LevitLogLevel.error,
         data: 'Oops',
         stackTrace: StackTrace.fromString('stack_frame_1'),
       );
@@ -89,7 +92,11 @@ void main() {
     });
 
     test('serialization handles null data', () {
-      final event = LogEvent(sessionId: 'test', level: Level.info, data: null);
+      final event = LevitLogEvent(
+        sessionId: 'test',
+        level: LevitLogLevel.info,
+        data: null,
+      );
       expect(event.toJson()['data'], isNull);
     });
 
@@ -97,7 +104,11 @@ void main() {
       'serializes custom object without toJson properly fallback to toString',
       () {
         final obj = _CustomObjectWithoutToJson();
-        final event = LogEvent(sessionId: 'test', level: Level.info, data: obj);
+        final event = LevitLogEvent(
+          sessionId: 'test',
+          level: LevitLogLevel.info,
+          data: obj,
+        );
         // It will fail jsonEncode(obj) because it lacks toJson.
         // Then it will fail (obj as dynamic).toJson() with NoSuchMethodError.
         // Then it falls back to toString.
@@ -107,7 +118,11 @@ void main() {
 
     test('serializes object whose toJson throws safely back to stringify', () {
       final obj = _CustomObjectThatThrowsOnToJson();
-      final event = LogEvent(sessionId: 'test', level: Level.info, data: obj);
+      final event = LevitLogEvent(
+        sessionId: 'test',
+        level: LevitLogLevel.info,
+        data: obj,
+      );
       // It will fail jsonEncode(obj) because toJson throws.
       // Then it attempts obj.toJson() directly and catches the same exception.
       // Then falls back to toString.
@@ -118,9 +133,9 @@ void main() {
       'serializes object whose toJson is valid but complex to jsonEncode directly',
       () {
         final nestedObj = _CustomObjectToJsonReturnsNested();
-        final event = LogEvent(
+        final event = LevitLogEvent(
           sessionId: 'test',
-          level: Level.info,
+          level: LevitLogLevel.info,
           data: nestedObj,
         );
 
@@ -132,9 +147,9 @@ void main() {
     test('serializes error and stackTrace if present', () {
       final error = StateError('some error');
       final stackTrace = StackTrace.fromString('some stack');
-      final event = LogEvent(
+      final event = LevitLogEvent(
         sessionId: 'test',
-        level: Level.error,
+        level: LevitLogLevel.error,
         data: 'failed',
         error: error,
         stackTrace: stackTrace,

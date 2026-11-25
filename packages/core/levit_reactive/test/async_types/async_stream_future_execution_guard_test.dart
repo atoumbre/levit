@@ -7,7 +7,7 @@ class _BatchOnlyMiddleware extends LevitReactiveMiddleware {
   final recordedBatches = <List<LevitReactiveChange>>[];
 
   @override
-  LxOnBatch? get onBatch => (next, change) {
+  LevitReactiveOnBatch? get onBatch => (next, change) {
     return () {
       final result = next();
       recordedBatches.add(List<LevitReactiveChange>.of(change.changes));

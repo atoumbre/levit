@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 void main() {
   test(
@@ -104,10 +105,10 @@ void main() {
         return 1;
       }, deadline: DateTime.now().add(const Duration(milliseconds: 10)));
       final outcome = await queued.outcome;
-      expect(outcome, isA<LevitTaskCancellation<int>>());
+      expect(outcome, isA<LevitTaskCancelled<int>>());
       expect(
-        (outcome as LevitTaskCancellation<int>).reason.kind,
-        LevitCancellationKind.deadlineExceeded,
+        (outcome as LevitTaskCancelled<int>).reason.kind,
+        LevitTaskCancellationKind.deadlineExceeded,
       );
       expect(invoked, isFalse);
       blocker.complete();
@@ -139,7 +140,7 @@ void main() {
     final joined = engine.submit(
       (_) => 2,
       id: 'next',
-      conflictPolicy: TaskConflictPolicy.join,
+      conflictPolicy: LevitTaskConflictPolicy.join,
     );
     expect(joined.executionId, queued.executionId);
     expect(
@@ -149,9 +150,9 @@ void main() {
     final dropped = engine.submit(
       (_) => 4,
       id: 'next',
-      conflictPolicy: TaskConflictPolicy.drop,
+      conflictPolicy: LevitTaskConflictPolicy.drop,
     );
-    expect(await dropped.outcome, isA<LevitTaskDropping<int>>());
+    expect(await dropped.outcome, isA<LevitTaskDropped<int>>());
     release.complete();
     await active.result;
     expect(await joined.result, 1);
@@ -170,13 +171,13 @@ void main() {
         results.add(
           engine.submit((_) {
             order.add('h$i');
-          }, priority: TaskPriority.high),
+          }, priority: LevitTaskPriority.high),
         );
       }
       results.add(
         engine.submit((_) {
           order.add('low');
-        }, priority: TaskPriority.low),
+        }, priority: LevitTaskPriority.low),
       );
       release.complete();
       await first.result;
@@ -207,9 +208,9 @@ void main() {
       final second = engine.submit(
         (_) => 2,
         id: 'same',
-        conflictPolicy: TaskConflictPolicy.restart,
+        conflictPolicy: LevitTaskConflictPolicy.restart,
       );
-      expect(await first.outcome, isA<LevitTaskSupersession<int>>());
+      expect(await first.outcome, isA<LevitTaskSuperseded<int>>());
       expect(await second.result, 2);
       await engine.dispose();
     },
@@ -246,7 +247,7 @@ void main() {
       }, retryPolicy: retry);
       await Future<void>.delayed(Duration.zero);
       cancelled.cancel();
-      expect(await cancelled.outcome, isA<LevitTaskCancellation>());
+      expect(await cancelled.outcome, isA<LevitTaskCancelled>());
       expect(attempts, 1);
       final capped = LevitRetryPolicy(
         shouldRetry: (_, __) => true,
@@ -278,12 +279,12 @@ void main() {
       final tail = engine.submit(
         (_) => 1,
         id: 'upload',
-        conflictPolicy: TaskConflictPolicy.coalesceLatest,
+        conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
       );
       final latest = engine.submit(
         (_) => 2,
         id: 'upload',
-        conflictPolicy: TaskConflictPolicy.coalesceLatest,
+        conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
       );
       expect(engine.pendingCount, 1);
       expect(latest.executionId, tail.executionId);
@@ -303,7 +304,7 @@ void main() {
         called = true;
         return 1;
       }, deadline: DateTime.now().subtract(const Duration(seconds: 1)));
-      expect(await task.outcome, isA<LevitTaskCancellation<int>>());
+      expect(await task.outcome, isA<LevitTaskCancelled<int>>());
       expect(called, isFalse);
       await engine.dispose();
     },
@@ -369,13 +370,13 @@ void main() {
       await started.future;
       group.cancel(
         const LevitTaskCancellationReason(
-          LevitCancellationKind.parentCancelled,
+          LevitTaskCancellationKind.parentCancelled,
         ),
       );
       final outcome = await task.outcome;
       expect(
-        (outcome as LevitTaskCancellation<int>).reason.kind,
-        LevitCancellationKind.parentCancelled,
+        (outcome as LevitTaskCancelled<int>).reason.kind,
+        LevitTaskCancellationKind.parentCancelled,
       );
       await observed;
       await engine.dispose();
@@ -387,7 +388,7 @@ Future<int> _waitInIsolate(int value, LevitIsolateTaskContext context) async {
   context.reportProgress(0.5);
   await context.cancelled;
   if (context.cancellationReason?.kind !=
-      LevitCancellationKind.parentCancelled) {
+      LevitTaskCancellationKind.parentCancelled) {
     throw StateError('Wrong cancellation reason in isolate');
   }
   await Future<void>.delayed(const Duration(milliseconds: 5));

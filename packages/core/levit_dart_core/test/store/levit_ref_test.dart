@@ -97,16 +97,14 @@ void main() {
       await state.find();
     });
 
-    test('findStoreAsync delegates to store lookup in same scope', () async {
+    test('findStore delegates to store lookup in same scope', () {
       final base = LevitStore((_) => 123);
 
-      final outer = LevitStore<Future<int>>((ref) {
-        return ref.findStoreAsync<int>(base);
+      final outer = LevitStore<int>((ref) {
+        return ref.findStore<int>(base);
       });
 
-      final future = outer.find();
-      expect(future, isA<Future<int>>());
-      expect(await future, 123);
+      expect(outer.find(), 123);
     });
 
     test('bindExisting delegates to the owning store scope', () {
@@ -133,7 +131,7 @@ void main() {
     });
 
     test('LxReactive fluent API: register, sensitive, named', () {
-      final r = 0.lx.named('my_lx').register('owner_1').sensitive();
+      final r = 0.lx.named('my_lx').ownedBy('owner_1').sensitive();
       expect(r.name, 'my_lx');
       expect(r.ownerId, 'owner_1');
       expect(r.isSensitive, true);

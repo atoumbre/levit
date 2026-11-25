@@ -11,10 +11,8 @@ void main() {
     expect(store.findIn(child), same(shared));
     final local = store.findIn(child, localOnly: true);
     expect(local, isNot(same(shared)));
-    expect(await store.findAsyncIn(child, localOnly: true), same(local));
     await child.run(() async {
       expect(store.find(localOnly: true), same(local));
-      expect(await store.findAsync(localOnly: true), same(local));
     });
     await child.dispose();
     expect(local.isDisposed, isTrue);
@@ -33,7 +31,7 @@ void main() {
       return Object();
     });
     final shared = store.findIn(parent);
-    final first = store.findAsyncIn(child, localOnly: true);
+    final first = store.findIn(child, localOnly: true);
     final second = store.findIn(child, localOnly: true);
     gate.complete();
     expect(await first, same(await second));
@@ -41,7 +39,6 @@ void main() {
     expect(creations, 2);
     await child.run(() async {
       expect(await store.find(localOnly: true), same(await first));
-      expect(await store.findAsync(localOnly: true), same(await first));
     });
     await child.dispose();
     await parent.dispose();
@@ -56,7 +53,7 @@ void main() {
     final sharedAsync = await asyncValue.findIn(parent);
     final recipe = LevitStore.async((ref) async {
       final local = ref.findStore(value, localOnly: true);
-      expect(await ref.findStoreAsync(value, localOnly: true), same(local));
+      expect(ref.findStore(value, localOnly: true), same(local));
       expect(local, isNot(same(shared)));
       expect(
         await ref.findAsyncStore(asyncValue, localOnly: true),

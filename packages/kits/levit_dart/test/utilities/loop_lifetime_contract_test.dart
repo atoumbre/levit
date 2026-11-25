@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
 
-class _LoopOwner extends LevitController with LevitLoopExecutionMixin {}
+class _LoopOwner extends LevitController with LevitLoopMixin {}
 
-class _Service implements StoppableService {
+class _Service implements LevitLoopService {
   @override
   final status = LxVar<LxStatus<dynamic>>(LxIdle());
   int resumes = 0;

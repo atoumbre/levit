@@ -1,12 +1,13 @@
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_reactive/spi.dart';
 
 class _Capture extends LevitReactiveMiddleware {
   final captured = <LxReactive>[];
   @override
   void Function(LxReactive) get onInit => (r) {
     void take() => captured.add(r);
-    if (!Lx.deferAutoLink(r, take)) take();
+    if (!LxSpi.deferAutoLink(r, take)) take();
   };
 }
 
@@ -43,8 +44,8 @@ void main() {
       final capture = _Capture();
       LevitReactiveMiddleware.add(capture, token: 'capture');
       late LxVar<int> sibling, child;
-      final parent = Lx.createOwned(() {
-        child = Lx.createOwned(() {
+      final parent = LxSpi.createOwned(() {
+        child = LxSpi.createOwned(() {
           sibling = 3.lx;
           return 1.lx;
         });

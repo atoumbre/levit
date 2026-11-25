@@ -1,6 +1,7 @@
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
   group('LevitMonitor Filtering', () {
@@ -11,10 +12,10 @@ void main() {
 
     test('filter exposes the predicate installed by setFilter', () {
       // Covers line 51: _filter = filter;
-      bool Function(MonitorEvent)? myFilter = (event) => true;
+      bool Function(LevitMonitorEvent)? myFilter = (event) => true;
       LevitMonitor.setFilter(myFilter);
 
-      // Covers line 28: static bool Function(MonitorEvent event)? get filter => _filter;
+      // Covers line 28: static bool Function(LevitMonitorEvent event)? get filter => _filter;
       expect(LevitMonitor.filter, equals(myFilter));
     });
 
@@ -22,7 +23,10 @@ void main() {
       'shouldProcess accepts unfiltered events and applies installed predicates',
       () {
         final reactive = 0.lx;
-        final event = ReactiveInitEvent(sessionId: 'test', reactive: reactive);
+        final event = LevitReactiveInitEvent(
+          sessionId: 'test',
+          reactive: reactive,
+        );
 
         // Covers line 58 part 1: _filter == null
         LevitMonitor.setFilter(null);
@@ -42,8 +46,8 @@ void main() {
   });
 
   group('LevitMonitor Setup', () {
-    test('attach without transport uses ConsoleTransport', () async {
-      // This covers line 69: final t = transport ?? ConsoleTransport();
+    test('attach without transport uses LevitConsoleTransport', () async {
+      // This covers line 69: final t = transport ?? LevitConsoleTransport();
       // We also check that it doesn't throw.
       expect(() async => await LevitMonitor.attach(), returnsNormally);
       await LevitMonitor.detach();
@@ -52,11 +56,11 @@ void main() {
 
   group('LevitMonitorMiddleware default transport', () {
     test(
-      'LevitMonitorMiddleware uses default ConsoleTransport when none provided',
+      'LevitMonitorMiddleware uses default LevitConsoleTransport when none provided',
       () async {
-        // This covers line 30 in state.dart: transport = transport ?? ConsoleTransport()
+        // This covers line 30 in state.dart: transport = transport ?? LevitConsoleTransport()
         final middleware = LevitMonitorMiddleware();
-        expect(middleware.transport, isA<ConsoleTransport>());
+        expect(middleware.transport, isA<LevitConsoleTransport>());
         await middleware.close();
       },
     );

@@ -145,12 +145,12 @@ names and result types do not identify stores. Install `store.overrideWith(build
 using `scope.applyOverrides([...])` before local resolution. The receiving scope
 owns override resources; unoverridden lookups inherit an ancestor unless
 `localOnly: true` is supplied. `LevitRef` and `context.levit` offer `findStore`,
-`findStoreAsync`, and `findAsyncStore` with the same typed contract.
+`findStore` and `findAsyncStore` with the same typed contract.
 
 Optional DI lookups return null only for missing registrations. Builder and type
 errors propagate. `scope.describe()` returns immutable ancestry, registration,
 initialization and ownership metadata without dependency values or raw tags.
-Builders and selectors accept `LxReadable<T>`; `LxState.asReactive` exposes this
+Builders and selectors accept `LxReadable<T>`; `LxState.asReadable` exposes this
 observation-only interface.
 
 Tests can import `package:levit/levit_testing.dart` or

@@ -35,7 +35,7 @@ void main() {
           return await ref.findAsync<String>(tag: 'ad');
         });
 
-        expect(await asyncState.findAsync(), 'async_dep');
+        expect(await asyncState.find(), 'async_dep');
         expect(asyncState.toString(), contains('LevitAsyncStore'));
       },
     );
@@ -108,10 +108,7 @@ void main() {
         final state = LevitStore((ref) => 'test');
         expect(state.find(), 'test');
 
-        // findAsync extension (state.dart line 325)
-        expect(await state.findAsync(), 'test');
-
-        // delete extension (state.dart lines 329-330)
+        // delete extension
         expect(await state.delete(), true);
         expect(await state.delete(), false);
       },

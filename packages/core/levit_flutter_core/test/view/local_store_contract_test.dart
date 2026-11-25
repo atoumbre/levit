@@ -26,7 +26,7 @@ void main() {
 
               if (async) {
                 return scoped
-                    ? LScopedAsyncView.store(
+                    ? LAsyncScopedView.store(
                         asyncStore,
                         localOnly: localOnly,
                         builder: builder,
@@ -51,7 +51,7 @@ void main() {
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: LScope(
-                    dependencyFactory: (scope) => parent = scope,
+                    configure: (scope) => parent = scope,
                     child: view(),
                   ),
                 ),

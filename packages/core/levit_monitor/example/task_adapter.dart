@@ -1,5 +1,6 @@
 import 'package:levit/levit.dart';
 import 'package:levit_monitor/levit_monitor.dart';
+import 'package:levit/tasks.dart';
 
 /// Optional application bridge: levit_monitor has no task-engine dependency.
 /// Own the adapter after its borrowed engine so it unsubscribes before release.

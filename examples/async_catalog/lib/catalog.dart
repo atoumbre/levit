@@ -84,7 +84,7 @@ class CatalogController extends LevitController with LevitTasksMixin {
     queries = own(
       LevitAsyncMap<CatalogKey, CatalogPage>(
         _repository.search,
-        engine: tasksEngine,
+        engine: taskEngine,
         name: 'catalog',
         maxInactiveEntries: 16,
         gracePeriod: const Duration(seconds: 5),

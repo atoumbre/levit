@@ -16,7 +16,7 @@ class TestView extends StatelessWidget {
   Widget build(BuildContext context) {
     return LScopedView<TestReactiveController>(
       autoWatch: watch,
-      dependencyFactory: (s) =>
+      configure: (s) =>
           s.put<TestReactiveController>(() => TestReactiveController()),
       resolver: (context) => context.levit.find<TestReactiveController>(),
       builder: (context, controller) {

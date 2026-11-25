@@ -2,16 +2,17 @@ import 'dart:async';
 import 'package:test/test.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
+import 'package:levit_monitor/spi.dart';
 
 // Internal Mock Transport for this test
 class MockTransport extends LevitTransport {
-  final List<MonitorEvent> sentEvents = [];
+  final List<LevitMonitorEvent> sentEvents = [];
 
   @override
   Stream<void> get onConnect => const Stream.empty();
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     sentEvents.add(event);
   }
 
@@ -33,7 +34,7 @@ void main() {
       LevitReactiveMiddleware.clear();
     });
 
-    test('Captures ReactiveErrorEvent when listener throws', () async {
+    test('Captures LevitReactiveErrorEvent when listener throws', () async {
       final rx = 0.lx.named('fail_rx');
 
       // We need to use runZonedGuarded or expectAsync because the error is caught by Levit
@@ -108,7 +109,7 @@ class _ThrowingTransport extends LevitTransport {
   Stream<void> get onConnect => const Stream<void>.empty();
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     throw StateError('transport failed');
   }
 

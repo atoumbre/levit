@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 class _ReactiveTaskController extends LevitController
     with LevitReactiveTasksMixin {}
@@ -84,7 +85,7 @@ void main() {
   );
 
   test(
-    'TaskConflictPolicy.restart preserves running task when queue is at maxPending',
+    'LevitTaskConflictPolicy.restart preserves running task when queue is at maxPending',
     () async {
       final engine = LevitTaskEngine(maxConcurrent: 1, maxPending: 1);
       final started = Completer<void>();
@@ -104,7 +105,7 @@ void main() {
         () => engine.submit<int>(
           (_) => 3,
           id: 'job',
-          conflictPolicy: TaskConflictPolicy.restart,
+          conflictPolicy: LevitTaskConflictPolicy.restart,
         ),
         throwsA(isA<LevitTaskQueueFullException>()),
       );
@@ -125,7 +126,7 @@ void main() {
       final result = await engine.schedule<int>(
         (_) => 42,
         id: 'corrupt',
-        cachePolicy: TaskCachePolicy<int>(
+        cachePolicy: LevitTaskCachePolicy<int>(
           key: 'corrupt',
           ttl: const Duration(minutes: 5),
           toJson: (v) => {'v': v},
@@ -200,7 +201,7 @@ void main() {
       final scope = LevitScope.root('sync_cancel');
       final controller = scope.put(_ReactiveTaskController.new);
       final middleware = _CancelOnQueuedMiddleware(
-        controller.tasksEngine,
+        controller.taskEngine,
         'cancel_me',
       );
       LevitTaskMiddleware.add(middleware);

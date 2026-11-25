@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:mirrors';
 
-import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 class MockCache extends LevitTaskCacheProvider {
   final Map<String, Map<String, dynamic>> storage = {};
@@ -98,7 +98,7 @@ void main() {
       final cache1 = MockCache();
       final cache2 = MockCache();
 
-      final policy = TaskCachePolicy<int>(
+      final policy = LevitTaskCachePolicy<int>(
         ttl: const Duration(minutes: 1),
         toJson: (v) => {'v': v},
         fromJson: (j) => j['v'] as int,
@@ -138,7 +138,7 @@ void main() {
           LevitTaskEvent(
             type: LevitTaskEventType.started,
             taskId: 'noop',
-            priority: TaskPriority.normal,
+            priority: LevitTaskPriority.normal,
             maxRetries: 0,
           ),
         ]),

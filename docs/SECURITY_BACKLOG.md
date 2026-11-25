@@ -42,8 +42,8 @@ Runtime redaction, transport, `sessionId`, and opaque identifier hardening items
 - **Risk:** High (Denial of Service / Crash)
 - **Details:**
   - Both `_producer` and `_viewer` call `socket.listen(...)` without `onError`, and invoke `socket.add`/`socket.close` without `try/catch` or `.catchError`, allowing malformed frames or socket resets to crash the inspector process.
-  - `StateSnapshot.applyEnvelope` stores raw `_wireProgress` without validating tuple shape/types; malformed records are ACKed and later crash `/export`, viewer selection, and queue recovery. `StateSnapshot._restore` clears all snapshot maps before validating incoming state.
-  - `LevitInspectorServer` has no connection/viewer caps or pre-handshake timeouts; `StateSnapshot.variables` is unbounded and not pruned on `scope_dispose`.
+  - `LevitStateSnapshot.applyEnvelope` stores raw `_wireProgress` without validating tuple shape/types; malformed records are ACKed and later crash `/export`, viewer selection, and queue recovery. `LevitStateSnapshot._restore` clears all snapshot maps before validating incoming state.
+  - `LevitInspectorServer` has no connection/viewer caps or pre-handshake timeouts; `LevitStateSnapshot.variables` is unbounded and not pruned on `scope_dispose`.
   - `levit_devtools_ui` has unguarded casts and unbounded recursion in `_tasks()` tree rendering, and `export_web.dart` calls `window.open` without `'noopener,noreferrer'`.
   - `bin/levit_devtools.dart` calls `ProcessSignal.sigterm.watch()` unconditionally, which throws `SignalException` on Windows.
 - **Planned Remediation:**

@@ -25,7 +25,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: LScope(
-          dependencyFactory: (s) => s.put<_TestService>(() => _TestService()),
+          configure: (s) => s.put<_TestService>(() => _TestService()),
           child: Builder(
             builder: (context) {
               context.levit.putOrFind<_TestService>(() => _TestService());

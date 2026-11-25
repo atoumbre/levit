@@ -1,5 +1,6 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart_core/spi.dart';
 
 void main() {
   setUp(() {
@@ -45,7 +46,7 @@ void main() {
 
     test('disableAutoLinking fully detaches auto-link middlewares', () async {
       LxReactive? linked;
-      runCapturedForTesting(() {
+      LevitAutoLinkSpi.runCaptured(() {
         linked = 0.lx;
       }, 'owner:on');
       expect(linked!.ownerId, 'owner:on');
@@ -54,7 +55,7 @@ void main() {
       Levit.disableAutoLinking();
 
       LxReactive? unlinked;
-      runCapturedForTesting(() {
+      LevitAutoLinkSpi.runCaptured(() {
         unlinked = 1.lx;
       }, 'owner:off');
       expect(unlinked!.ownerId, isNull);
@@ -63,7 +64,7 @@ void main() {
       Levit.enableAutoLinking();
 
       LxReactive? relinked;
-      runCapturedForTesting(() {
+      LevitAutoLinkSpi.runCaptured(() {
         relinked = 2.lx;
       }, 'owner:on:again');
       expect(relinked!.ownerId, 'owner:on:again');
@@ -97,8 +98,8 @@ class NestedCaptureController extends LevitController {
   void onInit() {
     outerReactive = 1.lx;
 
-    runCapturedForTesting(() {
-      runCapturedForTesting(() {
+    LevitAutoLinkSpi.runCaptured(() {
+      LevitAutoLinkSpi.runCaptured(() {
         innerReactive = 2.lx;
       }, 'level-2');
     }, 'level-1');

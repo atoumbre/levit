@@ -87,7 +87,7 @@ class DashboardRoute extends StatelessWidget {
 
     return LRouteScope(
       name: 'dashboard-route',
-      dependencyFactory: (scope) {
+      configure: (scope) {
         scope.put<RouteCounterController>(
           () => RouteCounterController(
             title: 'Dashboard',
@@ -136,7 +136,7 @@ class EditorRoute extends StatelessWidget {
 
     return LRouteScope(
       name: 'editor-route',
-      dependencyFactory: (scope) {
+      configure: (scope) {
         scope.put<RouteCounterController>(
           () => RouteCounterController(
             title: 'Editor Route',
@@ -185,7 +185,7 @@ class AsyncProfileRoute extends StatelessWidget {
 
     return LAsyncRouteScope(
       name: 'async-profile-route',
-      dependencyFactory: (scope) async {
+      configure: (scope) async {
         journal.log('Async profile loading started');
         await Future<void>.delayed(const Duration(milliseconds: 700));
         scope.put<RouteCounterController>(

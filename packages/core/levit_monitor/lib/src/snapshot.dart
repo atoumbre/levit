@@ -1,17 +1,17 @@
-part of '../levit_monitor.dart';
+part of 'monitor_library.dart';
 
 /// Redacted shadow state with optional bounded event retention (off by default).
 /// Only immutable JSON envelopes are retained; live application objects are not.
-class StateSnapshot {
-  final scopes = <int, ScopeModel>{};
-  final dependencies = <String, DependencyModel>{};
-  final variables = <int, ReactiveModel>{};
+class LevitStateSnapshot {
+  final scopes = <int, LevitScopeModel>{};
+  final dependencies = <String, LevitDependencyModel>{};
+  final variables = <int, LevitReactiveModel>{};
   final taskTrees = <String, Map<String, dynamic>>{};
   final int maxEvents;
   final ListQueue<LevitEventEnvelope> _eventCache = ListQueue();
   int droppedHistoryEvents = 0;
   List<LevitEventEnvelope> get events => List.unmodifiable(_eventCache);
-  StateSnapshot({this.maxEvents = 0}) {
+  LevitStateSnapshot({this.maxEvents = 0}) {
     if (maxEvents < 0) throw RangeError.value(maxEvents, 'maxEvents');
   }
   Map<String, dynamic> toJson() => {
@@ -23,7 +23,8 @@ class StateSnapshot {
     'historyCapacity': maxEvents,
     'droppedHistoryEvents': droppedHistoryEvents,
   };
-  void applyEvent(MonitorEvent event) => applyEnvelope(event.freeze().envelope);
+  void applyEvent(LevitMonitorEvent event) =>
+      applyEnvelope(event.freeze().envelope);
 
   /// Redacts retained history entries for [reactiveId] after sensitivity is enabled.
   void scrubSensitiveReactive(String reactiveId) {
@@ -64,7 +65,7 @@ class StateSnapshot {
         final record = data['scope'] as List;
         final id = record[0] as int;
         final ancestry = record[4] as List;
-        final scope = scopes[id] ??= ScopeModel(
+        final scope = scopes[id] ??= LevitScopeModel(
           id: id,
           name: record[1] as String,
           parentScopeId: ancestry.isEmpty ? null : ancestry.first[0] as int,
@@ -72,7 +73,7 @@ class StateSnapshot {
         scope._wireProgress = record;
         scope._progress = null;
       case 'scope_create':
-        scopes[scopeId!] = ScopeModel(
+        scopes[scopeId!] = LevitScopeModel(
           id: scopeId,
           name: data['scopeName'] as String,
           parentScopeId: data['parentScopeId'] as int?,
@@ -83,29 +84,29 @@ class StateSnapshot {
       case 'di_register':
         scopes.putIfAbsent(
           scopeId!,
-          () => ScopeModel(id: scopeId, name: data['scopeName'] as String),
+          () => LevitScopeModel(id: scopeId, name: data['scopeName'] as String),
         );
-        dependencies[depKey] = DependencyModel(
+        dependencies[depKey] = LevitDependencyModel(
           scopeId: scopeId,
           key: key!,
           isLazy: data['isLazy'] as bool,
           isFactory: data['isFactory'] as bool,
           isAsync: data['isAsync'] as bool,
-          status: DependencyStatus.registered,
+          status: LevitDependencyStatus.registered,
         );
       case 'di_delete':
         dependencies.remove(depKey);
       case 'di_instance_create':
-        dependencies[depKey]?.status = DependencyStatus.creating;
+        dependencies[depKey]?.status = LevitDependencyStatus.creating;
       case 'di_instance_init':
         final dep = dependencies[depKey];
         if (dep != null) {
-          dep.status = DependencyStatus.active;
+          dep.status = LevitDependencyStatus.active;
           dep.value = data['instance'] as String?;
           dep.type = switch (data['dependencyType']) {
-            'controller' => DependencyType.controller,
-            'store' => DependencyType.store,
-            _ => DependencyType.other,
+            'controller' => LevitDependencyType.controller,
+            'store' => LevitDependencyType.store,
+            _ => LevitDependencyType.other,
           };
         }
       case 'custom':
@@ -179,7 +180,7 @@ class StateSnapshot {
       variables.remove(id);
       return;
     }
-    final model = variables[id] ??= ReactiveModel(
+    final model = variables[id] ??= LevitReactiveModel(
       id: id,
       name: data['name'] as String? ?? '?',
       ownerId: data['ownerId'] as String?,
@@ -227,7 +228,7 @@ class StateSnapshot {
     }
     droppedHistoryEvents = state['droppedHistoryEvents'] as int? ?? 0;
     for (final s in state['scopes'] as List? ?? []) {
-      final scope = ScopeModel(
+      final scope = LevitScopeModel(
         id: s['id'] as int,
         name: s['name'] as String,
         parentScopeId: s['parentScopeId'] as int?,
@@ -236,20 +237,22 @@ class StateSnapshot {
       scopes[scope.id] = scope;
     }
     for (final d in state['dependencies'] as List? ?? []) {
-      final dep = DependencyModel(
+      final dep = LevitDependencyModel(
         scopeId: d['scopeId'] as int,
         key: d['key'] as String,
         isLazy: d['isLazy'] as bool,
         isFactory: d['isFactory'] as bool,
         isAsync: d['isAsync'] as bool,
-        status: DependencyStatus.values.byName(d['status'] as String),
-        type: DependencyType.values.byName(d['type'] as String? ?? 'other'),
+        status: LevitDependencyStatus.values.byName(d['status'] as String),
+        type: LevitDependencyType.values.byName(
+          d['type'] as String? ?? 'other',
+        ),
         value: d['value'] as String?,
       );
       dependencies['${dep.scopeId}:${dep.key}'] = dep;
     }
     for (final v in state['variables'] as List? ?? []) {
-      final model = ReactiveModel(
+      final model = LevitReactiveModel(
         id: v['id'] as int,
         name: v['name'] as String,
         ownerId: v['ownerId'] as String?,
@@ -266,9 +269,9 @@ class StateSnapshot {
 
 /// A serializable representation of a dependency injection scope.
 ///
-/// A [ScopeModel] describes a scope node (including its parent relationship) in
+/// A [LevitScopeModel] describes a scope node (including its parent relationship) in
 /// a transport-friendly form.
-class ScopeModel {
+class LevitScopeModel {
   /// The scope identifier.
   final int id;
 
@@ -281,7 +284,7 @@ class ScopeModel {
   /// Initialization and cleanup metadata from the latest progress event.
   /// Compact records expand on observation, preserving the same named fields.
   Map<String, dynamic> get progress =>
-      _progress ??= StateSnapshot._decodeScopeProgress(_wireProgress!);
+      _progress ??= LevitStateSnapshot._decodeScopeProgress(_wireProgress!);
   set progress(Map<String, dynamic> value) {
     _progress = value;
     _wireProgress = null;
@@ -295,7 +298,7 @@ class ScopeModel {
   /// [id] is the scope identifier.
   /// [name] is the scope name.
   /// [parentScopeId] is the parent scope identifier, if any.
-  ScopeModel({required this.id, required this.name, this.parentScopeId});
+  LevitScopeModel({required this.id, required this.name, this.parentScopeId});
 
   /// Converts this model to a JSON-serializable map.
   Map<String, dynamic> toJson() => {
@@ -307,16 +310,16 @@ class ScopeModel {
 }
 
 /// The lifecycle state of a dependency registration within a scope.
-enum DependencyStatus { registered, creating, active }
+enum LevitDependencyStatus { registered, creating, active }
 
 /// A coarse classification of a resolved dependency instance.
-enum DependencyType { controller, store, other }
+enum LevitDependencyType { controller, store, other }
 
 /// A serializable representation of a dependency registration.
 ///
-/// A [DependencyModel] describes the registration metadata and current instance
-/// state as observed by [StateSnapshot].
-class DependencyModel {
+/// A [LevitDependencyModel] describes the registration metadata and current instance
+/// state as observed by [LevitStateSnapshot].
+class LevitDependencyModel {
   /// The owning scope identifier.
   final int scopeId;
 
@@ -333,10 +336,10 @@ class DependencyModel {
   final bool isAsync;
 
   /// The current registration lifecycle status.
-  DependencyStatus status;
+  LevitDependencyStatus status;
 
   /// The detected instance classification.
-  DependencyType type;
+  LevitDependencyType type;
 
   /// A string representation of the instance, if available.
   String? value;
@@ -351,14 +354,14 @@ class DependencyModel {
   /// [status] is the current lifecycle status.
   /// [type] is the detected classification of the instance.
   /// [value] is a string representation of the instance, if present.
-  DependencyModel({
+  LevitDependencyModel({
     required this.scopeId,
     required this.key,
     required this.isLazy,
     required this.isFactory,
     required this.isAsync,
     required this.status,
-    this.type = DependencyType.other,
+    this.type = LevitDependencyType.other,
     this.value,
   });
 
@@ -377,9 +380,9 @@ class DependencyModel {
 
 /// A serializable representation of a reactive object and its metadata.
 ///
-/// A [ReactiveModel] describes a reactive variable, including its owner
+/// A [LevitReactiveModel] describes a reactive variable, including its owner
 /// information, listener count, and dependency graph links.
-class ReactiveModel {
+class LevitReactiveModel {
   /// The reactive identifier.
   final int id;
 
@@ -420,7 +423,7 @@ class ReactiveModel {
   /// [name] is the reactive name.
   /// [ownerId] is the owner identifier, if any.
   /// [isSensitive] indicates whether the reactive value is considered sensitive.
-  ReactiveModel({
+  LevitReactiveModel({
     required this.id,
     required this.name,
     this.ownerId,
@@ -465,8 +468,7 @@ LevitEventEnvelope _scrubEnvelopeForReactive(
 ) {
   final data = envelope.data;
   if (envelope.type == 'batch') {
-    final entries = data['entries'];
-    if (entries is! List) return envelope;
+    final entries = data['entries'] as List;
     var changed = false;
     final nextEntries = <Object?>[];
     for (final entry in entries) {

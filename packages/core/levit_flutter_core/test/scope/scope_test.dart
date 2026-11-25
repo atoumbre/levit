@@ -14,8 +14,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScope(
-            dependencyFactory: (s) =>
-                s.put<TestController>(() => TestController()),
+            configure: (s) => s.put<TestController>(() => TestController()),
             child: Builder(
               builder: (context) {
                 return Text(
@@ -58,7 +57,7 @@ void main() {
             valueListenable: showScope,
             builder: (context, show, __) => show
                 ? LScope(
-                    dependencyFactory: (s) {
+                    configure: (s) {
                       controller = TestController();
                       s.put<TestController>(() => controller!);
                     },
@@ -89,8 +88,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScope(
-            dependencyFactory: (s) =>
-                s.put<TestController>(() => TestController()),
+            configure: (s) => s.put<TestController>(() => TestController()),
             child: Builder(
               builder: (context) {
                 final controller = context.levit.find<TestController>();
@@ -111,7 +109,7 @@ void main() {
             children: [
               LScope(
                 name: 'firstScope',
-                dependencyFactory: (s) => s.put<TestController>(
+                configure: (s) => s.put<TestController>(
                   () => TestController()..count = 1,
                   tag: 'first',
                 ),
@@ -125,7 +123,7 @@ void main() {
               ),
               LScope(
                 name: 'secondScope',
-                dependencyFactory: (s) => s.put<TestController>(
+                configure: (s) => s.put<TestController>(
                   () => TestController()..count = 2,
                   tag: 'second',
                 ),
@@ -151,12 +149,10 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) =>
-                s.put<TestController>(() => TestController()),
+            configure: (s) => s.put<TestController>(() => TestController()),
             child: LScope(
               name: 'nested',
-              dependencyFactory: (s) =>
-                  s.put<TestController>(() => TestController()),
+              configure: (s) => s.put<TestController>(() => TestController()),
               child: Builder(
                 builder: (c) {
                   return Text(
@@ -177,8 +173,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) =>
-                s.put<TestController>(() => TestController()),
+            configure: (s) => s.put<TestController>(() => TestController()),
             child: Builder(
               builder: (c) {
                 final ctrl = TestController();
@@ -204,8 +199,7 @@ void main() {
             builder: (context, value, _) {
               return LScope(
                 key: const ValueKey('scope'),
-                dependencyFactory: (s) =>
-                    s.put<TestController>(() => TestController()),
+                configure: (s) => s.put<TestController>(() => TestController()),
                 child: Builder(
                   builder: (c) {
                     final registered = c.levit.isRegistered<TestController>();
@@ -232,7 +226,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScope(
-            dependencyFactory: (s) {
+            configure: (s) {
               s.put<TestController>(() => TestController()..count = 1);
               s.put<AnotherController>(
                 () => AnotherController()..name = 'Test',
@@ -257,10 +251,9 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) =>
-                s.put<TestController>(() => TestController()),
+            configure: (s) => s.put<TestController>(() => TestController()),
             child: LScope(
-              dependencyFactory: (s) {
+              configure: (s) {
                 s.put<TestController>(() => TestController());
               },
               child: Container(),
@@ -357,8 +350,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) =>
-                s.put(() => AnotherController()..name = 'Parent'),
+            configure: (s) => s.put(() => AnotherController()..name = 'Parent'),
             child: TestScopedView(),
           ),
         ),
@@ -388,7 +380,7 @@ class TestScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
-      dependencyFactory: (s) => s.put<TestController>(() => TestController()),
+      configure: (s) => s.put<TestController>(() => TestController()),
       resolver: (context) => context.levit.find<TestController>(),
       builder: (context, controller) => Text('Count: ${controller.count}'),
     );
@@ -403,7 +395,7 @@ class CaptureScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
-      dependencyFactory: (s) => s.put<TestController>(() => TestController()),
+      configure: (s) => s.put<TestController>(() => TestController()),
       resolver: (context) => context.levit.find<TestController>(),
       builder: (context, controller) {
         onController(controller);
@@ -419,7 +411,7 @@ class TaggedScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
-      dependencyFactory: (s) =>
+      configure: (s) =>
           s.put<TestController>(() => TestController(), tag: 'special'),
       resolver: (context) => context.levit.find<TestController>(tag: 'special'),
       builder: (context, controller) => Text('Tagged: ${controller.count}'),
@@ -435,7 +427,7 @@ class AutoWatchScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
-      dependencyFactory: (s) => s.put<TestController>(() => TestController()),
+      configure: (s) => s.put<TestController>(() => TestController()),
       resolver: (context) => context.levit.find<TestController>(),
       builder: (context, controller) {
         onController(controller);
@@ -454,7 +446,7 @@ class NoAutoWatchScopedView extends StatelessWidget {
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
       autoWatch: false,
-      dependencyFactory: (s) => s.put<TestController>(() => TestController()),
+      configure: (s) => s.put<TestController>(() => TestController()),
       resolver: (context) => context.levit.find<TestController>(),
       builder: (context, controller) {
         onController(controller);
@@ -470,7 +462,7 @@ class OuterScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
-      dependencyFactory: (s) =>
+      configure: (s) =>
           s.put<TestController>(() => TestController()..count = 1),
       resolver: (context) => context.levit.find<TestController>(),
       builder: (context, controller) =>
@@ -487,7 +479,7 @@ class InnerScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<AnotherController>(
-      dependencyFactory: (s) =>
+      configure: (s) =>
           s.put<AnotherController>(() => AnotherController()..name = '2'),
       resolver: (context) => context.levit.find<AnotherController>(),
       builder: (context, controller) =>

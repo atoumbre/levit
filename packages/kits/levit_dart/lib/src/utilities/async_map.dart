@@ -1,4 +1,4 @@
-part of '../../levit_dart.dart';
+part of '../kit_library.dart';
 
 /// One task execution owned by a keyed resource.
 class _AsyncProducer<T> extends LxFuture<T> {
@@ -126,10 +126,10 @@ final class LevitAsyncMap<K, T>
   final Duration staleTime, gracePeriod;
   final int maxInactiveEntries;
   final LevitRetryPolicy? retryPolicy;
-  final TaskCachePolicy<T>? Function(K)? cachePolicy;
+  final LevitTaskCachePolicy<T>? Function(K)? cachePolicy;
   final String? name;
   final String Function(K)? debugKey;
-  final _entries = Lx.createOwned(
+  final _entries = LxSpi.createOwned(
     () => LxMap<K, LevitAsyncMapEntry<T>>(null, null, true),
   );
   final _inactive = LinkedHashMap<K, LevitAsyncMapEntry<T>>();

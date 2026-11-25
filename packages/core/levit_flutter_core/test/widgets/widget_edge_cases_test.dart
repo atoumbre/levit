@@ -10,8 +10,7 @@ class _UpdateableScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<_TestService>(
-      dependencyFactory: (s) =>
-          s.put<_TestService>(() => _TestService(), tag: tag),
+      configure: (s) => s.put<_TestService>(() => _TestService(), tag: tag),
       resolver: (context) => context.levit.find<_TestService>(tag: tag),
       args: [tag],
       builder: (context, controller) => Text('Tag: $tag'),
@@ -58,7 +57,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScope(
-            dependencyFactory: (s) => s.put<_TestService>(() => _TestService()),
+            configure: (s) => s.put<_TestService>(() => _TestService()),
             child: Builder(
               builder: (context) {
                 context.levit.putOrFind<_TestService>(() => _TestService());
@@ -73,7 +72,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScope(
-            dependencyFactory: (s) => s.put<String>(() => 'dummy'),
+            configure: (s) => s.put<String>(() => 'dummy'),
             child: Builder(
               builder: (context) {
                 context.levit.putOrFind<_TestService>(() => _TestService());
@@ -88,7 +87,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScope(
-            dependencyFactory: (s) => s.put<String>(() => 'dummy'),
+            configure: (s) => s.put<String>(() => 'dummy'),
             child: Builder(
               builder: (context) {
                 final finder = context.levit.lazyPutAsync<_TestService>(
@@ -113,7 +112,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScope(
-            dependencyFactory: (s) => s.put<_TestService>(() => _TestService()),
+            configure: (s) => s.put<_TestService>(() => _TestService()),
             child: LView<_TestService>(
               resolver: (context) => context.levit.find<_TestService>(),
               builder: (context, controller) => const Text('Controller Found'),
@@ -166,7 +165,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: LScope(
-              dependencyFactory: (s) {
+              configure: (s) {
                 s.lazyPutAsync<_TestService>(() async {
                   await Future.delayed(const Duration(milliseconds: 100));
                   return _TestService();

@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 /// A reactive variable that holds a mutable value.
 ///
@@ -77,11 +77,11 @@ class LxState<T> extends LxBase<T> {
     _setValueInternal(reducer(value));
   }
 
-  /// Exposes this state as a read-only [LxReactive] interface.
+  /// Exposes this state as a read-only [LxReadable] interface.
   ///
   /// Useful for exposing public API from a controller while keeping the
   /// mutation logic private.
-  LxReadable<T> get asReactive => this;
+  LxReadable<T> get asReadable => this;
 }
 
 /// A reactive boolean with specialized toggling methods.
@@ -193,8 +193,8 @@ extension LxExtension<T> on T {
   LxVar<T> get lx => LxVar<T>(this);
 
   /// Wraps this value in a reactive [LxVar] with optional configuration.
-  LxVar<T> lxVar({String? named, bool isSensitive = false}) =>
-      LxVar<T>(this, name: named, isSensitive: isSensitive);
+  LxVar<T> lxVar({String? name, bool isSensitive = false}) =>
+      LxVar<T>(this, name: name, isSensitive: isSensitive);
 
   /// Wraps this value in a nullable reactive [LxVar].
   LxVar<T?> get lxNullable => LxVar<T?>(this);

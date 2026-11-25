@@ -16,7 +16,7 @@ Future<void> main({
 
   // Connect to LevitDevTools in debug mode
   if (kDebugMode && enableDevTools) {
-    final transport = WebSocketTransport.connect(
+    final transport = LevitWebSocketTransport.connect(
       const String.fromEnvironment(
         'LEVIT_INSPECTOR_URL',
         defaultValue: 'ws://127.0.0.1:9200/ws',
@@ -673,7 +673,7 @@ class _TopBar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => LScope(
-        dependencyFactory: (scope) =>
+        configure: (scope) =>
             scope.put<StatsController>(() => StatsController()),
         child: const _StatsDialog(),
       ),

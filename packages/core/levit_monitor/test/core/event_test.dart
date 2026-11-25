@@ -1,10 +1,10 @@
 import 'package:test/test.dart';
-import 'package:levit_monitor/levit_monitor.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
-  group('MonitorEvent Hierarchy', () {
-    test('ReactiveChangeEvent serializes common and specific fields', () {
+  group('LevitMonitorEvent Hierarchy', () {
+    test('LevitReactiveChangeEvent serializes common and specific fields', () {
       final reactive = 0.lx.named('counter');
       final change = LevitReactiveChange<int>(
         timestamp: DateTime.now(),
@@ -13,7 +13,7 @@ void main() {
         newValue: 1,
       );
 
-      final event = ReactiveChangeEvent(
+      final event = LevitReactiveChangeEvent(
         sessionId: 'test-session',
         reactive: reactive,
         change: change,
@@ -28,7 +28,7 @@ void main() {
       expect(json['isBatch'], false);
     });
 
-    test('ReactiveBatchEvent serializes all entries', () {
+    test('LevitReactiveBatchEvent serializes all entries', () {
       final r1 = 0.lx.named('r1');
       final r2 = 10.lx.named('r2');
 
@@ -53,7 +53,7 @@ void main() {
         ),
       ], batchId: 123);
 
-      final event = ReactiveBatchEvent(
+      final event = LevitReactiveBatchEvent(
         sessionId: 'test-session',
         change: batchChange,
       );
@@ -67,14 +67,14 @@ void main() {
       expect(json['entries'][1]['name'], 'r2');
     });
 
-    test('DependencyRegisterEvent serializes DI metadata', () {
+    test('LevitDependencyRegisterEvent serializes DI metadata', () {
       final info = LevitDependency(
         builder: () => 42,
         isLazy: true,
         permanent: true,
       );
 
-      final event = DependencyRegisterEvent(
+      final event = LevitDependencyRegisterEvent(
         sessionId: 'test-session',
         scopeId: 1,
         scopeName: 'root',
@@ -92,7 +92,7 @@ void main() {
     });
 
     test('_stringify handles null and unprintable objects', () {
-      final event = ReactiveInitEvent(
+      final event = LevitReactiveInitEvent(
         sessionId: 's',
         reactive: _Unprintable().lx.named('bad'),
       );
@@ -101,9 +101,12 @@ void main() {
       expect(json['initialValue'], '<unprintable>');
     });
 
-    test('ReactiveInitEvent with null value', () {
+    test('LevitReactiveInitEvent with null value', () {
       final reactive = null.lxNullable.named('nullable');
-      final event = ReactiveInitEvent(sessionId: 'test', reactive: reactive);
+      final event = LevitReactiveInitEvent(
+        sessionId: 'test',
+        reactive: reactive,
+      );
 
       final json = event.toJson();
       expect(json['type'], 'reactive_init');
@@ -111,21 +114,24 @@ void main() {
       expect(json['initialValue'], isNull);
     });
 
-    test('ReactiveDisposeEvent serialization', () {
+    test('LevitReactiveDisposeEvent serialization', () {
       final reactive = 0.lx.named('disposed');
-      final event = ReactiveDisposeEvent(sessionId: 'test', reactive: reactive);
+      final event = LevitReactiveDisposeEvent(
+        sessionId: 'test',
+        reactive: reactive,
+      );
 
       final json = event.toJson();
       expect(json['type'], 'reactive_dispose');
       expect(json['name'], 'disposed');
     });
 
-    test('ReactiveGraphChangeEvent serialization', () {
+    test('LevitReactiveGraphChangeEvent serialization', () {
       final dep1 = 0.lx.named('dep1');
       final dep2 = 1.lx.named('dep2');
       final computed = (() => dep1.value + dep2.value).lx.named('sum');
 
-      final event = ReactiveGraphChangeEvent(
+      final event = LevitReactiveGraphChangeEvent(
         sessionId: 'test',
         reactive: computed,
         dependencies: [dep1, dep2],
@@ -138,13 +144,13 @@ void main() {
       expect(json['dependencies'][1]['name'], 'dep2');
     });
 
-    test('DependencyResolveEvent with instance serialization', () {
+    test('LevitDependencyResolveEvent with instance serialization', () {
       final info = LevitDependency(
         instance: 'resolved_value',
         permanent: false,
       );
 
-      final event = DependencyResolveEvent(
+      final event = LevitDependencyResolveEvent(
         sessionId: 'test',
         scopeId: 1,
         scopeName: 'root',
@@ -160,10 +166,10 @@ void main() {
       expect(json['source'], 'find');
     });
 
-    test('DependencyDeleteEvent serialization', () {
+    test('LevitDependencyDeleteEvent serialization', () {
       final info = LevitDependency(instance: 'deleted', permanent: false);
 
-      final event = DependencyDeleteEvent(
+      final event = LevitDependencyDeleteEvent(
         sessionId: 'test',
         scopeId: 1,
         scopeName: 'root',
@@ -177,14 +183,14 @@ void main() {
       expect(json['source'], 'delete');
     });
 
-    test('DependencyInstanceCreateEvent serialization', () {
+    test('LevitDependencyInstanceCreateEvent serialization', () {
       final info = LevitDependency(
         builder: () => 'created',
         isLazy: false,
         permanent: false,
       );
 
-      final event = DependencyInstanceCreateEvent(
+      final event = LevitDependencyInstanceCreateEvent(
         sessionId: 'test',
         scopeId: 1,
         scopeName: 'root',
@@ -197,10 +203,10 @@ void main() {
       expect(json['isLazy'], false);
     });
 
-    test('DependencyInstanceReadyEvent serialization', () {
+    test('LevitDependencyInstanceReadyEvent serialization', () {
       final info = LevitDependency(instance: 'initialized', permanent: false);
 
-      final event = DependencyInstanceReadyEvent(
+      final event = LevitDependencyInstanceReadyEvent(
         sessionId: 'test',
         scopeId: 1,
         scopeName: 'root',
@@ -217,15 +223,18 @@ void main() {
 
     test('Event sequence numbers increment', () {
       final r1 = 0.lx;
-      final event1 = ReactiveInitEvent(sessionId: 'test', reactive: r1);
-      final event2 = ReactiveInitEvent(sessionId: 'test', reactive: r1);
+      final event1 = LevitReactiveInitEvent(sessionId: 'test', reactive: r1);
+      final event2 = LevitReactiveInitEvent(sessionId: 'test', reactive: r1);
 
       expect(event2.seq, greaterThan(event1.seq));
     });
 
     test('Event includes timestamp', () {
       final reactive = 0.lx;
-      final event = ReactiveInitEvent(sessionId: 'test', reactive: reactive);
+      final event = LevitReactiveInitEvent(
+        sessionId: 'test',
+        reactive: reactive,
+      );
       final json = event.toJson();
 
       expect(json['timestamp'], isA<String>());

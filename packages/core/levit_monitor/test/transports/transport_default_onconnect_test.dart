@@ -10,5 +10,5 @@ void main() {
 
 class StubTransport extends LevitTransport {
   @override
-  void send(MonitorEvent event) {}
+  void send(LevitMonitorEvent event) {}
 }

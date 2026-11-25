@@ -16,7 +16,7 @@ Open the printed URL. Attach each application before creating its feature scopes
 
 ```dart
 await LevitMonitor.attach(
-  transport: WebSocketTransport.connect(
+  transport: LevitWebSocketTransport.connect(
     'ws://127.0.0.1:9200/ws', appId: 'my-app'),
   historyCapacity: 1000,
   enableWorkerStatistics: true,

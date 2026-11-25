@@ -1,5 +1,6 @@
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 // Test controller to verify own integration
 class TestController extends LevitController {
@@ -37,7 +38,7 @@ void main() {
     final result = await engine.schedule(
       (_) async => 'success',
       id: 'task1',
-      priority: TaskPriority.normal,
+      priority: LevitTaskPriority.normal,
       retryPolicy: LevitRetryPolicy(
         shouldRetry: (error, stack) => true,
         maxRetries: 0,

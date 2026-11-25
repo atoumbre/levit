@@ -1,12 +1,12 @@
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:logger/logger.dart' hide LogEvent;
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class _FakeTransport extends LevitTransport {
-  final List<MonitorEvent> events = [];
+  final List<LevitMonitorEvent> events = [];
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     events.add(event);
   }
 
@@ -30,109 +30,145 @@ void main() {
       await LevitMonitor.detach();
     });
 
-    test('LevitMonitor.log emits LogEvent with correct severity', () async {
-      LevitMonitor.log('Hello Custom Log', level: Level.warning);
-      await Future.delayed(Duration.zero);
+    test(
+      'LevitMonitor.log emits LevitLogEvent with correct severity',
+      () async {
+        LevitMonitor.log('Hello Custom Log', level: LevitLogLevel.warning);
+        await Future.delayed(Duration.zero);
 
-      expect(transport.events.last, isA<FrozenMonitorEvent>());
-      final event = transport.events.last;
-      expect(event.toJson()['level'], Level.warning.name);
-      expect(event.toJson()['data'], 'Hello Custom Log');
-    });
-
-    test('Helper method logTrace emits LogEvent with Level.trace', () async {
-      LevitMonitor.logTrace('trace message');
-      await Future.delayed(Duration.zero);
-
-      expect(transport.events.last, isA<FrozenMonitorEvent>());
-      final event = transport.events.last;
-      expect(event.toJson()['level'], Level.trace.name);
-      expect(event.toJson()['data'], 'trace message');
-    });
-
-    test('Helper method logDebug emits LogEvent with Level.debug', () async {
-      LevitMonitor.logDebug('debug message');
-      await Future.delayed(Duration.zero);
-
-      expect(transport.events.last, isA<FrozenMonitorEvent>());
-      final event = transport.events.last;
-      expect(event.toJson()['level'], Level.debug.name);
-      expect(event.toJson()['data'], 'debug message');
-    });
-
-    test('Helper method logInfo emits LogEvent with Level.info', () async {
-      LevitMonitor.logInfo('info message');
-      await Future.delayed(Duration.zero);
-
-      expect(transport.events.last, isA<FrozenMonitorEvent>());
-      final event = transport.events.last;
-      expect(event.toJson()['level'], Level.info.name);
-      expect(event.toJson()['data'], 'info message');
-    });
+        expect(transport.events.last, isA<LevitFrozenMonitorEvent>());
+        final event = transport.events.last;
+        expect(event.toJson()['level'], LevitLogLevel.warning.name);
+        expect(event.toJson()['data'], 'Hello Custom Log');
+      },
+    );
 
     test(
-      'Helper method logWarning emits LogEvent with Level.warning',
+      'Helper method logTrace emits LevitLogEvent with LevitLogLevel.trace',
+      () async {
+        LevitMonitor.logTrace('trace message');
+        await Future.delayed(Duration.zero);
+
+        expect(transport.events.last, isA<LevitFrozenMonitorEvent>());
+        final event = transport.events.last;
+        expect(event.toJson()['level'], LevitLogLevel.trace.name);
+        expect(event.toJson()['data'], 'trace message');
+      },
+    );
+
+    test(
+      'Helper method logDebug emits LevitLogEvent with LevitLogLevel.debug',
+      () async {
+        LevitMonitor.logDebug('debug message');
+        await Future.delayed(Duration.zero);
+
+        expect(transport.events.last, isA<LevitFrozenMonitorEvent>());
+        final event = transport.events.last;
+        expect(event.toJson()['level'], LevitLogLevel.debug.name);
+        expect(event.toJson()['data'], 'debug message');
+      },
+    );
+
+    test(
+      'Helper method logInfo emits LevitLogEvent with LevitLogLevel.info',
+      () async {
+        LevitMonitor.logInfo('info message');
+        await Future.delayed(Duration.zero);
+
+        expect(transport.events.last, isA<LevitFrozenMonitorEvent>());
+        final event = transport.events.last;
+        expect(event.toJson()['level'], LevitLogLevel.info.name);
+        expect(event.toJson()['data'], 'info message');
+      },
+    );
+
+    test(
+      'Helper method logWarning emits LevitLogEvent with LevitLogLevel.warning',
       () async {
         LevitMonitor.logWarning('warning message');
         await Future.delayed(Duration.zero);
 
-        expect(transport.events.last, isA<FrozenMonitorEvent>());
+        expect(transport.events.last, isA<LevitFrozenMonitorEvent>());
         final event = transport.events.last;
-        expect(event.toJson()['level'], Level.warning.name);
+        expect(event.toJson()['level'], LevitLogLevel.warning.name);
         expect(event.toJson()['data'], 'warning message');
       },
     );
 
-    test('Helper method logError emits LogEvent with Level.error', () async {
-      LevitMonitor.logError('error message');
-      await Future.delayed(Duration.zero);
+    test(
+      'Helper method logError emits LevitLogEvent with LevitLogLevel.error',
+      () async {
+        LevitMonitor.logError('error message');
+        await Future.delayed(Duration.zero);
 
-      expect(transport.events.last, isA<FrozenMonitorEvent>());
-      final event = transport.events.last;
-      expect(event.toJson()['level'], Level.error.name);
-      expect(event.toJson()['data'], 'error message');
-    });
-
-    test('Helper method logFatal emits LogEvent with Level.fatal', () async {
-      final error = StateError('bad');
-      final stack = StackTrace.empty;
-      LevitMonitor.logFatal('fatal message', error: error, stackTrace: stack);
-      await Future.delayed(Duration.zero);
-
-      expect(transport.events.last, isA<FrozenMonitorEvent>());
-      final event = transport.events.last;
-      expect(event.toJson()['level'], Level.fatal.name);
-      expect(event.toJson()['data'], 'fatal message');
-      expect(event.toJson()['error'], error.toString());
-      expect(event.toJson()['stackTrace'], stack.toString());
-    });
+        expect(transport.events.last, isA<LevitFrozenMonitorEvent>());
+        final event = transport.events.last;
+        expect(event.toJson()['level'], LevitLogLevel.error.name);
+        expect(event.toJson()['data'], 'error message');
+      },
+    );
 
     test(
-      'Helper methods emit LogEvent with correct respective severities',
+      'Helper method logFatal emits LevitLogEvent with LevitLogLevel.fatal',
+      () async {
+        final error = StateError('bad');
+        final stack = StackTrace.empty;
+        LevitMonitor.logFatal('fatal message', error: error, stackTrace: stack);
+        await Future.delayed(Duration.zero);
+
+        expect(transport.events.last, isA<LevitFrozenMonitorEvent>());
+        final event = transport.events.last;
+        expect(event.toJson()['level'], LevitLogLevel.fatal.name);
+        expect(event.toJson()['data'], 'fatal message');
+        expect(event.toJson()['error'], error.toString());
+        expect(event.toJson()['stackTrace'], stack.toString());
+      },
+    );
+
+    test(
+      'Helper methods emit LevitLogEvent with correct respective severities',
       () async {
         LevitMonitor.logTrace('trace message');
         await Future.delayed(Duration.zero);
-        expect(transport.events.last.toJson()['level'], Level.trace.name);
+        expect(
+          transport.events.last.toJson()['level'],
+          LevitLogLevel.trace.name,
+        );
 
         LevitMonitor.logDebug('debug message');
         await Future.delayed(Duration.zero);
-        expect(transport.events.last.toJson()['level'], Level.debug.name);
+        expect(
+          transport.events.last.toJson()['level'],
+          LevitLogLevel.debug.name,
+        );
 
         LevitMonitor.logInfo('info message');
         await Future.delayed(Duration.zero);
-        expect(transport.events.last.toJson()['level'], Level.info.name);
+        expect(
+          transport.events.last.toJson()['level'],
+          LevitLogLevel.info.name,
+        );
 
         LevitMonitor.logWarning('warning message');
         await Future.delayed(Duration.zero);
-        expect(transport.events.last.toJson()['level'], Level.warning.name);
+        expect(
+          transport.events.last.toJson()['level'],
+          LevitLogLevel.warning.name,
+        );
 
         LevitMonitor.logError('error message');
         await Future.delayed(Duration.zero);
-        expect(transport.events.last.toJson()['level'], Level.error.name);
+        expect(
+          transport.events.last.toJson()['level'],
+          LevitLogLevel.error.name,
+        );
 
         LevitMonitor.logFatal('fatal message');
         await Future.delayed(Duration.zero);
-        expect(transport.events.last.toJson()['level'], Level.fatal.name);
+        expect(
+          transport.events.last.toJson()['level'],
+          LevitLogLevel.fatal.name,
+        );
       },
     );
 
@@ -194,7 +230,7 @@ void main() {
         final initialCount = transport.events.length;
 
         // Set level to warning
-        LevitMonitor.setLogLevel(Level.warning);
+        LevitMonitor.setLogLevel(LevitLogLevel.warning);
 
         // These should be completely dropped
         LevitMonitor.logTrace('trace');
@@ -211,22 +247,22 @@ void main() {
 
         expect(transport.events.length, initialCount + 3);
         final events = transport.events.sublist(initialCount);
-        expect(events[0].toJson()['level'], Level.warning.name);
-        expect(events[1].toJson()['level'], Level.error.name);
-        expect(events[2].toJson()['level'], Level.fatal.name);
+        expect(events[0].toJson()['level'], LevitLogLevel.warning.name);
+        expect(events[1].toJson()['level'], LevitLogLevel.error.name);
+        expect(events[2].toJson()['level'], LevitLogLevel.fatal.name);
 
         // Reset
-        LevitMonitor.setLogLevel(Level.all);
+        LevitMonitor.setLogLevel(LevitLogLevel.all);
       },
     );
 
     test('LevitMonitor.logLevel retrieves current configured log level', () {
-      LevitMonitor.setLogLevel(Level.error);
-      expect(LevitMonitor.logLevel, Level.error);
+      LevitMonitor.setLogLevel(LevitLogLevel.error);
+      expect(LevitMonitor.logLevel, LevitLogLevel.error);
 
       // Reset
-      LevitMonitor.setLogLevel(Level.all);
-      expect(LevitMonitor.logLevel, Level.all);
+      LevitMonitor.setLogLevel(LevitLogLevel.all);
+      expect(LevitMonitor.logLevel, LevitLogLevel.all);
     });
   });
 }

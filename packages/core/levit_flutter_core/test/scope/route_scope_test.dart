@@ -175,7 +175,7 @@ void main() {
           theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
             '/': (_) => LRouteScope(
-              dependencyFactory: (scope) {
+              configure: (scope) {
                 scope.put<_ClosingRouteController>(
                   () => _ClosingRouteController(onClosed: () => closeCount++),
                 );
@@ -218,7 +218,7 @@ void main() {
           theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
             '/': (_) => LAsyncRouteScope(
-              dependencyFactory: (scope) async {
+              configure: (scope) async {
                 await Future<void>.delayed(Duration.zero);
                 scope.put<TestController>(() => TestController()..count = 9);
               },
@@ -276,7 +276,7 @@ void main() {
                   ),
                 ),
                 LAsyncRouteScope(
-                  dependencyFactory: (_) async {
+                  configure: (_) async {
                     await Future<void>.delayed(Duration.zero);
                   },
                   loading: (context) => Text(
@@ -346,7 +346,7 @@ void main() {
           theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
             '/': (_) => LAsyncRouteScope(
-              dependencyFactory: (scope) async {
+              configure: (scope) async {
                 scope.put<_ClosingRouteController>(
                   () => _ClosingRouteController(onClosed: () => closeCount++),
                 );
@@ -459,7 +459,7 @@ class _AsyncHomeRoutePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LAsyncRouteScope(
-      dependencyFactory: (_) async {},
+      configure: (_) async {},
       child: Scaffold(
         body: Builder(
           builder: (context) {
@@ -489,7 +489,7 @@ class _AsyncDetailsRoutePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LAsyncRouteScope(
-      dependencyFactory: (_) async {},
+      configure: (_) async {},
       child: Scaffold(
         body: Builder(
           builder: (context) {

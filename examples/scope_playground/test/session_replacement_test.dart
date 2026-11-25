@@ -52,7 +52,7 @@ void main() {
           MaterialApp(
             home: LScope(
               lifecycle: lifecycle,
-              dependencyFactory: (scope) {
+              configure: (scope) {
                 expect(sessionLabel.findIn(scope), same(parent));
                 scope.applyOverrides([
                   sessionLabel.overrideWith((ref) {

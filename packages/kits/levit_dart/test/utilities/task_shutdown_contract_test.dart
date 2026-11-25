@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:levit_dart/levit_dart.dart';
 import 'package:test/test.dart';
+import 'package:levit_dart/tasks.dart';
 
 class Owner extends LevitController with LevitReactiveTasksMixin {}
 
@@ -13,12 +14,12 @@ class TasksFirstOwner extends LevitController
     with LevitReactiveTasksMixin, LevitTimeMixin {}
 
 class LoopFirstOwner extends LevitController
-    with LevitLoopExecutionMixin, LevitTasksMixin {}
+    with LevitLoopMixin, LevitTasksMixin {}
 
 class TasksBeforeLoopOwner extends LevitController
-    with LevitTasksMixin, LevitLoopExecutionMixin {}
+    with LevitTasksMixin, LevitLoopMixin {}
 
-class ProbeService implements StoppableService {
+class ProbeService implements LevitLoopService {
   bool stopped = false;
   @override
   final status = LxVar<LxStatus<dynamic>>(LxIdle());
@@ -85,7 +86,7 @@ void main() {
       'task draining composes with other resource mixins: $create',
       () async {
         final controller = create();
-        final service = controller is LevitLoopExecutionMixin
+        final service = controller is LevitLoopMixin
             ? controller.loopEngine.registerService('probe', ProbeService())
             : null;
         final timeOwner = controller is LevitTimeMixin ? controller : null;
@@ -93,8 +94,8 @@ void main() {
           duration: const Duration(hours: 1),
         );
         final engine = controller is LevitReactiveTasksMixin
-            ? controller.tasksEngine
-            : (controller as LevitTasksMixin).tasksEngine;
+            ? controller.taskEngine
+            : (controller as LevitTasksMixin).taskEngine;
         final release = Completer<void>();
         final started = Completer<void>();
         final result = engine.schedule((_) async {
@@ -120,7 +121,7 @@ void main() {
     () async {
       final scope = LevitScope.root();
       final owner = scope.put(PlainOwner.new);
-      final engine = owner.tasksEngine;
+      final engine = owner.taskEngine;
       final started = Completer<void>();
       final result = engine.schedule((task) async {
         started.complete();

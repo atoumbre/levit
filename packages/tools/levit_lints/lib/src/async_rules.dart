@@ -165,7 +165,7 @@ class _DiscardedFutureVisitor extends SimpleAstVisitor<void> {
       'LxBase': {'close'},
       'LxWorker': {'close'},
       'LxWorkerImpl': {'close'},
-      'StoppableService': {'stop'},
+      'LevitLoopService': {'stop'},
       'LevitLoopEngine': {'stopService', 'stopAllServices', 'dispose'},
       'LevitTaskEngine': {'dispose'},
       'LevitTaskGroup': {'dispose', 'drain'},

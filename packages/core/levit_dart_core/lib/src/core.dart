@@ -1,4 +1,4 @@
-part of '../levit_dart_core.dart';
+part of 'dart_core_library.dart';
 
 /// The central entry point for the Levit framework.
 ///
@@ -64,6 +64,14 @@ class Levit {
     return Lx.batchAsync(callback);
   }
 
+  /// Reads reactive state without subscribing an enclosing consumer.
+  static R untracked<R>(R Function() read) {
+    return Lx.untracked(read);
+  }
+
+  /// Whether the current execution context has an open reactive batch.
+  static bool get isBatching => Lx.isBatching;
+
   /// Bypasses all state middlewares for the duration of [action].
   ///
   /// Throws any exception thrown by [action].
@@ -81,20 +89,17 @@ class Levit {
     return Lx.containsMiddleware(middleware);
   }
 
-  /// Executes [fn] within a specific listener context.
-  ///
-  /// Used internally to attribute subscriptions to specific widgets or controllers.
-  ///
-  /// Returns the value returned by [fn].
-  ///
-  /// Throws any exception thrown by [fn].
-  static T runWithContext<T>(LxListenerContext context, T Function() fn) {
-    return Lx.runWithContext(context, fn);
+  /// Checks whether a state middleware [token] is currently registered.
+  static bool containsStateMiddlewareToken(Object token) {
+    return Lx.containsMiddlewareToken(token);
   }
 
   // ------------------------------------------------------------
   //    Levit API accessors
   // ------------------------------------------------------------
+
+  /// The currently active [LevitScope] for this execution zone, or the root scope.
+  static LevitScope get currentScope => Ls.currentScope;
 
   /// Instantiates and registers a dependency.
   ///
@@ -369,8 +374,8 @@ extension LxNamingExtension<R extends LxReactive> on R {
     return this;
   }
 
-  /// Links this reactive object to an owner ID.
-  R register(String ownerId) {
+  /// Associates this reactive object with an owner ID for diagnostics.
+  R ownedBy(String ownerId) {
     this.ownerId = ownerId;
     return this;
   }

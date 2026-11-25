@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 // Zone contexts can outlive their callback through escaped asynchronous work.
 // Closed contexts are skipped so late work never enters a flushed queue.
@@ -81,7 +81,7 @@ class _LevitReactiveCore {
     LevitReactiveChange change,
   ) {
     // Skip Zone lookup when batch middleware is not registered.
-    if (!LevitReactiveMiddleware.hasBatchMiddlewares) return;
+    if (!LevitReactiveMiddleware._hasBatchMiddlewares) return;
 
     var context = _currentBatch;
     while (context != null) {
@@ -192,7 +192,7 @@ class _LevitReactiveCore {
   /// Changes are collected and passed to middleware hooks.
   /// Returns the result of [callback], or throws if a middleware cancels.
   static R batch<R>(R Function() callback) {
-    if (!LevitReactiveMiddleware.hasBatchMiddlewares) {
+    if (!LevitReactiveMiddleware._hasBatchMiddlewares) {
       _batchDepth++;
       _updateFastPath();
       try {
@@ -271,7 +271,7 @@ class _LevitReactiveCore {
       }
     }
 
-    if (!LevitReactiveMiddleware.hasBatchMiddlewares) return execute();
+    if (!LevitReactiveMiddleware._hasBatchMiddlewares) return execute();
     final wrapped = _LevitReactiveMiddlewareChain.applyOnBatch(execute, change);
     return await (wrapped() as Future<dynamic>);
   }
@@ -401,7 +401,7 @@ class LevitReactiveNotifier {
     if (_disposed) return;
 
     // Listener middleware receives context for diagnostics/monitoring.
-    if (LevitReactiveMiddleware.hasListenerMiddlewares && this is LxReactive) {
+    if (LevitReactiveMiddleware._hasListenerMiddlewares && this is LxReactive) {
       _LevitReactiveMiddlewareChain.applyOnListenerAdd(
         this as LxReactive,
         _LevitReactiveCore.listenerContext,
@@ -433,7 +433,7 @@ class LevitReactiveNotifier {
     if (_disposed) return;
 
     // Listener middleware receives context for diagnostics/monitoring.
-    if (LevitReactiveMiddleware.hasListenerMiddlewares && this is LxReactive) {
+    if (LevitReactiveMiddleware._hasListenerMiddlewares && this is LxReactive) {
       _LevitReactiveMiddlewareChain.applyOnListenerRemove(
         this as LxReactive,
         _LevitReactiveCore.listenerContext,
@@ -467,7 +467,7 @@ class LevitReactiveNotifier {
     if (_singleListener != null &&
         _setListeners == null &&
         _LevitReactiveCore._fastPath) {
-      if (LevitReactiveMiddleware.hasErrorMiddlewares) {
+      if (LevitReactiveMiddleware._hasErrorMiddlewares) {
         try {
           _singleListener!();
         } catch (e, s) {
@@ -564,7 +564,7 @@ class LevitReactiveNotifier {
 
   void _notifyListeners() {
     if (_singleListener != null) {
-      if (!LevitReactiveMiddleware.hasErrorMiddlewares) {
+      if (!LevitReactiveMiddleware._hasErrorMiddlewares) {
         _singleListener!();
         return;
       }
@@ -593,7 +593,7 @@ class LevitReactiveNotifier {
     final length = snapshot.length;
 
     // Skip try/catch overhead when no reactive-error middleware is registered.
-    if (!LevitReactiveMiddleware.hasErrorMiddlewares) {
+    if (!LevitReactiveMiddleware._hasErrorMiddlewares) {
       for (var i = 0; i < length; i++) {
         if (_disposed) break;
         snapshot[i]();
@@ -633,10 +633,6 @@ class LevitReactiveNotifier {
     return _singleListener != null ||
         (_setListeners != null && _setListeners!.isNotEmpty);
   }
-
-  /// Set the depth (internal use only by computed values).
-  @visibleForTesting
-  set graphDepth(int value) => _graphDepth = value;
 }
 
 /// The primary implementation base for reactive objects.
@@ -674,7 +670,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   }) : _value = initial,
        _name = name,
        _isSensitive = isSensitive {
-    if (LevitReactiveMiddleware.hasInitMiddlewares) {
+    if (LevitReactiveMiddleware._hasInitMiddlewares) {
       _LevitReactiveMiddlewareChain.applyOnInit(this);
     }
   }
@@ -827,7 +823,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     observer.addNotifier(trackedNotifier);
 
     // Reactive graph reporting is opt-in to avoid overhead by default.
-    if (LevitReactiveMiddleware.hasGraphChangeMiddlewares) {
+    if (LevitReactiveMiddleware._hasGraphChangeMiddlewares) {
       observer.addReactive(trackedReactive);
     }
   }
@@ -839,11 +835,11 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   /// Internal setter for subclasses (Computed, etc.)
   void _setValueInternal(T val, {bool notifyListeners = true}) {
     final recordBatch =
-        LevitReactiveMiddleware.hasBatchMiddlewares &&
+        LevitReactiveMiddleware._hasBatchMiddlewares &&
         _LevitReactiveCore.isBatching;
     // Fast path bypasses middleware interception.
     if (LevitReactiveMiddleware.bypassMiddleware ||
-        (!LevitReactiveMiddleware.hasSetMiddlewares && !recordBatch)) {
+        (!LevitReactiveMiddleware._hasSetMiddlewares && !recordBatch)) {
       if (_isEqual(_value, val)) return;
       _value = val;
       _version++;
@@ -890,7 +886,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       }
     }
 
-    if (!LevitReactiveMiddleware.hasSetMiddlewares) {
+    if (!LevitReactiveMiddleware._hasSetMiddlewares) {
       performSet(val);
       return;
     }
@@ -970,7 +966,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
 
     try {
       if (LevitReactiveMiddleware.bypassMiddleware ||
-          !LevitReactiveMiddleware.hasDisposeMiddlewares) {
+          !LevitReactiveMiddleware._hasDisposeMiddlewares) {
         release();
       } else {
         _LevitReactiveMiddlewareChain.applyOnDispose(release, this)();
@@ -1007,11 +1003,11 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   void refresh() {
     if (isDisposed) return;
     final recordBatch =
-        LevitReactiveMiddleware.hasBatchMiddlewares &&
+        LevitReactiveMiddleware._hasBatchMiddlewares &&
         _LevitReactiveCore.isBatching;
     // Refresh fast path without middleware interception.
     if (LevitReactiveMiddleware.bypassMiddleware ||
-        (!LevitReactiveMiddleware.hasSetMiddlewares && !recordBatch)) {
+        (!LevitReactiveMiddleware._hasSetMiddlewares && !recordBatch)) {
       _controller?.add(_value);
       _publishMutation();
       return;
@@ -1042,7 +1038,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       }
     }
 
-    if (!LevitReactiveMiddleware.hasSetMiddlewares) {
+    if (!LevitReactiveMiddleware._hasSetMiddlewares) {
       performRefresh(_value);
       return;
     }

@@ -18,13 +18,13 @@ void main() {
       MaterialApp(
         home: LScope(
           lifecycle: outer,
-          dependencyFactory: (scope) {
+          configure: (scope) {
             parent = scope;
             first.findIn(scope);
           },
           child: LScope(
             lifecycle: lifecycle,
-            dependencyFactory: (scope) => scope.applyOverrides([
+            configure: (scope) => scope.applyOverrides([
               first.overrideWith((_) => 11),
               remote.overrideWith((_) async => 88),
             ]),
@@ -39,7 +39,7 @@ void main() {
                   remote,
                   localOnly: true,
                 );
-                resolvedSync = context.levit.findStoreAsync(second);
+                resolvedSync = Future.value(context.levit.findStore(second));
                 expect(context.levit.isStoreRegistered(first), isTrue);
                 expect(context.levit.isStoreInstantiated(first), isTrue);
                 expect(context.levit.isAsyncStoreInstantiated(remote), isTrue);

@@ -1,17 +1,17 @@
 import 'package:test/test.dart';
-import 'package:levit_monitor/levit_monitor.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
-  MonitorEvent createEvent([String sid = 's1']) => ScopeCreateEvent(
+  LevitMonitorEvent createEvent([String sid = 's1']) => LevitScopeCreateEvent(
     sessionId: sid,
     scopeId: 1,
     scopeName: 'test',
     parentScopeId: null,
   );
 
-  group('StateSnapshot Event Cache', () {
+  group('LevitStateSnapshot Event Cache', () {
     test('stores applied events', () {
-      final state = StateSnapshot(maxEvents: 5);
+      final state = LevitStateSnapshot(maxEvents: 5);
       final e1 = createEvent();
       final e2 = createEvent();
 
@@ -26,7 +26,7 @@ void main() {
     });
 
     test('respects maxEvents limit', () {
-      final state = StateSnapshot(maxEvents: 3);
+      final state = LevitStateSnapshot(maxEvents: 3);
       final events = List.generate(5, (_) => createEvent());
 
       for (final e in events) {
@@ -41,9 +41,9 @@ void main() {
       );
     });
 
-    test('ignores SnapshotEvent for cache', () {
-      final state = StateSnapshot(maxEvents: 10);
-      final snapshot = SnapshotEvent(sessionId: 's1', state: {});
+    test('ignores LevitSnapshotEvent for cache', () {
+      final state = LevitStateSnapshot(maxEvents: 10);
+      final snapshot = LevitSnapshotEvent(sessionId: 's1', state: {});
 
       state.applyEvent(snapshot);
 
@@ -51,28 +51,28 @@ void main() {
     });
 
     test('clears cache on restore', () {
-      final state = StateSnapshot(maxEvents: 10);
+      final state = LevitStateSnapshot(maxEvents: 10);
       state.applyEvent(createEvent());
       expect(state.events, isNotEmpty);
 
-      // _restore is called by SnapshotEvent (which also isn't cached itself)
+      // _restore is called by LevitSnapshotEvent (which also isn't cached itself)
       // But _restore logic explicitly clears the cache
-      state.applyEvent(SnapshotEvent(sessionId: 's1', state: {}));
+      state.applyEvent(LevitSnapshotEvent(sessionId: 's1', state: {}));
 
       expect(state.events, isEmpty);
     });
 
     test('handles batch events in cache', () {
       // Just verifying they are cached like any other event
-      final _ = StateSnapshot(maxEvents: 10);
+      final _ = LevitStateSnapshot(maxEvents: 10);
       // We don't need a valid batch for this test, just the type check
       // But we need to construct it validly if applyEvent processes it
       // Actually applyEvent will process it, so let's use a dummy batch event
       // However, creating a valid dummy might be tricky without deps.
-      // Let's use a generic generic MonitorEvent first to ensure base works,
+      // Let's use a generic generic LevitMonitorEvent first to ensure base works,
       // but the requirement implies all applied events.
-      // Let's rely on basic MonitorEvent for now as we tested batch logic separately.
-      // But we should verify ReactiveBatchEvent specifically is cached.
+      // Let's rely on basic LevitMonitorEvent for now as we tested batch logic separately.
+      // But we should verify LevitReactiveBatchEvent specifically is cached.
     });
   });
 }

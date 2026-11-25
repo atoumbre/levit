@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 enum _ReadKind { element, membership, length, empty, keys }
 
@@ -29,7 +29,8 @@ final class _EntryChannel extends LxBase<Object?> {
   void retireIfUnused() {
     if (isDisposed || hasListener) return;
     collection._removeChannel(this);
-    if (_controller == null && !LevitReactiveMiddleware.hasDisposeMiddlewares) {
+    if (_controller == null &&
+        !LevitReactiveMiddleware._hasDisposeMiddlewares) {
       dispose();
     } else {
       collection._retire(this);
@@ -39,10 +40,10 @@ final class _EntryChannel extends LxBase<Object?> {
   void publish(Object? snapshot) {
     _value = snapshot;
     final recordBatch =
-        LevitReactiveMiddleware.hasBatchMiddlewares &&
+        LevitReactiveMiddleware._hasBatchMiddlewares &&
         _LevitReactiveCore.isBatching;
     if (_controller == null &&
-        !LevitReactiveMiddleware.hasSetMiddlewares &&
+        !LevitReactiveMiddleware._hasSetMiddlewares &&
         !recordBatch) {
       _notifyListenersOnly();
     } else {
@@ -109,8 +110,8 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
 
   _EntryChannel _createChannel(_ReadKind kind, Object? address) {
     if (isDisposed) throw StateError('Collection is closed.');
-    final channel = LevitReactiveMiddleware.hasInitMiddlewares
-        ? Lx.createOwned(() => _EntryChannel(this, kind, address))
+    final channel = LevitReactiveMiddleware._hasInitMiddlewares
+        ? LxSpi.createOwned(() => _EntryChannel(this, kind, address))
         : _EntryChannel(this, kind, address);
     channel.ownerId = ownerId;
     if (!_hasChannels) {

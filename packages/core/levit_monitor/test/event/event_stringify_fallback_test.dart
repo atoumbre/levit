@@ -1,10 +1,10 @@
-import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
-  test('MonitorEvent stringify fallback', () {
+  test('LevitMonitorEvent stringify fallback', () {
     final unprintable = Unprintable();
-    final event = ReactiveErrorEvent(sessionId: 's', error: unprintable);
+    final event = LevitReactiveErrorEvent(sessionId: 's', error: unprintable);
     expect(event.toJson()['error'], contains('<unprintable>'));
   });
 }

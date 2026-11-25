@@ -4,12 +4,13 @@ import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:levit_monitor/spi.dart';
 
 class _RecordingTransport extends LevitTransport {
-  final List<MonitorEvent> events = [];
+  final List<LevitMonitorEvent> events = [];
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     events.add(event);
   }
 }
@@ -78,7 +79,7 @@ void main() {
     });
 
     test(
-      'LogEvent sensitive flag and nested sensitive reactives are redacted',
+      'LevitLogEvent sensitive flag and nested sensitive reactives are redacted',
       () async {
         final secret = LxVar<String>('bearer-xyz', isSensitive: true);
 
@@ -118,10 +119,10 @@ void main() {
     );
 
     test(
-      'ReactiveErrorEvent and listener events redact sensitive metadata',
+      'LevitReactiveErrorEvent and listener events redact sensitive metadata',
       () {
         final secret = LxVar<String>('pw', isSensitive: true);
-        final errorJson = ReactiveErrorEvent(
+        final errorJson = LevitReactiveErrorEvent(
           sessionId: 's1',
           reactive: secret,
           error: StateError('leak'),
@@ -131,7 +132,7 @@ void main() {
         expect(errorJson['error'], '***');
         expect(errorJson['stack'], '***');
 
-        final listenerJson = ReactiveListenerAddedEvent(
+        final listenerJson = LevitReactiveListenerAddedEvent(
           sessionId: 's1',
           reactive: secret,
           context: const LxListenerContext(
@@ -191,29 +192,29 @@ void main() {
     });
 
     test(
-      'WebSocketTransport blocks cleartext ws:// to non-loopback hosts by default',
+      'LevitWebSocketTransport blocks cleartext ws:// to non-loopback hosts by default',
       () async {
         expect(
-          () => WebSocketTransport.connect(
+          () => LevitWebSocketTransport.connect(
             'ws://remote.example.com:9200/ws',
             channelBuilder: (_) => _FakeChannel(),
           ),
           throwsArgumentError,
         );
 
-        final secure = WebSocketTransport.connect(
+        final secure = LevitWebSocketTransport.connect(
           'wss://remote.example.com:9200/ws',
           channelBuilder: (_) => _FakeChannel(),
         );
         await secure.close();
 
-        final loopback = WebSocketTransport.connect(
+        final loopback = LevitWebSocketTransport.connect(
           'ws://127.0.0.1:9200/ws',
           channelBuilder: (_) => _FakeChannel(),
         );
         await loopback.close();
 
-        final optedIn = WebSocketTransport.connect(
+        final optedIn = LevitWebSocketTransport.connect(
           'ws://remote.example.com:9200/ws',
           allowInsecureRemote: true,
           channelBuilder: (_) => _FakeChannel(),

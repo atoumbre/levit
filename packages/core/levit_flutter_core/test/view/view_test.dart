@@ -143,7 +143,7 @@ class TestScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
-      dependencyFactory: (s) => s.put<TestController>(() => TestController()),
+      configure: (s) => s.put<TestController>(() => TestController()),
       resolver: (context) => context.levit.find<TestController>(),
       builder: (context, controller) => Text('Count: ${controller.count}'),
     );
@@ -158,7 +158,7 @@ class MapScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
-      dependencyFactory: (s) => s.put<TestController>(() => TestController()),
+      configure: (s) => s.put<TestController>(() => TestController()),
       resolver: (context) => context.levit.find<TestController>(),
       builder: (context, controller) {
         onController(controller);
@@ -178,7 +178,7 @@ class OuterScopedView extends StatelessWidget {
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
       scopeName: 'OuterScope',
-      dependencyFactory: (s) =>
+      configure: (s) =>
           s.put<TestController>(() => TestController()..count = 1),
       resolver: (context) => context.levit.find<TestController>(),
       builder: (context, controller) =>
@@ -196,7 +196,7 @@ class InnerScopedView extends StatelessWidget {
   Widget build(BuildContext context) {
     return LScopedView<AnotherController>(
       scopeName: 'InnerScope',
-      dependencyFactory: (s) =>
+      configure: (s) =>
           s.put<AnotherController>(() => AnotherController()..name = '2'),
       resolver: (context) => context.levit.find<AnotherController>(),
       builder: (context, controller) =>

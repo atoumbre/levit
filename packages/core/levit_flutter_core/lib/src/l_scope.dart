@@ -8,13 +8,13 @@ part of '../levit_flutter_core.dart';
 /// // Example usage:
 /// ```dart
 /// LScope(
-///   dependencyFactory: (scope) => scope.put<MyController>(() => MyController()),
+///   configure: (scope) => scope.put<MyController>(() => MyController()),
 ///   child: const MyPage(),
 /// )
 /// ```
 class LScope extends StatefulWidget {
-  /// An optional factory to register dependencies in this scope.
-  final LScopeDependencyFactory? dependencyFactory;
+  /// Optional callback to register dependencies in this scope.
+  final void Function(LevitScope scope)? configure;
 
   /// The widget subtree that will have access to this scope.
   final Widget child;
@@ -44,7 +44,7 @@ class LScope extends StatefulWidget {
   /// Creates a widget-tree-bound dependency scope.
   const LScope({
     super.key,
-    this.dependencyFactory,
+    this.configure,
     required this.child,
     this.name,
     this.args,
@@ -67,7 +67,7 @@ class LScope extends StatefulWidget {
       key: key,
       name: name,
       args: args,
-      dependencyFactory: (s) {
+      configure: (s) {
         s.put<S>(builder, tag: tag, permanent: permanent);
       },
       child: child,
@@ -89,7 +89,7 @@ class LScope extends StatefulWidget {
       key: key,
       name: name,
       args: args,
-      dependencyFactory: (s) {
+      configure: (s) {
         s.lazyPut<S>(
           builder,
           tag: tag,
@@ -116,7 +116,7 @@ class LScope extends StatefulWidget {
       key: key,
       name: name,
       args: args,
-      dependencyFactory: (s) {
+      configure: (s) {
         s.lazyPutAsync<S>(
           builder,
           tag: tag,
@@ -190,12 +190,12 @@ class _LScopeState extends State<LScope> {
 
   void _configure() {
     _configured = true;
-    final factory = widget.dependencyFactory;
+    final configure = widget.configure;
     unawaited(
       _lifecycle.replace(
         parent: _parent!,
         name: widget.name ?? _uniqueScopeName(widget, this),
-        initialize: (scope) => factory?.call(scope),
+        initialize: (scope) => configure?.call(scope),
       ),
     );
   }

@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_reactive/spi.dart';
 
 class DisposeHook extends LevitReactiveMiddleware {
   DisposeHook(this.action);
   final void Function(void Function(), LxReactive) action;
   @override
-  LxOnDispose get onDispose =>
+  LevitReactiveOnDispose get onDispose =>
       (next, reactive) =>
           () => action(next, reactive);
 }
@@ -20,7 +21,7 @@ class ObservationHook extends LevitReactiveMiddleware
   void onReactiveMetadata(LxReactive reactive) =>
       metadata.add((reactive.name, reactive.ownerId, reactive.isSensitive));
   @override
-  LxOnSet get onSet =>
+  LevitReactiveOnSet get onSet =>
       (next, reactive, change) => (value) {
         changes.add(change);
         next(value);

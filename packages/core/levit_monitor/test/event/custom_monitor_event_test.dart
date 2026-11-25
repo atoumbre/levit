@@ -1,17 +1,17 @@
 import 'dart:async';
 
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:logger/logger.dart' hide LogEvent;
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class _CaptureTransport extends LevitTransport {
-  final events = <MonitorEvent>[];
+  final events = <LevitMonitorEvent>[];
 
   @override
   Stream<void> get onConnect => const Stream<void>.empty();
 
   @override
-  void send(MonitorEvent event) => events.add(event);
+  void send(LevitMonitorEvent event) => events.add(event);
 
   @override
   Future<void> close() async {}
@@ -31,11 +31,11 @@ void main() {
 
   test('custom event preserves safe structured attributes', () {
     final timestamp = DateTime.utc(2026, 1, 2);
-    final event = CustomMonitorEvent(
+    final event = LevitCustomMonitorEvent(
       sessionId: 'session',
       namespace: 'levit.task',
       name: 'finished',
-      level: Level.debug,
+      level: LevitLogLevel.debug,
       attributes: {
         'category': 'sync',
         'attempt': 2,
@@ -62,7 +62,7 @@ void main() {
 
   test('sensitive custom event redacts attributes and errors', () {
     LevitMonitor.setObfuscator((_) => '<redacted>');
-    final event = CustomMonitorEvent(
+    final event = LevitCustomMonitorEvent(
       sessionId: 'session',
       namespace: 'levit.task',
       name: 'failed',
@@ -117,11 +117,15 @@ void main() {
 
   test('custom event validates stable names', () {
     expect(
-      () => CustomMonitorEvent(sessionId: 's', namespace: ' ', name: 'event'),
+      () => LevitCustomMonitorEvent(
+        sessionId: 's',
+        namespace: ' ',
+        name: 'event',
+      ),
       throwsArgumentError,
     );
     expect(
-      () => CustomMonitorEvent(sessionId: 's', namespace: 'app', name: ''),
+      () => LevitCustomMonitorEvent(sessionId: 's', namespace: 'app', name: ''),
       throwsArgumentError,
     );
   });

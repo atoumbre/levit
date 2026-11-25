@@ -1,12 +1,13 @@
 import 'package:levit_reactive/levit_reactive.dart';
 import 'package:test/test.dart';
+import 'package:levit_reactive/spi.dart';
 
 class TestRejectMiddleware extends LevitReactiveMiddleware {
   @override
-  LxOnSet? get onSet =>
+  LevitReactiveOnSet? get onSet =>
       (next, reactive, change) => (value) {};
   @override
-  LxOnBatch? get onBatch =>
+  LevitReactiveOnBatch? get onBatch =>
       (next, change) =>
           () => throw StateError('Batch rejected');
 }
@@ -14,7 +15,7 @@ class TestRejectMiddleware extends LevitReactiveMiddleware {
 class TestSimpleMiddleware extends LevitReactiveMiddleware {
   final List<LevitReactiveChange> changes = [];
   @override
-  LxOnSet? get onSet =>
+  LevitReactiveOnSet? get onSet =>
       (next, reactive, change) => (value) {
         next(value);
         changes.add(change);

@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor_io.dart';
-import 'package:logger/logger.dart' hide LogEvent;
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
-  group('FileTransport', () {
+  group('LevitFileTransport', () {
     late Directory tempDir;
     late String filePath;
 
@@ -20,10 +20,10 @@ void main() {
       await tempDir.delete(recursive: true);
     });
 
-    test('writes DependencyRegisterEvent to file with category', () async {
-      final transport = FileTransport(filePath);
+    test('writes LevitDependencyRegisterEvent to file with category', () async {
+      final transport = LevitFileTransport(filePath);
       final info = LevitDependency(builder: () => 42);
-      final event = DependencyRegisterEvent(
+      final event = LevitDependencyRegisterEvent(
         sessionId: 's1',
         scopeId: 1,
         scopeName: 'root',
@@ -47,8 +47,8 @@ void main() {
       expect(json['scopeName'], 'root');
     });
 
-    test('writes ReactiveChangeEvent to file with category', () async {
-      final transport = FileTransport(filePath);
+    test('writes LevitReactiveChangeEvent to file with category', () async {
+      final transport = LevitFileTransport(filePath);
       final reactive = 10.lx.named('rx');
       final change = LevitReactiveChange(
         timestamp: DateTime.now(),
@@ -56,7 +56,7 @@ void main() {
         oldValue: 10,
         newValue: 11,
       );
-      final event = ReactiveChangeEvent(
+      final event = LevitReactiveChangeEvent(
         sessionId: 's1',
         reactive: reactive,
         change: change,
@@ -77,11 +77,11 @@ void main() {
       expect(json['newValue'], '11');
     });
 
-    test('writes LogEvent to file with correct category', () async {
-      final transport = FileTransport(filePath);
-      final event = LogEvent(
+    test('writes LevitLogEvent to file with correct category', () async {
+      final transport = LevitFileTransport(filePath);
+      final event = LevitLogEvent(
         sessionId: 's1',
-        level: Level.info,
+        level: LevitLogLevel.info,
         data: 'test log',
       );
 
@@ -102,18 +102,22 @@ void main() {
     });
 
     test('close releases resources', () async {
-      final transport = FileTransport(filePath);
+      final transport = LevitFileTransport(filePath);
       await transport.close();
     });
 
     test(
       'failed IO is reported after idempotent close attempts cleanup',
       () async {
-        final transport = FileTransport(
+        final transport = LevitFileTransport(
           tempDir.path,
         ); // A directory cannot be opened as a file.
         transport.send(
-          LogEvent(sessionId: 'io', level: Level.info, data: 'write'),
+          LevitLogEvent(
+            sessionId: 'io',
+            level: LevitLogLevel.info,
+            data: 'write',
+          ),
         );
         await expectLater(
           transport.flush(),
@@ -124,7 +128,11 @@ void main() {
         await expectLater(closing, throwsA(isA<LevitMonitorException>()));
         expect(
           () => transport.send(
-            LogEvent(sessionId: 'io', level: Level.info, data: 'late'),
+            LevitLogEvent(
+              sessionId: 'io',
+              level: LevitLogLevel.info,
+              data: 'late',
+            ),
           ),
           throwsStateError,
         );

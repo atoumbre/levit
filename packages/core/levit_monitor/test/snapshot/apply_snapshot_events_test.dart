@@ -1,14 +1,14 @@
-import 'package:levit_monitor/levit_monitor.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_scope/levit_scope.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class FakeLevitStoreInstance {}
 
 void main() {
   group('Snapshot dependency type reconstruction', () {
     test('snapshot events restore controller dependency types', () {
-      final snapshot = StateSnapshot();
+      final snapshot = LevitStateSnapshot();
       final data = {
         'scopes': [
           {'id': 1, 'name': 'root'},
@@ -28,21 +28,21 @@ void main() {
         'variables': [],
       };
 
-      snapshot.applyEvent(SnapshotEvent(sessionId: 'abc', state: data));
+      snapshot.applyEvent(LevitSnapshotEvent(sessionId: 'abc', state: data));
 
       final dep = snapshot.dependencies['1:MyService']!;
-      expect(dep.type, DependencyType.controller);
+      expect(dep.type, LevitDependencyType.controller);
     });
 
     test('instance-ready events classify store dependencies', () {
-      final snapshot = StateSnapshot();
+      final snapshot = LevitStateSnapshot();
       final instance = FakeLevitStoreInstance();
 
       final sid = 'test-session';
       final info = LevitDependency(isLazy: false, isFactory: false);
 
       snapshot.applyEvent(
-        DependencyRegisterEvent(
+        LevitDependencyRegisterEvent(
           sessionId: sid,
           scopeId: 1,
           scopeName: 's1',
@@ -53,7 +53,7 @@ void main() {
       );
 
       snapshot.applyEvent(
-        DependencyInstanceReadyEvent(
+        LevitDependencyInstanceReadyEvent(
           sessionId: sid,
           scopeId: 1,
           scopeName: 's1',
@@ -64,7 +64,7 @@ void main() {
       );
 
       final dep = snapshot.dependencies['1:MyState']!;
-      expect(dep.type, DependencyType.store);
+      expect(dep.type, LevitDependencyType.store);
     });
   });
 }

@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'package:levit_reactive/levit_reactive.dart';
 import '../helpers.dart';
+import 'package:levit_reactive/spi.dart';
 
 void main() {
   group('LxProxy', () {
@@ -8,9 +9,9 @@ void main() {
       final count = 0.lx;
       final observer = MockObserver();
 
-      Lx.proxy = observer;
+      LxSpi.proxy = observer;
       final _ = count.value; // Read triggers registration
-      Lx.proxy = null;
+      LxSpi.proxy = null;
 
       expect(observer.notifiers, hasLength(1));
     });
@@ -25,12 +26,12 @@ void main() {
       expect(observer.notifiers, isEmpty);
 
       // Read with proxy
-      Lx.proxy = observer;
+      LxSpi.proxy = observer;
       // ignore: unused_local_variable
       final val1 = count.value;
       // ignore: unused_local_variable
       final val2 = name.value;
-      Lx.proxy = null;
+      LxSpi.proxy = null;
 
       expect(observer.notifiers, hasLength(2));
     });

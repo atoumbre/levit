@@ -1,4 +1,4 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 /// Determines what an [LxStream] does when its current source completes.
 enum LxStreamCompletionPolicy {

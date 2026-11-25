@@ -1,17 +1,17 @@
-part of '../levit_reactive.dart';
+part of 'reactive_library.dart';
 
 /// The global entry point for the Levit reactive engine.
 ///
 /// [Lx] provides static access to core functionality, including configuration,
 /// dependency tracking, and batching.
 class Lx {
-  /// Reads implementation state without subscribing an enclosing consumer.
+  /// Reads reactive state without subscribing an enclosing consumer.
   static R untracked<R>(R Function() read) {
-    final previous = proxy;
+    final previous = _LevitReactiveCore.proxy;
     if (previous == null && _LevitReactiveCore._asyncZoneDepth == 0) {
       return read();
     }
-    proxy = null;
+    _LevitReactiveCore.proxy = null;
     try {
       if (_LevitReactiveCore._asyncZoneDepth != 0) {
         return runZoned(
@@ -21,51 +21,8 @@ class Lx {
       }
       return read();
     } finally {
-      proxy = previous;
+      _LevitReactiveCore.proxy = previous;
     }
-  }
-
-  static List<(LxReactive, void Function())>? _construction;
-
-  /// Runs a synchronous factory whose returned object has an explicit owner.
-  /// Dependency capture still receives independent reactive allocations.
-  static R createOwned<R>(R Function() create) {
-    final parent = _construction;
-    final captured = <(LxReactive, void Function())>[];
-    _construction = captured;
-    Object? result;
-    try {
-      final created = create();
-      result = created;
-      return created;
-    } finally {
-      _construction = parent;
-      for (final item in captured) {
-        if (!identical(item.$1, result)) {
-          if (parent == null) {
-            item.$2();
-          } else {
-            parent.add(item);
-          }
-        }
-      }
-    }
-  }
-
-  /// Framework hook for automatic ownership capture during [createOwned].
-  static bool deferAutoLink(LxReactive reactive, void Function() capture) {
-    final frame = _construction;
-    if (frame == null) return false;
-    frame.add((reactive, capture));
-    return true;
-  }
-
-  /// The active observer capturing dependencies.
-  static LevitReactiveObserver? get proxy => _LevitReactiveCore.proxy;
-
-  /// Sets the active observer.
-  static set proxy(LevitReactiveObserver? value) {
-    _LevitReactiveCore.proxy = value;
   }
 
   /// Whether to capture stack traces on state changes (performance intensive).
@@ -79,7 +36,7 @@ class Lx {
 
   /// Global flag to enable or disable performance monitoring for all [LxWorker] instances.
   ///
-  /// When `true` (default), watchers track execution counts and durations.
+  /// When `true`, watchers track execution counts and durations.
   static bool get enableWatchMonitoring => _enableWatchMonitoring;
 
   static set enableWatchMonitoring(bool value) {
@@ -148,8 +105,62 @@ class Lx {
 
   /// Returns `true` if the current execution context has an open batch.
   static bool get isBatching => _LevitReactiveCore.isBatching;
+}
 
-  /// The context is passed to [LevitReactiveMiddleware.startedListening]
+/// Low-level runtime hooks exposed via `package:levit_reactive/spi.dart`.
+abstract final class LxSpi {
+  static List<(LxReactive, void Function())>? _construction;
+
+  /// Runs a synchronous factory whose returned object has an explicit owner.
+  /// Dependency capture still receives independent reactive allocations.
+  static R createOwned<R>(R Function() create) {
+    final parent = _construction;
+    final captured = <(LxReactive, void Function())>[];
+    _construction = captured;
+    Object? result;
+    try {
+      final created = create();
+      result = created;
+      return created;
+    } finally {
+      _construction = parent;
+      for (final item in captured) {
+        if (!identical(item.$1, result)) {
+          if (parent == null) {
+            item.$2();
+          } else {
+            parent.add(item);
+          }
+        }
+      }
+    }
+  }
+
+  /// Framework hook for automatic ownership capture during [createOwned].
+  static bool deferAutoLink(LxReactive reactive, void Function() capture) {
+    final frame = _construction;
+    if (frame == null) return false;
+    frame.add((reactive, capture));
+    return true;
+  }
+
+  /// The active observer capturing dependencies.
+  static LevitReactiveObserver? get proxy => _LevitReactiveCore.proxy;
+
+  /// Sets the active observer.
+  static set proxy(LevitReactiveObserver? value) {
+    _LevitReactiveCore.proxy = value;
+  }
+
+  /// Whether any registered reactive middleware implements `onInit`.
+  static bool get hasInitMiddlewares =>
+      LevitReactiveMiddleware._hasInitMiddlewares;
+
+  /// Whether any registered reactive middleware tracks listener activity.
+  static bool get hasListenerMiddlewares =>
+      LevitReactiveMiddleware._hasListenerMiddlewares;
+
+  /// The context passed to [LevitReactiveMiddleware.startedListening]
   /// and [LevitReactiveMiddleware.stoppedListening].
   static T runWithContext<T>(LxListenerContext context, T Function() fn) {
     return _LevitReactiveCore.runWithContext(context, fn);
@@ -175,20 +186,22 @@ class Lx {
     }
   }
 
-  /// Internal: Enters an asynchronous tracking scope.
-  @visibleForTesting
+  /// Enters an asynchronous tracking scope.
   static void enterAsyncScope() {
     _LevitReactiveCore._enterAsyncScope();
   }
 
-  /// Internal: Exits an asynchronous tracking scope.
-  @visibleForTesting
+  /// Exits an asynchronous tracking scope.
   static void exitAsyncScope() {
     _LevitReactiveCore._exitAsyncScope();
   }
 
-  /// Internal: Zone key for identifying the active async computed tracker.
-  @visibleForTesting
+  /// Zone key for identifying the active async computed tracker.
   static Object get asyncComputedTrackerZoneKey =>
       _LevitReactiveCore.asyncComputedTrackerZoneKey;
+
+  /// Overrides the dependency graph depth on [notifier] for internal testing.
+  static void setGraphDepth(LevitReactiveNotifier notifier, int value) {
+    notifier._graphDepth = value;
+  }
 }

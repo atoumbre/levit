@@ -1,6 +1,7 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 void main() {
   group('LevitMonitorMiddleware close()', () {
@@ -59,7 +60,7 @@ class TestTransport extends LevitTransport {
   bool closeCalled = false;
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     if (!closeCalled) {
       events.add(event);
     }

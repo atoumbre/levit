@@ -2,18 +2,18 @@ import 'dart:convert';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:logger/logger.dart' show Level;
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
-class _WireTimestamp extends LogEvent {
-  _WireTimestamp() : super(sessionId: 'custom', level: Level.info);
+class _WireTimestamp extends LevitLogEvent {
+  _WireTimestamp() : super(sessionId: 'custom', level: LevitLogLevel.info);
   @override
   Map<String, dynamic> toJson() => super.toJson()
     ..['timestamp'] = '2026-01-02T03:04:05.123456Z'
     ..['category'] = 'overridden';
 }
 
-class _CustomChange extends ReactiveChangeEvent {
+class _CustomChange extends LevitReactiveChangeEvent {
   _CustomChange({required super.reactive, required super.change})
     : super(sessionId: 'custom');
   @override
@@ -33,7 +33,7 @@ void main() {
           oldValue: null,
           newValue: 'secret "quoted"',
         );
-        final event = ReactiveChangeEvent(
+        final event = LevitReactiveChangeEvent(
           sessionId: 'session',
           reactive: source,
           change: change,
@@ -103,7 +103,10 @@ void main() {
   });
 
   test('captured timestamps retain precision and custom serialization', () {
-    final ordinary = LogEvent(sessionId: 'ordinary', level: Level.info);
+    final ordinary = LevitLogEvent(
+      sessionId: 'ordinary',
+      level: LevitLogLevel.info,
+    );
     final frozen = ordinary.freeze();
     expect(frozen.timestamp, same(ordinary.timestamp));
     expect(

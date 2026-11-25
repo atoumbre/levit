@@ -1,4 +1,4 @@
-part of '../../levit_dart.dart';
+part of '../kit_library.dart';
 
 /// A standalone engine for named, cancellable asynchronous work.
 ///
@@ -31,13 +31,13 @@ class LevitTaskEngine
   int get runningCount => _activeExecutions.length;
   int _priorityCursor = 0;
   static const _priorityCycle = [
-    TaskPriority.high,
-    TaskPriority.high,
-    TaskPriority.high,
-    TaskPriority.high,
-    TaskPriority.normal,
-    TaskPriority.normal,
-    TaskPriority.low,
+    LevitTaskPriority.high,
+    LevitTaskPriority.high,
+    LevitTaskPriority.high,
+    LevitTaskPriority.high,
+    LevitTaskPriority.normal,
+    LevitTaskPriority.normal,
+    LevitTaskPriority.low,
   ];
 
   void _notifyTaskTree() {
@@ -100,7 +100,7 @@ class LevitTaskEngine
     this.onTaskEvent,
     this.ownerPath = '?',
   }) : _maxConcurrent = maxConcurrent,
-       cacheProvider = cacheProvider ?? InMemoryTaskCacheProvider() {
+       cacheProvider = cacheProvider ?? LevitTaskCacheProvider.inMemory() {
     if (maxConcurrent < 1) {
       throw RangeError.range(maxConcurrent, 1, null, 'maxConcurrent');
     }
@@ -148,13 +148,13 @@ class LevitTaskEngine
   Future<T> schedule<T>(
     FutureOr<T> Function(LevitTaskContext context) task, {
     String? id,
-    TaskPriority priority = TaskPriority.normal,
-    TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitTaskConflictPolicy conflictPolicy = LevitTaskConflictPolicy.reject,
     LevitRetryPolicy? retryPolicy,
     LevitTaskGroup? group,
     DateTime? deadline,
     void Function(Object, StackTrace)? onError,
-    TaskCachePolicy<T>? cachePolicy,
+    LevitTaskCachePolicy<T>? cachePolicy,
     void Function()? onStart,
     void Function(T result)? onSuccess,
     void Function(double progress)? onProgress,
@@ -187,13 +187,13 @@ class LevitTaskEngine
   LevitTaskExecution<T> submit<T>(
     FutureOr<T> Function(LevitTaskContext context) task, {
     String? id,
-    TaskPriority priority = TaskPriority.normal,
-    TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitTaskConflictPolicy conflictPolicy = LevitTaskConflictPolicy.reject,
     LevitRetryPolicy? retryPolicy,
     LevitTaskGroup? group,
     DateTime? deadline,
     void Function(Object, StackTrace)? onError,
-    TaskCachePolicy<T>? cachePolicy,
+    LevitTaskCachePolicy<T>? cachePolicy,
     void Function()? onStart,
     void Function(T result)? onSuccess,
     void Function(double progress)? onProgress,
@@ -242,13 +242,13 @@ class LevitTaskEngine
     LevitIsolateTask<I, T> task,
     I input, {
     String? id,
-    TaskPriority priority = TaskPriority.normal,
-    TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitTaskConflictPolicy conflictPolicy = LevitTaskConflictPolicy.reject,
     LevitRetryPolicy? retryPolicy,
     LevitTaskGroup? group,
     DateTime? deadline,
     void Function(Object, StackTrace)? onError,
-    TaskCachePolicy<T>? cachePolicy,
+    LevitTaskCachePolicy<T>? cachePolicy,
     void Function()? onStart,
     void Function(T result)? onSuccess,
     void Function(double progress)? onProgress,
@@ -283,13 +283,13 @@ class LevitTaskEngine
     LevitIsolateTask<I, T> task,
     I input, {
     String? id,
-    TaskPriority priority = TaskPriority.normal,
-    TaskConflictPolicy conflictPolicy = TaskConflictPolicy.reject,
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitTaskConflictPolicy conflictPolicy = LevitTaskConflictPolicy.reject,
     LevitRetryPolicy? retryPolicy,
     LevitTaskGroup? group,
     DateTime? deadline,
     void Function(Object, StackTrace)? onError,
-    TaskCachePolicy<T>? cachePolicy,
+    LevitTaskCachePolicy<T>? cachePolicy,
     void Function()? onStart,
     void Function(T result)? onSuccess,
     void Function(double progress)? onProgress,
@@ -343,7 +343,7 @@ class LevitTaskEngine
   LevitTaskExecution<T> _submitConfig<T>({
     required String taskId,
     required _TaskExecutionConfig config,
-    required TaskConflictPolicy conflictPolicy,
+    required LevitTaskConflictPolicy conflictPolicy,
     void Function(_TaskExecution execution)? captureExecution,
   }) {
     // Root work needs no composite identity. Child keys are typed records, so
@@ -356,7 +356,7 @@ class LevitTaskEngine
 
     if (existing != null) {
       switch (conflictPolicy) {
-        case TaskConflictPolicy.reject:
+        case LevitTaskConflictPolicy.reject:
           final executionId = _generateExecutionId();
           final now = DateTime.now();
           _emitTaskEvent(
@@ -375,10 +375,10 @@ class LevitTaskEngine
               runsInIsolate: config.runsInIsolate,
             ),
           );
-          throw TaskConflictException(taskId);
-        case TaskConflictPolicy.join:
+          throw LevitTaskConflictException(taskId);
+        case LevitTaskConflictPolicy.join:
           return _handleFor<T>(existing, LevitTaskSubmissionDisposition.joined);
-        case TaskConflictPolicy.drop:
+        case LevitTaskConflictPolicy.drop:
           final executionId = _generateExecutionId();
           final now = DateTime.now();
           _emitTaskEvent(
@@ -393,7 +393,7 @@ class LevitTaskEngine
               finishedAt: now,
               queueDuration: Duration.zero,
               runDuration: Duration.zero,
-              skipReason: TaskSkipReason.dropped,
+              skipReason: LevitTaskSkipReason.dropped,
               outcome: LevitTaskOutcome.dropped,
               runsInIsolate: config.runsInIsolate,
             ),
@@ -405,7 +405,7 @@ class LevitTaskEngine
             result: Future<T>.error(LevitTaskDroppedException(taskId)),
             cancel: () {},
           );
-        case TaskConflictPolicy.restart:
+        case LevitTaskConflictPolicy.restart:
           final freed = group!.outstanding
               .where((item) => item.state == _TaskExecutionState.queued)
               .length;
@@ -414,9 +414,9 @@ class LevitTaskEngine
           }
           _supersedeGroup(group);
           group = null;
-        case TaskConflictPolicy.enqueue:
+        case LevitTaskConflictPolicy.enqueue:
           break;
-        case TaskConflictPolicy.coalesceLatest:
+        case LevitTaskConflictPolicy.coalesceLatest:
           final tail = group!.coalescedTail;
           if (tail != null && tail.state == _TaskExecutionState.queued) {
             _moveQueuedExecution(tail, config.priority);
@@ -463,7 +463,7 @@ class LevitTaskEngine
     _executions[execution.executionId] = execution;
     _pendingCount++;
     if (existing != null &&
-        conflictPolicy == TaskConflictPolicy.coalesceLatest) {
+        conflictPolicy == LevitTaskConflictPolicy.coalesceLatest) {
       group.coalescedTail = execution;
     }
     if (pendingCount == 1) _priorityCursor = 0;
@@ -480,7 +480,7 @@ class LevitTaskEngine
     _processQueue();
 
     final disposition =
-        existing != null && conflictPolicy == TaskConflictPolicy.restart
+        existing != null && conflictPolicy == LevitTaskConflictPolicy.restart
         ? LevitTaskSubmissionDisposition.restarted
         : LevitTaskSubmissionDisposition.admitted;
     return _handleFor<T>(execution, disposition);
@@ -504,7 +504,7 @@ class LevitTaskEngine
     );
   }
 
-  Queue<_TaskExecution> _queueFor(TaskPriority priority) {
+  Queue<_TaskExecution> _queueFor(LevitTaskPriority priority) {
     return _queueForPriority(
       priority: priority,
       highPriorityQueue: _highPriorityQueue,
@@ -515,7 +515,7 @@ class LevitTaskEngine
 
   void _moveQueuedExecution(
     _TaskExecution execution,
-    TaskPriority nextPriority,
+    LevitTaskPriority nextPriority,
   ) {
     if (execution.config.priority == nextPriority) return;
     _queueFor(execution.config.priority).remove(execution);
@@ -563,9 +563,9 @@ class LevitTaskEngine
     execution.deadlineTimer = Timer(deadline.difference(DateTime.now()), () {
       _cancelExecution(
         execution,
-        TaskSkipReason.cancelledWhileQueued,
+        LevitTaskSkipReason.cancelledWhileQueued,
         reason: const LevitTaskCancellationReason(
-          LevitCancellationKind.deadlineExceeded,
+          LevitTaskCancellationKind.deadlineExceeded,
         ),
       );
     });
@@ -622,14 +622,17 @@ class LevitTaskEngine
         if (!DateTime.now().isBefore(deadline))
           execution.cancellation.cancel(
             const LevitTaskCancellationReason(
-              LevitCancellationKind.deadlineExceeded,
+              LevitTaskCancellationKind.deadlineExceeded,
             ),
           );
       }
       if (execution.cancellation.isCancelled) {
         _completeCancelled(
           execution,
-          _cancellationReason(execution, TaskSkipReason.cancelledBeforeStart),
+          _cancellationReason(
+            execution,
+            LevitTaskSkipReason.cancelledBeforeStart,
+          ),
         );
         return;
       }
@@ -644,7 +647,7 @@ class LevitTaskEngine
           cachedResult.result,
           eventType: LevitTaskEventType.skipped,
           outcome: LevitTaskOutcome.cacheHit,
-          skipReason: TaskSkipReason.cacheHit,
+          skipReason: LevitTaskSkipReason.cacheHit,
         );
         return;
       }
@@ -653,7 +656,10 @@ class LevitTaskEngine
       if (execution.cancellation.isCancelled) {
         _completeCancelled(
           execution,
-          _cancellationReason(execution, TaskSkipReason.cancelledBeforeStart),
+          _cancellationReason(
+            execution,
+            LevitTaskSkipReason.cancelledBeforeStart,
+          ),
         );
         return;
       }
@@ -685,7 +691,10 @@ class LevitTaskEngine
           if (execution.cancellation.isCancelled) {
             _completeCancelled(
               execution,
-              _cancellationReason(execution, TaskSkipReason.cancelledAfterRun),
+              _cancellationReason(
+                execution,
+                LevitTaskSkipReason.cancelledAfterRun,
+              ),
             );
             return;
           }
@@ -701,7 +710,10 @@ class LevitTaskEngine
           if (execution.cancellation.isCancelled) {
             _completeCancelled(
               execution,
-              _cancellationReason(execution, TaskSkipReason.cancelledAfterRun),
+              _cancellationReason(
+                execution,
+                LevitTaskSkipReason.cancelledAfterRun,
+              ),
             );
             return;
           }
@@ -733,7 +745,10 @@ class LevitTaskEngine
             }
             _completeCancelled(
               execution,
-              _cancellationReason(execution, TaskSkipReason.cancelledAfterRun),
+              _cancellationReason(
+                execution,
+                LevitTaskSkipReason.cancelledAfterRun,
+              ),
               error: error,
               stackTrace: stackTrace,
             );
@@ -771,7 +786,7 @@ class LevitTaskEngine
                 execution,
                 _cancellationReason(
                   execution,
-                  TaskSkipReason.cancelledAfterRun,
+                  LevitTaskSkipReason.cancelledAfterRun,
                 ),
                 error: error,
                 stackTrace: stackTrace,
@@ -789,7 +804,7 @@ class LevitTaskEngine
       if (execution.cancellation.isCancelled) {
         _completeCancelled(
           execution,
-          _cancellationReason(execution, TaskSkipReason.cancelledAfterRun),
+          _cancellationReason(execution, LevitTaskSkipReason.cancelledAfterRun),
           error: error,
           stackTrace: stackTrace,
         );
@@ -825,7 +840,7 @@ class LevitTaskEngine
     dynamic value, {
     required LevitTaskEventType eventType,
     required LevitTaskOutcome outcome,
-    TaskSkipReason? skipReason,
+    LevitTaskSkipReason? skipReason,
   }) {
     _emitTaskEvent(
       _eventFor(
@@ -883,14 +898,14 @@ class LevitTaskEngine
 
   void _completeCancelled(
     _TaskExecution execution,
-    TaskSkipReason reason, {
+    LevitTaskSkipReason reason, {
     Object? error,
     StackTrace? stackTrace,
   }) {
     if (execution.state == _TaskExecutionState.completed) return;
     final onCancel = execution.config.onCancel;
     final onEvent = execution.config.onEvent;
-    final outcome = reason == TaskSkipReason.superseded
+    final outcome = reason == LevitTaskSkipReason.superseded
         ? LevitTaskOutcome.superseded
         : LevitTaskOutcome.cancelled;
     final event = _eventFor(
@@ -912,7 +927,7 @@ class LevitTaskEngine
     execution.config.group._taskFinished(execution);
     if (!execution.completer.isCompleted)
       execution.completer.completeError(
-        reason == TaskSkipReason.superseded
+        reason == LevitTaskSkipReason.superseded
             ? LevitTaskSupersededException(
                 execution.taskId,
                 execution.executionId,
@@ -923,19 +938,19 @@ class LevitTaskEngine
                 reason:
                     execution.cancellation.reason ??
                     const LevitTaskCancellationReason(
-                      LevitCancellationKind.requested,
+                      LevitTaskCancellationKind.requested,
                     ),
               ),
         stackTrace ?? StackTrace.current,
       );
   }
 
-  TaskSkipReason _cancellationReason(
+  LevitTaskSkipReason _cancellationReason(
     _TaskExecution execution,
-    TaskSkipReason fallback,
+    LevitTaskSkipReason fallback,
   ) {
-    return execution.cancellationReason == TaskSkipReason.superseded
-        ? TaskSkipReason.superseded
+    return execution.cancellationReason == LevitTaskSkipReason.superseded
+        ? LevitTaskSkipReason.superseded
         : fallback;
   }
 
@@ -966,7 +981,7 @@ class LevitTaskEngine
     int? attempt,
     Duration? retryIn,
     double? progress,
-    TaskSkipReason? skipReason,
+    LevitTaskSkipReason? skipReason,
     LevitTaskOutcome? outcome,
     Object? error,
     StackTrace? stackTrace,
@@ -1046,7 +1061,7 @@ class LevitTaskEngine
         .where((execution) => execution.taskId == id)
         .toList(growable: false);
     for (final execution in matches) {
-      _cancelExecution(execution, TaskSkipReason.cancelledWhileQueued);
+      _cancelExecution(execution, LevitTaskSkipReason.cancelledWhileQueued);
     }
   }
 
@@ -1054,22 +1069,24 @@ class LevitTaskEngine
   bool cancelExecution(String executionId) {
     final execution = _executions[executionId];
     if (execution == null) return false;
-    _cancelExecution(execution, TaskSkipReason.cancelledWhileQueued);
+    _cancelExecution(execution, LevitTaskSkipReason.cancelledWhileQueued);
     return true;
   }
 
   void _cancelExecution(
     _TaskExecution execution,
-    TaskSkipReason queuedReason, {
+    LevitTaskSkipReason queuedReason, {
     LevitTaskCancellationReason reason = const LevitTaskCancellationReason(
-      LevitCancellationKind.requested,
+      LevitTaskCancellationKind.requested,
     ),
   }) {
     if (execution.state == _TaskExecutionState.completed) return;
     execution.cancellationReason = queuedReason;
     execution.cancellation.cancel(
-      queuedReason == TaskSkipReason.superseded
-          ? const LevitTaskCancellationReason(LevitCancellationKind.superseded)
+      queuedReason == LevitTaskSkipReason.superseded
+          ? const LevitTaskCancellationReason(
+              LevitTaskCancellationKind.superseded,
+            )
           : reason,
     );
     _notifyTaskTree();
@@ -1086,7 +1103,7 @@ class LevitTaskEngine
     _groups.remove(group.key);
     for (final execution in previous) {
       execution.detachedByRestart = true;
-      _cancelExecution(execution, TaskSkipReason.superseded);
+      _cancelExecution(execution, LevitTaskSkipReason.superseded);
     }
   }
 
@@ -1099,7 +1116,7 @@ class LevitTaskEngine
       _executions.values,
       growable: false,
     )) {
-      _cancelExecution(execution, TaskSkipReason.cancelledWhileQueued);
+      _cancelExecution(execution, LevitTaskSkipReason.cancelledWhileQueued);
     }
   }
 
@@ -1126,7 +1143,7 @@ class LevitTaskEngine
     if (_disposed) return;
     _disposed = true;
     rootGroup.cancel(
-      const LevitTaskCancellationReason(LevitCancellationKind.ownerClosed),
+      const LevitTaskCancellationReason(LevitTaskCancellationKind.ownerClosed),
     );
   }
 
@@ -1218,7 +1235,7 @@ Future<T> _runInTaskIsolate<I, T>({
             reason:
                 cancellation.reason ??
                 const LevitTaskCancellationReason(
-                  LevitCancellationKind.requested,
+                  LevitTaskCancellationKind.requested,
                 ),
           ),
           StackTrace.current,

@@ -74,18 +74,18 @@ void main() {
 }
 
 class _TestMiddleware implements LevitReactiveMiddleware {
-  final LxOnSet? onSetCallback;
+  final LevitReactiveOnSet? onSetCallback;
 
   _TestMiddleware({this.onSetCallback});
 
   @override
-  LxOnSet? get onSet => onSetCallback;
+  LevitReactiveOnSet? get onSet => onSetCallback;
 
   @override
-  LxOnBatch? get onBatch => null;
+  LevitReactiveOnBatch? get onBatch => null;
 
   @override
-  LxOnDispose? get onDispose => null;
+  LevitReactiveOnDispose? get onDispose => null;
 
   @override
   void Function(LxReactive)? get onInit => null;

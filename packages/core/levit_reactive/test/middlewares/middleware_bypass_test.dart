@@ -6,7 +6,7 @@ class TestTrackingMiddleware extends LevitReactiveMiddleware {
   int afterCount = 0;
 
   @override
-  LxOnSet? get onSet => (next, reactive, change) {
+  LevitReactiveOnSet? get onSet => (next, reactive, change) {
     return (value) {
       beforeCount++;
       try {
@@ -19,7 +19,7 @@ class TestTrackingMiddleware extends LevitReactiveMiddleware {
 
   // Pass-through batch
   @override
-  LxOnBatch? get onBatch =>
+  LevitReactiveOnBatch? get onBatch =>
       (next, change) => next;
 
   void reset() {

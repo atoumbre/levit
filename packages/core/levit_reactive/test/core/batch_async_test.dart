@@ -163,7 +163,7 @@ class TestBatchHookMiddleware extends LevitReactiveMiddleware {
   TestBatchHookMiddleware({required this.onStart, required this.onEnd});
 
   @override
-  LxOnBatch? get onBatch => (next, change) {
+  LevitReactiveOnBatch? get onBatch => (next, change) {
     return () {
       onStart();
       // ignore: prefer_typing_uninitialized_variables

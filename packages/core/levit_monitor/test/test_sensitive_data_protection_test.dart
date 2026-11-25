@@ -1,12 +1,13 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
+import 'package:levit_monitor/spi.dart';
 
 class MockTransport extends LevitTransport {
-  final List<MonitorEvent> events = [];
+  final List<LevitMonitorEvent> events = [];
 
   @override
-  void send(MonitorEvent event) {
+  void send(LevitMonitorEvent event) {
     events.add(event);
   }
 
@@ -34,7 +35,7 @@ void main() {
 
     test('default obfuscation masks sensitive data with ***', () async {
       final password = 'my-secret-password'.lxVar(
-        named: 'password',
+        name: 'password',
         isSensitive: true,
       );
 
@@ -62,7 +63,7 @@ void main() {
     test('custom obfuscator is respected', () async {
       LevitMonitor.setObfuscator((value) => 'HIDDEN(${value.length})');
 
-      'abc-123'.lxVar(named: 'token', isSensitive: true);
+      'abc-123'.lxVar(name: 'token', isSensitive: true);
 
       await Future.delayed(const Duration(milliseconds: 10));
 
@@ -73,7 +74,7 @@ void main() {
     });
 
     test('non-sensitive data is not obfuscated', () async {
-      final count = 0.lxVar(named: 'count');
+      final count = 0.lxVar(name: 'count');
 
       await Future.delayed(const Duration(milliseconds: 10));
 
@@ -94,8 +95,8 @@ void main() {
     });
 
     test('batch updates respect sensitivity per variable', () async {
-      final sensitive = 'secret'.lxVar(named: 'sensitive', isSensitive: true);
-      final normal = 'public'.lxVar(named: 'normal');
+      final sensitive = 'secret'.lxVar(name: 'sensitive', isSensitive: true);
+      final normal = 'public'.lxVar(name: 'normal');
 
       Levit.batch(() {
         sensitive.value = 'new-secret';
@@ -123,7 +124,7 @@ void main() {
     });
 
     test(
-      'StateSnapshot stores obfuscated values for sensitive variables',
+      'LevitStateSnapshot stores obfuscated values for sensitive variables',
       () async {
         final secret = 'ssh'.lxVar(isSensitive: true);
         secret.value = 'updated-ssh';
@@ -131,7 +132,7 @@ void main() {
         // Allow events to reach transport
         await Future.delayed(const Duration(milliseconds: 10));
 
-        final stateSnapshot = StateSnapshot();
+        final stateSnapshot = LevitStateSnapshot();
         for (final event in transport.events) {
           stateSnapshot.applyEvent(event);
         }

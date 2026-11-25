@@ -40,7 +40,7 @@ cancellation and draining matter.
 import 'package:levit/levit.dart';
 
 class CountdownController extends LevitController with LevitTimeMixin {
-  late final LxCountdown countdown;
+  late final LevitCountdown countdown;
 
   @override
   void onInit() {
@@ -56,7 +56,7 @@ finishing; `start()` begins a fresh run. The clock is monotonic, so delayed tick
 catch up. App suspension does not automatically pause it. Control the countdown
 through these methods rather than assigning `remaining.value`.
 
-A standalone `LxCountdown` starts idle. Register it with an owner or await its
+A standalone `LevitCountdown` starts idle. Register it with an owner or await its
 `dispose()` yourself. See [countdown semantics](../packages/kits/levit_dart/README.md#advanced-elapsed-time-countdowns-010)
 for timing and callback details.
 
@@ -121,7 +121,7 @@ Future<void> main() async {
 }
 ```
 
-Use `ref.findStore`, `ref.findStoreAsync` or `ref.findAsyncStore` to compose typed
+Use `ref.findStore` or `ref.findAsyncStore` to compose typed
 stores. Override the matching variant tag when targeting a particular instance.
 An optional DI lookup returns null only for absence; builder and type errors
 still propagate.

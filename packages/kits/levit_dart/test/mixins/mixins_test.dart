@@ -34,7 +34,7 @@ void main() {
     });
 
     test('executes simple task', () async {
-      final result = await service.tasksEngine.schedule((_) async => 'success');
+      final result = await service.taskEngine.schedule((_) async => 'success');
       expect(result, 'success');
     });
 
@@ -47,8 +47,8 @@ void main() {
       };
       final executionOrder = <String>[];
 
-      Future<void> run(String id, TaskPriority priority) {
-        return service.tasksEngine.schedule(
+      Future<void> run(String id, LevitTaskPriority priority) {
+        return service.taskEngine.schedule(
           (_) async {
             executionOrder.add('start_$id');
             await completers[id]!.future;
@@ -61,8 +61,8 @@ void main() {
 
       // Max concurrent is 2
       // Start 2 tasks (Active: t1, t2)
-      run('t1', TaskPriority.normal);
-      run('t2', TaskPriority.normal);
+      run('t1', LevitTaskPriority.normal);
+      run('t2', LevitTaskPriority.normal);
 
       await Future.delayed(Duration.zero);
       expect(executionOrder, containsAll(['start_t1', 'start_t2']));
@@ -70,8 +70,8 @@ void main() {
 
       // Start 2 more (Queued: t3, t4)
       // t3 is Low, t4 is High
-      run('t3', TaskPriority.low);
-      run('t4', TaskPriority.high);
+      run('t3', LevitTaskPriority.low);
+      run('t4', LevitTaskPriority.high);
 
       await Future.delayed(Duration.zero);
       // Still only t1, t2 active
@@ -99,7 +99,7 @@ void main() {
     test('retries on failure', () async {
       int attempts = 0;
       try {
-        await service.tasksEngine.schedule(
+        await service.taskEngine.schedule(
           (_) async {
             attempts++;
             if (attempts < 3) throw 'fail';
@@ -122,7 +122,7 @@ void main() {
 
     test('linear backoff', () async {
       int attempts = 0;
-      await service.tasksEngine.schedule(
+      await service.taskEngine.schedule(
         (_) async {
           attempts++;
           if (attempts < 3) throw 'fail';
@@ -142,7 +142,7 @@ void main() {
     test('fails after max retries', () async {
       int attempts = 0;
       try {
-        await service.tasksEngine.schedule(
+        await service.taskEngine.schedule(
           (_) async {
             attempts++;
             throw 'fail';
@@ -169,13 +169,13 @@ void main() {
     test('cancels active task', () async {
       final completer = Completer();
       final done = Completer();
-      service.tasksEngine.schedule((_) async {
+      service.taskEngine.schedule((_) async {
         await completer.future;
         done.complete();
       }, id: 't1');
 
       await Future.delayed(Duration.zero);
-      service.tasksEngine.cancel('t1');
+      service.taskEngine.cancel('t1');
       completer.complete();
       await expectLater(done.future, completes);
     });
@@ -184,13 +184,13 @@ void main() {
       final b1 = Completer();
       final b2 = Completer();
       // Saturate concurrency (max=2)
-      service.tasksEngine.schedule((_) => b1.future, id: 'b1');
-      service.tasksEngine.schedule((_) => b2.future, id: 'b2');
+      service.taskEngine.schedule((_) => b1.future, id: 'b1');
+      service.taskEngine.schedule((_) => b2.future, id: 'b2');
 
       bool ran = false;
-      service.tasksEngine.schedule((_) async => ran = true, id: 'queued');
+      service.taskEngine.schedule((_) async => ran = true, id: 'queued');
 
-      service.tasksEngine.cancel('queued');
+      service.taskEngine.cancel('queued');
       b1.complete();
       b2.complete();
       await Future.delayed(Duration.zero);
@@ -202,7 +202,7 @@ void main() {
       final started = Completer();
       int attempts = 0;
       bool onErrorCalled = false;
-      final future = service.tasksEngine.schedule(
+      final future = service.taskEngine.schedule(
         (_) async {
           attempts++;
           if (attempts == 1) {
@@ -229,7 +229,7 @@ void main() {
       // Now it's likely finished the throw and is entering the Future.delayed(200ms)
       await Future.delayed(const Duration(milliseconds: 50));
 
-      service.tasksEngine.cancel('retry_cancel_loop');
+      service.taskEngine.cancel('retry_cancel_loop');
 
       await expectLater(future, throwsA(isA<LevitTaskCancelledException>()));
       expect(attempts, 1);
@@ -239,9 +239,9 @@ void main() {
     test('cancelAllTasks iterates active tasks', () async {
       final c1 = Completer();
       final c2 = Completer();
-      service.tasksEngine.schedule((_) => c1.future, id: 'a1');
-      service.tasksEngine.schedule((_) => c2.future, id: 'a2');
-      service.tasksEngine.cancelAll();
+      service.taskEngine.schedule((_) => c1.future, id: 'a1');
+      service.taskEngine.schedule((_) => c2.future, id: 'a2');
+      service.taskEngine.cancelAll();
       c1.complete();
       c2.complete();
     });
@@ -250,10 +250,10 @@ void main() {
       final b1 = Completer();
       final b2 = Completer();
       // Saturate concurrency (max=2)
-      service.tasksEngine.schedule((_) => b1.future);
-      service.tasksEngine.schedule((_) => b2.future);
+      service.taskEngine.schedule((_) => b1.future);
+      service.taskEngine.schedule((_) => b2.future);
 
-      final future = service.tasksEngine.schedule(
+      final future = service.taskEngine.schedule(
         (_) => throw 'error',
         onError: (e, s) => throw 'bubble',
       );
@@ -266,9 +266,9 @@ void main() {
 
     test('uses onTaskError', () async {
       bool caught = false;
-      service.tasksEngine.config(onTaskError: (e, s) => caught = true);
+      service.taskEngine.config(onTaskError: (e, s) => caught = true);
       try {
-        await service.tasksEngine.schedule((_) => throw 'error');
+        await service.taskEngine.schedule((_) => throw 'error');
       } catch (_) {}
       expect(caught, true);
     });
@@ -334,9 +334,9 @@ void main() {
     });
 
     test('clearCompleted removes success/idle', () async {
-      controller.tasks['s'] = TaskDetails(status: LxSuccess(1));
-      controller.tasks['i'] = TaskDetails(status: LxIdle());
-      controller.tasks['w'] = TaskDetails(status: LxWaiting());
+      controller.tasks['s'] = LevitTaskDetails(status: LxSuccess(1));
+      controller.tasks['i'] = LevitTaskDetails(status: LxIdle());
+      controller.tasks['w'] = LevitTaskDetails(status: LxWaiting());
 
       controller.clearCompleted();
 

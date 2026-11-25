@@ -7,12 +7,10 @@ void main() {
     testWidgets(
       'LScope replaces its child when rebuilt without a dependency factory',
       (tester) async {
-        await tester.pumpWidget(
-          LScope(dependencyFactory: null, child: Container()),
-        );
+        await tester.pumpWidget(LScope(configure: null, child: Container()));
 
         await tester.pumpWidget(
-          LScope(dependencyFactory: null, child: const SizedBox()),
+          LScope(configure: null, child: const SizedBox()),
         );
 
         expect(find.byType(SizedBox), findsOneWidget);
@@ -24,7 +22,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put<String>(() => 'A', tag: 'A'),
+            configure: (s) => s.put<String>(() => 'A', tag: 'A'),
             child: const Text('A'),
           ),
         ),
@@ -34,7 +32,7 @@ void main() {
         Directionality(
           textDirection: TextDirection.ltr,
           child: LScope(
-            dependencyFactory: (s) => s.put<String>(() => 'A', tag: 'B'),
+            configure: (s) => s.put<String>(() => 'A', tag: 'B'),
             child: const Text('A'),
           ),
         ),

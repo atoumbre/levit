@@ -12,8 +12,7 @@ class SelectionExampleController<T> extends LevitController
 
 class TimeExampleController extends LevitController with LevitTimeMixin {}
 
-class LoopExampleController extends LevitController
-    with LevitLoopExecutionMixin {}
+class LoopExampleController extends LevitController with LevitLoopMixin {}
 
 /// A comprehensive example demonstrating the high-level utility mixins
 /// provided by the `levit_dart` package.
@@ -29,7 +28,7 @@ void main() async {
 
   print('Starting a task that fails once but succeeds on retry...');
   int attempts = 0;
-  final result = await taskController.tasksEngine.schedule<String>(
+  final result = await taskController.taskEngine.schedule<String>(
     (_) async {
       attempts++;
       if (attempts == 1) {

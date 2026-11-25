@@ -28,7 +28,7 @@ void main() {
 import 'package:levit_dart_core/levit_dart_core.dart';
 void observe(LxReadable<int> value, LxState<int> state) {
   final int current = value.value;
-  final LxReadable<int> borrowed = state.asReactive;
+  final LxReadable<int> borrowed = state.asReadable;
   borrowed.addListener(() { print(current); });
 }
 Future<void> setup(LevitScope scope) async {
@@ -45,8 +45,8 @@ Future<void> setup(LevitScope scope) async {
       "readable.name = 'changed';",
       "readable.ownerId = 'changed';",
       'readable.isSensitive = true;',
-      'state.asReactive.close();',
-      'state.asReactive.value = 1;',
+      'state.asReadable.close();',
+      'state.asReadable.value = 1;',
       'Object().toBuilder;',
       '(() => Object()).levitPut();',
       '(() => Object()).levitLazyPut();',

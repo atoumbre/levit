@@ -58,9 +58,9 @@ import 'package:levit_monitor/levit_monitor.dart';
 Future<void> main() async {
   Levit.enableAutoLinking();
   LevitMonitor.setFilter((event) =>
-      event is! ReactiveEvent || event.reactive.name != 'secret');
+      event is! LevitReactiveEvent || event.reactive.name != 'secret');
   await LevitMonitor.attach(
-    transport: ConsoleTransport(),
+    transport: LevitConsoleTransport(),
   );
 }
 ```
@@ -82,7 +82,7 @@ snapshot cache, and transport pipeline without adding a package dependency to
 LevitMonitor.emitCustomEvent(
   namespace: 'my_app.sync',
   name: 'finished',
-  level: Level.info,
+  level: LevitLogLevel.info,
   attributes: {
     'category': 'background',
     'outcome': 'succeeded',
@@ -119,7 +119,7 @@ without installing a new monitor if the preceding attachment cannot close cleanl
 History is **off by default** (`historyCapacity: 0`), as are worker statistics.
 Enable `historyCapacity` and `enableWorkerStatistics` for inspector sessions;
 detach restores the previous statistics flag. `maxPendingEvents` defaults to 1024.
-`WebSocketTransport` has a bounded queue (256), sequence acknowledgements and a
+`LevitWebSocketTransport` has a bounded queue (256), sequence acknowledgements and a
 five-second acknowledgement deadline. Disconnection or overflow accounts for
 lost delivery through `droppedEvents`; `flush` waits for delivery or an accounted
 drop and for actual socket cleanup. It does not promise durable receipt.
@@ -138,14 +138,14 @@ sensitivity later cannot retract events already delivered. Custom events use
 ## Local inspector and platform imports
 
 Run the optional `levit_devtools` CLI, then attach with
-`WebSocketTransport.connect('ws://127.0.0.1:9200/ws', appId: 'my-app')`.
+`LevitWebSocketTransport.connect('ws://127.0.0.1:9200/ws', appId: 'my-app')`.
 The standalone tool includes sessions, ownership/reactions, update details, pending
 cleanup, optional task trees, filtering, a bounded timeline and redacted JSON export.
 See [levit_devtools](../../tools/levit_devtools/README.md).
 
 The default library and `levit_monitor_protocol.dart` support browsers. File output
-is IO-only: import `package:levit_monitor/levit_monitor_io.dart` for `FileTransport`.
-Custom transports extend `LevitTransport`, accept frozen `MonitorEvent` envelopes,
+is IO-only: import `package:levit_monitor/levit_monitor_io.dart` for `LevitFileTransport`.
+Custom transports extend `LevitTransport`, accept frozen `LevitMonitorEvent` envelopes,
 and implement awaitable `flush` and `close` for any buffered work.
 Synchronous `send` implementations drain without a future per event; asynchronous
 sends remain ordered and are awaited before subsequent sends and shutdown.
@@ -177,7 +177,7 @@ Scope flags are closing=1 and disposed=2. Ancestors and children are `[id, name]
 registrations are `[key, type, aliasOf, flags, pendingInitializations, ownedInstances]`,
 with factory=1, async=2, lazy=4, permanent=8, instantiated=16 and closing=32.
 Every record is complete. Dropped earlier records cannot leave a partial delta.
-`StateSnapshot` expands it to the usual named fields for the inspector and JSON
+`LevitStateSnapshot` expands it to the usual named fields for the inspector and JSON
 snapshots; unsupported wire versions fail explicitly.
 Immutable capture reuses the event timestamp and freezes private JSON copies;
 custom wire timestamp overrides still round-trip. `LevitEventEnvelope(data,

@@ -8,6 +8,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:path/path.dart' as path;
+import 'package:levit_monitor/spi.dart';
 
 /// Read-only, IPv4-loopback inspector host with bounded sessions and delivery.
 ///
@@ -417,7 +418,7 @@ class _Session {
   final String appId;
   final int capacity;
   final int byteCapacity;
-  final state = StateSnapshot();
+  final state = LevitStateSnapshot();
   final ListQueue<LevitEventEnvelope> timeline = ListQueue();
   WebSocket? producer;
   int lastSequence = -1;
