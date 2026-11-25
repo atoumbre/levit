@@ -477,6 +477,7 @@ class LevitTaskExecution<T> {
       );
 
   final void Function() _cancel;
+  final LevitDisposalFailure? Function()? _takeCleanupFailure;
 
   LevitTaskExecution._({
     required this.taskId,
@@ -484,7 +485,9 @@ class LevitTaskExecution<T> {
     required this.disposition,
     required this.result,
     required void Function() cancel,
-  }) : _cancel = cancel {
+    LevitDisposalFailure? Function()? takeCleanupFailure,
+  }) : _cancel = cancel,
+       _takeCleanupFailure = takeCleanupFailure {
     // A handle may be observed through outcome later. Mark the source handled
     // immediately, without eagerly allocating an unused outcome future/value.
     // ignore() retains the result/error for later result and outcome listeners.

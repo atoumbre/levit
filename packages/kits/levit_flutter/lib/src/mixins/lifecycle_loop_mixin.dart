@@ -10,21 +10,32 @@ mixin LevitLoopExecutionLifecycleMixin
     on LevitController, LevitLoopExecutionMixin {
   _LifecycleLoopObserver? _lifecycleObserver;
 
+  void _detachLifecycleObserver() {
+    final observer = _lifecycleObserver;
+    if (observer != null) {
+      WidgetsBinding.instance.removeObserver(observer);
+      _lifecycleObserver = null;
+    }
+  }
+
   @override
   void onInit() {
     super.onInit();
+    _detachLifecycleObserver();
     final observer = _LifecycleLoopObserver(this);
     _lifecycleObserver = observer;
     WidgetsBinding.instance.addObserver(observer);
   }
 
   @override
+  void requestCancel() {
+    _detachLifecycleObserver();
+    super.requestCancel();
+  }
+
+  @override
   FutureOr<void> onClose() {
-    final observer = _lifecycleObserver;
-    if (observer != null) {
-      WidgetsBinding.instance.removeObserver(observer);
-      _lifecycleObserver = null;
-    }
+    _detachLifecycleObserver();
     return super.onClose();
   }
 
@@ -41,6 +52,7 @@ class _LifecycleLoopObserver with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_mixin.isClosing || _mixin.isDisposed) return;
     switch (state) {
       case AppLifecycleState.resumed:
         _mixin.loopEngine.resumeAllServices(

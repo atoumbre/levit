@@ -47,7 +47,13 @@ class LevitScopeLifecycleController implements Listenable {
     required FutureOr<void> Function(LevitScope scope) initialize,
   }) {
     if (_closing) throw StateError('Scope lifecycle is closing.');
-    _pending = _lastRequest = _ScopeRequest(parent, name, initialize);
+    _lastRequest = _ScopeRequest(parent, name, initialize);
+    if (_cleanupError != null) {
+      _error = _cleanupError;
+      _stackTrace = _cleanupStack;
+      return settled;
+    }
+    _pending = _lastRequest;
     _generation++;
     _ready = false;
     _scope?.requestCancel();
@@ -59,6 +65,7 @@ class LevitScopeLifecycleController implements Listenable {
 
   /// Retries the latest configuration after a failed initialization or cleanup.
   Future<void> retry() {
+    if (_closing) throw StateError('Scope lifecycle is closing.');
     final request = _lastRequest;
     if (request == null) throw StateError('No scope configuration to retry.');
     _cleanupError = null;

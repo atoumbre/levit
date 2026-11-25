@@ -64,14 +64,41 @@ sealed class MonitorEvent {
   /// Safeguard for converting arbitrary objects to string representations.
   static dynamic _stringify(dynamic value, {bool isSensitive = false}) {
     if (value == null) return null;
-    if (isSensitive) {
+    if (isSensitive || (value is LxReactive && value.isSensitive)) {
       return LevitMonitor.obfuscate(value);
     }
     try {
+      if (value is Map || value is Iterable) {
+        return _redactNested(value).toString();
+      }
       return value.toString();
     } catch (_) {
       return '<unprintable>';
     }
+  }
+
+  static dynamic _redactNested(dynamic value, {int depth = 0}) {
+    if (value == null) return null;
+    if (value is LxReactive && value.isSensitive) {
+      return LevitMonitor.obfuscate(value);
+    }
+    if (depth >= 16) return value;
+    if (value is Map) {
+      return value.map(
+        (key, nested) => MapEntry(
+          key is LxReactive && key.isSensitive
+              ? LevitMonitor.obfuscate(key)
+              : key,
+          _redactNested(nested, depth: depth + 1),
+        ),
+      );
+    }
+    if (value is Iterable) {
+      return value
+          .map((item) => _redactNested(item, depth: depth + 1))
+          .toList(growable: false);
+    }
+    return value;
   }
 
   /// Safeguard for dependency instance payloads: emit only runtime type.
@@ -270,7 +297,9 @@ class ReactiveListenerAddedEvent extends ReactiveEvent {
   Map<String, dynamic> toJson() => {
     ...super.toJson(),
     'type': 'listener_add',
-    'context': context?.toJson(),
+    'context': reactive.isSensitive
+        ? (context == null ? null : LevitMonitor.obfuscate(context!.toJson()))
+        : context?.toJson(),
   };
 }
 
@@ -289,7 +318,9 @@ class ReactiveListenerRemovedEvent extends ReactiveEvent {
   Map<String, dynamic> toJson() => {
     ...super.toJson(),
     'type': 'listener_remove',
-    'context': context?.toJson(),
+    'context': reactive.isSensitive
+        ? (context == null ? null : LevitMonitor.obfuscate(context!.toJson()))
+        : context?.toJson(),
   };
 }
 
@@ -317,6 +348,7 @@ class ReactiveErrorEvent extends MonitorEvent {
     'type': 'reactive_error',
     'reactiveId': reactive?.id.toString(),
     'name': reactive?.name,
+    'isSensitive': reactive?.isSensitive ?? false,
     'error': MonitorEvent._stringify(
       error,
       isSensitive: reactive?.isSensitive ?? false,
@@ -528,6 +560,9 @@ class LogEvent extends MonitorEvent {
   /// The primary data or message being logged. Can be a string or a serializable object.
   final Object? data;
 
+  /// Whether log payload and error details must be redacted.
+  final bool sensitive;
+
   /// An optional error associated with the log.
   final Object? error;
 
@@ -538,6 +573,7 @@ class LogEvent extends MonitorEvent {
     required super.sessionId,
     required this.level,
     this.data,
+    this.sensitive = false,
     this.error,
     this.stackTrace,
   });
@@ -547,23 +583,34 @@ class LogEvent extends MonitorEvent {
     ...super.toJson(),
     'type': 'log',
     'level': level.name,
-    'data': _serializeData(data),
-    if (error != null) 'error': MonitorEvent._stringify(error),
-    if (stackTrace != null) 'stackTrace': MonitorEvent._stringify(stackTrace),
+    'isSensitive': sensitive,
+    'data': sensitive
+        ? (data == null ? null : LevitMonitor.obfuscate(data))
+        : _serializeData(data),
+    if (error != null)
+      'error': MonitorEvent._stringify(error, isSensitive: sensitive),
+    if (stackTrace != null)
+      'stackTrace': MonitorEvent._stringify(stackTrace, isSensitive: sensitive),
   };
 
   static dynamic _serializeData(Object? data) {
     if (data == null) return null;
+    if (data is LxReactive && data.isSensitive) {
+      return LevitMonitor.obfuscate(data);
+    }
     if (data is num || data is String || data is bool) return data;
+    final sanitized = data is Map || data is Iterable
+        ? MonitorEvent._redactNested(data)
+        : data;
     try {
       // Attempt to encode to check if serializable or if it has `toJson()`
-      jsonEncode(data);
-      return data;
+      jsonEncode(sanitized);
+      return sanitized;
     } catch (_) {
       try {
-        return (data as dynamic).toJson();
+        return (sanitized as dynamic).toJson();
       } catch (_) {
-        return MonitorEvent._stringify(data);
+        return MonitorEvent._stringify(sanitized);
       }
     }
   }
@@ -695,6 +742,9 @@ class CustomMonitorEvent extends MonitorEvent {
   static dynamic _serializeValue(Object? value) {
     if (value == null || value is num || value is bool || value is String) {
       return value;
+    }
+    if (value is LxReactive && value.isSensitive) {
+      return LevitMonitor.obfuscate(value);
     }
     if (value is DateTime) return value.toIso8601String();
     if (value is Duration) return value.inMicroseconds;

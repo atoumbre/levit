@@ -45,18 +45,28 @@ final class LxCleanupException implements Exception {
 
 /// Context for one reactive execution. Cancellation does not stop a Future.
 final class LxExecutionContext {
-  LxExecutionContext._(this._owner);
+  LxExecutionContext._(this._owner) : _parent = current;
 
   static final Object _zoneKey = Object();
   final Object _owner;
+  final LxExecutionContext? _parent;
   final Completer<void> _cancelled = Completer<void>();
+  bool _completed = false;
 
   /// The context of the current worker/computed callback, if any.
   static LxExecutionContext? get current => Zone.current[_zoneKey];
 
   /// Whether [resource] is executing in the current asynchronous context.
-  static bool isExecuting(Object resource) =>
-      identical(current?._owner, resource);
+  static bool isExecuting(Object resource) {
+    var context = current;
+    while (context != null) {
+      if (!context._completed && identical(context._owner, resource)) {
+        return true;
+      }
+      context = context._parent;
+    }
+    return false;
+  }
 
   bool get isCancelled => _cancelled.isCompleted;
 
@@ -69,6 +79,10 @@ final class LxExecutionContext {
 
   void _cancel() {
     if (!_cancelled.isCompleted) _cancelled.complete();
+  }
+
+  void _complete() {
+    _completed = true;
   }
 
   R _run<R>(R Function() action) =>
@@ -106,7 +120,10 @@ mixin _LxAsyncLifecycle<T> on LxBase<T> implements LxAsyncResource {
         )
         .whenComplete(() {
           _pendingWork.remove(tracked);
-          if (context != null) _executionContexts.remove(context);
+          if (context != null) {
+            context._complete();
+            _executionContexts.remove(context);
+          }
         });
     _pendingWork.add(tracked);
   }

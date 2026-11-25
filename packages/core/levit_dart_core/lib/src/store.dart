@@ -370,6 +370,16 @@ class _LevitStoreInstance extends LevitController implements LevitRef {
         ownerId: ownerPath,
         onSettled: _trackCapturedInitialization,
       );
+      if (_value is Future && !scope.isClosing && !scope.isDisposed) {
+        unawaited(
+          scope.trackInitialization(
+            (_value as Future).then<void>(
+              (_) {},
+              onError: (Object _, StackTrace __) {},
+            ),
+          ),
+        );
+      }
       _builderRun = true;
     }
     return _value;
@@ -491,6 +501,8 @@ extension LevitScopeStoreOverrides on LevitScope {
 }
 
 final class _LevitStoreKey {
+  static final int _variantSalt = math.Random.secure().nextInt(0x7fffffff);
+
   const _LevitStoreKey(this.definition, this.variant);
   final Object definition;
   final Object? variant;
@@ -502,6 +514,10 @@ final class _LevitStoreKey {
   @override
   int get hashCode => Object.hash(identityHashCode(definition), variant);
   @override
-  String toString() =>
-      'store#${identityHashCode(definition)}:${variant == null ? 'default' : variant.hashCode}';
+  String toString() {
+    final variantLabel = variant == null
+        ? 'default'
+        : Object.hash(_variantSalt, variant).toUnsigned(32).toRadixString(16);
+    return 'store#${identityHashCode(definition)}:$variantLabel';
+  }
 }

@@ -61,6 +61,7 @@ class _TaskExecution {
   double progress = 0;
   bool detachedByRestart = false;
   TaskSkipReason? cancellationReason;
+  LevitDisposalFailure? cleanupFailure;
 
   _TaskExecution({
     required this.taskId,

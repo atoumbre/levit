@@ -17,15 +17,15 @@ Future<_TaskCacheHit<T>?> _readCachedTaskResult<T>({
   final cachedJson = await cacheProvider.read(cacheKey);
   if (cachedJson == null) return null;
 
-  final expiresAt = DateTime.fromMillisecondsSinceEpoch(
-    cachedJson['expiresAt'] as int,
-  );
-  if (DateTime.now().isAfter(expiresAt)) {
-    await cacheProvider.delete(cacheKey);
-    return null;
-  }
-
   try {
+    final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+      cachedJson['expiresAt'] as int,
+    );
+    if (DateTime.now().isAfter(expiresAt)) {
+      await cacheProvider.delete(cacheKey);
+      return null;
+    }
+
     final data = cachedJson['data'] as Map<String, dynamic>;
     return _TaskCacheHit(cachePolicy.fromJson(data) as T);
   } catch (_) {

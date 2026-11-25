@@ -18,21 +18,32 @@ part of '../../levit_flutter.dart';
 mixin LevitAppLifecycleMixin on LevitController {
   _AppLifecycleObserver? _observer;
 
+  void _detachObserver() {
+    final observer = _observer;
+    if (observer != null) {
+      WidgetsBinding.instance.removeObserver(observer);
+      _observer = null;
+    }
+  }
+
   @override
   void onInit() {
     super.onInit();
+    _detachObserver();
     final observer = _AppLifecycleObserver(this);
     _observer = observer;
     WidgetsBinding.instance.addObserver(observer);
   }
 
   @override
+  void requestCancel() {
+    _detachObserver();
+    super.requestCancel();
+  }
+
+  @override
   FutureOr<void> onClose() {
-    final observer = _observer;
-    if (observer != null) {
-      WidgetsBinding.instance.removeObserver(observer);
-      _observer = null;
-    }
+    _detachObserver();
     return super.onClose();
   }
 
@@ -59,6 +70,7 @@ class _AppLifecycleObserver with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_mixin.isClosing || _mixin.isDisposed) return;
     switch (state) {
       case AppLifecycleState.resumed:
         _mixin.onAppResumed();

@@ -110,8 +110,10 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
       dependencyFactory: widget.onConfigScope,
       child: Builder(
         builder: (context) {
-          final controller =
-              widget.resolver?.call(context) ?? context.levit.findOrNull<T>();
+          final resolver = widget.resolver;
+          final controller = resolver != null
+              ? resolver(context)
+              : context.levit.findOrNull<T>();
           if (controller == null) {
             final fallback = widget.orElse;
             if (fallback != null) return fallback(context);
@@ -244,10 +246,10 @@ class _LScopedAsyncViewState<T> extends State<LScopedAsyncView<T>> {
         builder: (context) {
           return LAsyncView<T>(
             resolver: widget.resolver,
-            builder: widget.builder,
+            builder: widget.buildView,
             autoWatch: widget.autoWatch,
-            loading: widget.loading,
-            error: widget.error,
+            loading: widget.buildLoading,
+            error: widget.buildError,
             args: widget.args,
           );
         },

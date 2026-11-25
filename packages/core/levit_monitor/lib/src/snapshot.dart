@@ -25,6 +25,18 @@ class StateSnapshot {
   };
   void applyEvent(MonitorEvent event) => applyEnvelope(event.freeze().envelope);
 
+  /// Redacts retained history entries for [reactiveId] after sensitivity is enabled.
+  void scrubSensitiveReactive(String reactiveId) {
+    if (_eventCache.isEmpty) return;
+    final updated = ListQueue<LevitEventEnvelope>(_eventCache.length);
+    for (final envelope in _eventCache) {
+      updated.add(_scrubEnvelopeForReactive(envelope, reactiveId));
+    }
+    _eventCache
+      ..clear()
+      ..addAll(updated);
+  }
+
   /// Applies a previously serialized event, also used for inspector replay.
   void applyEnvelope(LevitEventEnvelope envelope) {
     final data = envelope.data;
@@ -179,10 +191,17 @@ class StateSnapshot {
     }
     model.isSensitive = data['isSensitive'] as bool? ?? model.isSensitive;
     if (type == 'reactive_metadata' && model.isSensitive) {
-      model.value = LevitMonitor.obfuscate(model.value);
+      if (model.value != null) {
+        model.value = LevitMonitor.obfuscate(model.value);
+      }
     }
     if (type == 'reactive_init' || type == 'state_change') {
-      model.value = data[type == 'reactive_init' ? 'initialValue' : 'newValue'];
+      final incoming =
+          data[type == 'reactive_init' ? 'initialValue' : 'newValue'];
+      model.value =
+          model.isSensitive && data['isSensitive'] != true && incoming != null
+          ? LevitMonitor.obfuscate(incoming)
+          : incoming;
       model.valueType = data['valueType'] as String?;
     } else if (type == 'graph_change') {
       model.dependencies = (data['dependencies'] as List)
@@ -438,4 +457,55 @@ class ReactiveModel {
     'dependencies': dependencies,
     'listenerCount': listenerCount,
   };
+}
+
+LevitEventEnvelope _scrubEnvelopeForReactive(
+  LevitEventEnvelope envelope,
+  String reactiveId,
+) {
+  final data = envelope.data;
+  if (envelope.type == 'batch') {
+    final entries = data['entries'];
+    if (entries is! List) return envelope;
+    var changed = false;
+    final nextEntries = <Object?>[];
+    for (final entry in entries) {
+      if (entry is Map && entry['reactiveId']?.toString() == reactiveId) {
+        changed = true;
+        final copy = Map<String, dynamic>.from(entry);
+        copy['isSensitive'] = true;
+        if (copy['oldValue'] != null) {
+          copy['oldValue'] = LevitMonitor.obfuscate(copy['oldValue']);
+        }
+        if (copy['newValue'] != null) {
+          copy['newValue'] = LevitMonitor.obfuscate(copy['newValue']);
+        }
+        nextEntries.add(copy);
+      } else {
+        nextEntries.add(entry);
+      }
+    }
+    if (!changed) return envelope;
+    return LevitEventEnvelope(
+      Map<String, dynamic>.from(data)..['entries'] = nextEntries,
+    );
+  }
+
+  if (data['reactiveId']?.toString() != reactiveId) return envelope;
+  final copy = Map<String, dynamic>.from(data);
+  copy['isSensitive'] = true;
+  for (final key in const [
+    'initialValue',
+    'oldValue',
+    'newValue',
+    'error',
+    'stack',
+    'stackTrace',
+    'context',
+  ]) {
+    if (copy[key] != null) {
+      copy[key] = LevitMonitor.obfuscate(copy[key]);
+    }
+  }
+  return LevitEventEnvelope(copy);
 }

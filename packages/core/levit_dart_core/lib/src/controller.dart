@@ -91,10 +91,9 @@ mixin LevitResourceOwnership on LevitScopeDisposable
 
     final object = resource as Object;
     if (dispose == null && !Levit._canDisposeItem(object)) {
-      throw ArgumentError.value(
-        resource,
+      throw ArgumentError(
+        'Supply an explicit dispose callback for ${object.runtimeType}.',
         'resource',
-        'Supply an explicit dispose callback for this resource type.',
       );
     }
     final alreadyOwned = _ownedResources.any(

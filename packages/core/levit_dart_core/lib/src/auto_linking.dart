@@ -1,5 +1,9 @@
 part of '../levit_dart_core.dart';
 
+final class _CaptureState {
+  bool active = true;
+}
+
 /// Internal scope for capturing reactive objects creation.
 ///
 /// Uses [Zone] values to intercept [LxReactive] objects initialized within
@@ -8,6 +12,7 @@ class _AutoLinkScope {
   static int _activeCaptureScopes = 0;
 
   static final Object _captureKey = Object();
+  static final Object _captureStateKey = Object();
   static final Object _ownerIdKey = Object();
 
   /// The Zone key used to store the capture list.
@@ -22,12 +27,19 @@ class _AutoLinkScope {
     R core() {
       if (_activeCaptureScopes == 0 &&
           !LevitReactiveMiddleware.hasInitMiddlewares) {
-        return builder();
+        final result = builder();
+        if (result is Future && onSettled != null) {
+          onSettled(
+            result.then<void>((_) {}, onError: (Object _, StackTrace __) {}),
+          );
+        }
+        return result;
       }
 
       // A nested registration owns its allocations even when another owner's
       // builder is the first caller to resolve it.
       final captured = <LxReactive>[];
+      final state = _CaptureState();
 
       _activeCaptureScopes++;
       try {
@@ -35,6 +47,7 @@ class _AutoLinkScope {
           builder,
           zoneValues: {
             _captureKey: captured,
+            _captureStateKey: state,
             if (ownerId != null) _ownerIdKey: ownerId,
           },
         );
@@ -50,6 +63,7 @@ class _AutoLinkScope {
                 },
               )
               .whenComplete(() {
+                state.active = false;
                 _activeCaptureScopes--;
               });
           if (onSettled != null) {
@@ -62,12 +76,14 @@ class _AutoLinkScope {
             );
           }
         } else {
+          state.active = false;
           processor(captured, result);
           _activeCaptureScopes--;
         }
 
         return result;
       } catch (e) {
+        state.active = false;
         final cleanup = _disposeCaptured(captured);
         if (onSettled != null) {
           onSettled(cleanup);
@@ -132,6 +148,7 @@ class _AutoLinkScope {
       }
 
       _AutoLinkScope._activeCaptureScopes++;
+      final state = _CaptureState();
       try {
         // `onInit` may return `Future` despite the static `void` signature.
         final dynamic result = Lx.runWithOwner(
@@ -140,13 +157,18 @@ class _AutoLinkScope {
             () => instance is LevitResourceOwnership
                 ? instance._runInitialization(() => (onInit as dynamic)())
                 : (onInit as dynamic)(),
-            zoneValues: {_captureKey: captured, _ownerIdKey: key},
+            zoneValues: {
+              _captureKey: captured,
+              _captureStateKey: state,
+              _ownerIdKey: key,
+            },
           ),
         );
 
         if (result is Future) {
           final initialization = result
               .whenComplete(() {
+                state.active = false;
                 _AutoLinkScope._activeCaptureScopes--;
               })
               .then<void>((_) {});
@@ -162,9 +184,11 @@ class _AutoLinkScope {
             info.trackInitialization(initialization);
           }
         } else {
+          state.active = false;
           _AutoLinkScope._activeCaptureScopes--;
         }
       } catch (e) {
+        state.active = false;
         _AutoLinkScope._activeCaptureScopes--;
         rethrow;
       }
@@ -213,6 +237,14 @@ void _captureReactiveIfNeeded(LxReactive reactive) {
   if (_AutoLinkScope._activeCaptureScopes <= 0) return;
 
   final captureList = Zone.current[_AutoLinkScope._captureKey];
+  final captureState = Zone.current[_AutoLinkScope._captureStateKey];
+  if (captureState is _CaptureState && !captureState.active) {
+    if (captureList is _LiveCaptureList && captureList._owner.isDisposed) {
+      captureList.add(reactive);
+    }
+    return;
+  }
+
   if (captureList is List<LxReactive>) {
     captureList.add(reactive);
   } else {
@@ -227,10 +259,13 @@ void _assignReactiveOwnerIfNeeded(
 ) {
   if (reactive.ownerId != null) return;
 
-  final zonedOwnerId = Zone.current[_AutoLinkScope._ownerIdKey] as String?;
-  if (zonedOwnerId != null) {
-    reactive.ownerId = zonedOwnerId;
-    return;
+  final captureState = Zone.current[_AutoLinkScope._captureStateKey];
+  if (captureState is! _CaptureState || captureState.active) {
+    final zonedOwnerId = Zone.current[_AutoLinkScope._ownerIdKey] as String?;
+    if (zonedOwnerId != null) {
+      reactive.ownerId = zonedOwnerId;
+      return;
+    }
   }
 
   if (!hasOwnerContext) return;

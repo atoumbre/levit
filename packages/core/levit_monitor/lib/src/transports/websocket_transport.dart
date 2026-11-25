@@ -14,6 +14,7 @@ class WebSocketTransport extends LevitTransport {
   final int capacity;
   final Duration acknowledgementTimeout;
   final bool requireAcknowledgement;
+  final bool allowInsecureRemote;
   final _onConnectController = StreamController<void>.broadcast();
   final ListQueue<_SocketDelivery> _queue = ListQueue();
   _SocketDelivery? _inFlight;
@@ -36,7 +37,8 @@ class WebSocketTransport extends LevitTransport {
        _appId = null,
        _channelBuilder = null,
        _onReady = null,
-       _onError = null {
+       _onError = null,
+       allowInsecureRemote = false {
     _validate();
     _adopt(channel);
   }
@@ -49,6 +51,7 @@ class WebSocketTransport extends LevitTransport {
     this.capacity,
     this.acknowledgementTimeout,
     this.requireAcknowledgement,
+    this.allowInsecureRemote,
   ) {
     _validate();
     _connect();
@@ -61,6 +64,33 @@ class WebSocketTransport extends LevitTransport {
         'acknowledgementTimeout',
       );
     }
+    if (_url case final rawUrl?) {
+      final uri = Uri.parse(rawUrl);
+      if (uri.scheme != 'ws' && uri.scheme != 'wss') {
+        throw ArgumentError.value(
+          rawUrl,
+          'serverUrl',
+          'WebSocket URL scheme must be ws or wss.',
+        );
+      }
+      if (uri.scheme == 'ws' &&
+          !allowInsecureRemote &&
+          !_isLoopbackHost(uri.host)) {
+        throw ArgumentError.value(
+          rawUrl,
+          'serverUrl',
+          'Cleartext ws:// to non-loopback hosts requires allowInsecureRemote: true.',
+        );
+      }
+    }
+  }
+
+  static bool _isLoopbackHost(String host) {
+    final normalized = host.toLowerCase();
+    return normalized == 'localhost' ||
+        normalized == '127.0.0.1' ||
+        normalized == '::1' ||
+        normalized == '[::1]';
   }
 
   static WebSocketTransport connect(
@@ -72,6 +102,7 @@ class WebSocketTransport extends LevitTransport {
     int capacity = 256,
     Duration acknowledgementTimeout = const Duration(seconds: 5),
     bool requireAcknowledgement = true,
+    bool allowInsecureRemote = false,
   }) => WebSocketTransport._(
     serverUrl,
     appId,
@@ -81,6 +112,7 @@ class WebSocketTransport extends LevitTransport {
     capacity,
     acknowledgementTimeout,
     requireAcknowledgement,
+    allowInsecureRemote,
   );
   @override
   int get droppedEvents => _dropped;

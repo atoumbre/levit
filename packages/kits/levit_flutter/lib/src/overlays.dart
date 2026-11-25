@@ -17,6 +17,7 @@ Future<T?> showLevitDialog<T>({
   Offset? anchorPoint,
   TraversalEdgeBehavior? traversalEdgeBehavior,
 }) {
+  final captured = LScope.capture(context, child: Builder(builder: builder));
   return showDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
@@ -27,7 +28,7 @@ Future<T?> showLevitDialog<T>({
     routeSettings: routeSettings,
     anchorPoint: anchorPoint,
     traversalEdgeBehavior: traversalEdgeBehavior,
-    builder: (_) => LScope.capture(context, child: Builder(builder: builder)),
+    builder: (_) => captured,
   );
 }
 
@@ -56,6 +57,7 @@ Future<T?> showLevitModalBottomSheet<T>({
   AnimationController? transitionAnimationController,
   Offset? anchorPoint,
 }) {
+  final captured = LScope.capture(context, child: Builder(builder: builder));
   return showModalBottomSheet<T>(
     context: context,
     backgroundColor: backgroundColor,
@@ -75,6 +77,6 @@ Future<T?> showLevitModalBottomSheet<T>({
     routeSettings: routeSettings,
     transitionAnimationController: transitionAnimationController,
     anchorPoint: anchorPoint,
-    builder: (_) => LScope.capture(context, child: Builder(builder: builder)),
+    builder: (_) => captured,
   );
 }

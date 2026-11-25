@@ -29,6 +29,9 @@ class LxComputed<T> extends _ComputedBase<T> {
   final bool Function(T previous, T current)? _equals;
   bool _isDirty = true;
   bool _isComputing = false;
+  bool _hasComputeError = false;
+  bool _pendingEagerRecompute = false;
+  bool _hasPendingValueNotification = false;
   // Prevent duplicate reactive updates when dirty-state was already emitted.
   bool _notifiedDirty = false;
 
@@ -36,6 +39,7 @@ class LxComputed<T> extends _ComputedBase<T> {
   final bool _eager;
   bool _hasStaticGraph = false;
   bool _initialHasCollectionReads = false;
+  List<int>? _capturedDepVersions;
 
   // Captures first-run dependencies during constructor initialization.
   static final List<_DependencyTracker> _initialDepStack = [];
@@ -54,13 +58,19 @@ class LxComputed<T> extends _ComputedBase<T> {
   }) : _equals = equals,
        _staticDeps = staticDeps,
        _eager = eager,
-       super(_computeInitial(name, _compute), name: name) {
+       super(_computeInitial(name, _compute), name: name, equals: equals) {
     _isDirty = true;
     // Initial dependencies are reused on first activation to avoid a second run.
     if (_initialDepStack.isNotEmpty) {
       final tracker = _initialDepStack.removeLast();
       _initialHasCollectionReads = tracker.hasCollectionReads;
-      _capturedDeps = tracker.dependencies.toList(growable: false);
+      final deps = tracker.dependencies.toList(growable: false);
+      _capturedDeps = deps;
+      _capturedDepVersions = List<int>.generate(
+        deps.length,
+        (i) => deps[i]._version,
+        growable: false,
+      );
       _capturedReactives = tracker.trackReactives
           ? tracker.reactives.toList()
           : null;
@@ -157,17 +167,28 @@ class LxComputed<T> extends _ComputedBase<T> {
   void _onActive() {
     _isActive = true;
     if (_capturedDeps != null) {
-      // Apply constructor-captured graph on first activation.
-      if (_initialHasCollectionReads &&
-          _capturedDeps!.any((dep) => dep.isDisposed)) {
-        // An unobserved address may have retired between construction and
-        // activation. Capture fresh channels rather than attaching to dead ones.
+      final deps = _capturedDeps!;
+      final versions = _capturedDepVersions;
+      var stale = false;
+      for (var i = 0; i < deps.length; i++) {
+        final dep = deps[i];
+        if (dep.isDisposed ||
+            (versions != null && dep._version != versions[i])) {
+          stale = true;
+          break;
+        }
+      }
+      // Apply constructor-captured graph on first activation only when all
+      // captured dependencies remain alive and unmodified.
+      if (stale ||
+          (_initialHasCollectionReads && deps.any((dep) => dep.isDisposed))) {
         _hasStaticGraph = false;
         _isDirty = true;
       } else {
-        _reconcileDependencies(_capturedDeps!, reactives: _capturedReactives);
+        _reconcileDependencies(deps, reactives: _capturedReactives);
       }
       _capturedDeps = null;
+      _capturedDepVersions = null;
       _capturedReactives = null;
     }
 
@@ -182,17 +203,55 @@ class LxComputed<T> extends _ComputedBase<T> {
     _isActive = false;
     _hasStaticGraph = false;
     _isDirty = true;
+    _pendingEagerRecompute = false;
+    _hasPendingValueNotification = false;
     _cleanupSubscriptions();
+  }
+
+  @override
+  void _propagateNotify() {
+    if (_pendingEagerRecompute) {
+      _pendingEagerRecompute = false;
+      final hadPending = _hasPendingValueNotification;
+      if (!_isClosed && _isActive && _isDirty) {
+        _recompute();
+      }
+      if (hadPending &&
+          _hasPendingValueNotification &&
+          !_isPendingPropagate &&
+          !_isPendingSyncBatch) {
+        _hasPendingValueNotification = false;
+        super._propagateNotify();
+      }
+      return;
+    }
+    _hasPendingValueNotification = false;
+    super._propagateNotify();
+  }
+
+  @override
+  void _publishMutation() {
+    if (_LevitReactiveCore._isPropagating ||
+        _LevitReactiveCore._batchDepth > 0) {
+      _hasPendingValueNotification = true;
+    }
+    super._publishMutation();
   }
 
   @override
   void _onDependencyChanged() {
     if (_isClosed || !_isActive) return;
-    if (!_isDirty && !_isComputing) {
+    if ((!_isDirty || _hasComputeError) && !_isComputing) {
       // Stream listeners require eager recompute to push latest value.
       if (_hasStreamListener || _eager) {
         _isDirty = true;
-        _recompute();
+        if (_LevitReactiveCore._isPropagating ||
+            _LevitReactiveCore._batchDepth > 0) {
+          _pendingEagerRecompute = true;
+          _notifyListenersOnly();
+        } else {
+          _recompute();
+        }
         return;
       }
 
@@ -232,7 +291,7 @@ class LxComputed<T> extends _ComputedBase<T> {
   void _recompute() {
     if (_isClosed || !_isActive || _isComputing) return;
     _isComputing = true;
-    _isDirty = false;
+    _pendingEagerRecompute = false;
 
     // Static dependency mode skips graph tracking after first successful capture.
     if (_staticDeps && _hasStaticGraph) {
@@ -240,18 +299,23 @@ class LxComputed<T> extends _ComputedBase<T> {
       try {
         resultValue = _compute();
       } catch (_) {
+        _hasComputeError = true;
+        _isDirty = true;
+        _notifiedDirty = false;
         rethrow;
       } finally {
         _isComputing = false;
       }
 
+      _hasComputeError = false;
+      _isDirty = false;
+      final notify = !_notifiedDirty;
+      _notifiedDirty = false;
+
       // Skip reactive update when value comparator reports no change.
       if (_equals == null || !_equals(_value, resultValue)) {
-        _setValueInternal(resultValue, notifyListeners: !_notifiedDirty);
+        _setValueInternal(resultValue, notifyListeners: notify);
       }
-
-      _isDirty = false;
-      _notifiedDirty = false;
       return;
     }
 
@@ -266,16 +330,24 @@ class LxComputed<T> extends _ComputedBase<T> {
       late T resultValue;
       try {
         resultValue = _compute();
+      } catch (_) {
+        _hasComputeError = true;
+        _isDirty = true;
+        _notifiedDirty = false;
+        rethrow;
       } finally {
         _LevitReactiveCore.proxy = previousProxy;
         _isComputing = false;
       }
 
-      if (_equals == null || !_equals(_value, resultValue)) {
-        _setValueInternal(resultValue, notifyListeners: !_notifiedDirty);
-      }
+      _hasComputeError = false;
       _isDirty = false;
+      final notify = !_notifiedDirty;
       _notifiedDirty = false;
+
+      if (_equals == null || !_equals(_value, resultValue)) {
+        _setValueInternal(resultValue, notifyListeners: notify);
+      }
 
       // A value listener can deactivate or close this computed synchronously.
       if (_isClosed || !_isActive) return;
@@ -316,7 +388,7 @@ class LxComputed<T> extends _ComputedBase<T> {
 
     // Pull-only values do not subscribe. An outer observer already captures
     // their reads; otherwise only graph diagnostics need a temporary tracker.
-    if (Lx.proxy != null ||
+    if (_capturingCollection ||
         !LevitReactiveMiddleware.hasGraphChangeMiddlewares) {
       return _compute();
     }
@@ -400,6 +472,14 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
        super(
          initial != null ? LxSuccess<T>(initial) : LxWaiting<T>(),
          name: name,
+         equals: equals == null
+             ? null
+             : (previous, current) {
+                 if (previous is LxSuccess<T> && current is LxSuccess<T>) {
+                   return equals(previous.value, current.value);
+                 }
+                 return previous == current;
+               },
        );
 
   @override
@@ -446,7 +526,23 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
     }
 
     if (_showWaiting || isInitial) {
-      _setValueInternal(LxWaiting<T>.fromPrevious(previous));
+      try {
+        _setValueInternal(LxWaiting<T>.fromPrevious(previous));
+      } catch (_) {
+        context._complete();
+        _executionContexts.remove(context);
+        _finishExecution();
+        rethrow;
+      }
+      if (_isClosed ||
+          _workCancelled ||
+          !_isActive ||
+          myExecutionId != _executionId) {
+        context._complete();
+        _executionContexts.remove(context);
+        _finishExecution();
+        return;
+      }
     }
 
     late Future<T> future;
@@ -503,6 +599,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
           LxError<T>.fromPrevious(syncError!, syncStack!, previous),
         );
       }
+      context._complete();
       _executionContexts.remove(context);
       _finishExecution();
       return;
@@ -561,8 +658,8 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
 
   void _applyResult(T result, {required bool isInitial}) {
     if (!isInitial && _hasValue && _equals(_lastComputedValue as T, result)) {
-      // Preserve reactive update semantics when value is unchanged after waiting.
-      if (_value is LxWaiting<T>) {
+      // Preserve reactive update semantics when value is unchanged after waiting or error.
+      if (_value is! LxSuccess<T>) {
         _setValueInternal(LxSuccess<T>(result));
       }
       return;
@@ -579,7 +676,8 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
   void refresh() => _run();
 
   @override
-  String toString() => 'LxComputed.async($status)';
+  String toString() =>
+      isSensitive ? 'LxComputed.async(***)' : 'LxComputed.async($_value)';
 }
 
 /// Shared base for computed implementations.
@@ -614,8 +712,17 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
   List<LevitReactiveNotifier>? _capturedDeps;
   List<LxReactive>? _capturedReactives;
 
-  _ComputedBase(Val initialValue, {String? name})
-    : super(initialValue, onListen: null, onCancel: null, name: name);
+  _ComputedBase(
+    Val initialValue, {
+    String? name,
+    bool Function(Val previous, Val current)? equals,
+  }) : super(
+         initialValue,
+         onListen: null,
+         onCancel: null,
+         name: name,
+         equals: equals,
+       );
 
   @override
   void _protectedOnActive() {

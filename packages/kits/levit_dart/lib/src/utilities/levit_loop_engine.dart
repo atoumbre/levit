@@ -242,21 +242,28 @@ class _LoopExecutor {
   }
 
   void pause() {
+    if (_isStopped) return;
     _isPaused = true;
     _updateStatus(LxWaiting());
   }
 
   void resume() {
+    if (_isStopped) return;
     _isPaused = false;
-    _pauseCompleter?.complete();
+    final completer = _pauseCompleter;
     _pauseCompleter = null;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
+    }
     _updateStatus(LxWaiting());
   }
 
   void requestCancel() {
     _isStopped = true;
-    if (_pauseCompleter != null && !_pauseCompleter!.isCompleted) {
-      _pauseCompleter!.complete();
+    final completer = _pauseCompleter;
+    _pauseCompleter = null;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
     }
     _delayTimer?.cancel();
     if (!(_delayCompleter?.isCompleted ?? true)) _delayCompleter!.complete();
@@ -351,7 +358,14 @@ _IsolateSpawner _spawnIsolate =
       _IsolateConfig message, {
       String? debugName,
     }) {
-      return Isolate.spawn(entryPoint, message, debugName: debugName);
+      return Isolate.spawn(
+        entryPoint,
+        message,
+        onError: message.mainSendPort,
+        onExit: message.mainSendPort,
+        errorsAreFatal: true,
+        debugName: debugName,
+      );
     };
 
 class _IsolateLoopService implements StoppableService, LevitDrainable {
@@ -387,12 +401,32 @@ class _IsolateLoopService implements StoppableService, LevitDrainable {
     _status.value = LxWaiting();
 
     await _closeReceivePort();
+    if (_stopping) {
+      if (!_finished.isCompleted) _finished.complete();
+      return;
+    }
     try {
       _receivePort = ReceivePort();
       _receiveSubscription = _receivePort!.listen((message) {
-        if (message is SendPort) {
+        if (message == null) {
+          if (!_finished.isCompleted) _finished.complete();
+        } else if (message is List) {
+          if (!_stopping) {
+            final errText = message.isNotEmpty
+                ? message[0].toString()
+                : 'Isolate error';
+            final stackText = message.length > 1 && message[1] != null
+                ? message[1].toString()
+                : '';
+            _status.value = LxError(
+              RemoteError(errText, stackText),
+              StackTrace.fromString(stackText),
+            );
+          }
+          if (!_finished.isCompleted) _finished.complete();
+        } else if (message is SendPort) {
           _commandPort = message;
-          final pendingCommand = _pendingCommand;
+          final pendingCommand = _stopping ? 'stop' : _pendingCommand;
           if (pendingCommand != null) {
             message.send(pendingCommand);
             _pendingCommand = null;
@@ -415,7 +449,7 @@ class _IsolateLoopService implements StoppableService, LevitDrainable {
         debugName: _debugName,
       );
     } catch (e, s) {
-      _status.value = LxError(e, s);
+      if (!_stopping) _status.value = LxError(e, s);
       if (!_finished.isCompleted) _finished.complete();
       await _closeReceivePort();
     }
@@ -424,7 +458,9 @@ class _IsolateLoopService implements StoppableService, LevitDrainable {
   void _dispatchCommand(String command) {
     final port = _commandPort;
     if (port == null) {
-      _pendingCommand = command;
+      if (_pendingCommand != 'stop') {
+        _pendingCommand = command;
+      }
       return;
     }
     port.send(command);
@@ -432,6 +468,7 @@ class _IsolateLoopService implements StoppableService, LevitDrainable {
 
   @override
   void pause() {
+    if (_stopping) return;
     _desiredPaused = true;
     _dispatchCommand('pause');
     _status.value = LxWaiting();
@@ -439,6 +476,7 @@ class _IsolateLoopService implements StoppableService, LevitDrainable {
 
   @override
   void resume() {
+    if (_stopping) return;
     _desiredPaused = false;
     _dispatchCommand('resume');
     _status.value = LxWaiting();
@@ -485,11 +523,21 @@ class _IsolateLoopService implements StoppableService, LevitDrainable {
     final commandPort = ReceivePort();
     config.mainSendPort.send(commandPort.sendPort);
 
-    final executor = _LoopExecutor(
-      config.body,
-      config.delay,
-      (status) => config.mainSendPort.send(status),
-    );
+    final executor = _LoopExecutor(config.body, config.delay, (status) {
+      try {
+        config.mainSendPort.send(status);
+      } catch (_) {
+        if (status is LxError<dynamic>) {
+          final stackText = status.stackTrace?.toString() ?? '';
+          config.mainSendPort.send(
+            LxError<dynamic>(
+              RemoteError(status.error.toString(), stackText),
+              StackTrace.fromString(stackText),
+            ),
+          );
+        }
+      }
+    });
 
     late final StreamSubscription<dynamic> commandSubscription;
     commandSubscription = commandPort.listen((message) {

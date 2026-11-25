@@ -111,6 +111,7 @@ void main() {
 
         final transport = WebSocketTransport.connect(
           'ws://invalid-url',
+          allowInsecureRemote: true,
           channelBuilder: (uri) {
             channelBuilderCalls++;
             throw 'Connection failed';

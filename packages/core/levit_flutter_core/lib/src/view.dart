@@ -153,7 +153,8 @@ class _LViewState<T> extends State<LView<T>> {
   }
 
   T? _resolveController() {
-    return widget.resolver?.call(context) ?? context.levit.findOrNull<T>();
+    final resolver = widget.resolver;
+    return resolver != null ? resolver(context) : context.levit.findOrNull<T>();
   }
 
   bool _argsMatch(List<Object?>? a, List<Object?>? b) {
@@ -312,23 +313,23 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
     return FutureBuilder<T>(
       future: future,
       builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return widget.buildLoading(context);
+        }
+
         if (snapshot.hasError) {
           return widget.buildError(context, snapshot.error!);
         }
 
-        if (snapshot.hasData) {
-          final controller = snapshot.data as T;
-          if (widget.autoWatch) {
-            return LWatch(() => widget.buildView(context, controller));
-          }
-
-          return LScope.runBridged(
-            context,
-            () => widget.buildView(context, controller),
-          );
+        final controller = snapshot.data as T;
+        if (widget.autoWatch) {
+          return LWatch(() => widget.buildView(context, controller));
         }
 
-        return widget.buildLoading(context);
+        return LScope.runBridged(
+          context,
+          () => widget.buildView(context, controller),
+        );
       },
     );
   }

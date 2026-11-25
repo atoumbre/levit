@@ -3,23 +3,38 @@ part of '../../levit_dart.dart';
 /// One task execution owned by a keyed resource.
 class _AsyncProducer<T> extends LxFuture<T> {
   final LevitTaskExecution<T> execution;
-  final LevitTaskEngine _engine;
   final void Function(_AsyncProducer<T>) _released;
-  DateTime? _succeededAt;
+  final List<DateTime?> _stamp;
   Future<void>? _queryClose;
-  _AsyncProducer._(
-    this.execution,
-    this._engine,
-    this._released,
+
+  factory _AsyncProducer._(
+    LevitTaskExecution<T> execution,
+    void Function(_AsyncProducer<T>) released,
     DateTime Function() now,
     LxStatus<T>? previous,
-  ) : super(execution.result, previous: previous) {
-    execution.result.then<void>(
-      (_) => _succeededAt = now(),
-      onError: (Object _, StackTrace __) {},
+  ) {
+    final stamp = <DateTime?>[null];
+    return _AsyncProducer._internal(
+      execution,
+      released,
+      stamp,
+      execution.result.then((value) {
+        stamp[0] = now();
+        return value;
+      }),
+      previous,
     );
   }
-  DateTime? get succeededAt => _succeededAt;
+
+  _AsyncProducer._internal(
+    this.execution,
+    this._released,
+    this._stamp,
+    Future<T> trackedResult,
+    LxStatus<T>? previous,
+  ) : super(trackedResult, previous: previous);
+
+  DateTime? get succeededAt => _stamp[0];
   @override
   void requestCancel() {
     execution.cancel();
@@ -33,16 +48,8 @@ class _AsyncProducer<T> extends LxFuture<T> {
     return _queryClose ??= () async {
       try {
         await super.close();
-        final failures = _engine._cleanupFailures
-            .where(
-              (failure) =>
-                  failure.resource is _TaskExecution &&
-                  (failure.resource as _TaskExecution).executionId ==
-                      execution.executionId,
-            )
-            .toList();
-        if (failures.isNotEmpty)
-          throw LevitDisposalException.aggregate(failures);
+        final failure = execution._takeCleanupFailure?.call();
+        if (failure != null) throw LevitDisposalException.aggregate([failure]);
       } finally {
         _released(this);
       }
@@ -57,6 +64,7 @@ final class LevitAsyncMapEntry<T> implements LxReadable<LxStatus<T>> {
   int _operations = 0;
   Timer? _expiry;
   Future<void>? _refresh;
+  Future<T>? _refreshValue;
   bool get isActive => _resource.isActive;
   bool get isClosed => _resource.isClosed;
   bool get isReplacing => _resource.isReplacing;
@@ -187,7 +195,6 @@ final class LevitAsyncMap<K, T>
           );
           final producer = _AsyncProducer<T>._(
             job,
-            _engine,
             _producers.remove,
             _now,
             resource.lastValue,
@@ -238,8 +245,12 @@ final class LevitAsyncMap<K, T>
 
   bool isFresh(K key) {
     final item = peek(key);
-    if (item == null || item.isReplacing || item.value is! LxSuccess<T>)
+    if (item == null ||
+        item.isClosed ||
+        item.isReplacing ||
+        item.value is! LxSuccess<T>) {
       return false;
+    }
     final stamp = item._resource.producer.succeededAt;
     return stamp != null && _now().difference(stamp) < staleTime;
   }
@@ -250,10 +261,12 @@ final class LevitAsyncMap<K, T>
     final item = _acquire(key, pin: true);
     try {
       if (creating && item._resource.refreshError != null) item._resource.value;
-      if (item._refresh case final pending?) {
-        await pending;
-      } else if (!isFresh(key)) {
-        await _refreshEntry(key, item);
+      if (item._refreshValue case final pending?) {
+        return await pending;
+      }
+      if (!isFresh(key)) {
+        _refreshEntry(key, item);
+        return await item._refreshValue!;
       }
       return await item._resource.producer.wait;
     } finally {
@@ -281,8 +294,11 @@ final class LevitAsyncMap<K, T>
     bool first = false,
   }) {
     final done = Completer<void>();
+    final resultDone = Completer<T>();
     item._refresh = done.future;
+    item._refreshValue = resultDone.future;
     done.future.ignore();
+    resultDone.future.ignore();
     unawaited(() async {
       try {
         if (first && item._resource.refreshError != null) item._resource.value;
@@ -291,12 +307,15 @@ final class LevitAsyncMap<K, T>
           await item._resource.refresh();
         }
         if (_closing || item.isClosed) throw const LxCancelledException();
-        await item._resource.producer.wait;
+        final result = await item._resource.producer.wait;
+        resultDone.complete(result);
         done.complete();
       } catch (e, s) {
+        resultDone.completeError(e, s);
         done.completeError(e, s);
       } finally {
         item._refresh = null;
+        item._refreshValue = null;
         if (releasePin) item._operations--;
         _touch(key, item);
       }

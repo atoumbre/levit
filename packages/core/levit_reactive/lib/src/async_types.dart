@@ -135,6 +135,9 @@ class LxStream<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
       onError: (Object error, StackTrace stackTrace) {
         if (_bindEpoch != epoch || isDisposed || _workCancelled) return;
         _setValueInternal(LxError<T>.fromPrevious(error, stackTrace, _value));
+        if (_valueController?.hasListener ?? false) {
+          _valueController!.addError(error, stackTrace);
+        }
       },
       onDone: () {
         if (_bindEpoch != epoch || isDisposed || _workCancelled) return;
@@ -216,7 +219,7 @@ class LxStream<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
   }
 
   @override
-  String toString() => 'LxStream($status)';
+  String toString() => isSensitive ? 'LxStream(***)' : 'LxStream($_value)';
 
   /// Transforms each data event with [convert].
   LxStream<R> map<R>(R Function(T event) convert) {
@@ -313,19 +316,20 @@ class LxFuture<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
     }
 
     _trackWork(
-      future
-          .then<void>((val) {
-            if (_activeFuture == future && !isDisposed && !_workCancelled) {
-              _setValueInternal(LxSuccess<T>(val));
-            }
-          })
-          .catchError((Object error, StackTrace stackTrace) {
-            if (_activeFuture == future && !isDisposed && !_workCancelled) {
-              _setValueInternal(
-                LxError<T>.fromPrevious(error, stackTrace, previous),
-              );
-            }
-          }),
+      future.then<void>(
+        (val) {
+          if (_activeFuture == future && !isDisposed && !_workCancelled) {
+            _setValueInternal(LxSuccess<T>(val));
+          }
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (_activeFuture == future && !isDisposed && !_workCancelled) {
+            _setValueInternal(
+              LxError<T>.fromPrevious(error, stackTrace, previous),
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -347,7 +351,7 @@ class LxFuture<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
   void restart(Future<T> future) => _run(future, isRefresh: true);
 
   @override
-  String toString() => 'LxFuture($status)';
+  String toString() => isSensitive ? 'LxFuture(***)' : 'LxFuture($_value)';
 
   /// Returns an [LxStream] representation of this future.
   LxStream<T> get asLxStream => LxStream<T>(wait.asStream());

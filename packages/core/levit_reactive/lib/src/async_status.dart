@@ -216,7 +216,9 @@ extension LxStatusReactiveExtensions<T> on LxReadable<LxStatus<T>> {
     final s = value;
     if (s is LxSuccess<T>) return s.value;
     if (s is LxError<T>) throw s.error;
-    throw StateError('Async operation has no value yet (status: $s)');
+    final sensitive = this is LxReactive && (this as LxReactive).isSensitive;
+    final statusLabel = sensitive ? '${s.runtimeType}(***)' : '$s';
+    throw StateError('Async operation has no value yet (status: $statusLabel)');
   }
 
   /// Returns a Future that completes when the operation reaches a terminal state.

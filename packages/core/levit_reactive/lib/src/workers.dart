@@ -157,14 +157,15 @@ class LxWorker<T> extends LxBase<LxWorkerStat>
     final monitoring = isMonitoringEnabled;
     final clock = monitoring ? (Stopwatch()..start()) : null;
     void finish({Object? error, bool asynchronous = false}) {
+      context._complete();
       _executionContexts.remove(context);
       if (monitoring && !isDisposed && !_workCancelled) {
         final duration = clock!.elapsed;
         _setValueInternal(
           LxWorkerStat(
-            runCount: this.value.runCount + 1,
+            runCount: _value.runCount + 1,
             lastDuration: duration,
-            totalDuration: this.value.totalDuration + duration,
+            totalDuration: _value.totalDuration + duration,
             lastRun: DateTime.now(),
             error: error,
             isAsync: asynchronous,
@@ -182,23 +183,25 @@ class LxWorker<T> extends LxBase<LxWorkerStat>
     try {
       final result = context._run(() => _callback(value, context));
       if (result is Future) {
-        if (monitoring && !isDisposed && !_workCancelled) {
-          _setValueInternal(
-            this.value.copyWith(isAsync: true, isProcessing: true),
-          );
-        }
         _trackWork(
           result.then<void>(
             (_) => finish(asynchronous: true),
             onError: (Object error, StackTrace stack) {
               finish(error: error, asynchronous: true);
               if (error is! LxCancelledException) {
-                _onProcessingError?.call(error, stack);
+                if (_onProcessingError != null) {
+                  _onProcessingError(error, stack);
+                } else if (!monitoring) {
+                  Zone.current.handleUncaughtError(error, stack);
+                }
               }
             },
           ),
           context,
         );
+        if (monitoring && !isDisposed && !_workCancelled) {
+          _setValueInternal(_value.copyWith(isAsync: true, isProcessing: true));
+        }
       } else {
         finish();
       }

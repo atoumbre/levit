@@ -121,10 +121,15 @@ class LevitTaskEngine
   static void _onTaskErrorUnset(Object error, StackTrace stackTrace) {}
   static void _onTaskEventUnset(LevitTaskEvent event) {}
 
-  void _emitTaskEvent(LevitTaskEvent? event) {
+  void _emitTaskEvent(
+    LevitTaskEvent? event, {
+    void Function(LevitTaskEvent)? onEvent,
+  }) {
     if (event == null) return;
     try {
-      _executions[event.executionId]?.config.onEvent?.call(event);
+      final callback =
+          onEvent ?? _executions[event.executionId]?.config.onEvent;
+      callback?.call(event);
     } catch (_) {
       // Per-execution instrumentation must never affect application work.
     }
@@ -401,11 +406,14 @@ class LevitTaskEngine
             cancel: () {},
           );
         case TaskConflictPolicy.restart:
-          _supersedeGroup(group!);
-          group = _groups.putIfAbsent(
-            schedulingKey,
-            () => _TaskGroup(schedulingKey),
-          );
+          final freed = group!.outstanding
+              .where((item) => item.state == _TaskExecutionState.queued)
+              .length;
+          if (maxPending != null && pendingCount - freed >= maxPending!) {
+            throw LevitTaskQueueFullException(maxPending!);
+          }
+          _supersedeGroup(group);
+          group = null;
         case TaskConflictPolicy.enqueue:
           break;
         case TaskConflictPolicy.coalesceLatest:
@@ -437,10 +445,6 @@ class LevitTaskEngine
     if (maxPending != null && pendingCount >= maxPending!) {
       throw LevitTaskQueueFullException(maxPending!);
     }
-    group ??= _groups.putIfAbsent(
-      schedulingKey,
-      () => _TaskGroup(schedulingKey),
-    );
     final execution = _TaskExecution(
       taskId: taskId,
       schedulingKey: schedulingKey,
@@ -451,6 +455,10 @@ class LevitTaskEngine
     );
     captureExecution?.call(execution);
     config.group._admitTask(execution);
+    group ??= _groups.putIfAbsent(
+      schedulingKey,
+      () => _TaskGroup(schedulingKey),
+    );
     group.outstanding.add(execution);
     _executions[execution.executionId] = execution;
     _pendingCount++;
@@ -488,6 +496,11 @@ class LevitTaskEngine
       disposition: disposition,
       result: execution.completer.future.then((value) => value as T),
       cancel: () => cancelExecution(execution.executionId),
+      takeCleanupFailure: () {
+        final failure = execution.cleanupFailure;
+        execution.cleanupFailure = null;
+        return failure;
+      },
     );
   }
 
@@ -543,6 +556,8 @@ class LevitTaskEngine
 
   void _armDeadline(_TaskExecution execution) {
     execution.deadlineTimer?.cancel();
+    execution.deadlineTimer = null;
+    if (execution.state == _TaskExecutionState.completed) return;
     final deadline = execution.config.deadline;
     if (deadline == null) return;
     execution.deadlineTimer = Timer(deadline.difference(DateTime.now()), () {
@@ -705,14 +720,17 @@ class LevitTaskEngine
         } catch (error, stackTrace) {
           if (execution.cancellation.isCancelled ||
               error is LevitTaskCancelledException) {
-            if (error is! LevitTaskCancelledException)
-              _cleanupFailures.add(
-                LevitDisposalFailure(
-                  resource: execution,
-                  error: error,
-                  stackTrace: stackTrace,
-                ),
+            if (error is! LevitTaskCancelledException) {
+              final failure = LevitDisposalFailure(
+                resource: execution.executionId,
+                error: error,
+                stackTrace: stackTrace,
               );
+              execution.cleanupFailure = failure;
+              if (_cleanupFailures.length < 64) {
+                _cleanupFailures.add(failure);
+              }
+            }
             _completeCancelled(
               execution,
               _cancellationReason(execution, TaskSkipReason.cancelledAfterRun),
@@ -869,26 +887,28 @@ class LevitTaskEngine
     Object? error,
     StackTrace? stackTrace,
   }) {
-    try {
-      execution.config.onCancel?.call();
-    } catch (_) {
-      // Cancellation observers do not change cancellation semantics.
-    }
+    if (execution.state == _TaskExecutionState.completed) return;
+    final onCancel = execution.config.onCancel;
+    final onEvent = execution.config.onEvent;
     final outcome = reason == TaskSkipReason.superseded
         ? LevitTaskOutcome.superseded
         : LevitTaskOutcome.cancelled;
-    _emitTaskEvent(
-      _eventFor(
-        execution,
-        type: LevitTaskEventType.skipped,
-        phase: LevitTaskPhase.completed,
-        outcome: outcome,
-        skipReason: reason,
-        error: error,
-        stackTrace: stackTrace,
-      ),
+    final event = _eventFor(
+      execution,
+      type: LevitTaskEventType.skipped,
+      phase: LevitTaskPhase.completed,
+      outcome: outcome,
+      skipReason: reason,
+      error: error,
+      stackTrace: stackTrace,
     );
     _finalize(execution);
+    try {
+      onCancel?.call();
+    } catch (_) {
+      // Cancellation observers do not change cancellation semantics.
+    }
+    _emitTaskEvent(event, onEvent: onEvent);
     execution.config.group._taskFinished(execution);
     if (!execution.completer.isCompleted)
       execution.completer.completeError(
@@ -924,6 +944,7 @@ class LevitTaskEngine
     if (execution.state == _TaskExecutionState.queued) _pendingCount--;
     execution.state = _TaskExecutionState.completed;
     execution.deadlineTimer?.cancel();
+    execution.deadlineTimer = null;
     _activeExecutions.remove(execution);
     _executions.remove(execution.executionId);
     final group = _groups[execution.schedulingKey];
@@ -1112,6 +1133,7 @@ class LevitTaskEngine
   @override
   Future<void> drain() async {
     assertCanDispose();
+    requestCancel();
     final admitted = _runners.toList();
     await rootGroup.done;
     // Include runners present at admission and any started by group bodies
@@ -1142,7 +1164,6 @@ Future<T> _runInTaskIsolate<I, T>({
   required _LevitTaskCancellation cancellation,
 }) async {
   final events = ReceivePort();
-  final errors = ReceivePort();
   final exited = Completer<void>();
   final result = Completer<T>();
   SendPort? cancellationPort;
@@ -1152,7 +1173,6 @@ Future<T> _runInTaskIsolate<I, T>({
   unawaited(cancellation.cancelled.then((_) => sendCancellation()));
 
   late final StreamSubscription<dynamic> eventSubscription;
-  late final StreamSubscription<dynamic> errorSubscription;
 
   void completeError(Object error, StackTrace stackTrace) {
     if (!result.isCompleted) result.completeError(error, stackTrace);
@@ -1166,6 +1186,17 @@ Future<T> _runInTaskIsolate<I, T>({
           StateError('Task isolate exited without a result.'),
           StackTrace.current,
         );
+      return;
+    }
+    if (raw is List<dynamic>) {
+      final errText = raw.isNotEmpty ? raw[0].toString() : 'Isolate error';
+      final stackText = raw.length > 1 && raw[1] != null
+          ? raw[1].toString()
+          : '';
+      completeError(
+        RemoteError(errText, stackText),
+        StackTrace.fromString(stackText),
+      );
       return;
     }
     final message = raw as (Object, Object?);
@@ -1200,13 +1231,6 @@ Future<T> _runInTaskIsolate<I, T>({
         );
     }
   });
-  errorSubscription = errors.listen((dynamic raw) {
-    final parts = raw as List<dynamic>;
-    completeError(
-      RemoteError(parts[0] as String, parts[1] as String),
-      StackTrace.fromString(parts[1] as String),
-    );
-  });
   try {
     await Isolate.spawn<List<Object?>>(
       _levitTaskIsolateEntry,
@@ -1218,7 +1242,7 @@ Future<T> _runInTaskIsolate<I, T>({
         context.executionId,
         context.attempt,
       ],
-      onError: errors.sendPort,
+      onError: events.sendPort,
       onExit: events.sendPort,
       errorsAreFatal: true,
       debugName: context.executionId,
@@ -1230,9 +1254,7 @@ Future<T> _runInTaskIsolate<I, T>({
     }
   } finally {
     await eventSubscription.cancel();
-    await errorSubscription.cancel();
     events.close();
-    errors.close();
   }
 }
 

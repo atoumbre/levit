@@ -55,7 +55,13 @@ class LevitMonitor {
   }
 
   /// Obfuscates a [value] if it is considered sensitive.
-  static dynamic obfuscate(dynamic value) => _obfuscator(value);
+  static dynamic obfuscate(dynamic value) {
+    try {
+      return _obfuscator(value);
+    } catch (_) {
+      return '***';
+    }
+  }
 
   /// Evaluates whether a specific [event] should be processed based on the
   /// current filter configuration.
@@ -66,10 +72,12 @@ class LevitMonitor {
   /// Emits a diagnostic log event to the monitoring pipeline.
   ///
   /// The [data] parameter can be a simple message string or a structured,
-  /// JSON-serializable object.
+  /// JSON-serializable object. Set [sensitive] to `true` to redact payload and
+  /// error details before buffering and export.
   static void log(
     Object? data, {
     Level level = Level.info,
+    bool sensitive = false,
     Object? error,
     StackTrace? stackTrace,
   }) {
@@ -80,6 +88,7 @@ class LevitMonitor {
       sessionId: _middleware!.sessionId,
       level: level,
       data: data,
+      sensitive: sensitive,
       error: error,
       stackTrace: stackTrace,
     );
@@ -117,31 +126,88 @@ class LevitMonitor {
   }
 
   /// Helper method for emitting a log at [Level.trace].
-  static void logTrace(Object? data, {Object? error, StackTrace? stackTrace}) =>
-      log(data, level: Level.trace, error: error, stackTrace: stackTrace);
+  static void logTrace(
+    Object? data, {
+    bool sensitive = false,
+    Object? error,
+    StackTrace? stackTrace,
+  }) => log(
+    data,
+    level: Level.trace,
+    sensitive: sensitive,
+    error: error,
+    stackTrace: stackTrace,
+  );
 
   /// Helper method for emitting a log at [Level.debug].
-  static void logDebug(Object? data, {Object? error, StackTrace? stackTrace}) =>
-      log(data, level: Level.debug, error: error, stackTrace: stackTrace);
+  static void logDebug(
+    Object? data, {
+    bool sensitive = false,
+    Object? error,
+    StackTrace? stackTrace,
+  }) => log(
+    data,
+    level: Level.debug,
+    sensitive: sensitive,
+    error: error,
+    stackTrace: stackTrace,
+  );
 
   /// Helper method for emitting a log at [Level.info].
-  static void logInfo(Object? data, {Object? error, StackTrace? stackTrace}) =>
-      log(data, level: Level.info, error: error, stackTrace: stackTrace);
+  static void logInfo(
+    Object? data, {
+    bool sensitive = false,
+    Object? error,
+    StackTrace? stackTrace,
+  }) => log(
+    data,
+    level: Level.info,
+    sensitive: sensitive,
+    error: error,
+    stackTrace: stackTrace,
+  );
 
   /// Helper method for emitting a log at [Level.warning].
   static void logWarning(
     Object? data, {
+    bool sensitive = false,
     Object? error,
     StackTrace? stackTrace,
-  }) => log(data, level: Level.warning, error: error, stackTrace: stackTrace);
+  }) => log(
+    data,
+    level: Level.warning,
+    sensitive: sensitive,
+    error: error,
+    stackTrace: stackTrace,
+  );
 
   /// Helper method for emitting a log at [Level.error].
-  static void logError(Object? data, {Object? error, StackTrace? stackTrace}) =>
-      log(data, level: Level.error, error: error, stackTrace: stackTrace);
+  static void logError(
+    Object? data, {
+    bool sensitive = false,
+    Object? error,
+    StackTrace? stackTrace,
+  }) => log(
+    data,
+    level: Level.error,
+    sensitive: sensitive,
+    error: error,
+    stackTrace: stackTrace,
+  );
 
   /// Helper method for emitting a log at [Level.fatal].
-  static void logFatal(Object? data, {Object? error, StackTrace? stackTrace}) =>
-      log(data, level: Level.fatal, error: error, stackTrace: stackTrace);
+  static void logFatal(
+    Object? data, {
+    bool sensitive = false,
+    Object? error,
+    StackTrace? stackTrace,
+  }) => log(
+    data,
+    level: Level.fatal,
+    sensitive: sensitive,
+    error: error,
+    stackTrace: stackTrace,
+  );
 
   /// Bootstraps the monitoring system and attaches it to the application.
   ///

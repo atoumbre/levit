@@ -293,13 +293,22 @@ final class LevitTaskGroup
     String name = 'workflow',
     LevitTaskGroupPolicy policy = LevitTaskGroupPolicy.cancelOnError,
     DateTime? deadline,
-  }) => LevitTaskGroup(
-    engine: engine,
-    parent: this,
-    name: name,
-    policy: policy,
-    deadline: deadline,
-  ).run(body);
+  }) {
+    if (identical(_currentTaskZone?.execution?.config.group.engine, engine)) {
+      return Future<T>.error(
+        StateError(
+          'Coordinate groups outside a leaf task; submit leaves from the group body.',
+        ),
+      );
+    }
+    return LevitTaskGroup(
+      engine: engine,
+      parent: this,
+      name: name,
+      policy: policy,
+      deadline: deadline,
+    ).run(body);
+  }
 
   LevitTaskExecution<T> submit<T>(
     FutureOr<T> Function(LevitTaskContext) body, {
@@ -398,7 +407,11 @@ final class LevitTaskGroup
 
   @override
   void assertCanDispose() {
-    engine.assertCanDispose();
+    if (identical(_currentTaskZone?.execution?.config.group.engine, engine)) {
+      throw StateError(
+        'Tracked work cannot await disposal of its own engine or owner.',
+      );
+    }
     var active = current;
     while (active != null) {
       if (identical(active, this) && active._bodyRunning)
@@ -412,6 +425,7 @@ final class LevitTaskGroup
   @override
   Future<void> drain() async {
     assertCanDispose();
+    requestCancel();
     await done;
   }
 

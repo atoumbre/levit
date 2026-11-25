@@ -181,6 +181,11 @@ class LevitDependency<S> {
       _initializationFailureStorage ?? const [];
   List<LevitDisposalFailure> get _mutableInitializationFailures =>
       _initializationFailureStorage ??= [];
+  List<LevitDisposalFailure>? _releasedFactoryFailureStorage;
+  List<LevitDisposalFailure> get _releasedFactoryFailures =>
+      _releasedFactoryFailureStorage ?? const [];
+  List<LevitDisposalFailure> get _mutableReleasedFactoryFailures =>
+      _releasedFactoryFailureStorage ??= [];
   late final Set<Future<void>> _factoryReleases = {};
   late final _releasingFactoryInstances = HashSet<Object>.identity();
   LevitScope? _scope;
@@ -329,6 +334,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   Completer<void>? _disposedCompleter;
   Set<LevitScope>? _ownedChildrenStorage;
   Set<LevitScope> get _ownedChildren => _ownedChildrenStorage ?? const {};
+  Map<Object, int>? _opaqueTagIds;
   List<LevitDisposalFailure>? _cancellationFailures;
   bool _isClosing = false;
   bool _isDisposed = false;
@@ -397,7 +403,32 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     final info = LevitDependency<S>(permanent: permanent);
 
     // Instance creation happens before registration so middleware sees final metadata.
-    info.instance = _createInstance<S>(builder, keyString, info);
+    final created = _createInstance<S>(builder, keyString, info);
+
+    if (_isClosing ||
+        _isDisposed ||
+        _retiring.containsKey(key) ||
+        _registry.containsKey(key) ||
+        _aliases.containsKey(key)) {
+      if (created != null) {
+        final cleanup = _disposeInstance(created);
+        if (cleanup is Future<void>) {
+          if (!_isClosing && !_isDisposed) {
+            unawaited(trackInitialization(cleanup));
+          } else {
+            unawaited(cleanup);
+          }
+        }
+      }
+      if (_isClosing || _isDisposed) {
+        throw StateError('LevitScope($name) was disposed during put<$S>().');
+      }
+      throw StateError(
+        'LevitScope($name): "$keyString" was registered or retired during put<$S>().',
+      );
+    }
+
+    info.instance = created;
 
     _registerBinding(key, keyString, info, 'put', tag: tag);
 
@@ -427,10 +458,13 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
+    final existing = _registry[key];
     if (_retiring.containsKey(key) ||
-        (_registry[key]?.isFactory == true &&
-            _registry[key]!._hasFactoryWork) ||
-        (isFactory && _registry[key]?.isInstantiated == true)) {
+        (existing != null &&
+            (existing._hasFactoryWork ||
+                existing._initializationFailures.isNotEmpty)) ||
+        (_pendingInit?.containsKey(key) ?? false) ||
+        (isFactory && existing?.isInstantiated == true)) {
       throw StateError('Await delete<$S> before replacing "$keyString".');
     }
 
@@ -483,10 +517,13 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
+    final existing = _registry[key];
     if (_retiring.containsKey(key) ||
-        (_registry[key]?.isFactory == true &&
-            _registry[key]!._hasFactoryWork) ||
-        (isFactory && _registry[key]?.isInstantiated == true)) {
+        (existing != null &&
+            (existing._hasFactoryWork ||
+                existing._initializationFailures.isNotEmpty)) ||
+        (_pendingInit?.containsKey(key) ?? false) ||
+        (isFactory && existing?.isInstantiated == true)) {
       throw StateError('Await delete<$S> before replacing "$keyString".');
     }
 
@@ -585,6 +622,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     if (tag == null) {
       _typeRegistry[S] = info;
       _typeResolutionCacheStorage?.remove(S);
+      _instanceCache.remove(S);
     }
 
     _resolutionCacheStorage?.remove(key);
@@ -850,8 +888,14 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     ) {
       ancestors.add(LevitScopeIdentity(parent.id, parent.name));
     }
-    String keyId(LevitScopeKey key) =>
-        '${key.type}#${key.tag == null ? 'default' : key.tag.hashCode}';
+    String keyId(LevitScopeKey key) {
+      final tag = key.tag;
+      if (tag == null) return '${key.type}#default';
+      final ids = _opaqueTagIds ??= <Object, int>{};
+      final opaqueId = ids.putIfAbsent(tag, () => ids.length + 1);
+      return '${key.type}#tag$opaqueId';
+    }
+
     return LevitScopeDescription(
       id: id,
       name: name,
@@ -1134,7 +1178,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
 
   S _createInstance<S>(S Function() builder, String key, LevitDependency info) {
     final wrappedBuilder = _applyCreateInstanceHooks<S>(builder, key, info);
-    return wrappedBuilder();
+    return _guardInitialization(wrappedBuilder, registration: info);
   }
 
   Future<S> _createInstanceAsync<S>(
@@ -1267,7 +1311,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
       ], includeScopeInitialization: false);
       return true;
     } catch (error, stackTrace) {
-      info._mutableInitializationFailures.add(
+      info._mutableReleasedFactoryFailures.add(
         LevitDisposalFailure(
           resource: instance,
           error: error,
@@ -1574,6 +1618,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
               info._pendingFactories.isEmpty &&
               info._factoryInstances.isEmpty &&
               info._initializationFailures.isEmpty &&
+              info._releasedFactoryFailures.isEmpty &&
               info._cleanupFuture == null &&
               info.instance is! LevitDrainable,
         )) {
@@ -1708,6 +1753,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
         await Future.wait(info._pendingFactories.toList());
       }
       failures.addAll(info._initializationFailures);
+      failures.addAll(info._releasedFactoryFailures);
       for (final instance in [
         ...info._factoryInstances.toList().reversed,
         if (info.isInstantiated) info.instance,

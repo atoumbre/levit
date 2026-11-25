@@ -53,8 +53,6 @@ class _LWatchElement extends ComponentElement
   final Set<LevitReactiveNotifier> _scratchNotifiers = {};
   LxListenerContext? _cachedContext;
 
-  bool _isDirty = false;
-
   @override
   void addNotifier(LevitReactiveNotifier notifier) {
     (_newNotifiers ??= []).add(notifier);
@@ -70,7 +68,10 @@ class _LWatchElement extends ComponentElement
     // Stabilize reads when a getter recreates wrapper reactives every build
     // but they still represent the same logical source.
     final single = _singleNotifier;
-    if (_usingSinglePath && single is LxReactive) {
+    if (_usingSinglePath &&
+        single != null &&
+        !single.isDisposed &&
+        single is LxReactive) {
       final stable = single as LxReactive;
       if (_isSameLogicalReactive(stable, reactive)) {
         return stable;
@@ -83,12 +84,24 @@ class _LWatchElement extends ComponentElement
     final key = _logicalKeyOf(reactive);
     if (key == null) return reactive;
 
-    return _logicalReactiveIndex?[key] ?? reactive;
+    final candidate = _logicalReactiveIndex?[key];
+    if (candidate == null ||
+        (candidate is LevitReactiveNotifier &&
+            (candidate as LevitReactiveNotifier).isDisposed)) {
+      return reactive;
+    }
+    return candidate;
   }
 
   bool _isSameLogicalReactive(LxReactive a, LxReactive b) {
     if (identical(a, b)) return true;
     if (a.runtimeType != b.runtimeType) return false;
+    if (a is LevitReactiveNotifier && (a as LevitReactiveNotifier).isDisposed) {
+      return false;
+    }
+    if (b is LevitReactiveNotifier && (b as LevitReactiveNotifier).isDisposed) {
+      return false;
+    }
 
     // Keep aliasing conservative to avoid cross-wiring unrelated reactives.
     final ownerA = a.ownerId;
@@ -96,7 +109,12 @@ class _LWatchElement extends ComponentElement
     final nameA = a.name;
     final nameB = b.name;
 
-    if (ownerA == null || ownerB == null || nameA == null || nameB == null) {
+    if (ownerA == null ||
+        ownerB == null ||
+        ownerA == '?' ||
+        ownerB == '?' ||
+        nameA == null ||
+        nameB == null) {
       return false;
     }
 
@@ -106,7 +124,7 @@ class _LWatchElement extends ComponentElement
   (Type, String, String)? _logicalKeyOf(LxReactive reactive) {
     final ownerId = reactive.ownerId;
     final name = reactive.name;
-    if (ownerId == null || name == null) return null;
+    if (ownerId == null || ownerId == '?' || name == null) return null;
     return (reactive.runtimeType, ownerId, name);
   }
 
@@ -114,7 +132,7 @@ class _LWatchElement extends ComponentElement
     Map<(Type, String, String), LxReactive?>? next;
 
     for (final notifier in notifiers) {
-      if (notifier is! LxReactive) continue;
+      if (notifier.isDisposed || notifier is! LxReactive) continue;
       final reactive = notifier as LxReactive;
       final key = _logicalKeyOf(reactive);
       if (key == null) continue;
@@ -149,8 +167,7 @@ class _LWatchElement extends ComponentElement
   }
 
   void _triggerRebuild() {
-    if (!_isDirty && mounted) {
-      _isDirty = true;
+    if (mounted) {
       markNeedsBuild();
     }
   }
@@ -164,7 +181,6 @@ class _LWatchElement extends ComponentElement
       }());
     }
 
-    _isDirty = false;
     _newNotifiers = null;
 
     final previousProxy = Lx.proxy;

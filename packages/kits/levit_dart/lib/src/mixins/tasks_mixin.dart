@@ -159,8 +159,37 @@ mixin LevitTasksMixin on LevitController {
 
   @override
   FutureOr<void> onBeforeClose() async {
-    await _taskEngines[this]?.dispose();
-    await super.onBeforeClose();
+    final failures = <LevitDisposalFailure>[];
+    final engine = _taskEngines[this];
+    if (engine != null) {
+      try {
+        await engine.dispose();
+      } on LevitDisposalException catch (error) {
+        failures.addAll(error.failures);
+      } catch (error, stackTrace) {
+        failures.add(
+          LevitDisposalFailure(
+            resource: engine,
+            error: error,
+            stackTrace: stackTrace,
+          ),
+        );
+      }
+    }
+    try {
+      await super.onBeforeClose();
+    } on LevitDisposalException catch (error) {
+      failures.addAll(error.failures);
+    } catch (error, stackTrace) {
+      failures.add(
+        LevitDisposalFailure(
+          resource: this,
+          error: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+    if (failures.isNotEmpty) throw LevitDisposalException.aggregate(failures);
   }
 }
 
@@ -412,7 +441,8 @@ mixin LevitReactiveTasksMixin on LevitController {
         (debugName == null
             ? LevitTaskMetadata.none
             : LevitTaskMetadata(debugName: debugName));
-    LevitTaskEvent? queuedEvent;
+    LevitTaskEvent? latestEvent;
+    String? executionId;
     late final LevitTaskExecution<T> execution;
 
     execution = tasksEngine.submit<T>(
@@ -426,39 +456,50 @@ mixin LevitReactiveTasksMixin on LevitController {
       cachePolicy: cachePolicy,
       metadata: taskMetadata,
       onEvent: (event) {
-        queuedEvent ??= event;
+        executionId ??= event.executionId;
+        latestEvent = event;
         _applyTaskEvent(event);
       },
       onSuccess: (result) {
-        _updateExecution(taskId, execution.executionId, (current) {
+        final idForUpdate = executionId;
+        if (idForUpdate == null) return;
+        _updateExecution(taskId, idForUpdate, (current) {
           return current.copyWith(status: LxSuccess<T>(result), progress: 1);
         });
       },
       onProgress: (progress) {
-        _updateExecution(taskId, execution.executionId, (current) {
+        final idForUpdate = executionId;
+        if (idForUpdate == null) return;
+        _updateExecution(taskId, idForUpdate, (current) {
           return current.copyWith(progress: progress);
         });
       },
       onError: (error, stackTrace) {
-        _updateExecution(taskId, execution.executionId, (current) {
-          return current.copyWith(
-            status: LxError<dynamic>.fromPrevious(
-              error,
-              stackTrace,
-              current.status,
-            ),
-          );
-        });
+        final idForUpdate = executionId;
+        if (idForUpdate != null) {
+          _updateExecution(taskId, idForUpdate, (current) {
+            return current.copyWith(
+              status: LxError<dynamic>.fromPrevious(
+                error,
+                stackTrace,
+                current.status,
+              ),
+            );
+          });
+        }
         (onError ?? this.onTaskError)?.call(error, stackTrace);
       },
       onCancel: () {
-        _updateExecution(taskId, execution.executionId, (current) {
+        final idForUpdate = executionId;
+        if (idForUpdate == null) return;
+        _updateExecution(taskId, idForUpdate, (current) {
           return current.copyWith(
             status: LxIdle<dynamic>.fromPrevious(current.status),
           );
         });
       },
     );
+    executionId ??= execution.executionId;
 
     if (execution.disposition == LevitTaskSubmissionDisposition.joined ||
         execution.disposition == LevitTaskSubmissionDisposition.dropped) {
@@ -467,26 +508,34 @@ mixin LevitReactiveTasksMixin on LevitController {
 
     _cleanupTimers.remove(taskId)?.cancel();
     _pruneTaskHistoryFor(taskId);
-    final initialEvent = queuedEvent;
+    final initialEvent = latestEvent;
+    final previousStatus = tasks[taskId]?.status ?? LxIdle<dynamic>();
+    final initialPhase = initialEvent?.phase ?? LevitTaskPhase.queued;
+    final initialStatus = initialPhase == LevitTaskPhase.completed
+        ? LxIdle<dynamic>.fromPrevious(previousStatus)
+        : LxWaiting<dynamic>.fromPrevious(previousStatus);
     tasks[taskId] = TaskDetails(
-      status: LxWaiting<dynamic>.fromPrevious(
-        tasks[taskId]?.status ?? LxIdle<dynamic>(),
-      ),
+      status: initialStatus,
       executionId: execution.executionId,
       ownerPath: initialEvent?.ownerPath ?? ownerPath,
       groupId: initialEvent?.groupId,
       parentGroupId: initialEvent?.parentGroupId,
       deadline: initialEvent?.deadline,
       cancellationReason: initialEvent?.cancellationReason,
-      phase: initialEvent?.phase ?? LevitTaskPhase.queued,
+      phase: initialPhase,
       metadata: taskMetadata,
       priority: priority,
       attempt: initialEvent?.attempt ?? 0,
       weight: weight,
       progress: 0,
-      started: false,
+      started: initialPhase == LevitTaskPhase.running,
       queuedAt: initialEvent?.queuedAt ?? DateTime.now(),
+      finishedAt: initialEvent?.finishedAt,
+      outcome: initialEvent?.outcome,
     );
+    if (initialPhase == LevitTaskPhase.completed) {
+      _scheduleCleanup(taskId);
+    }
     return execution.result;
   }
 
@@ -549,7 +598,8 @@ mixin LevitReactiveTasksMixin on LevitController {
         (debugName == null
             ? LevitTaskMetadata.none
             : LevitTaskMetadata(debugName: debugName));
-    LevitTaskEvent? queuedEvent;
+    LevitTaskEvent? latestEvent;
+    String? executionId;
     late final LevitTaskExecution<T> execution;
     execution = tasksEngine.submitIsolate<I, T>(
       task,
@@ -563,39 +613,50 @@ mixin LevitReactiveTasksMixin on LevitController {
       cachePolicy: cachePolicy,
       metadata: taskMetadata,
       onEvent: (event) {
-        queuedEvent ??= event;
+        executionId ??= event.executionId;
+        latestEvent = event;
         _applyTaskEvent(event);
       },
       onSuccess: (result) {
-        _updateExecution(taskId, execution.executionId, (current) {
+        final idForUpdate = executionId;
+        if (idForUpdate == null) return;
+        _updateExecution(taskId, idForUpdate, (current) {
           return current.copyWith(status: LxSuccess<T>(result), progress: 1);
         });
       },
       onProgress: (progress) {
-        _updateExecution(taskId, execution.executionId, (current) {
+        final idForUpdate = executionId;
+        if (idForUpdate == null) return;
+        _updateExecution(taskId, idForUpdate, (current) {
           return current.copyWith(progress: progress);
         });
       },
       onError: (error, stackTrace) {
-        _updateExecution(taskId, execution.executionId, (current) {
-          return current.copyWith(
-            status: LxError<dynamic>.fromPrevious(
-              error,
-              stackTrace,
-              current.status,
-            ),
-          );
-        });
+        final idForUpdate = executionId;
+        if (idForUpdate != null) {
+          _updateExecution(taskId, idForUpdate, (current) {
+            return current.copyWith(
+              status: LxError<dynamic>.fromPrevious(
+                error,
+                stackTrace,
+                current.status,
+              ),
+            );
+          });
+        }
         (onError ?? this.onTaskError)?.call(error, stackTrace);
       },
       onCancel: () {
-        _updateExecution(taskId, execution.executionId, (current) {
+        final idForUpdate = executionId;
+        if (idForUpdate == null) return;
+        _updateExecution(taskId, idForUpdate, (current) {
           return current.copyWith(
             status: LxIdle<dynamic>.fromPrevious(current.status),
           );
         });
       },
     );
+    executionId ??= execution.executionId;
 
     if (execution.disposition == LevitTaskSubmissionDisposition.joined ||
         execution.disposition == LevitTaskSubmissionDisposition.dropped) {
@@ -604,23 +665,32 @@ mixin LevitReactiveTasksMixin on LevitController {
 
     _cleanupTimers.remove(taskId)?.cancel();
     _pruneTaskHistoryFor(taskId);
-    final initialEvent = queuedEvent;
+    final initialEvent = latestEvent;
+    final previousStatus = tasks[taskId]?.status ?? LxIdle<dynamic>();
+    final initialPhase = initialEvent?.phase ?? LevitTaskPhase.queued;
+    final initialStatus = initialPhase == LevitTaskPhase.completed
+        ? LxIdle<dynamic>.fromPrevious(previousStatus)
+        : LxWaiting<dynamic>.fromPrevious(previousStatus);
     tasks[taskId] = TaskDetails(
-      status: LxWaiting<dynamic>.fromPrevious(
-        tasks[taskId]?.status ?? LxIdle<dynamic>(),
-      ),
+      status: initialStatus,
       executionId: execution.executionId,
       ownerPath: initialEvent?.ownerPath ?? ownerPath,
       groupId: initialEvent?.groupId,
       parentGroupId: initialEvent?.parentGroupId,
       deadline: initialEvent?.deadline,
       cancellationReason: initialEvent?.cancellationReason,
-      phase: initialEvent?.phase ?? LevitTaskPhase.queued,
+      phase: initialPhase,
       metadata: taskMetadata,
       priority: priority,
       weight: weight,
+      started: initialPhase == LevitTaskPhase.running,
       queuedAt: initialEvent?.queuedAt ?? DateTime.now(),
+      finishedAt: initialEvent?.finishedAt,
+      outcome: initialEvent?.outcome,
     );
+    if (initialPhase == LevitTaskPhase.completed) {
+      _scheduleCleanup(taskId);
+    }
     return execution.result;
   }
 
@@ -634,11 +704,13 @@ mixin LevitReactiveTasksMixin on LevitController {
   }
 
   void _scheduleCleanup(String id) {
+    if (isClosed) return;
     final delay = autoCleanupDelay;
     if (delay == null) return;
     _cleanupTimers.remove(id)?.cancel();
     _cleanupTimers[id] = Timer(delay, () {
       _cleanupTimers.remove(id);
+      if (isClosed) return;
       if (tasks[id]?.phase == LevitTaskPhase.completed) clearTask(id);
     });
   }
@@ -658,7 +730,11 @@ mixin LevitReactiveTasksMixin on LevitController {
   void clearTask(String id) {
     tasks.remove(id);
     _cleanupTimers.remove(id)?.cancel();
-    cancelTask(id);
+    if (!isClosed) {
+      cancelTask(id);
+    } else {
+      _taskEngines[this]?.cancel(id);
+    }
   }
 
   /// Clears all terminal tracked entries.
@@ -684,11 +760,40 @@ mixin LevitReactiveTasksMixin on LevitController {
 
   @override
   FutureOr<void> onBeforeClose() async {
-    await _taskEngines[this]?.dispose();
     for (final timer in _cleanupTimers.values) {
       timer.cancel();
     }
     _cleanupTimers.clear();
-    await super.onBeforeClose();
+    final failures = <LevitDisposalFailure>[];
+    final engine = _taskEngines[this];
+    if (engine != null) {
+      try {
+        await engine.dispose();
+      } on LevitDisposalException catch (error) {
+        failures.addAll(error.failures);
+      } catch (error, stackTrace) {
+        failures.add(
+          LevitDisposalFailure(
+            resource: engine,
+            error: error,
+            stackTrace: stackTrace,
+          ),
+        );
+      }
+    }
+    try {
+      await super.onBeforeClose();
+    } on LevitDisposalException catch (error) {
+      failures.addAll(error.failures);
+    } catch (error, stackTrace) {
+      failures.add(
+        LevitDisposalFailure(
+          resource: this,
+          error: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
+    if (failures.isNotEmpty) throw LevitDisposalException.aggregate(failures);
   }
 }

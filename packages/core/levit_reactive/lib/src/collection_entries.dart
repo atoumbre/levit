@@ -38,7 +38,12 @@ final class _EntryChannel extends LxBase<Object?> {
 
   void publish(Object? snapshot) {
     _value = snapshot;
-    if (_controller == null && !LevitReactiveMiddleware.hasSetMiddlewares) {
+    final recordBatch =
+        LevitReactiveMiddleware.hasBatchMiddlewares &&
+        _LevitReactiveCore.isBatching;
+    if (_controller == null &&
+        !LevitReactiveMiddleware.hasSetMiddlewares &&
+        !recordBatch) {
       _notifyListenersOnly();
     } else {
       super.refresh();

@@ -154,9 +154,16 @@ class LevitMonitorMiddleware
     return operation;
   }
 
-  static int _sessionCounter = 0;
-  static String _generateSessionId() =>
-      '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}-${_sessionCounter++}';
+  static final Random _sessionRandom = Random.secure();
+  static String _generateSessionId() {
+    final buffer = StringBuffer();
+    for (var i = 0; i < 4; i++) {
+      buffer.write(
+        _sessionRandom.nextInt(1 << 32).toRadixString(16).padLeft(8, '0'),
+      );
+    }
+    return buffer.toString();
+  }
 
   void _recordFailure(Object error, StackTrace stack) {
     if (_failures.length < 32) _failures.add(AsyncError(error, stack));
@@ -212,8 +219,13 @@ class LevitMonitorMiddleware
     await _flushQueue();
   }
 
-  Future<void> _flushQueue() async {
+  Future<void> _flushQueue({bool waitForTransition = true}) async {
     while (_pumping != null || _pending.isNotEmpty) {
+      if (_paused) {
+        if (!waitForTransition) break;
+        await _transition;
+        continue;
+      }
       _pump();
       await _pumping;
     }
@@ -230,9 +242,32 @@ class LevitMonitorMiddleware
   // ---------------------------------------------------------------------------
 
   @override
-  void onReactiveMetadata(LxReactive reactive) => _addToBuffer(
-    ReactiveMetadataEvent(sessionId: sessionId, reactive: reactive),
-  );
+  void onReactiveMetadata(LxReactive reactive) {
+    if (reactive.isSensitive) {
+      final reactiveId = reactive.id.toString();
+      _stateSnapshot.scrubSensitiveReactive(reactiveId);
+      if (_pending.isNotEmpty) {
+        final scrubbed = ListQueue<FrozenMonitorEvent>(_pending.length);
+        for (final pending in _pending) {
+          final nextEnvelope = _scrubEnvelopeForReactive(
+            pending.envelope,
+            reactiveId,
+          );
+          scrubbed.add(
+            identical(nextEnvelope, pending.envelope)
+                ? pending
+                : FrozenMonitorEvent._captured(nextEnvelope, pending.timestamp),
+          );
+        }
+        _pending
+          ..clear()
+          ..addAll(scrubbed);
+      }
+    }
+    _addToBuffer(
+      ReactiveMetadataEvent(sessionId: sessionId, reactive: reactive),
+    );
+  }
 
   @override
   LxOnSet? get onSet => (next, reactive, change) {

@@ -49,7 +49,7 @@ class _LevitReactiveCore {
     _batchedNotifiers[_batchCount++] = notifier;
   }
 
-  static final List<LevitReactiveNotifier> _propagationQueue = [];
+  static final List<LevitReactiveNotifier?> _propagationQueue = [];
 
   static bool _isPropagating = false;
 
@@ -100,38 +100,41 @@ class _LevitReactiveCore {
         !_isPropagating;
   }
 
-  // Static comparator avoids per-sort closure allocation during batch flush.
-  static int _batchSorter(LevitReactiveNotifier a, LevitReactiveNotifier b) =>
-      a._graphDepth.compareTo(b._graphDepth);
-
   static void _flushGlobalBatch() {
     if (_batchCount == 0) return;
 
     _batchDepth++;
     _updateFastPath();
     try {
-      // Process shallower graph nodes first to keep derived values glitch-free.
-      for (var i = 1; i < _batchCount; i++) {
-        if (_batchedNotifiers[i - 1]!._graphDepth >
-            _batchedNotifiers[i]!._graphDepth) {
-          final sorted =
-              _batchedNotifiers
-                  .take(_batchCount)
-                  .cast<LevitReactiveNotifier>()
-                  .toList()
-                ..sort(_batchSorter);
-          _batchedNotifiers.setRange(0, _batchCount, sorted);
-          break;
+      // Process shallower graph nodes first, including nodes appended during
+      // flush, so derived values stay glitch-free without duplicate emissions.
+      var head = 0;
+      var remaining = _batchCount;
+      while (remaining > 0) {
+        while (head < _batchCount && _batchedNotifiers[head] == null) {
+          head++;
         }
-      }
-
-      // Re-entrant notifications can append to this list during iteration.
-      int processedCount = 0;
-      while (processedCount < _batchCount) {
-        final notifier = _batchedNotifiers[processedCount]!;
-        _batchedNotifiers[processedCount++] = null;
+        if (head >= _batchCount) break;
+        var minIdx = head;
+        var minDepth = _batchedNotifiers[head]!._graphDepth;
+        if (minDepth > 0) {
+          for (var i = head + 1; i < _batchCount; i++) {
+            final candidate = _batchedNotifiers[i];
+            if (candidate != null && candidate._graphDepth < minDepth) {
+              minDepth = candidate._graphDepth;
+              minIdx = i;
+              if (minDepth == 0) break;
+            }
+          }
+        }
+        final notifier = _batchedNotifiers[minIdx]!;
+        _batchedNotifiers[minIdx] = null;
+        remaining--;
+        if (minIdx == head) head++;
+        final countBefore = _batchCount;
         notifier._isPendingSyncBatch = false;
-        notifier._notifyListeners();
+        notifier._propagateNotify();
+        remaining += _batchCount - countBefore;
       }
 
       // Clear only after all appended items were processed.
@@ -384,6 +387,10 @@ class LevitReactiveNotifier {
   /// Used to ensure correct notification order.
   int _graphDepth = 0;
 
+  /// Monotonic mutation counter used by inactive computed values to detect
+  /// upstream changes between construction and first activation.
+  int _version = 0;
+
   /// Returns the current depth in the dependency graph.
   int get graphDepth => _graphDepth;
 
@@ -454,6 +461,7 @@ class LevitReactiveNotifier {
   /// Notifies all listeners of a change.
   void notify() {
     if (_disposed) return;
+    _version++;
 
     // Direct-call fast path for the most common single-listener case.
     if (_singleListener != null &&
@@ -505,12 +513,35 @@ class LevitReactiveNotifier {
     try {
       _notifyListeners();
 
-      if (_LevitReactiveCore._propagationQueue.isNotEmpty) {
-        var i = 0;
-        while (i < _LevitReactiveCore._propagationQueue.length) {
-          final notifier = _LevitReactiveCore._propagationQueue[i++];
+      final queue = _LevitReactiveCore._propagationQueue;
+      if (queue.isNotEmpty) {
+        var head = 0;
+        var remaining = queue.length;
+        while (remaining > 0) {
+          while (head < queue.length && queue[head] == null) {
+            head++;
+          }
+          if (head >= queue.length) break;
+          var minIdx = head;
+          var minDepth = queue[head]!._graphDepth;
+          if (minDepth > 0) {
+            for (var i = head + 1; i < queue.length; i++) {
+              final candidate = queue[i];
+              if (candidate != null && candidate._graphDepth < minDepth) {
+                minDepth = candidate._graphDepth;
+                minIdx = i;
+                if (minDepth == 0) break;
+              }
+            }
+          }
+          final notifier = queue[minIdx]!;
+          queue[minIdx] = null;
+          remaining--;
+          if (minIdx == head) head++;
+          final lengthBefore = queue.length;
           notifier._isPendingPropagate = false; // Clear before processing
-          notifier._notifyListeners();
+          notifier._propagateNotify();
+          remaining += queue.length - lengthBefore;
         }
       }
     } finally {
@@ -519,12 +550,17 @@ class LevitReactiveNotifier {
       if (_LevitReactiveCore._propagationQueue.isNotEmpty) {
         // Reset pending flags if propagation exits early.
         for (final n in _LevitReactiveCore._propagationQueue) {
-          n._isPendingPropagate = false;
+          n?._isPendingPropagate = false;
         }
         _LevitReactiveCore._propagationQueue.clear();
       }
     }
   }
+
+  /// Hook invoked when dequeuing from batch or propagation queues.
+  /// Overridden by [LxComputed] to run deferred eager recomputations in
+  /// topological order.
+  void _propagateNotify() => _notifyListeners();
 
   void _notifyListeners() {
     if (_singleListener != null) {
@@ -802,11 +838,15 @@ abstract class LxBase<T> extends LevitReactiveNotifier
 
   /// Internal setter for subclasses (Computed, etc.)
   void _setValueInternal(T val, {bool notifyListeners = true}) {
+    final recordBatch =
+        LevitReactiveMiddleware.hasBatchMiddlewares &&
+        _LevitReactiveCore.isBatching;
     // Fast path bypasses middleware interception.
     if (LevitReactiveMiddleware.bypassMiddleware ||
-        !LevitReactiveMiddleware.hasSetMiddlewares) {
+        (!LevitReactiveMiddleware.hasSetMiddlewares && !recordBatch)) {
       if (_isEqual(_value, val)) return;
       _value = val;
+      _version++;
       _controller?.add(_value);
       if (notifyListeners) {
         _publishMutation();
@@ -828,6 +868,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
           : null,
       restore: (v) {
         _value = v;
+        _version++;
         _controller?.add(_value);
         if (notifyListeners) {
           _publishMutation();
@@ -838,6 +879,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     // Centralized setter reused by middleware wrappers.
     void performSet(T v) {
       _value = v;
+      _version++;
       _controller?.add(_value);
       if (notifyListeners) {
         _publishMutation();
@@ -846,6 +888,11 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       if (_LevitReactiveCore.isBatching) {
         _LevitReactiveCore._recordBatchEntry(this, change);
       }
+    }
+
+    if (!LevitReactiveMiddleware.hasSetMiddlewares) {
+      performSet(val);
+      return;
     }
 
     final wrapped = _LevitReactiveMiddlewareChain.applyOnSet<T>(
@@ -959,9 +1006,12 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   /// This also triggers middleware hooks to ensure mutations are tracked.
   void refresh() {
     if (isDisposed) return;
+    final recordBatch =
+        LevitReactiveMiddleware.hasBatchMiddlewares &&
+        _LevitReactiveCore.isBatching;
     // Refresh fast path without middleware interception.
     if (LevitReactiveMiddleware.bypassMiddleware ||
-        !LevitReactiveMiddleware.hasSetMiddlewares) {
+        (!LevitReactiveMiddleware.hasSetMiddlewares && !recordBatch)) {
       _controller?.add(_value);
       _publishMutation();
       return;
@@ -992,6 +1042,11 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       }
     }
 
+    if (!LevitReactiveMiddleware.hasSetMiddlewares) {
+      performRefresh(_value);
+      return;
+    }
+
     final wrapped = _LevitReactiveMiddlewareChain.applyOnSet<T>(
       performRefresh,
       this,
@@ -1017,7 +1072,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   }
 
   @override
-  String toString() => _value.toString();
+  String toString() => isSensitive ? '***' : _value.toString();
 
   /// Whether the reactive object has been closed/disposed.
   @override

@@ -608,51 +608,66 @@ class LxSet<E> extends LxVar<Set<E>> implements Set<E> {
 
   @override
   bool add(E value) {
-    final result = this.value.add(value);
+    final result = _value.add(value);
     if (result) refresh();
     return result;
   }
 
   @override
   void addAll(Iterable<E> elements) {
-    value.addAll(elements);
-    refresh();
+    try {
+      _value.addAll(elements);
+    } finally {
+      refresh();
+    }
   }
 
   @override
   bool remove(Object? value) {
-    final result = this.value.remove(value);
+    final result = _value.remove(value);
     if (result) refresh();
     return result;
   }
 
   @override
   void removeWhere(bool Function(E) test) {
-    value.removeWhere(test);
-    refresh();
+    try {
+      _value.removeWhere(test);
+    } finally {
+      refresh();
+    }
   }
 
   @override
   void retainWhere(bool Function(E) test) {
-    value.retainWhere(test);
-    refresh();
+    try {
+      _value.retainWhere(test);
+    } finally {
+      refresh();
+    }
   }
 
   @override
   void removeAll(Iterable<Object?> elements) {
-    value.removeAll(elements);
-    refresh();
+    try {
+      _value.removeAll(elements);
+    } finally {
+      refresh();
+    }
   }
 
   @override
   void retainAll(Iterable<Object?> elements) {
-    value.retainAll(elements);
-    refresh();
+    try {
+      _value.retainAll(elements);
+    } finally {
+      refresh();
+    }
   }
 
   @override
   void clear() {
-    value.clear();
+    _value.clear();
     refresh();
   }
 
@@ -767,15 +782,17 @@ class LxSet<E> extends LxVar<Set<E>> implements Set<E> {
 
   /// Replaces all elements with [elements] in a single notification.
   void assign(Iterable<E> elements) {
-    value
+    if (identical(elements, this) || identical(elements, _value)) return;
+    final copy = List<E>.of(elements);
+    _value
       ..clear()
-      ..addAll(elements);
+      ..addAll(copy);
     refresh();
   }
 
   /// Replaces the set with a single [element].
   void assignOne(E element) {
-    value
+    _value
       ..clear()
       ..add(element);
     refresh();
