@@ -71,7 +71,8 @@ void main() {
         title: 'Benchmark Results',
         environment: environment,
       );
-      final reportFile = File('../reports/bench_mark_report.md');
+      final reportFile = File('../reports/benchmark_report.md');
+      await reportFile.parent.create(recursive: true);
       await reportFile.writeAsString(report);
       print('Benchmark report generated: ${reportFile.absolute.path}');
     });

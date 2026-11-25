@@ -64,6 +64,3 @@ native observation interoperability and has no persistence or storage dependency
 - [ ] Maintain browser builds where supported, adapter tests, analysis, documentation
   and publication dry-runs in the ecosystem repository.
 - [ ] Link published integrations from main-repository documentation once available.
-
-See the [revised 0.1.0 plan](release_0.1.0_plan.md) and
-[implementation progress](release_0.1.0_progress.md).

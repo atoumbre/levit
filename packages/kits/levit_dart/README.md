@@ -317,7 +317,7 @@ the controller starts closing. For deterministic tests, pass a controlled `Stopw
 to the standalone constructor; the countdown exclusively controls that stopwatch.
 
 Persistence codecs/storage and persistent task caches belong to the independent
-[ecosystem roadmap](../../../reports/ecosystem_roadmap.md), outside runtime dependencies.
+[ecosystem roadmap](../../../docs/ecosystem_roadmap.md), outside runtime dependencies.
 
 Task queue accounting maintains the number of pending leaf entries without
 rescanning the execution map on submission. Joins and coalesced replacements

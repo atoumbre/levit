@@ -79,89 +79,20 @@ Output uses the inherited log stream, preserving the macOS application sandbox.
 The smoke binary exits after completion. Rebuild with `--target=lib/main.dart`
 to return to the interactive dashboard.
 
-## Repeating the dashboard comparison
+## Automated report
 
-`lib/compare_app_workloads.dart` mounts the real dashboard (including its sidebar)
-and runs all 60 cases with the existing 50 samples and five warmups. It emits an
-`APP_COMPARISON_JSON:` record, awaits unmount/cleanup and exits. The driver checks
-identical benchmark sources/locks, stamps source digests, and rejects changed
-window geometry or refresh rates:
+From the repository root, regenerate the retained
+[benchmark report](../reports/benchmark_report.md) with:
 
 ```sh
-dart run scripts/compare_app_performance.dart --before-root /path/to/before \
-  --after-root /path/to/after --output /path/to/evidence --flutter /path/to/flutter
+melos run report:benchmarks --no-select
 ```
 
-Run the driver from the repository root on an otherwise idle machine. It builds
-both revisions, then runs before → after → after → before in separate processes.
-It retains build logs, raw samples, source manifests and AOT binary hashes.
-Summarize completed runs with
-`dart run scripts/summarize_app_performance.dart /path/to/evidence`.
-`--mode=profile` is also supported. `--grid-only` isolates the unchanged grid
-across all five frameworks; `--chain-only` isolates the unchanged Levit/vanilla
-chain cases. These use normal dashboard selections, so report them separately
-from the full suite: the surrounding workload history differs.
-Restore the interactive app afterward with
-`flutter build macos --release --target=lib/main.dart` from `benchmarks/`.
-
-`lib/profile_app_workloads.dart` exposes `ext.levit.profile` for CPU/allocation
-sampling of the same fan-in, fan-out, grid and chain implementations on that dashboard.
-Its repeated eight-second loops are for identifying CPU costs, **not latency
-comparisons**: logic iterations omit the normal inter-sample idle period.
-
-## Comparing static and dynamic computed tracking
-
-Run every computed dashboard workload in both modes from the repository root:
-
-```sh
-dart run scripts/compare_computed_modes.dart --output /path/to/new-evidence \
-  --flutter /path/to/flutter
-```
-
-The driver builds `lib/compare_computed_modes.dart` once in release mode and
-starts eight separate processes: four per dependency mode. Four adjacent pairs
-balance which mode runs first and whether workload order is forward or reversed.
-`--mode=profile` is also supported. Run on an otherwise idle machine.
-
-Add `--isolate-workloads` to run each workload in a fresh process (48 processes,
-still four pairs and 200 measured samples per mode per workload). This removes
-cross-workload history, including shared allocator/tracker state. Retain and
-report this separately from the suite; it does not change the timed workload.
-
-It reuses the diamond, fan-out, fan-in, async computed, batch and observed-chain
-implementations, changing only `staticDeps`. Work sizes, subscriptions, five
-warmups, 50 measured samples, correctness checks, 10ms inter-sample idle and
-awaited cleanup are unchanged. All six dependency sets are fixed, so static mode
-is valid. The chain and diamond observe their final output; intermediate
-computeds retain their original subscription behavior. This is not a comparison
-of independently subscribed nodes at every level.
-
-Each JSON result labels its tracking mode. Evidence includes raw samples, source
-and binary hashes, build/device metadata, workload sizes and per-process p50/p95.
-`summary.json` aggregates independent process medians and records every paired
-percentage difference; negative means static takes less time. It does not pool
-consecutive samples as independent runs. This comparison isolates tracking mode,
-not a change against an earlier revision or a ranking of other frameworks.
-
-The normal dashboard still uses its original modes: diamond/async static,
-fan-in/fan-out/batch/chain dynamic. Rapid mutation, DI and UI fixtures have no
-computed mode to switch. Static tracking is an opt-in promise that dependencies
-stay fixed; use dynamic tracking for conditional or changing dependency sets.
-No runtime default is changed by this comparison.
-
-The [2026-11-12 comparison](../reports/validation/0.1.0/2026-11-12-computed-modes/COMPARISON.md)
-retains both suite and isolated results, with raw samples and variability limits.
-
-The comparison binary exits after cleanup. Restore the interactive app from
-`benchmarks/` with `flutter build macos --release --target=lib/main.dart`, adding
-`--dart-define=BENCHMARK_REVISION=SOURCE_DIGEST` to identify the checkout.
-
-## Historical published-release comparison
-
-The [November 13 comparison](../reports/validation/0.1.0/2026-11-13-published-comparison/COMPARISON.md)
-summarizes the comparison against version 0.0.11. Its compatibility-rewrite
-driver and generated run artifacts were retired during cleanup. The original
-driver and results remain in Git history at `bd1a095`.
+This runs the shared workloads in a headless Flutter test process with reduced
+test-profile sizes, 50 warmups and 100 measured iterations. Use it to inspect
+workload behavior and timing under that profile. It does not measure native
+release performance or establish real-application speedups. Run it separately
+from other tests and builds on an otherwise idle machine.
 
 ## Methodology
 
@@ -230,8 +161,8 @@ LEVIT_PERFORMANCE_RUN=1 LEVIT_DIAGNOSTICS=off build/macos/Build/Products/Release
 ```
 
 Each process runs exactly one diagnostic state over three rounds. Set
-`LEVIT_DIAGNOSTICS=off` or `LEVIT_DIAGNOSTICS=on`; the comparison runner sets it
-for every process. Explicit monitor detachment is verified after every round. Logic workloads use
+`LEVIT_DIAGNOSTICS=off` or `LEVIT_DIAGNOSTICS=on` for every process.
+Explicit monitor detachment is verified after every round. Logic workloads use
 five warmups and 30 measured samples per round; UI uses ten warmup frames and 60
 measured frames. Debug builds are rejected. Diagnostics serialize JSON into a
 counting sink without retaining payloads or measuring network/disk IO. History is
@@ -243,16 +174,12 @@ measurement settings, not recommended application defaults.
 Run binaries sequentially on the same machine without concurrent test/build jobs.
 Use the same workload source and Flutter SDK for each reference. Preserve and
 identify any baseline adapter separately from the original runtime source.
-`dart run scripts/compare_release_performance.dart REFERENCE_ROOT OUTPUT [BEFORE_ROOT]`
-runs each revision in profile/release and each diagnostic state in a fresh
-process, then repeats in reversed revision/diagnostic order (16 processes, or 24
-with an optional before-optimization root). It validates sample counts and matching display
-geometry, and preserves logs, JSON samples and six round medians per configuration.
-The runner sets `LEVIT_PERFORMANCE_RUN=1` for both native hosts. This holds a
-process-scoped macOS activity assertion during measurement to prevent background
-idle throttling; it does not change system power settings. The assertion ends
-when the window closes or the process exits, and the runner verifies its startup
-marker before accepting results.
+Run each revision and diagnostic state in separate processes, repeat in reversed
+order, and retain logs, raw samples, source identity and SDK/device metadata.
+Check sample counts and matching display geometry before comparing runs.
+`LEVIT_PERFORMANCE_RUN=1` holds a process-scoped macOS activity assertion during
+measurement to prevent background idle throttling. It does not change system
+power settings, and the assertion ends when the window closes or the process exits.
 During these runs only, the benchmark window floats above ordinary windows so
 macOS occlusion cannot suspend Flutter frame delivery. It is placed on the
 available display with the highest scale factor; differing geometry invalidates
@@ -281,8 +208,8 @@ The service extension accepts `workload` (`tasks`, `scopes`, `notify`, `fanout`)
 and exercises verified work for five seconds. Set `LEVIT_DIAGNOSTICS=off|on` in
 separate processes. Collect VM CPU samples and heap counters around each call;
 profile instrumented runs independently from `release_performance.dart` timings.
-The collector and captured profiles are retained with the performance-remediation
-evidence. Heap counters are observations, not a complete allocation census.
+Keep captured profiles outside the repository. Heap counters are observations,
+not a complete allocation census.
 The native comparison retains end-to-end samples, including the explicit
 zero-duration event-loop wait used to drain delivery. Logic workloads also emit
 `bodySamplesUs`, measured at the return from the awaited operation, and the

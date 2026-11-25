@@ -1,117 +1,218 @@
 # Start with the lifetime
 
-Levit 0.1.0 requires Dart 3.12+; Flutter applications require Flutter 3.44+.
-Use `package:levit/levit.dart` in Dart and
-`package:levit_flutter/levit_flutter.dart` in Flutter. The core packages support
-custom integrations; applications generally need one kit import.
+This guide describes the current 0.1.0 API in this repository. Levit requires
+Dart 3.12+; Flutter applications require Flutter 3.44+.
 
-## 1. Scopes define the boundary
+| Application | Import |
+| --- | --- |
+| Pure Dart | `package:levit/levit.dart` |
+| Flutter | `package:levit_flutter/levit_flutter.dart` |
 
-Choose an app, route, feature, subtree or test lifetime before registering state.
-A scope resolves its own registrations first, then its ancestors. A child owns
-what it creates and borrows what it inherits. Register inside builders so
-construction and initialization are captured together.
+Use one kit for application code. Core packages are available for custom
+integrations. To run this repository's examples, first follow the
+[workspace setup](../CONTRIBUTING.md#development-setup).
+
+## 1. Choose who owns the state
+
+Choose an app, route, feature, subtree or test lifetime before registering a
+dependency. A scope searches its own registrations, then its ancestors. It owns
+local registrations and borrows inherited ones.
+
+| Need | Starting point |
+| --- | --- |
+| One Flutter feature owns a controller and its view | `LScopedView.put` |
+| Several widgets share a subtree's dependencies | `LScope`, or `LAsyncScope` for awaited setup |
+| A view consumes an existing dependency | `LView` or `LAsyncView` |
+| Dependencies follow route identity | `LRouteScope` or `LAsyncRouteScope` |
+| A short Dart operation needs scoped dependencies | `Levit.runInScope` |
+| A longer Dart lifetime needs explicit cleanup | `Levit.createScope` and awaited `scope.dispose()` |
+
+Construct dependencies inside registration builders. In widgets, resolve them
+with `context.levit.find<T>()` so nested scopes are respected. A child must not
+dispose a dependency borrowed from its parent. `permanent: true` only protects
+against a non-forced reset; disposing the owning scope still closes it.
+
+## 2. Build a small Flutter feature
+
+With `levit_flutter` in the application's dependencies, this is a complete
+`lib/main.dart`:
 
 ```dart
-final feature = Levit.createScope('editor');
-try {
-  final editor = feature.put(() => EditorController());
-  await editor.save();
-} finally {
-  await feature.dispose();
+import 'package:flutter/material.dart';
+import 'package:levit_flutter/levit_flutter.dart';
+
+class CounterController extends LevitController {
+  final count = 0.lx;
+
+  @override
+  void onInit() {
+    super.onInit();
+    own(count);
+  }
+
+  void increment() => count.value++;
 }
-```
 
-In Flutter, use `LScope`/`LAsyncScope` for subtree ownership or `LScopedView.put`
-for a controller and its view. `LView` consumes an existing registration. Resolve
-inside widgets using `context.levit.find<T>()` so nested scopes work correctly.
-
-## 2. Owners keep dependencies alive until work finishes
-
-A controller owns its reactives, subscriptions and tasks. `own` accepts supported
-resource contracts, or an explicit disposer for other resources:
-
-```dart
-late final text = own(TextEditingController(), dispose: (value) => value.dispose());
-```
-
-Call `Levit.enableAutoLinking()` before `runApp` to capture reactive construction.
-Explicitly own workers and resources created later. Pure Dart applications can
-use explicit ownership throughout.
-
-Cleanup first requests cancellation and drains tracked work, including `finally`
-blocks, then releases remaining owned resources in reverse order. Await cleanup
-to receive aggregate failures after all attempts. A cancellation request or a
-caller timeout is not cleanup completion. Delegate async lifecycle hooks with
-`await super.onBeforeClose()` (or return the future).
-
-Workflow groups cancel siblings on failure; the controller root supervises
-unrelated workflows. Submit leaf work from group bodies. Never await the owner's
-disposal inside its own task. See the runnable
-[save/upload example](../examples/task_board/lib/save_upload.dart).
-
-## 3. State belongs to an owner
-
-Use `.lx` for mutable values, `LxComputed` for derivations, and `LxReadable<T>` for
-observation-only consumers. Calls read; `.value` writes. Stores are stable recipe
-objects, keyed by definition identity and variant, not by diagnostic names or
-result types. Install `overrideWith` recipes before first local resolution.
-
-Observe one key or position with `map.entry(key)` or `list.entry(index)`.
-Own an `LxResource` to keep mounted consumers subscribed while replacing a
-producer. Own a `LevitAsyncMap` for loading by key; give builders
-`queries.entry(key)` and await `queries.refresh(key)` for the load result.
-`status.hasLastValue` distinguishes absent data from a successful `null`.
-
-[Searchable pagination](../examples/async_catalog) includes refresh and optimistic
-rollback. Keep request and mutation policy in controllers/application code.
-
-## 4. Widgets observe focused state
-
-```dart
 void main() {
   Levit.enableAutoLinking();
-  runApp(MaterialApp(home: LScopedView<CounterController>.put(
-    () => CounterController(),
-    autoWatch: false,
-    builder: (context, counter) => Scaffold(
-      body: Center(child: LWatch(() => Text('${counter.count.value}'))),
-      floatingActionButton: FloatingActionButton(
-        onPressed: counter.increment,
-        child: const Icon(Icons.add),
+  runApp(
+    MaterialApp(
+      home: LScopedView<CounterController>.put(
+        () => CounterController(),
+        autoWatch: false,
+        builder: (context, counter) => Scaffold(
+          appBar: AppBar(title: const Text('Counter')),
+          body: Center(child: LWatch(() => Text('${counter.count.value}'))),
+          floatingActionButton: FloatingActionButton(
+            onPressed: counter.increment,
+            child: const Icon(Icons.add),
+          ),
+        ),
       ),
     ),
-  )));
+  );
 }
 ```
 
-With the default `autoWatch: true`, read reactives directly in a small view's
-builder. For a large screen, use focused `LWatch` regions as above. Keep business
-logic in the controller. Use `LStatusBuilder` for full waiting/error statuses and
-`asValueListenable()` when borrowing state into Flutter APIs. Own that adapter;
-its disposal only unsubscribes.
+The scoped view creates and owns the controller. The controller owns its state;
+`increment` contains the mutation. `.value` writes, while `count()` and
+`count.value` read. `LWatch` observes reads inside its callback and rebuilds that
+region when they change.
 
-## Test the boundary, then inspect it
+Call `Levit.enableAutoLinking()` before `runApp` to capture reactive construction
+during owner initialization. Explicit `own(count)` is also valid and makes this
+controller usable without auto-linking in pure Dart. Own workers and resources
+created later explicitly. For a Flutter object such as `TextEditingController`,
+use `own(TextEditingController(), dispose: (value) => value.dispose())` inside
+the owning controller.
 
-Import `levit/levit_testing.dart` or `levit_flutter/levit_testing.dart` in tests.
-`LevitTestScope` provides isolated setup, typed overrides, explicit task tracking
-and awaited teardown with failure reporting. Widget unmount is synchronous;
-retain a `LevitScopeLifecycleController` and await `close()` to observe cleanup
-failures. `closed` is only a completion signal. Test code must advance its fake
-clock when intentionally delayed cleanup is pending.
+For a small view, leave `autoWatch: true` and read reactive values directly in
+its builder. Use `autoWatch: false` with focused `LWatch` regions for larger
+screens. Keep business logic in controllers or stores.
 
-The [session replacement example and widget tests](../examples/scope_playground)
-show cleanup, rapid changes, loading/retry and store overrides. Keep the lifecycle
-controller stable while mounted; obsolete initialization affects only its own
-generation.
+## 3. Share state deliberately
 
-Enable [levit_lints](../packages/tools/levit_lints) for focused static diagnostics.
-For runtime inspection, opt into [levit_monitor](../packages/core/levit_monitor)
-and run [levit_devtools](../packages/tools/levit_devtools). Telemetry/history are
-optional, bounded and redacted. Reconnect snapshots describe current state,
-not a complete missing event history.
+Use `LevitStore((ref) => ref.own(0.lx))` for a reusable state recipe. Keep the
+definition stable, typically as a top-level `final`. `context.levit.findStore`
+resolves it in Flutter; `store.findIn(scope)` resolves it in an explicit scope.
+Store identity is the definition object plus its optional variant tag.
 
-Continue with [advanced helpers](ADVANCED.md), the
-[cumulative migration guide](../MIGRATION_0.1.0.md), and inline DartDoc.
-Storage, schema migrations and persistence integrations live on the independent
-[ecosystem roadmap](../reports/ecosystem_roadmap.md).
+A lookup reuses an ancestor instance by default. Use `localOnly: true` when the
+child needs its own state. Install `store.overrideWith(builder)` through
+`scope.applyOverrides` before the first local resolution. Override resources
+belong to the receiving scope. See [store composition](ADVANCED.md#stores-aliases-and-factories)
+for an example.
+
+Consuming `LView` and `LAsyncView` resolve initially, when their scope changes,
+or when explicit `args` change. A new resolver closure alone does not refetch.
+Pass captured inputs in `args`, such as `args: [userId]`. On owning scopes/views,
+changing ownership arguments recreates the scope and awaits the previous cleanup.
+
+For finer state boundaries, use:
+
+- `LxComputed` for derived values and `LxReadable<T>` for observation-only consumers.
+- `map.entry(key)` or `list.entry(index)` to observe one address. A list entry
+  follows a position, so use stable keyed state when item identity matters.
+- `LxResource` for an owned, replaceable reactive producer.
+- `LevitAsyncMap` for task-backed loading by key. Give widgets `queries.entry(key)`
+  and await `queries.refresh(key)` for the load result.
+
+Use `LStatusBuilder` for waiting, success and error states. A successful `null`
+is valid data; `status.hasLastValue` distinguishes it from absent data. The
+[async catalog](../examples/async_catalog) demonstrates pagination, retained data
+during refresh, optimistic updates and rollback.
+
+## 4. Keep async work inside its lifetime
+
+For controller-owned work, use `LevitTasksMixin` or `LevitReactiveTasksMixin`
+when widgets also need reactive task details. Start workflows through
+`taskGroup.runGroup` and submit leaf work from the group body. Workflow groups
+cancel siblings on failure; the controller root supervises unrelated work.
+
+Cancellation is cooperative: the IO adapter must stop its real operation and
+finish cleanup. Owner shutdown requests cancellation, drains tracked work
+including `finally` blocks, then releases remaining resources in reverse order.
+Await cleanup to observe aggregated failures. An arbitrary unawaited future is
+not automatically tracked, and a caller timeout does not finish owner cleanup.
+
+Delegate lifecycle overrides to `super`: call `super.onInit()` and await async
+`super.onBeforeClose()` / `super.onClose()` calls. Request cancellation from a
+task; await disposal from outside that owner's running work. The
+[save/upload example](../examples/task_board/lib/save_upload.dart) shows the full
+workflow and repository lifetime.
+
+For a short pure Dart operation, scope cleanup can be automatic and awaited:
+
+```dart
+import 'package:levit/levit.dart';
+
+final counterStore = LevitStore((ref) => ref.own(0.lx));
+
+Future<void> main() async {
+  final result = await Levit.runInScope(() {
+    final count = counterStore.find();
+    count.value++;
+    return count.value;
+  });
+  print(result); // 1; the scoped state has already been released.
+}
+```
+
+For longer Dart lifetimes, create an explicit scope and await its disposal in
+`finally`. In ordinary Flutter code, let scope widgets manage that boundary.
+
+## 5. Test ownership and cleanup
+
+The testing entrypoints provide `LevitTestScope` for isolated setup, typed
+overrides, explicit future tracking and awaited teardown. A complete Dart test:
+
+```dart
+import 'package:levit/levit_testing.dart';
+import 'package:test/test.dart';
+
+final counterStore = LevitStore((ref) => ref.own(0.lx));
+
+void main() {
+  test('a local store override supplies the initial counter value', () {
+    final harness = LevitTestScope(
+      overrides: [counterStore.overrideWith((ref) => ref.own(10.lx))],
+    );
+    addTearDown(harness.close);
+
+    final count = harness.run(() => counterStore.find());
+    expect(count.value, 10);
+    count.value++;
+    expect(count.value, 11);
+  });
+}
+```
+
+Use `harness.track(operation)` for asynchronous work the harness must observe,
+and await `harness.settle()` when the assertion requires its completion. Flutter
+tests can import `package:levit_flutter/levit_testing.dart`.
+
+Widget unmount starts cleanup synchronously. To await its result, keep a stable
+`LevitScopeLifecycleController` on `LScope`/`LAsyncScope`, unmount, and await
+`lifecycle.close()`. Advance the test's fake clock when cleanup intentionally
+uses timers. `closed` signals completion; `close()` also surfaces cleanup errors.
+The [session replacement tests](../examples/scope_playground/test/session_replacement_test.dart)
+exercise loading, rapid changes, retry and store overrides.
+
+## Continue from a working feature
+
+Use [advanced helpers](ADVANCED.md) when a feature needs explicit scheduling,
+interoperability or additional resource composition. The
+[migration guide](MIGRATION_0.1.0.md) covers API changes; package READMEs and
+inline DartDoc describe individual contracts.
+
+[levit_monitor](../packages/core/levit_monitor) adds optional runtime diagnostics.
+The repository also contains [levit_lints](../packages/tools/levit_lints) and the
+[local inspector](../packages/tools/levit_devtools); both tools are currently
+private workspace packages. Use the lint plugin's checkout-path configuration
+and run the inspector from its package directory with
+`dart run bin/levit_devtools.dart` after workspace setup. See
+[diagnostic boundaries](ADVANCED.md#diagnostics-and-ecosystem-boundaries) before
+attaching telemetry.
+
+Storage, schema migrations and persistence integrations are planned separately
+on the [ecosystem roadmap](ecosystem_roadmap.md).

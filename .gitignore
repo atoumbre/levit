@@ -39,10 +39,10 @@ coverage_report/
 .temp-docs
 **/doc/api/
 pana_report.md
-# Retain written release summaries while keeping generated runs out of Git.
-reports/validation/**
-!reports/validation/**/
-!reports/validation/**/*.md
+# Keep only the recurring benchmark and stress reports in Git.
+reports/*
+!reports/benchmark_report.md
+!reports/stress_test_report.md
 
 # The publishable inspector's bundled web assets.
 !packages/tools/levit_devtools/lib/assets/**

@@ -566,8 +566,7 @@ Keep persistence interfaces, codecs, migrations and storage integrations in the
 independent ecosystem repository. Persistent task caches and codec-based Flutter
 restoration belong there too. These are no longer main 0.1.0 release requirements.
 Ecosystem packages depend on public Levit APIs; runtime packages never depend on
-ecosystem packages. Track work in reports/ecosystem_roadmap.md and use the revised
-release plan in reports/release_0.1.0_plan.md.
+ecosystem packages. Track work in docs/ecosystem_roadmap.md.
 
 Onboarding: docs/ONBOARDING.md (scopes → owners → state → widgets).
 Advanced selection/time, numeric helpers, LKeepAlive, staticDeps and batchAsync:

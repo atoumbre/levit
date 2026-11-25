@@ -132,7 +132,7 @@ Levit takes a different position: scope ownership, cleanup, and reactive propaga
 
 The proposition is not just conceptual. This repo includes:
 
-- Cross-framework benchmarks under a shared harness: [`benchmarks/README.md`](./benchmarks/README.md), [`reports/bench_mark_report.md`](./reports/bench_mark_report.md)
+- Cross-framework benchmarks under a shared harness: [`benchmarks/README.md`](./benchmarks/README.md), [`reports/benchmark_report.md`](./reports/benchmark_report.md)
 - Stress tests for reactive, DI, and Flutter lifecycle behavior: [`stress_tests/README.md`](./stress_tests/README.md), [`reports/stress_test_report.md`](./reports/stress_test_report.md)
 - Examples that show feature scopes, async patterns, and route ownership in practice: [`examples/`](./examples)
 
@@ -243,10 +243,9 @@ Reference docs:
 - Package READMEs document package scope, architecture role, and onboarding.
 - This root README documents ecosystem-level architecture and adoption guidance.
 
-The [0.1.0 release plan](reports/release_0.1.0_plan.md) keeps the runtime independent
-of storage backends. Persistence codecs, migrations, storage adapters and persistent
-task caches are tracked in the independently released
-[ecosystem roadmap](reports/ecosystem_roadmap.md). Native Flutter interoperability
+The runtime stays independent of storage backends. Persistence codecs, migrations,
+storage adapters and persistent task caches are tracked in the independently released
+[ecosystem roadmap](docs/ecosystem_roadmap.md). Native Flutter interoperability
 and existing runtime correctness remain in this repository.
 
 ## For AI assistants
@@ -275,4 +274,4 @@ melos test
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for workflow details.
 
-Upgrading to 0.1.0? Read the [cumulative migration guide](MIGRATION_0.1.0.md) for lifecycle and API changes.
+Upgrading to 0.1.0? Read the [cumulative migration guide](docs/MIGRATION_0.1.0.md) for lifecycle and API changes.

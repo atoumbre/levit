@@ -76,8 +76,12 @@ scripts:
       scope: benchmarks
 
   report:benchmarks:
-    run: dart run scripts/benchmark_report.dart
+    run: flutter test tool/generate_benchmark_report.dart --reporter=compact
     description: Regenerate benchmark report
+    exec:
+      concurrency: 1
+    packageFilters:
+      scope: benchmarks
 
   format:
     run: dart format .

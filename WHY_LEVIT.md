@@ -161,7 +161,7 @@ That trade can be worth it in larger systems and unnecessary in smaller ones.
 The pitch is backed by concrete material in this repo:
 
 - Benchmark methodology: [`benchmarks/README.md`](./benchmarks/README.md)
-- Comparative results: [`reports/bench_mark_report.md`](./reports/bench_mark_report.md)
+- Comparative results: [`reports/benchmark_report.md`](./reports/benchmark_report.md)
 - Stress results for reactive, DI, and Flutter bindings: [`reports/stress_test_report.md`](./reports/stress_test_report.md)
 - Worked examples: [`examples/`](./examples), [`packages/kits/levit_flutter/example/README.md`](./packages/kits/levit_flutter/example/README.md)
 
@@ -229,7 +229,7 @@ task caches and codec-based restoration belong in an independently released
 ecosystem repository. Those integrations consume public Levit APIs and test
 initialization, subscription ownership and awaited cleanup against supported
 runtime versions. The runtime must not depend on ecosystem packages. See the
-[ecosystem roadmap](reports/ecosystem_roadmap.md).
+[ecosystem roadmap](docs/ecosystem_roadmap.md).
 
 ## 0.1.0 lifetime and observation contracts
 
@@ -247,4 +247,4 @@ make ownership inspectable without coupling the core to a storage or network sta
 The optional local inspector shows redacted, bounded state and task metadata.
 Snapshots after reconnection restore current state without inventing missing
 history. The lint plugin adds focused local checks, not general cancellation proofs.
-See [onboarding](docs/ONBOARDING.md) and [migration](MIGRATION_0.1.0.md).
+See [onboarding](docs/ONBOARDING.md) and [migration](docs/MIGRATION_0.1.0.md).

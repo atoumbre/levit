@@ -1,5 +1,6 @@
 name: levit_devtools
 description: Read-only local inspector for Levit ownership, reactions, tasks and cleanup.
+publish_to: none
 version: 0.1.0-beta.1
 repository: https://github.com/softilab/levit
 environment:

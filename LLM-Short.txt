@@ -196,7 +196,7 @@ Runtime boundary
 ----------------
 Persistence codecs, migrations, storage and persistent task-cache/restoration
 adapters belong to the independent ecosystem roadmap, not runtime packages.
-See reports/release_0.1.0_plan.md and reports/ecosystem_roadmap.md.
+See docs/ecosystem_roadmap.md.
 
 Onboarding: docs/ONBOARDING.md (scopes → owners → state → widgets).
 Advanced selection/time, numeric helpers, LKeepAlive, staticDeps and batchAsync:

@@ -61,6 +61,30 @@ melos run test --no-select
 melos run test:flutter --no-select
 ```
 
+### Development tools and reports
+
+Keep `scripts/` limited to maintained development, CI, build and release checks.
+Use Dart for reusable tooling; use Melos directly when a command needs no script.
+Temporary migrations and one-off investigation tools belong outside the repository.
+
+The two retained reports can be regenerated from the repository root:
+
+```bash
+melos run stress --no-select
+melos run report:benchmarks --no-select
+```
+
+These write [stress results](reports/stress_test_report.md) and
+[benchmark results](reports/benchmark_report.md). Run performance measurements
+on an idle machine, separately from other checks. The benchmark report uses a
+headless test profile; see [the benchmark guide](benchmarks/README.md) for its limits.
+
+For an optional local test-coverage summary, run
+`dart run scripts/check_coverage.dart --fail-under=100 --generate-report`.
+It writes `coverage/packages_test_coverage.md`, which is ignored by Git along with
+raw coverage data. Keep ongoing design guidance in `docs/`; historical audits,
+release investigations and their tooling remain available in Git history.
+
 ## Style Guide
 
 -   We follow the official [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style).

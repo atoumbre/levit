@@ -20,15 +20,11 @@ Future<ProcessOutcome> runProcess(
   List<String> command, {
   required String workingDirectory,
   Duration? timeout,
-  Map<String, String>? environment,
-  bool includeParentEnvironment = true,
 }) async {
   final process = await Process.start(
     command.first,
     command.sublist(1),
     workingDirectory: workingDirectory,
-    environment: environment,
-    includeParentEnvironment: includeParentEnvironment,
   );
 
   final stdoutFuture = process.stdout.transform(utf8.decoder).join();

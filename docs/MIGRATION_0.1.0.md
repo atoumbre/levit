@@ -251,7 +251,7 @@ in Dart entrypoints when relying on captured ownership. Set monitor filters with
 
 `levit_lints` is publishable at 0.1.0. Use its native root-level plugin
 configuration; until publication, select the checkout path. See the
-[lint README](packages/tools/levit_lints/README.md) for configuration and rule limits.
+[lint README](../packages/tools/levit_lints/README.md) for configuration and rule limits.
 
 ## Validation before upgrading an application
 
@@ -303,8 +303,8 @@ default inspector port is occupied.
 
 Persistence interfaces/codecs, migrations, storage adapters, persistent task caches
 and codec-based restoration moved to the independent
-[ecosystem roadmap](reports/ecosystem_roadmap.md). They are not main 0.1.0 packages
-or release gates. The approved main plan is [here](reports/release_0.1.0_plan.md).
+[ecosystem roadmap](ecosystem_roadmap.md). They are not main 0.1.0 packages
+or release gates.
 
 `LxReadable<T>.asValueListenable()` creates an `LxValueListenable<T>` exposed through
 `levit_flutter`. Own it at a controller/widget boundary and retain it outside build.
@@ -339,12 +339,12 @@ cleanup futures; they do not prove general cancellation correctness.
   the unpublished checkout; do not mix the 0.0.12 and 0.1.0 runtime graph.
 - Run fatal-info analysis and exercise initialization, refresh, cancellation and
   awaited unmount. Handle aggregate cleanup failures at the lifetime boundary.
-- Follow [scopes → owners → state → widgets](docs/ONBOARDING.md). Selection/time,
+- Follow [scopes → owners → state → widgets](ONBOARDING.md). Selection/time,
   numeric helpers, keep-alive, static dependencies and async batching remain
-  supported in [advanced documentation](docs/ADVANCED.md).
+  supported in [advanced documentation](ADVANCED.md).
 - Use the searchable catalog, save/upload task groups, session replacement and
-  store-override widget tests under [examples](examples/README.md).
+  store-override widget tests under [examples](../examples/README.md).
 
-This guide describes implemented contracts. Release-wide candidate validation is
-tracked separately in the [progress report](reports/release_0.1.0_progress.md);
-publication remains a separate action.
+This guide describes implemented contracts. Run the
+[workspace checks](../CONTRIBUTING.md#running-checks) when validating a release
+candidate; publication remains a separate action.

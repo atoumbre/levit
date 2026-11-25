@@ -420,12 +420,8 @@ Future<void> _generateReport(
 
   // Export to file ONLY if requested
   if (generateFile) {
-    final reportsDir = Directory('reports');
-    if (!reportsDir.existsSync()) {
-      reportsDir.createSync();
-    }
-
-    final reportFile = File('reports/packages_test_coverage.md');
+    final reportFile = File('coverage/packages_test_coverage.md');
+    reportFile.parent.createSync(recursive: true);
     await reportFile.writeAsString(buffer.toString());
     if (!quiet) print('\nReport exported to: ${reportFile.absolute.path}');
   } else if (!quiet) {
