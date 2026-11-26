@@ -52,12 +52,12 @@ final class LevitMcpProtocolServer extends MCPServer
   /// - [maxTaskTreeDepth]: Maximum recursion depth returned by
   ///   `inspect_task_tree` (defaults to `16`).
   /// - [version]: Server implementation version advertised during the MCP
-  ///   handshake (defaults to `'0.1.0-beta.1'`).
+  ///   handshake (defaults to `'0.1.0'`).
   LevitMcpProtocolServer(
     super.channel, {
     required this.store,
     this.maxTaskTreeDepth = 16,
-    String version = '0.1.0-beta.1',
+    String version = '0.1.0',
   }) : super.fromStreamChannel(
          implementation: Implementation(name: 'levit_mcp', version: version),
          instructions:

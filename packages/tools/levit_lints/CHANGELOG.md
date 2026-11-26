@@ -1,4 +1,4 @@
-## 0.1.0-beta.1
+## 0.1.0
 
 - Publish the native analyzer plugin with supported root-level configuration.
 - Add awaited lifecycle delegation, scoped widget lookup, and discarded known

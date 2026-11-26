@@ -23,7 +23,7 @@ helpers behind one entry point while keeping `levit_monitor` opt-in.
 
 ```yaml
 dependencies:
-  levit_flutter: ^0.1.0-beta.1
+  levit_flutter: ^0.1.0
 ```
 
 ```dart

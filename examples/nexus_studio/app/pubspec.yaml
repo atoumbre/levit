@@ -12,8 +12,8 @@ dependencies:
     sdk: flutter
   web_socket_channel: ^3.0.3
 
-  levit_flutter_core: ^0.1.0-beta.1
-  levit_monitor: ^0.1.0-beta.1
+  levit_flutter_core: ^0.1.0
+  levit_monitor: ^0.1.0
   
   nexus_studio_shared:
     path: ../shared

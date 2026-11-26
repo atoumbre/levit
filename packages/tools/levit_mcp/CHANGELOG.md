@@ -1,4 +1,4 @@
-## 0.1.0-beta.1
+## 0.1.0
 
 - Initial release of `levit_mcp`, the read-only Model Context Protocol (MCP) server for live Levit runtime inspection.
 - Accepts authenticated loopback `LevitWebSocketTransport` connections from running Dart and Flutter apps.

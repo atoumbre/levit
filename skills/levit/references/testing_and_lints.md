@@ -68,7 +68,7 @@ In `analysis_options.yaml`:
 
 ```yaml
 plugins:
-  levit_lints: ^0.1.0-beta.1
+  levit_lints: ^0.1.0
 ```
 
 Key checks enforced by `levit_lints`:

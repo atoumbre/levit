@@ -1,4 +1,4 @@
-## 0.1.0-beta.1
+## 0.1.0
 
 - **Breaking:** Requires Dart 3.7+.
 - **Breaking:** Await `attach`, `flush`, `detach`, `updateTransport`, and transport `close`; aggregate delivery and cleanup failures in `LevitMonitorException`.
@@ -9,7 +9,7 @@
 - Remove `package:logger` and `package:web_socket_channel` runtime dependencies (built-in console formatter + `dart:io` / `dart:js_interop` `LevitWebSocketConnection`), making `levit_monitor` free of third-party runtime dependencies.
 - Harden `LevitStateSnapshot` with eager `scope_progress` validation, atomic snapshot restore, `scope_dispose` variable pruning, and bounded `maxVariables`.
 - Add optional `token` authentication parameter to `LevitWebSocketTransport.connect`.
-- Updated internal package constraints to `^0.1.0-beta.1`.
+- Updated internal package constraints to `^0.1.0`.
 
 ## 0.0.12
 

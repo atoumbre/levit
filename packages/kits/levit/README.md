@@ -26,7 +26,7 @@ kit keeps observability opt-in.
 
 ```yaml
 dependencies:
-  levit: ^0.1.0-beta.1
+  levit: ^0.1.0
 ```
 
 ```dart

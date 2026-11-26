@@ -11,7 +11,7 @@
 /// ```yaml
 /// plugins:
 ///   levit_lints:
-///     version: ^0.1.0-beta.1
+///     version: ^0.1.0
 ///     diagnostics:
 ///       await_levit_lifecycle: true
 ///       avoid_global_levit_in_widgets: true

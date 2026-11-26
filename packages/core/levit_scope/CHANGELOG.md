@@ -1,4 +1,4 @@
-## 0.1.0-beta.1
+## 0.1.0
 
 - **Breaking:** Requires Dart 3.7+.
 - **Breaking:** Child scopes created via `createScope` are owned by their parent by default (`ownedByParent: true`) and dispose before parent dependencies.

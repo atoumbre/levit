@@ -1,11 +1,11 @@
-## 0.1.0-beta.1
+## 0.1.0
 
 - **Breaking:** Requires Dart 3.7+.
 - Add structured task workflows with `LevitTaskGroup` (`taskGroup.runGroup`), inherited absolute deadlines, `LevitRetryPolicy`, `taskEngine.taskTree`, conflict-policy shorthand helpers (`runLatest`, `runDrop`, `runQueued`, `runJoin`, `runCoalesceLatest`) on `LevitTasksMixin` and `LevitReactiveTasksMixin`, and a default `maxPending` cap of `256`.
 - Add `LevitAsyncMap` for observed keyed loads, freshness-aware fetches, and bounded inactive eviction with observer/in-flight pinning.
 - Measure `LevitCountdown` / `LevitTimeMixin.startCountdown` from monotonic elapsed time, preserve partial pauses, finish at the exact deadline, and await countdown cleanup.
 - Await graceful completion of active iterations and isolate shutdown in `LevitLoopEngine.stopService`, `stopAllServices`, and `dispose`.
-- Updated internal package constraints to `^0.1.0-beta.1`.
+- Updated internal package constraints to `^0.1.0`.
 
 ## 0.0.12
 

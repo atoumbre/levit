@@ -1,4 +1,4 @@
-## 0.1.0-beta.1
+## 0.1.0
 
 - **Breaking:** Requires Dart 3.7+ and Flutter 3.29+.
 - **Breaking:** `LStatusBuilder.onWaiting`, `onError`, and `onIdle` receive their complete `LxStatus<T>` objects, and builders/selectors observe `LxReadable<T>`.
@@ -7,7 +7,7 @@
 - Add serialized `LScope` / `LAsyncScope` replacement with coalesced rapid updates, reentrant replacement serialization, and `LevitScopeLifecycleController` (`settled`, `error`, `retry()`, `close()`).
 - Add borrowing `LevitValueListenable` and `asValueListenable()` interoperability with listener-scoped subscriptions and idempotent disposal.
 - Add typed `context.levit.findStore` and `context.levit.findAsyncStore` lookups.
-- Updated internal package constraints to `^0.1.0-beta.1`.
+- Updated internal package constraints to `^0.1.0`.
 
 ## 0.0.12
 

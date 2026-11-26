@@ -1,6 +1,6 @@
 name: levit_flutter
 description: Deterministic ownership and fine-grained reactivity for Flutter applications.
-version: 0.1.0-beta.1
+version: 0.1.0
 repository: https://github.com/softilab/levit
 topics:
   - flutter
@@ -14,8 +14,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  levit_dart: ^0.1.0-beta.1
-  levit_flutter_core: ^0.1.0-beta.1
+  levit_dart: ^0.1.0
+  levit_flutter_core: ^0.1.0
 
 dev_dependencies:
   flutter_test:

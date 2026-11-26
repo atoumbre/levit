@@ -32,13 +32,13 @@ If your app is still small enough that ownership is obvious everywhere, it may b
 ### Flutter applications
 
 ```bash
-flutter pub add levit_flutter:^0.1.0-beta.1
+flutter pub add levit_flutter:^0.1.0
 ```
 
 ### Pure Dart applications (CLI, server, shared domain)
 
 ```bash
-dart pub add levit:^0.1.0-beta.1
+dart pub add levit:^0.1.0
 ```
 
 ## Start with scopes → owners → state → widgets

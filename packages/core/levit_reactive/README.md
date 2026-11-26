@@ -28,7 +28,7 @@ Dependency injection lives in `levit_scope`; Flutter bindings live in
 
 ```yaml
 dependencies:
-  levit_reactive: ^0.1.0-beta.1
+  levit_reactive: ^0.1.0
 ```
 
 ```dart

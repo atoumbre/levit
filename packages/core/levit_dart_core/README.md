@@ -29,7 +29,7 @@ This package owns:
 
 ```yaml
 dependencies:
-  levit_dart_core: ^0.1.0-beta.1
+  levit_dart_core: ^0.1.0
 ```
 
 ```dart

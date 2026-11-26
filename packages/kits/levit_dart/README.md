@@ -25,7 +25,7 @@ recommended app-level single import, use [`levit`](https://pub.dev/packages/levi
 
 ```yaml
 dependencies:
-  levit_dart: ^0.1.0-beta.1
+  levit_dart: ^0.1.0
 ```
 
 ```dart

@@ -33,7 +33,7 @@ higher-level `levit_dart` utilities and overlay/lifecycle helpers bundled in
 
 ```yaml
 dependencies:
-  levit_flutter_core: ^0.1.0-beta.1
+  levit_flutter_core: ^0.1.0
 ```
 
 ```dart

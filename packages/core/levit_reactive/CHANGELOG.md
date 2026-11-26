@@ -1,4 +1,4 @@
-## 0.1.0-beta.1
+## 0.1.0
 
 - **Breaking:** Requires Dart 3.7+.
 - **Breaking:** Reactive `close()` now returns `Future<void>`, drains admitted work and subscriptions, and aggregates cleanup failures in `LxCleanupException`.

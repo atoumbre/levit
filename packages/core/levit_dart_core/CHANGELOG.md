@@ -1,4 +1,4 @@
-## 0.1.0-beta.1
+## 0.1.0
 
 - **Breaking:** Requires Dart 3.7+.
 - **Breaking:** Remove reflective disposal method-name guessing from `own(...)`; pass explicit `dispose:` callbacks for third-party resources while keeping typed adapters for built-in reactives, subscriptions, timers, sinks, Levit disposables, and registered platform adapters (`LevitResourceDisposerSpi`).
@@ -7,7 +7,7 @@
 - Add `computed(...)` and `asyncComputed(...)` ownership helpers on `LevitController` and `LevitRef` plus `Levit.isAutoLinkingEnabled`.
 - Support asynchronous callbacks in `LevitRef.onDispose`, typed `LevitRef.findStore` / `findAsyncStore`, and `store.overrideWith(...)`.
 - Add `package:levit_dart_core/levit_testing.dart` with `LevitTestScope` for isolated override testing, tracked async work, `settle()`, and awaited teardown.
-- Updated internal package constraints to `^0.1.0-beta.1`.
+- Updated internal package constraints to `^0.1.0`.
 
 ## 0.0.12
 

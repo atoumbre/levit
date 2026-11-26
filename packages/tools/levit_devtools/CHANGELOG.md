@@ -1,4 +1,4 @@
-## 0.1.0-beta.1
+## 0.1.0
 
 - Initial release of `levit_devtools`:
   - Read-only Flutter DevTools extension (Scopes, Reactives, Tasks, Timeline, Diagnostics tabs).

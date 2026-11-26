@@ -1,6 +1,6 @@
 name: levit_mcp
 description: Read-only Model Context Protocol (MCP) server for inspecting live Levit scopes, reactive state graphs, task trees, and runtime diagnostics.
-version: 0.1.0-beta.1
+version: 0.1.0
 repository: https://github.com/softilab/levit
 homepage: https://github.com/softilab/levit
 topics:
@@ -16,7 +16,7 @@ environment:
 dependencies:
   args: ^2.7.0
   dart_mcp: ^0.5.2
-  levit_monitor: ^0.1.0-beta.1
+  levit_monitor: ^0.1.0
   stream_channel: ^2.1.4
 
 dev_dependencies:

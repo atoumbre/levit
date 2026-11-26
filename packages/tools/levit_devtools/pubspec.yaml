@@ -1,6 +1,6 @@
 name: levit_devtools
 description: Read-only Flutter DevTools extension and Dart VM Service transport for inspecting live Levit scopes, reactives, tasks, timeline, and diagnostics.
-version: 0.1.0-beta.1
+version: 0.1.0
 repository: https://github.com/softilab/levit
 homepage: https://github.com/softilab/levit
 topics:
@@ -14,9 +14,9 @@ environment:
   sdk: ^3.7.0
 
 dependencies:
-  levit_monitor: ^0.1.0-beta.1
+  levit_monitor: ^0.1.0
 
 dev_dependencies:
-  levit: ^0.1.0-beta.1
+  levit: ^0.1.0
   lints: '>=5.1.1 <7.0.0'
   test: ^1.25.0

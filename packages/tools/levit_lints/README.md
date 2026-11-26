@@ -10,7 +10,7 @@ Add this in the **root** `analysis_options.yaml` of your package/workspace:
 ```yaml
 plugins:
   levit_lints:
-    version: ^0.1.0-beta.1
+    version: ^0.1.0
     diagnostics:
       await_levit_lifecycle: true
       avoid_global_levit_in_widgets: true
@@ -24,7 +24,7 @@ plugins:
 ```
 
 When developing inside a local checkout of the Levit monorepo, replace
-`version: ^0.1.0-beta.1` with `path: /absolute/path/to/levit/packages/tools/levit_lints`.
+`version: ^0.1.0` with `path: /absolute/path/to/levit/packages/tools/levit_lints`.
 
 No runtime dependency or `custom_lint` runner is needed. Restart the analysis
 server after changing plugin configuration; run `dart analyze --fatal-infos` or

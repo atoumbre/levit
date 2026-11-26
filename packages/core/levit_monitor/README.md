@@ -22,8 +22,8 @@ Add `levit_monitor` when you need:
 
 ```yaml
 dependencies:
-  levit: ^0.1.0-beta.1
-  levit_monitor: ^0.1.0-beta.1
+  levit: ^0.1.0
+  levit_monitor: ^0.1.0
 ```
 
 ```dart

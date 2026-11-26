@@ -28,7 +28,7 @@ Reactive state lives in `levit_reactive`; Flutter bindings live in
 
 ```yaml
 dependencies:
-  levit_scope: ^0.1.0-beta.1
+  levit_scope: ^0.1.0
 ```
 
 ```dart

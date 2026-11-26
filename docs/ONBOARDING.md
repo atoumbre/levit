@@ -25,10 +25,10 @@ Pick the single kit package for your target:
 
 ```bash
 # Flutter app
-flutter pub add levit_flutter:^0.1.0-beta.1
+flutter pub add levit_flutter:^0.1.0
 
 # Pure Dart (CLI, server, or shared domain package)
-dart pub add levit:^0.1.0-beta.1
+dart pub add levit:^0.1.0
 ```
 
 ### Enable auto-linking and compose your root scope

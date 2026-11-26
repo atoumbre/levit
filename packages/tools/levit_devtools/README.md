@@ -28,8 +28,8 @@ Add `levit_devtools` to your app:
 
 ```yaml
 dependencies:
-  levit_flutter: ^0.1.0-beta.1
-  levit_devtools: ^0.1.0-beta.1
+  levit_flutter: ^0.1.0
+  levit_devtools: ^0.1.0
 ```
 
 Attach in `main()` before `runApp` (automatically a no-op in `--release` builds):
