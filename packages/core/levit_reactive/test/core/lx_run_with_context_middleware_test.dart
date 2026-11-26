@@ -7,17 +7,21 @@ class ListeningContextMiddleware extends LevitReactiveMiddleware {
   int stopCount = 0;
   LxListenerContext? lastContext;
   @override
-  void Function(LxReactive, LxListenerContext?)? get startedListening =>
-      (r, c) {
-        startCount++;
-        lastContext = c;
-      };
+  void Function(LxReactive, LxListenerContext?)? get startedListening => (
+    r,
+    c,
+  ) {
+    startCount++;
+    lastContext = c;
+  };
   @override
-  void Function(LxReactive, LxListenerContext?)? get stoppedListening =>
-      (r, c) {
-        stopCount++;
-        lastContext = c;
-      };
+  void Function(LxReactive, LxListenerContext?)? get stoppedListening => (
+    r,
+    c,
+  ) {
+    stopCount++;
+    lastContext = c;
+  };
 }
 
 void main() {

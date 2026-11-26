@@ -169,9 +169,8 @@ void main() {
             closed = true;
           }),
         );
-        final operation = reset
-            ? scope.reset()
-            : scope.delete<_CloseCallback>();
+        final operation =
+            reset ? scope.reset() : scope.delete<_CloseCallback>();
         final checked = expectLater(
           operation,
           throwsA(

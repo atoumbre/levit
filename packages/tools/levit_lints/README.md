@@ -1,8 +1,7 @@
 # levit_lints
 
 Native Dart analyzer rules for Levit lifecycle, reactive-state, and widget
-scoping usage. Currently an unpublished workspace tool (`publish_to: none`) with
-no Levit runtime dependency. Requires Dart 3.12+.
+scoping usage, with no Levit runtime dependency. Requires Dart 3.12+.
 
 ## Enable
 
@@ -11,7 +10,7 @@ Add this in the **root** `analysis_options.yaml` of your package/workspace:
 ```yaml
 plugins:
   levit_lints:
-    path: /absolute/path/to/levit/packages/tools/levit_lints
+    version: ^0.1.0-beta.1
     diagnostics:
       await_levit_lifecycle: true
       avoid_global_levit_in_widgets: true
@@ -20,7 +19,12 @@ plugins:
       unowned_levit_resource: true
       avoid_plain_lx_status_fields: true
       avoid_preconstructed_levit_put: true
+      avoid_redundant_outer_lwatch: true
+      avoid_unscoped_overlay: true
 ```
+
+When developing inside a local checkout of the Levit monorepo, replace
+`version: ^0.1.0-beta.1` with `path: /absolute/path/to/levit/packages/tools/levit_lints`.
 
 No runtime dependency or `custom_lint` runner is needed. Restart the analysis
 server after changing plugin configuration; run `dart analyze --fatal-infos` or
@@ -38,6 +42,8 @@ server after changing plugin configuration; run `dart analyze --fatal-infos` or
 | `unowned_levit_resource` | Discarded subscriptions/timers and lazy reactive owner fields outside `own`. |
 | `avoid_plain_lx_status_fields` | Mutable plain status fields and retained `.status` snapshots. |
 | `avoid_preconstructed_levit_put` | A registration builder returning an already constructed owner. |
+| `avoid_redundant_outer_lwatch` | Returning a root `LWatch` inside `LView` / `LScopedView` / `LAsyncView` when `autoWatch` is enabled. |
+| `avoid_unscoped_overlay` | Raw `showDialog` / `showModalBottomSheet` inside Levit Flutter widgets without `LScope.capture` (use `showLevitDialog` / `showLevitModalBottomSheet`). |
 
 The three async/scoping rules resolve API/library identity. Similar names on
 unrelated types do not trigger them. Widget analysis cannot infer the runtime

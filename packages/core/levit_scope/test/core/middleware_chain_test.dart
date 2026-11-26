@@ -19,11 +19,16 @@ void main() {
         return builder;
       };
 
-      middleware.onDependencyInitCallback =
-          (onInit, instance, scope, key, info) {
-            initCalled = true;
-            return onInit;
-          };
+      middleware.onDependencyInitCallback = (
+        onInit,
+        instance,
+        scope,
+        key,
+        info,
+      ) {
+        initCalled = true;
+        return onInit;
+      };
 
       // Trigger middleware chain
       scope.put(() => TestService());

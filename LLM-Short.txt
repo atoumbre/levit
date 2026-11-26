@@ -2,7 +2,7 @@ Levit LLM Guidance (Short)
 ==========================
 
 Ownership-first runtime: scope → controller → reactive → Flutter bindings.
-Requires Dart 3.12+ (and Flutter 3.44+ for Flutter apps).
+Requires Dart 3.7+ (and Flutter 3.29+ for Flutter apps; Dart 3.12+ for `levit_lints`).
 
 When to read:
 - This file — routine edits and quick orientation (default).
@@ -37,10 +37,12 @@ nexus_studio.
 Bootstrap (Flutter)
 -------------------
 
-Call Levit.enableAutoLinking() in main() before runApp.
-Monitoring never enables auto-linking. Still call own(...) explicitly for
-non-reactive resources (pass `dispose:` for third-party objects; no reflective
-method-name guessing) and reactives/workers created outside controller init.
+Call Levit.enableAutoLinking() in main() before runApp (mounting an LScope or
+LAsyncScope also enables auto-linking automatically unless Levit.disableAutoLinking()
+was called; check Levit.isAutoLinkingEnabled). Monitoring never enables
+auto-linking. Still call own(...) explicitly for non-reactive resources (pass
+`dispose:` for third-party objects; no reflective method-name guessing) and
+reactives/workers created outside controller init.
 
 
 Dependency Injection
@@ -73,6 +75,7 @@ Reactive State
 - .named('label') — diagnostics; mark isSensitive at construction
 - LxList / LxMap / LxSet or <T>[].lx — collections (borrow contents)
 - LxComputed(() => ...) / LxComputed.async(() async => ...) — derived state
+  (await computed.wait for the next settled async value/error)
 - LxAsyncConcurrency.exhaustLatest — one running + one coalesced trailing run
 - LxStream completionPolicy: retain — preserve/rebind a completed source
 - LxMap/LxList.entry — borrowed address; LevitAsyncMap — keyed task-backed queries
@@ -148,9 +151,10 @@ Middleware & Workspace Tooling
 Use one stable token per concern. Bridge task events to LevitMonitor.emitCustomEvent
 in the application composition layer.
 
-Unpublished workspace tools in packages/tools/:
-- levit_lints — native analyzer rules (configure via path: in root analysis_options.yaml)
-- levit_mcp — read-only live runtime MCP server (`dart run levit_mcp`)
+Optional tooling in packages/tools/:
+- levit_devtools (Dart 3.7+) — read-only Flutter DevTools extension (`LevitDevTools.attach()`)
+- levit_lints (Dart 3.12+) — native analyzer plugin (9 lifecycle/scoping/overlay rules)
+- levit_mcp (Dart 3.7+) — read-only live runtime MCP server (`levit_mcp`)
 - skills/levit/ — portable Agent Skill
 
 
@@ -180,4 +184,4 @@ melos run ci --no-select
 
 Update DartDoc and package README when changing public APIs.
 Runtime packages stay independent of storage/persistence backends.
-Onboarding: docs/ONBOARDING.md | Advanced: docs/ADVANCED.md | Why: docs/WHY_LEVIT.md
+Onboarding: docs/ONBOARDING.md | Migrating: docs/MIGRATING.md | Advanced: docs/ADVANCED.md | Why: docs/WHY_LEVIT.md

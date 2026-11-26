@@ -3,12 +3,10 @@ import 'package:test/test.dart';
 
 class TestRejectMiddleware extends LevitReactiveMiddleware {
   @override
-  LevitReactiveOnSet? get onSet =>
-      (next, reactive, change) => (value) {};
+  LevitReactiveOnSet? get onSet => (next, reactive, change) => (value) {};
   @override
   LevitReactiveOnBatch? get onBatch =>
-      (next, change) =>
-          () => throw StateError('Batch rejected');
+      (next, change) => () => throw StateError('Batch rejected');
 }
 
 class TestSimpleMiddleware extends LevitReactiveMiddleware {

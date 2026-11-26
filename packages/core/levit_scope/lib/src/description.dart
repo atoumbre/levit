@@ -140,15 +140,14 @@ final class LevitScopeDescription {
     'isDisposed': isDisposed,
     'pendingInitializations': pendingInitializations,
     'parentScopeId': ancestry.isEmpty ? null : ancestry.first.id,
-    'ancestry': ancestry
-        .map((scope) => {'id': scope.id, 'name': scope.name})
-        .toList(),
-    'ownedChildren': ownedChildren
-        .map((scope) => {'id': scope.id, 'name': scope.name})
-        .toList(),
-    'registrations': registrations
-        .map((registration) => registration.toJson())
-        .toList(),
+    'ancestry':
+        ancestry.map((scope) => {'id': scope.id, 'name': scope.name}).toList(),
+    'ownedChildren':
+        ownedChildren
+            .map((scope) => {'id': scope.id, 'name': scope.name})
+            .toList(),
+    'registrations':
+        registrations.map((registration) => registration.toJson()).toList(),
   };
 }
 

@@ -16,8 +16,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LView<TestController>(
-            builder: (context, controller) =>
-                Text('Count: ${controller.count}'),
+            builder:
+                (context, controller) => Text('Count: ${controller.count}'),
           ),
         ),
       );
@@ -34,8 +34,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LAsyncView<TestController>(
-            builder: (context, controller) =>
-                Text('Count: ${controller.count}'),
+            builder:
+                (context, controller) => Text('Count: ${controller.count}'),
             loading: (_) => const Text('Loading...'),
           ),
         ),
@@ -54,10 +54,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScopedView<TestController>(
-            configure: (s) =>
-                s.put<TestController>(() => TestController()..count = 123),
-            builder: (context, controller) =>
-                Text('Scoped: ${controller.count}'),
+            configure:
+                (s) =>
+                    s.put<TestController>(() => TestController()..count = 123),
+            builder:
+                (context, controller) => Text('Scoped: ${controller.count}'),
           ),
         ),
       );
@@ -79,8 +80,9 @@ void main() {
             },
             loading: (_) => const Text('Loading...'),
             child: LView<TestController>(
-              builder: (context, controller) =>
-                  Text('AsyncScoped: ${controller.count}'),
+              builder:
+                  (context, controller) =>
+                      Text('AsyncScoped: ${controller.count}'),
             ),
           ),
         ),

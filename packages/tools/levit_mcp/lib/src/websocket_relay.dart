@@ -190,8 +190,8 @@ final class LevitWebSocketRelay {
           final incomingSessionId = envelope.data['sessionId'];
           final resolvedId =
               (incomingSessionId is String && incomingSessionId.isNotEmpty)
-              ? incomingSessionId
-              : (boundSessionId ??= 'session-${++_fallbackSessionCounter}');
+                  ? incomingSessionId
+                  : (boundSessionId ??= 'session-${++_fallbackSessionCounter}');
           boundSessionId = resolvedId;
           store.applyEnvelope(resolvedId, envelope, appId: appId);
 

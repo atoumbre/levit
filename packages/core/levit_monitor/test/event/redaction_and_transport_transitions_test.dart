@@ -61,17 +61,19 @@ void main() {
             data: {'token': 'secret'},
           );
 
-          final withContext = LevitReactiveListenerRemovedEvent(
-            sessionId: 's1',
-            reactive: secret,
-            context: context,
-          ).toJson();
+          final withContext =
+              LevitReactiveListenerRemovedEvent(
+                sessionId: 's1',
+                reactive: secret,
+                context: context,
+              ).toJson();
           expect(withContext['context'], '***');
 
-          final withoutContext = LevitReactiveListenerRemovedEvent(
-            sessionId: 's1',
-            reactive: secret,
-          ).toJson();
+          final withoutContext =
+              LevitReactiveListenerRemovedEvent(
+                sessionId: 's1',
+                reactive: secret,
+              ).toJson();
           expect(withoutContext['context'], isNull);
 
           secret.close();

@@ -328,9 +328,9 @@ final class LevitMcpProtocolServer extends MCPServer
     for (final scope in snapshot.scopes.values) {
       final parentKey =
           (scope.parentScopeId != null &&
-              snapshot.scopes.containsKey(scope.parentScopeId))
-          ? scope.parentScopeId
-          : null;
+                  snapshot.scopes.containsKey(scope.parentScopeId))
+              ? scope.parentScopeId
+              : null;
       childrenByParent.putIfAbsent(parentKey, () => []).add(scope);
     }
 

@@ -95,7 +95,7 @@ refreshed, or reconnected, pick the tool that matches your scenario:
 | :-- | :-- | :-- |
 | Wrap one `Future` as loading/data/error | `LxFuture` | Simplest wrapper when inputs don't change (supports `restart(...)`). |
 | Wrap or reconnect a live `Stream` / WebSocket | `LxStream` (`defer` + `restartDeferred`) | Lazy subscription, keeps listeners connected across reconnects, and supports `completionPolicy: retain`. |
-| Auto-refetch whenever reactive state changes | `LxComputed.async` | Supports `latest` (ignore older runs) or `exhaustLatest` (finish the current run, then run once more with the latest input). |
+| Auto-refetch whenever reactive state changes | `LxComputed.async` | Supports `latest` (ignore older runs), `exhaustLatest` (finish the current run, then run once more with the latest input), and `await computed.wait` for awaiting the next settled value. |
 | Cache and refresh data per ID or search query | `LevitAsyncMap` | Keeps one cached entry per key, deduplicates concurrent fetches, and cleans up unused entries automatically. |
 
 ### Caching & refreshing by key (`LevitAsyncMap`)
@@ -492,10 +492,14 @@ Future<void> main() async {
 - **Web vs. IO imports:** `package:levit_monitor/levit_monitor.dart` works on
   all platforms including Web; import `package:levit_monitor/levit_monitor_io.dart`
   for `LevitFileTransport`.
-- **Workspace tools (currently unpublished):**
-  - [levit_lints](../packages/tools/levit_lints) — Dart analyzer plugin that
+- **Optional developer tooling:**
+  - [levit_devtools](../packages/tools/levit_devtools) — read-only Flutter DevTools extension
+    streaming redacted scopes, reactives, tasks, timeline, and diagnostics over
+    Dart VM Service (`await LevitDevTools.attach()`).
+  - [levit_lints](../packages/tools/levit_lints) — native Dart analyzer plugin (Dart 3.12+) that
     flags missing `super` lifecycle calls, unowned resources, discarded Levit
-    futures, and global `Levit.find` inside widgets.
+    futures, global `Levit.find` inside widgets, redundant outer `LWatch`, and
+    unscoped raw overlays.
   - [levit_mcp](../packages/tools/levit_mcp) — read-only MCP server over
     authenticated loopback WebSockets for live runtime inspection by AI agents.
 - **Storage boundary:** Persistence codecs, storage adapters, and persistent

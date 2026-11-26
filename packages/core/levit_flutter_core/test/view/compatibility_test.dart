@@ -47,8 +47,9 @@ class ExtendedLAsyncScopeView extends StatelessWidget {
       },
       loading: (_) => const Text('Loading...'),
       child: LView<TestController>(
-        builder: (context, controller) =>
-            Text('ExtendedAsyncScope: ${controller.count.value}'),
+        builder:
+            (context, controller) =>
+                Text('ExtendedAsyncScope: ${controller.count.value}'),
       ),
     );
   }
@@ -97,10 +98,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LScopedView<TestController>(
-            configure: (scope) =>
-                scope.put<TestController>(() => TestController()),
-            builder: (context, c) =>
-                Text('ScopedComposition: ${c.count.value}'),
+            configure:
+                (scope) => scope.put<TestController>(() => TestController()),
+            builder:
+                (context, c) => Text('ScopedComposition: ${c.count.value}'),
           ),
         ),
       );
@@ -124,8 +125,9 @@ void main() {
             },
             loading: (_) => const Text('Loading...'),
             child: LView<TestController>(
-              builder: (context, c) =>
-                  Text('AsyncScopeComposition: ${c.count.value}'),
+              builder:
+                  (context, c) =>
+                      Text('AsyncScopeComposition: ${c.count.value}'),
             ),
           ),
         ),

@@ -65,4 +65,4 @@ Future<void> main() async {
 - **Production default:** built for shared domain logic, CLIs, and backend services.
 
 Continue with [ownership-first onboarding](https://github.com/softilab/levit/blob/main/docs/ONBOARDING.md) and
-[advanced helpers](https://github.com/softilab/levit/blob/main/docs/ADVANCED.md). Requires Dart 3.12+.
+[advanced helpers](https://github.com/softilab/levit/blob/main/docs/ADVANCED.md). Requires Dart 3.7+.

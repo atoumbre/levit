@@ -95,9 +95,8 @@ void main() {
 
       await tester.pumpWidget(
         LWatch(() {
-          final total = showSecond.value
-              ? first.value + second.value
-              : first.value;
+          final total =
+              showSecond.value ? first.value + second.value : first.value;
           return Text('$total', textDirection: TextDirection.ltr);
         }, debugLabel: 'DynamicWatch'),
       );
@@ -147,6 +146,5 @@ class _RecordingListenerMiddleware extends LevitReactiveMiddleware {
 
   @override
   void Function(LxReactive reactive, LxListenerContext? context)?
-  get stoppedListening =>
-      (rx, ctx) => onStop(rx.name);
+  get stoppedListening => (rx, ctx) => onStop(rx.name);
 }

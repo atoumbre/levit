@@ -34,10 +34,10 @@ void main() {
               }
               return scoped
                   ? LScopedView.store(
-                      store,
-                      localOnly: localOnly,
-                      builder: builder,
-                    )
+                    store,
+                    localOnly: localOnly,
+                    builder: builder,
+                  )
                   : LView.store(store, localOnly: localOnly, builder: builder);
             }
 

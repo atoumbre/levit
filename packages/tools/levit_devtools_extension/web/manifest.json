@@ -1,0 +1,9 @@
+{
+  "name": "Levit DevTools",
+  "short_name": "Levit",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#6366F1",
+  "description": "Read-only Flutter DevTools inspector for Levit runtimes."
+}

@@ -8,9 +8,9 @@ topics:
   - di
 
 environment:
-  sdk: ^3.12.0
+  sdk: ^3.7.0
 
 dev_dependencies:
   test: ^1.24.0
-  lints: ^6.0.0
+  lints: '>=5.1.1 <7.0.0'
   coverage: ^1.15.0

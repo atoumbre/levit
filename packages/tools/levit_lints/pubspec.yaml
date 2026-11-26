@@ -1,7 +1,6 @@
 name: levit_lints
 description: Native Dart analyzer rules for safe Levit lifecycle and reactive-state usage.
 repository: https://github.com/softilab/levit
-publish_to: none
 version: 0.1.0-beta.1
 topics:
   - lint

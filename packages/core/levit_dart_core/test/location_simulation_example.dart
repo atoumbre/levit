@@ -67,19 +67,20 @@ class LocationController extends LevitController {
 
     /// Declarative derived state.
     /// Automatically tracks `wayPoints` — no manual wiring.
-    distance = (() {
-      var total = 0.0;
+    distance =
+        (() {
+          var total = 0.0;
 
-      for (int i = 0; i < wayPoints.length - 1; i++) {
-        final p1 = wayPoints[i];
-        final p2 = wayPoints[i + 1];
+          for (int i = 0; i < wayPoints.length - 1; i++) {
+            final p1 = wayPoints[i];
+            final p2 = wayPoints[i + 1];
 
-        total += sqrt(pow(p2.$1 - p1.$1, 2) + pow(p2.$2 - p1.$2, 2));
-      }
+            total += sqrt(pow(p2.$1 - p1.$1, 2) + pow(p2.$2 - p1.$2, 2));
+          }
 
-      print('Computed distance: $total');
-      return total;
-    }).lx;
+          print('Computed distance: $total');
+          return total;
+        }).lx;
 
     /// Side effect:
     /// - sample location every second

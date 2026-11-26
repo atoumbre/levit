@@ -247,9 +247,7 @@ void main() {
 
 class _PassThroughMiddleware extends LevitReactiveMiddleware {
   @override
-  LevitReactiveOnSet get onSet =>
-      (next, reactive, change) => next;
+  LevitReactiveOnSet get onSet => (next, reactive, change) => next;
   @override
-  LevitReactiveOnBatch get onBatch =>
-      (next, change) => next;
+  LevitReactiveOnBatch get onBatch => (next, change) => next;
 }

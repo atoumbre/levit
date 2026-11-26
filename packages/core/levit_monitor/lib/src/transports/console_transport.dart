@@ -226,16 +226,18 @@ class LevitConsoleTransport extends LevitTransport {
     }
 
     final message = _formatMessage(event);
-    final line = _formatter != null
-        ? _formatter(level, message)
-        : _defaultFormat(level, message);
+    final line =
+        _formatter != null
+            ? _formatter(level, message)
+            : _defaultFormat(level, message);
     _output(line);
   }
 
   String _defaultFormat(LevitLogLevel level, String message) {
-    final prefix = includeEmojis
-        ? '${level._emoji} [${level._badge}]'
-        : '[${level._badge}]';
+    final prefix =
+        includeEmojis
+            ? '${level._emoji} [${level._badge}]'
+            : '[${level._badge}]';
     return colors
         ? '${level._ansi}$prefix $message\x1B[0m'
         : '$prefix $message';

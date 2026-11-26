@@ -26,8 +26,8 @@ void main() {
                       context: context,
                       builder: (dialogContext) {
                         try {
-                          final controller = dialogContext.levit
-                              .find<_PageController>();
+                          final controller =
+                              dialogContext.levit.find<_PageController>();
                           return AlertDialog(
                             content: Text('Found: ${controller.value()}'),
                           );
@@ -74,8 +74,8 @@ void main() {
                       context: context,
                       builder: (sheetContext) {
                         try {
-                          final controller = sheetContext.levit
-                              .find<_PageController>();
+                          final controller =
+                              sheetContext.levit.find<_PageController>();
                           return SizedBox(
                             height: 120,
                             child: Center(

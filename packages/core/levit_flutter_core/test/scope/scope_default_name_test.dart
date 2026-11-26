@@ -45,9 +45,7 @@ void main() {
     await runZoned(
       () async {
         await tester.pumpWidget(
-          const MaterialApp(
-            home: LScope(child: LScope(child: Text('nested'))),
-          ),
+          const MaterialApp(home: LScope(child: LScope(child: Text('nested')))),
         );
       },
       zoneSpecification: ZoneSpecification(
@@ -129,12 +127,13 @@ void main() {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => LRouteScope(
-                            configure: (scope) {
-                              capturedScopeName = scope.name;
-                            },
-                            child: const Text('route-fallback'),
-                          ),
+                          builder:
+                              (_) => LRouteScope(
+                                configure: (scope) {
+                                  capturedScopeName = scope.name;
+                                },
+                                child: const Text('route-fallback'),
+                              ),
                         ),
                       );
                     },
@@ -179,12 +178,13 @@ void main() {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => LAsyncRouteScope(
-                            configure: (scope) async {
-                              capturedScopeName = scope.name;
-                            },
-                            child: const Text('async-route-fallback'),
-                          ),
+                          builder:
+                              (_) => LAsyncRouteScope(
+                                configure: (scope) async {
+                                  capturedScopeName = scope.name;
+                                },
+                                child: const Text('async-route-fallback'),
+                              ),
                         ),
                       );
                     },

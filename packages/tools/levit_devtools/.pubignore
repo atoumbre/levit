@@ -1,0 +1,11 @@
+# Exclude local workspace/IDE files while explicitly including the compiled
+# Flutter DevTools web bundle (which the root .gitignore ignores via build/
+# and *.dart.js).
+.dart_tool/
+coverage/
+pubspec.lock
+pubspec_overrides.yaml
+*.iml
+!extension/devtools/build/
+!extension/devtools/build/**
+!extension/devtools/build/main.dart.js

@@ -127,4 +127,4 @@ ValueListenableBuilder<int>(
 
 Start with [scopes → owners → state → widgets](https://github.com/softilab/levit/blob/main/docs/ONBOARDING.md)
 and [advanced documentation](https://github.com/softilab/levit/blob/main/docs/ADVANCED.md).
-Requires Dart 3.12+ and Flutter 3.44+.
+Requires Dart 3.7+ and Flutter 3.29+.

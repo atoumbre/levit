@@ -7,9 +7,10 @@ class _ScopeProvider extends InheritedWidget {
   const _ScopeProvider({required this.scope, required super.child});
 
   static LevitScope? of(BuildContext context, {bool listen = false}) {
-    final provider = listen
-        ? context.dependOnInheritedWidgetOfExactType<_ScopeProvider>()
-        : context.getInheritedWidgetOfExactType<_ScopeProvider>();
+    final provider =
+        listen
+            ? context.dependOnInheritedWidgetOfExactType<_ScopeProvider>()
+            : context.getInheritedWidgetOfExactType<_ScopeProvider>();
     return provider?.scope;
   }
 

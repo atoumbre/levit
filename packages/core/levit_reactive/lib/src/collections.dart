@@ -47,8 +47,8 @@ class LxList<E> extends LxVar<List<E>>
   @override
   _Element _element(Object? index) =>
       index is int && index >= 0 && index < _count
-      ? (exists: true, value: _value[index])
-      : (exists: false, value: null);
+          ? (exists: true, value: _value[index])
+          : (exists: false, value: null);
 
   /// Observes a position, including a position beyond the current length.
   LxListEntry<E> entry(int index) {
@@ -390,18 +390,20 @@ class LxList<E> extends LxVar<List<E>>
     if (identical(elements, this) || identical(elements, _value)) return;
     final copy = List<E>.of(elements);
     mutate(
-      (list) => list
-        ..clear()
-        ..addAll(copy),
+      (list) =>
+          list
+            ..clear()
+            ..addAll(copy),
     );
   }
 
   /// Replaces the list with a single [element].
   void assignOne(E element) {
     mutate(
-      (list) => list
-        ..clear()
-        ..add(element),
+      (list) =>
+          list
+            ..clear()
+            ..add(element),
     );
   }
 }
@@ -465,8 +467,10 @@ class LxMap<K, V> extends LxVar<Map<K, V>>
   @override
   Object? _valueAt(Object? key) => _value[key];
   @override
-  _Element _element(Object? key) =>
-      (exists: _value.containsKey(key), value: _value[key]);
+  _Element _element(Object? key) => (
+    exists: _value.containsKey(key),
+    value: _value[key],
+  );
 
   @override
   void _setValueInternal(Map<K, V> val, {bool notifyListeners = true}) {
@@ -493,9 +497,10 @@ class LxMap<K, V> extends LxVar<Map<K, V>>
   void addAll(Map<K, V> other) => addEntries(other.entries);
   @override
   void addEntries(Iterable<MapEntry<K, V>> entries) {
-    final touched = !_hasChannels
-        ? null
-        : (_standardAddresses ? <Object?>{} : Set<Object?>.identity());
+    final touched =
+        !_hasChannels
+            ? null
+            : (_standardAddresses ? <Object?>{} : Set<Object?>.identity());
     try {
       for (final item in entries) {
         _value[item.key] = item.value;
@@ -533,9 +538,10 @@ class LxMap<K, V> extends LxVar<Map<K, V>>
 
   @override
   void updateAll(V Function(K, V) update) {
-    final touched = !_hasChannels
-        ? null
-        : (_standardAddresses ? <Object?>{} : Set<Object?>.identity());
+    final touched =
+        !_hasChannels
+            ? null
+            : (_standardAddresses ? <Object?>{} : Set<Object?>.identity());
     try {
       _value.updateAll((key, old) {
         final next = update(key, old);
@@ -610,9 +616,10 @@ class LxMap<K, V> extends LxVar<Map<K, V>>
   void assign(Map<K, V> other) {
     if (identical(other, this) || identical(other, _value)) return;
     mutate(
-      (m) => m
-        ..clear()
-        ..addAll(other),
+      (m) =>
+          m
+            ..clear()
+            ..addAll(other),
     );
   }
 }

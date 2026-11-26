@@ -24,8 +24,8 @@ void main() {
         MaterialApp(
           home: LView<TestController>(
             resolver: (context) => context.levit.find<TestController>(),
-            builder: (context, controller) =>
-                Text('Name: ${controller.name.value}'),
+            builder:
+                (context, controller) => Text('Name: ${controller.name.value}'),
           ),
         ),
       );
@@ -47,8 +47,8 @@ void main() {
           home: LView<TestController>(
             autoWatch: false,
             resolver: (context) => context.levit.find<TestController>(),
-            builder: (context, controller) =>
-                Text('Name: ${controller.name.value}'),
+            builder:
+                (context, controller) => Text('Name: ${controller.name.value}'),
           ),
         ),
       );
@@ -71,10 +71,10 @@ void main() {
               await Future.delayed(const Duration(milliseconds: 50));
               return AsyncTestController();
             },
-            loading: (context) =>
-                const Center(child: CircularProgressIndicator()),
-            builder: (context, controller) =>
-                Text('Done: ${controller.name.value}'),
+            loading:
+                (context) => const Center(child: CircularProgressIndicator()),
+            builder:
+                (context, controller) => Text('Done: ${controller.name.value}'),
           ),
         ),
       );
@@ -116,8 +116,9 @@ void main() {
               await Future.delayed(const Duration(milliseconds: 50));
               return AsyncTestController();
             },
-            builder: (context, controller) =>
-                Text('Sugar: ${controller.name.value}'),
+            builder:
+                (context, controller) =>
+                    Text('Sugar: ${controller.name.value}'),
           ),
         ),
       );

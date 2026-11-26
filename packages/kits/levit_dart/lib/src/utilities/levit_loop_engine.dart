@@ -357,21 +357,20 @@ typedef _IsolateSpawner =
       String? debugName,
     });
 
-_IsolateSpawner _spawnIsolate =
-    (
-      void Function(_IsolateConfig) entryPoint,
-      _IsolateConfig message, {
-      String? debugName,
-    }) {
-      return spawnDartIsolate(
-        entryPoint,
-        message,
-        onError: message.mainSendPort,
-        onExit: message.mainSendPort,
-        errorsAreFatal: true,
-        debugName: debugName,
-      );
-    };
+_IsolateSpawner _spawnIsolate = (
+  void Function(_IsolateConfig) entryPoint,
+  _IsolateConfig message, {
+  String? debugName,
+}) {
+  return spawnDartIsolate(
+    entryPoint,
+    message,
+    onError: message.mainSendPort,
+    onExit: message.mainSendPort,
+    errorsAreFatal: true,
+    debugName: debugName,
+  );
+};
 
 class _IsolateLoopService implements LevitLoopService, LevitDrainable {
   final FutureOr<void> Function() _body;
@@ -417,12 +416,12 @@ class _IsolateLoopService implements LevitLoopService, LevitDrainable {
           if (!_finished.isCompleted) _finished.complete();
         } else if (message is List) {
           if (!_stopping) {
-            final errText = message.isNotEmpty
-                ? message[0].toString()
-                : 'Isolate error';
-            final stackText = message.length > 1 && message[1] != null
-                ? message[1].toString()
-                : '';
+            final errText =
+                message.isNotEmpty ? message[0].toString() : 'Isolate error';
+            final stackText =
+                message.length > 1 && message[1] != null
+                    ? message[1].toString()
+                    : '';
             _status.value = LxError(
               createIsolateRemoteError(errText, stackText),
               StackTrace.fromString(stackText),

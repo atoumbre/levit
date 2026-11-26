@@ -137,20 +137,21 @@ mixin _LxAsyncLifecycle<T> on LxBase<T> implements LxAsyncResource {
   void _trackWork(Future<void> future, [LxExecutionContext? context]) {
     final pending = _pendingWork ??= {};
     late final Future<void> tracked;
-    tracked = future
-        .then<void>(
-          (_) {},
-          onError: (Object error, StackTrace stack) {
-            (_cleanupFailures ??= []).add(AsyncError(error, stack));
-          },
-        )
-        .whenComplete(() {
-          pending.remove(tracked);
-          if (context != null) {
-            context._complete();
-            _executionContexts?.remove(context);
-          }
-        });
+    void finish() {
+      pending.remove(tracked);
+      if (context != null) {
+        context._complete();
+        _executionContexts?.remove(context);
+      }
+    }
+
+    tracked = future.then<void>(
+      (_) => finish(),
+      onError: (Object error, StackTrace stack) {
+        (_cleanupFailures ??= []).add(AsyncError(error, stack));
+        finish();
+      },
+    );
     pending.add(tracked);
   }
 
@@ -195,14 +196,13 @@ mixin _LxAsyncLifecycle<T> on LxBase<T> implements LxAsyncResource {
     requestCancel();
     final baseClose = super.close();
     final failures = <AsyncError>[];
-    return _asyncCloseFuture =
-        Future.wait([
-          for (final operation in [baseClose, drain()])
-            operation.catchError((Object error, StackTrace stack) {
-              failures.add(AsyncError(error, stack));
-            }),
-        ]).then((_) {
-          if (failures.isNotEmpty) throw LxCleanupException(failures);
-        });
+    return _asyncCloseFuture = Future.wait([
+      for (final operation in [baseClose, drain()])
+        operation.catchError((Object error, StackTrace stack) {
+          failures.add(AsyncError(error, stack));
+        }),
+    ]).then((_) {
+      if (failures.isNotEmpty) throw LxCleanupException(failures);
+    });
   }
 }

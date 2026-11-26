@@ -7,8 +7,7 @@ import 'package:levit_reactive/spi.dart';
 class _EntryNames extends LevitReactiveMiddleware {
   final names = <String?>[];
   @override
-  void Function(LxReactive)? get onInit =>
-      (value) => names.add(value.name);
+  void Function(LxReactive)? get onInit => (value) => names.add(value.name);
 }
 
 void main() {

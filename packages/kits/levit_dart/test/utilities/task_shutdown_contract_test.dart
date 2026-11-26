@@ -86,16 +86,18 @@ void main() {
       'task draining composes with other resource mixins: $create',
       () async {
         final controller = create();
-        final service = controller is LevitLoopMixin
-            ? controller.loopEngine.registerService('probe', ProbeService())
-            : null;
+        final service =
+            controller is LevitLoopMixin
+                ? controller.loopEngine.registerService('probe', ProbeService())
+                : null;
         final timeOwner = controller is LevitTimeMixin ? controller : null;
         final countdown = timeOwner?.startCountdown(
           duration: const Duration(hours: 1),
         );
-        final engine = controller is LevitReactiveTasksMixin
-            ? controller.taskEngine
-            : (controller as LevitTasksMixin).taskEngine;
+        final engine =
+            controller is LevitReactiveTasksMixin
+                ? controller.taskEngine
+                : (controller as LevitTasksMixin).taskEngine;
         final release = Completer<void>();
         final started = Completer<void>();
         final result = engine.schedule((_) async {

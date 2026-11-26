@@ -182,11 +182,12 @@ sealed class LevitReactiveEvent extends LevitMonitorEvent {
   LevitReactiveEvent({required super.sessionId, required this.reactive});
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['reactiveId'] = reactive.id.toString()
-    ..['name'] = reactive.name
-    ..['ownerId'] = reactive.ownerId
-    ..['isSensitive'] = reactive.isSensitive;
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['reactiveId'] = reactive.id.toString()
+        ..['name'] = reactive.name
+        ..['ownerId'] = reactive.ownerId
+        ..['isSensitive'] = reactive.isSensitive;
 }
 
 /// Event triggered when a new reactive variable is instantiated.
@@ -196,13 +197,14 @@ class LevitReactiveInitEvent extends LevitReactiveEvent {
   /// Creates a reactive initialization event.
   LevitReactiveInitEvent({required super.sessionId, required super.reactive});
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'reactive_init'
-    ..['valueType'] = reactive.value?.runtimeType.toString() ?? 'dynamic'
-    ..['initialValue'] = LevitMonitorEvent._stringify(
-      reactive.value,
-      isSensitive: reactive.isSensitive,
-    );
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'reactive_init'
+        ..['valueType'] = reactive.value?.runtimeType.toString() ?? 'dynamic'
+        ..['initialValue'] = LevitMonitorEvent._stringify(
+          reactive.value,
+          isSensitive: reactive.isSensitive,
+        );
 }
 
 /// Event triggered when a reactive object's lifecycle ends.
@@ -263,13 +265,14 @@ class LevitReactiveChangeEvent extends LevitReactiveEvent {
                 )
                 as String?,
         valueType: change.valueType.toString(),
-        stackTrace: stackTrace == null
-            ? null
-            : LevitMonitorEvent._stringify(
-                    stackTrace,
-                    isSensitive: reactive.isSensitive,
-                  )
-                  as String?,
+        stackTrace:
+            stackTrace == null
+                ? null
+                : LevitMonitorEvent._stringify(
+                      stackTrace,
+                      isSensitive: reactive.isSensitive,
+                    )
+                    as String?,
       ),
       timestamp,
     );
@@ -277,18 +280,19 @@ class LevitReactiveChangeEvent extends LevitReactiveEvent {
 
   @override
   Map<String, dynamic> toJson() {
-    final data = super.toJson()
-      ..['type'] = 'state_change'
-      ..['oldValue'] = LevitMonitorEvent._stringify(
-        change.oldValue,
-        isSensitive: reactive.isSensitive,
-      )
-      ..['newValue'] = LevitMonitorEvent._stringify(
-        change.newValue,
-        isSensitive: reactive.isSensitive,
-      )
-      ..['valueType'] = change.valueType.toString()
-      ..['isBatch'] = false;
+    final data =
+        super.toJson()
+          ..['type'] = 'state_change'
+          ..['oldValue'] = LevitMonitorEvent._stringify(
+            change.oldValue,
+            isSensitive: reactive.isSensitive,
+          )
+          ..['newValue'] = LevitMonitorEvent._stringify(
+            change.newValue,
+            isSensitive: reactive.isSensitive,
+          )
+          ..['valueType'] = change.valueType.toString()
+          ..['isBatch'] = false;
     if (stackTrace != null) {
       data['stackTrace'] = LevitMonitorEvent._stringify(
         stackTrace,
@@ -310,28 +314,30 @@ class LevitReactiveBatchEvent extends LevitMonitorEvent {
   LevitReactiveBatchEvent({required super.sessionId, required this.change});
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'batch'
-    ..['batchId'] = change.batchId
-    ..['count'] = change.length
-    ..['entries'] = change.entries
-        .map(
-          (e) => {
-            'reactiveId': e.$1.id.toString(),
-            'name': e.$1.name,
-            'isSensitive': e.$1.isSensitive,
-            'oldValue': LevitMonitorEvent._stringify(
-              e.$2.oldValue,
-              isSensitive: e.$1.isSensitive,
-            ),
-            'newValue': LevitMonitorEvent._stringify(
-              e.$2.newValue,
-              isSensitive: e.$1.isSensitive,
-            ),
-            'valueType': e.$2.valueType.toString(),
-          },
-        )
-        .toList();
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'batch'
+        ..['batchId'] = change.batchId
+        ..['count'] = change.length
+        ..['entries'] =
+            change.entries
+                .map(
+                  (e) => {
+                    'reactiveId': e.$1.id.toString(),
+                    'name': e.$1.name,
+                    'isSensitive': e.$1.isSensitive,
+                    'oldValue': LevitMonitorEvent._stringify(
+                      e.$2.oldValue,
+                      isSensitive: e.$1.isSensitive,
+                    ),
+                    'newValue': LevitMonitorEvent._stringify(
+                      e.$2.newValue,
+                      isSensitive: e.$1.isSensitive,
+                    ),
+                    'valueType': e.$2.valueType.toString(),
+                  },
+                )
+                .toList();
 }
 
 /// Event triggered when a computed value's dependency graph is updated.
@@ -349,11 +355,13 @@ class LevitReactiveGraphChangeEvent extends LevitReactiveEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'graph_change'
-    ..['dependencies'] = dependencies
-        .map((d) => {'id': d.id.toString(), 'name': d.name})
-        .toList();
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'graph_change'
+        ..['dependencies'] =
+            dependencies
+                .map((d) => {'id': d.id.toString(), 'name': d.name})
+                .toList();
 }
 
 /// Event triggered when a new listener subscribes to a reactive object.
@@ -371,11 +379,15 @@ class LevitReactiveListenerAddedEvent extends LevitReactiveEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'listener_add'
-    ..['context'] = reactive.isSensitive
-        ? (context == null ? null : LevitMonitor.obfuscate(context!.toJson()))
-        : context?.toJson();
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'listener_add'
+        ..['context'] =
+            reactive.isSensitive
+                ? (context == null
+                    ? null
+                    : LevitMonitor.obfuscate(context!.toJson()))
+                : context?.toJson();
 }
 
 /// Event triggered when a listener unsubscribes from a reactive object.
@@ -393,11 +405,15 @@ class LevitReactiveListenerRemovedEvent extends LevitReactiveEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'listener_remove'
-    ..['context'] = reactive.isSensitive
-        ? (context == null ? null : LevitMonitor.obfuscate(context!.toJson()))
-        : context?.toJson();
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'listener_remove'
+        ..['context'] =
+            reactive.isSensitive
+                ? (context == null
+                    ? null
+                    : LevitMonitor.obfuscate(context!.toJson()))
+                : context?.toJson();
 }
 
 /// Event triggered when an unhandled exception is reported during reactive
@@ -423,19 +439,20 @@ class LevitReactiveErrorEvent extends LevitMonitorEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'reactive_error'
-    ..['reactiveId'] = reactive?.id.toString()
-    ..['name'] = reactive?.name
-    ..['isSensitive'] = reactive?.isSensitive ?? false
-    ..['error'] = LevitMonitorEvent._stringify(
-      error,
-      isSensitive: reactive?.isSensitive ?? false,
-    )
-    ..['stack'] = LevitMonitorEvent._stringify(
-      stack,
-      isSensitive: reactive?.isSensitive ?? false,
-    );
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'reactive_error'
+        ..['reactiveId'] = reactive?.id.toString()
+        ..['name'] = reactive?.name
+        ..['isSensitive'] = reactive?.isSensitive ?? false
+        ..['error'] = LevitMonitorEvent._stringify(
+          error,
+          isSensitive: reactive?.isSensitive ?? false,
+        )
+        ..['stack'] = LevitMonitorEvent._stringify(
+          stack,
+          isSensitive: reactive?.isSensitive ?? false,
+        );
 }
 
 // ============================================================================
@@ -468,15 +485,16 @@ sealed class LevitDependencyEvent extends LevitMonitorEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['scopeId'] = scopeId
-    ..['scopeName'] = scopeName
-    ..['key'] = key
-    ..['isLazy'] = info.isLazy
-    ..['isFactory'] = info.isFactory
-    ..['isAsync'] = info.isAsync
-    ..['permanent'] = info.permanent
-    ..['isInstantiated'] = info.isInstantiated;
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['scopeId'] = scopeId
+        ..['scopeName'] = scopeName
+        ..['key'] = key
+        ..['isLazy'] = info.isLazy
+        ..['isFactory'] = info.isFactory
+        ..['isAsync'] = info.isAsync
+        ..['permanent'] = info.permanent
+        ..['isInstantiated'] = info.isInstantiated;
 }
 
 /// Event triggered when a new scope is created.
@@ -500,11 +518,12 @@ class LevitScopeCreateEvent extends LevitDependencyEvent {
        ); // Scope lifecycle events have no dependency payload.
 
   @override
-  Map<String, dynamic> toJson() => _metadataJson()
-    ..['scopeId'] = scopeId
-    ..['scopeName'] = scopeName
-    ..['type'] = 'scope_create'
-    ..['parentScopeId'] = parentScopeId;
+  Map<String, dynamic> toJson() =>
+      _metadataJson()
+        ..['scopeId'] = scopeId
+        ..['scopeName'] = scopeName
+        ..['type'] = 'scope_create'
+        ..['parentScopeId'] = parentScopeId;
 }
 
 /// Event triggered when a scope is disposed, after all cleanup attempts finish.
@@ -524,10 +543,11 @@ class LevitScopeDisposeEvent extends LevitDependencyEvent {
        ); // Scope lifecycle events have no dependency payload.
 
   @override
-  Map<String, dynamic> toJson() => _metadataJson()
-    ..['scopeId'] = scopeId
-    ..['scopeName'] = scopeName
-    ..['type'] = 'scope_dispose';
+  Map<String, dynamic> toJson() =>
+      _metadataJson()
+        ..['scopeId'] = scopeId
+        ..['scopeName'] = scopeName
+        ..['type'] = 'scope_dispose';
 }
 
 /// Event triggered when a dependency is registered with a scope.
@@ -549,9 +569,10 @@ class LevitDependencyRegisterEvent extends LevitDependencyEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'di_register'
-    ..['source'] = source;
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'di_register'
+        ..['source'] = source;
 }
 
 /// Event triggered when a dependency instance creation begins.
@@ -596,11 +617,12 @@ class LevitDependencyInstanceReadyEvent extends LevitDependencyEvent {
       ..['type'] = 'di_instance_init'
       ..['instance'] = '<$type>'
       ..['instanceType'] = type
-      ..['dependencyType'] = instance is LevitController
-          ? 'controller'
-          : type.contains('LevitStoreInstance')
-          ? 'store'
-          : 'other';
+      ..['dependencyType'] =
+          instance is LevitController
+              ? 'controller'
+              : type.contains('LevitStoreInstance')
+              ? 'store'
+              : 'other';
   }
 }
 
@@ -652,9 +674,10 @@ class LevitDependencyDeleteEvent extends LevitDependencyEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'di_delete'
-    ..['source'] = source;
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'di_delete'
+        ..['source'] = source;
 }
 
 // ============================================================================
@@ -692,13 +715,15 @@ class LevitLogEvent extends LevitMonitorEvent {
 
   @override
   Map<String, dynamic> toJson() {
-    final payload = super.toJson()
-      ..['type'] = 'log'
-      ..['level'] = level.name
-      ..['isSensitive'] = sensitive
-      ..['data'] = sensitive
-          ? (data == null ? null : LevitMonitor.obfuscate(data))
-          : _serializeData(data);
+    final payload =
+        super.toJson()
+          ..['type'] = 'log'
+          ..['level'] = level.name
+          ..['isSensitive'] = sensitive
+          ..['data'] =
+              sensitive
+                  ? (data == null ? null : LevitMonitor.obfuscate(data))
+                  : _serializeData(data);
     if (error != null) {
       payload['error'] = LevitMonitorEvent._stringify(
         error,
@@ -720,9 +745,10 @@ class LevitLogEvent extends LevitMonitorEvent {
       return LevitMonitor.obfuscate(data);
     }
     if (data is num || data is String || data is bool) return data;
-    final sanitized = data is Map || data is Iterable
-        ? LevitMonitorEvent._redactNested(data)
-        : data;
+    final sanitized =
+        data is Map || data is Iterable
+            ? LevitMonitorEvent._redactNested(data)
+            : data;
     try {
       // Attempt to encode to check if serializable or if it has `toJson()`
       jsonEncode(sanitized);
@@ -778,10 +804,11 @@ final class _ScopeProgressEvent extends LevitMonitorEvent {
   ];
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'scope_progress'
-    ..['version'] = 1
-    ..['scope'] = scope;
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'scope_progress'
+        ..['version'] = 1
+        ..['scope'] = scope;
 }
 
 /// A dependency-neutral structured event supplied by an application or adapter.
@@ -833,15 +860,17 @@ class LevitCustomMonitorEvent extends LevitMonitorEvent {
 
   @override
   Map<String, dynamic> toJson() {
-    final data = super.toJson()
-      ..['type'] = 'custom'
-      ..['namespace'] = namespace
-      ..['name'] = name
-      ..['level'] = level.name
-      ..['isSensitive'] = sensitive
-      ..['attributes'] = sensitive
-          ? LevitMonitor.obfuscate(attributes)
-          : _serializeAttributes(attributes);
+    final data =
+        super.toJson()
+          ..['type'] = 'custom'
+          ..['namespace'] = namespace
+          ..['name'] = name
+          ..['level'] = level.name
+          ..['isSensitive'] = sensitive
+          ..['attributes'] =
+              sensitive
+                  ? LevitMonitor.obfuscate(attributes)
+                  : _serializeAttributes(attributes);
     if (error != null) {
       data['error'] = LevitMonitorEvent._stringify(
         error,
@@ -905,9 +934,10 @@ class LevitSnapshotEvent extends LevitMonitorEvent {
   LevitSnapshotEvent({required super.sessionId, required this.state});
 
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['type'] = 'snapshot'
-    ..['state'] = state;
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['type'] = 'snapshot'
+        ..['state'] = state;
 }
 
 /// The only event form retained by monitor queues and passed to transports.

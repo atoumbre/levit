@@ -13,8 +13,8 @@ void main() {
         },
         child: MaterialApp(
           home: LAsyncView<TestController>(
-            builder: (context, controller) =>
-                Text('Count: ${controller.count}'),
+            builder:
+                (context, controller) => Text('Count: ${controller.count}'),
           ),
         ),
       ),

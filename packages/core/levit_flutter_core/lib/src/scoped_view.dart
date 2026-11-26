@@ -120,9 +120,10 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
       child: Builder(
         builder: (context) {
           final resolver = widget.resolver;
-          final controller = resolver != null
-              ? resolver(context)
-              : context.levit.findOrNull<T>();
+          final controller =
+              resolver != null
+                  ? resolver(context)
+                  : context.levit.findOrNull<T>();
           if (controller == null) {
             final fallback = widget.orElse;
             if (fallback != null) return fallback(context);

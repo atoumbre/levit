@@ -729,9 +729,9 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     throw Exception(
       tag == null
           ? 'LevitScope($name): Type "$S" is not registered.\n'
-                'Not found in scope or any parent.'
+              'Not found in scope or any parent.'
           : 'LevitScope($name): Type "$S" with tag "$tag" is not registered.\n'
-                'Not found in scope or any parent.',
+              'Not found in scope or any parent.',
     );
   }
 
@@ -981,32 +981,35 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
       (info._pendingStorage ??= {}).add(finished.future);
       _notifyScopeProgress();
       late final Future<S> future;
-      future = (() async {
-        try {
-          final instance = await _createInstanceAsync<S>(
-            info.asyncBuilder!,
-            keyString,
-            info,
-          );
-          info.instance = instance;
-          if (info._removed || _isClosing || _isDisposed) {
-            info._pendingStorage?.remove(finished.future);
-            _notifyScopeProgress();
-            finished.complete();
-            throw StateError(
-              'LevitScope($name): Dependency "$keyString" was disposed while initializing.',
-            );
-          }
-          _initializeInstance(instance, keyString, info);
-          _notifyResolve(keyString, info, 'findAsync');
-          return instance;
-        } finally {
-          info._pendingStorage?.remove(finished.future);
-          _notifyScopeProgress();
-          if (!finished.isCompleted) finished.complete();
-          if (identical(_pendingInit?[key], future)) _pendingInit?.remove(key);
-        }
-      })();
+      future =
+          (() async {
+            try {
+              final instance = await _createInstanceAsync<S>(
+                info.asyncBuilder!,
+                keyString,
+                info,
+              );
+              info.instance = instance;
+              if (info._removed || _isClosing || _isDisposed) {
+                info._pendingStorage?.remove(finished.future);
+                _notifyScopeProgress();
+                finished.complete();
+                throw StateError(
+                  'LevitScope($name): Dependency "$keyString" was disposed while initializing.',
+                );
+              }
+              _initializeInstance(instance, keyString, info);
+              _notifyResolve(keyString, info, 'findAsync');
+              return instance;
+            } finally {
+              info._pendingStorage?.remove(finished.future);
+              _notifyScopeProgress();
+              if (!finished.isCompleted) finished.complete();
+              if (identical(_pendingInit?[key], future)) {
+                _pendingInit?.remove(key);
+              }
+            }
+          })();
       (_pendingInit ??= {})[key] = future;
       return future;
     }
@@ -1251,9 +1254,10 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     _notifyScopeProgress();
     try {
       while (true) {
-        final initializing = info._pendingFactories
-            .where((work) => !info._factoryReleases.contains(work))
-            .toList();
+        final initializing =
+            info._pendingFactories
+                .where((work) => !info._factoryReleases.contains(work))
+                .toList();
         if (initializing.isEmpty) break;
         await Future.wait(initializing);
       }
@@ -1789,10 +1793,11 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   int get registeredCount => _registry.length + _aliases.length;
 
   /// A list of keys for all locally registered dependencies (for debugging).
-  List<String> get registeredKeys => <_LevitScopeKey>[
-    ..._registry.keys,
-    ..._aliases.keys,
-  ].map((k) => k.debugString).toList();
+  List<String> get registeredKeys =>
+      <_LevitScopeKey>[
+        ..._registry.keys,
+        ..._aliases.keys,
+      ].map((k) => k.debugString).toList();
 
   @override
   String toString() {

@@ -73,9 +73,8 @@ class LxComputed<T> extends _ComputedBase<T> {
         (i) => deps[i]._version,
         growable: false,
       );
-      _capturedReactives = tracker.trackReactives
-          ? tracker.reactives.toList()
-          : null;
+      _capturedReactives =
+          tracker.trackReactives ? tracker.reactives.toList() : null;
 
       if (_staticDeps) {
         _hasStaticGraph = true;
@@ -391,8 +390,9 @@ class LxComputed<T> extends _ComputedBase<T> {
   // Keep optional diagnostic capture out of ordinary computed read sites.
   @pragma('vm:never-inline')
   T _readWithGraphCapture() {
-    final tracker = _DependencyTracker()
-      ..trackReactives = LevitReactiveMiddleware._hasGraphChangeMiddlewares;
+    final tracker =
+        _DependencyTracker()
+          ..trackReactives = LevitReactiveMiddleware._hasGraphChangeMiddlewares;
     LxSpi.proxy = tracker;
     try {
       final result = _compute();
@@ -443,9 +443,11 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
   T? _lastComputedValue;
   bool _hasValue = false;
   int _executionId = 0;
+  int _settledExecutionId = 0;
   bool _hasProducedResult = false;
   bool _executionRunning = false;
   bool _trailingExecutionRequested = false;
+  List<Completer<T>>? _waiters;
 
   final bool _staticDeps;
   bool _hasStaticGraph = false;
@@ -467,14 +469,15 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
        super(
          initial != null ? LxSuccess<T>(initial) : LxWaiting<T>(),
          name: name,
-         equals: equals == null
-             ? null
-             : (previous, current) {
-                 if (previous is LxSuccess<T> && current is LxSuccess<T>) {
-                   return equals(previous.value, current.value);
-                 }
-                 return previous == current;
-               },
+         equals:
+             equals == null
+                 ? null
+                 : (previous, current) {
+                   if (previous is LxSuccess<T> && current is LxSuccess<T>) {
+                     return equals(previous.value, current.value);
+                   }
+                   return previous == current;
+                 },
        );
 
   @override
@@ -485,11 +488,22 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
 
   @override
   void _onInactive() {
+    final wasInFlight =
+        _executionId != _settledExecutionId || _trailingExecutionRequested;
     _isActive = false;
     _executionId++; // Cancel pending
     _trailingExecutionRequested = false;
     _hasStaticGraph = false;
     _cleanupSubscriptions();
+    if (wasInFlight) {
+      _failWaiters(const LxCancelledException(), StackTrace.current);
+    }
+  }
+
+  @override
+  void requestCancel() {
+    super.requestCancel();
+    _failWaiters(const LxCancelledException(), StackTrace.current);
   }
 
   @override
@@ -593,9 +607,13 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
       if (myExecutionId == _executionId) {
         _hasProducedResult = true;
         _hasStaticGraph = _staticDeps;
+        _settledExecutionId = myExecutionId;
         _setValueInternal(
           LxError<T>.fromPrevious(syncError!, syncStack!, previous),
         );
+        if (!_trailingExecutionRequested) {
+          _failWaiters(syncError, syncStack);
+        }
       }
       context._complete();
       _executionContexts?.remove(context);
@@ -605,37 +623,51 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
 
     // Async completion updates status only for the latest execution token.
     _trackWork(
-      future
-          .then<void>(
-            (result) {
-              if (myExecutionId == _executionId &&
-                  !_isClosed &&
-                  !_workCancelled) {
-                _hasProducedResult = true;
-                // A result listener may detach synchronously and release this graph.
-                _hasStaticGraph = _staticDeps;
-                _applyResult(result, isInitial: isInitial);
+      future.then<void>(
+        (result) {
+          try {
+            if (myExecutionId == _executionId &&
+                !_isClosed &&
+                !_workCancelled) {
+              _hasProducedResult = true;
+              // A result listener may detach synchronously and release this graph.
+              _hasStaticGraph = _staticDeps;
+              _settledExecutionId = myExecutionId;
+              _applyResult(result, isInitial: isInitial);
 
-                if (tracker != null) {
-                  _notifyDependencyGraph(tracker.reactives);
-                }
+              if (tracker != null) {
+                _notifyDependencyGraph(tracker.reactives);
               }
-            },
-            onError: (Object e, StackTrace st) {
-              if (myExecutionId == _executionId &&
-                  !_isClosed &&
-                  !_workCancelled) {
-                _hasProducedResult = true;
-                _hasStaticGraph = _staticDeps;
-                _setValueInternal(LxError<T>.fromPrevious(e, st, previous));
+              if (!_trailingExecutionRequested) {
+                _completeWaiters(result);
+              }
+            }
+          } finally {
+            _finishExecution();
+          }
+        },
+        onError: (Object e, StackTrace st) {
+          try {
+            if (myExecutionId == _executionId &&
+                !_isClosed &&
+                !_workCancelled) {
+              _hasProducedResult = true;
+              _hasStaticGraph = _staticDeps;
+              _settledExecutionId = myExecutionId;
+              _setValueInternal(LxError<T>.fromPrevious(e, st, previous));
 
-                if (tracker != null) {
-                  _notifyDependencyGraph(tracker.reactives);
-                }
+              if (tracker != null) {
+                _notifyDependencyGraph(tracker.reactives);
               }
-            },
-          )
-          .whenComplete(_finishExecution),
+              if (!_trailingExecutionRequested) {
+                _failWaiters(e, st);
+              }
+            }
+          } finally {
+            _finishExecution();
+          }
+        },
+      ),
       context,
     );
   }
@@ -670,6 +702,66 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
 
   /// The current asynchronous computation [LxStatus] (alias for [value]).
   LxStatus<T> get status => value;
+
+  /// Returns a [Future] that completes with the next settled value or error
+  /// of this asynchronous computation.
+  ///
+  /// When active and already settled, returns the current [LxSuccess] value or
+  /// [LxError] failure immediately. When inactive, temporarily activates the
+  /// computation until it settles. If cancelled, deactivated while in flight,
+  /// or closed before settling, completes with [LxCancelledException].
+  Future<T> get wait {
+    if (_isClosed || _workCancelled) {
+      return _settledFutureOrCancelled();
+    }
+    if (!_isActive) {
+      void keepAlive() {}
+      addListener(keepAlive);
+      final future = _waitActive();
+      return future.whenComplete(() {
+        if (!_isClosed) removeListener(keepAlive);
+      });
+    }
+    return _waitActive();
+  }
+
+  Future<T> _waitActive() {
+    if (_executionId == _settledExecutionId && !_trailingExecutionRequested) {
+      return _settledFutureOrCancelled();
+    }
+    final completer = Completer<T>();
+    (_waiters ??= <Completer<T>>[]).add(completer);
+    return completer.future;
+  }
+
+  Future<T> _settledFutureOrCancelled() {
+    return switch (_value) {
+      LxSuccess<T>(:final value) => Future<T>.value(value),
+      LxError<T>(:final error, :final stackTrace) => Future<T>.error(
+        error,
+        stackTrace,
+      ),
+      _ => Future<T>.error(const LxCancelledException()),
+    };
+  }
+
+  void _completeWaiters(T value) {
+    final waiters = _waiters;
+    if (waiters == null) return;
+    _waiters = null;
+    for (final waiter in waiters) {
+      if (!waiter.isCompleted) waiter.complete(value);
+    }
+  }
+
+  void _failWaiters(Object error, StackTrace stackTrace) {
+    final waiters = _waiters;
+    if (waiters == null) return;
+    _waiters = null;
+    for (final waiter in waiters) {
+      if (!waiter.isCompleted) waiter.completeError(error, stackTrace);
+    }
+  }
 
   /// Re-runs the asynchronous computation if this computed value is active.
   ///
@@ -790,9 +882,10 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
     if (_multipleDependencies case final deps?) {
       deps.add(notifier);
     } else if (_soleDependency case final first?) {
-      _multipleDependencies = Set.identity()
-        ..add(first)
-        ..add(notifier);
+      _multipleDependencies =
+          Set.identity()
+            ..add(first)
+            ..add(notifier);
       _soleDependency = null;
     } else {
       _soleDependency = notifier;
@@ -856,9 +949,10 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
         _subscribeTo(dep);
       }
       // The initial capture is already a privately owned list.
-      _orderedDependencies = identical(newDependencies, _capturedDeps)
-          ? _capturedDeps
-          : newDependencies.toList(growable: false);
+      _orderedDependencies =
+          identical(newDependencies, _capturedDeps)
+              ? _capturedDeps
+              : newDependencies.toList(growable: false);
       if (reactives != null) maybeNotifyGraphChange(reactives);
       return;
     }

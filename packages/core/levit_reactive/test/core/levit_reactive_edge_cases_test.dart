@@ -82,6 +82,5 @@ class ErrorMiddleware extends LevitReactiveMiddleware {
 
   @override
   void Function(Object error, StackTrace? stack, LxReactive? context)?
-  get onReactiveError =>
-      (e, s, c) => onError(e);
+  get onReactiveError => (e, s, c) => onError(e);
 }

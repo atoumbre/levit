@@ -13,9 +13,8 @@ void main() {
     final config =
         jsonDecode(await File.fromUri(configUri).readAsString()) as Map;
     for (final entry in config['packages'] as List) {
-      entry['rootUri'] = configUri
-          .resolve(entry['rootUri'] as String)
-          .toString();
+      entry['rootUri'] =
+          configUri.resolve(entry['rootUri'] as String).toString();
     }
     await Directory('${directory.path}/.dart_tool').create();
     await File(
@@ -71,21 +70,23 @@ void removed(LxReadable<int> readable, LxVar<int> state,
       '--format=machine',
       directory.path,
     ]);
-    final diagnostics = '${analysis.stdout}\n${analysis.stderr}'
-        .split('\n')
-        .where((line) => line.startsWith('ERROR|'))
-        .map((line) => line.split('|'))
-        .toList();
+    final diagnostics =
+        '${analysis.stdout}\n${analysis.stderr}'
+            .split('\n')
+            .where((line) => line.startsWith('ERROR|'))
+            .map((line) => line.split('|'))
+            .toList();
     expect(analysis.exitCode, isNonZero);
     expect(
       diagnostics.where((parts) => parts[3].endsWith('/valid.dart')),
       isEmpty,
       reason: '${analysis.stdout}\n${analysis.stderr}',
     );
-    final invalidLines = diagnostics
-        .where((parts) => parts[3].endsWith('/invalid.dart'))
-        .map((parts) => int.parse(parts[4]))
-        .toSet();
+    final invalidLines =
+        diagnostics
+            .where((parts) => parts[3].endsWith('/invalid.dart'))
+            .map((parts) => int.parse(parts[4]))
+            .toSet();
     final firstLine = '\n'.allMatches(header).length + 1;
     expect(invalidLines, {
       for (var i = 0; i < invalidStatements.length; i++) firstLine + i,

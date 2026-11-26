@@ -51,9 +51,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LWatch(
-            () => showWatch.value
-                ? LWatch(() => Text('Count: ${count.value}'))
-                : const Text('Hidden'),
+            () =>
+                showWatch.value
+                    ? LWatch(() => Text('Count: ${count.value}'))
+                    : const Text('Hidden'),
           ),
         ),
       );
@@ -169,10 +170,11 @@ void main() {
         MaterialApp(
           home: ValueListenableBuilder<bool>(
             valueListenable: useFirst,
-            builder: (_, first, __) => LBuilder<String>(
-              first ? value1 : value2,
-              (value) => Text('Value: ${value}'),
-            ),
+            builder:
+                (_, first, __) => LBuilder<String>(
+                  first ? value1 : value2,
+                  (value) => Text('Value: ${value}'),
+                ),
           ),
         ),
       );
@@ -230,12 +232,14 @@ void main() {
     testWidgets('handles ambiguous logical keys in multi dependency mode', (
       tester,
     ) async {
-      final left = 1.lx
-        ..ownerId = 'shared-owner'
-        ..name = 'shared-name';
-      final right = 2.lx
-        ..ownerId = 'shared-owner'
-        ..name = 'shared-name';
+      final left =
+          1.lx
+            ..ownerId = 'shared-owner'
+            ..name = 'shared-name';
+      final right =
+          2.lx
+            ..ownerId = 'shared-owner'
+            ..name = 'shared-name';
 
       Widget buildStage() {
         return Directionality(

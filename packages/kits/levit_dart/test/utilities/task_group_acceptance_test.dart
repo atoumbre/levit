@@ -202,11 +202,12 @@ void main() {
       final cancelled = LevitTaskGroup(engine: engine);
       await expectLater(
         cancelled.run(
-          (_) => throw const LevitTaskCancelledException(
-            'task',
-            'run',
-            reason: reason,
-          ),
+          (_) =>
+              throw const LevitTaskCancelledException(
+                'task',
+                'run',
+                reason: reason,
+              ),
         ),
         throwsA(
           isA<LevitTaskCancelledException>().having(

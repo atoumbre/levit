@@ -98,8 +98,7 @@ LevitMonitor.emitCustomEvent(
   `LevitMonitorEvent` envelopes and implement awaitable `flush` and `close`.
 - **Live AI agent inspection:** Connect a running app via
   `LevitWebSocketTransport.connect('ws://127.0.0.1:9200/ws', appId: 'my-app', token: 'dev-local-token')`
-  to the unpublished workspace tool
-  [levit_mcp](https://github.com/softilab/levit/blob/main/packages/tools/levit_mcp/README.md)
+  to [levit_mcp](https://github.com/softilab/levit/blob/main/packages/tools/levit_mcp/README.md)
   for read-only scope, reactive graph, timeline, task tree, and diagnostic tools.
 
 ## Wire Protocol & Snapshots

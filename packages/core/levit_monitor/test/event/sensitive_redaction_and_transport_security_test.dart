@@ -90,25 +90,27 @@ void main() {
       'LevitReactiveErrorEvent and listener events redact sensitive metadata',
       () {
         final secret = LxVar<String>('pw', isSensitive: true);
-        final errorJson = LevitReactiveErrorEvent(
-          sessionId: 's1',
-          reactive: secret,
-          error: StateError('leak'),
-          stack: StackTrace.current,
-        ).toJson();
+        final errorJson =
+            LevitReactiveErrorEvent(
+              sessionId: 's1',
+              reactive: secret,
+              error: StateError('leak'),
+              stack: StackTrace.current,
+            ).toJson();
         expect(errorJson['isSensitive'], isTrue);
         expect(errorJson['error'], '***');
         expect(errorJson['stack'], '***');
 
-        final listenerJson = LevitReactiveListenerAddedEvent(
-          sessionId: 's1',
-          reactive: secret,
-          context: const LxListenerContext(
-            type: 'Widget',
-            id: 1,
-            data: {'secret': 'v'},
-          ),
-        ).toJson();
+        final listenerJson =
+            LevitReactiveListenerAddedEvent(
+              sessionId: 's1',
+              reactive: secret,
+              context: const LxListenerContext(
+                type: 'Widget',
+                id: 1,
+                data: {'secret': 'v'},
+              ),
+            ).toJson();
         expect(listenerJson['context'], '***');
 
         secret.close();

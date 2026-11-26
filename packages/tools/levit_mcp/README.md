@@ -3,8 +3,8 @@
 [![Platforms](https://img.shields.io/badge/platforms-dart-blue)](https://pub.dev/packages/levit_mcp)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
-Read-only Model Context Protocol (MCP) server for live Levit runtime inspection
-(currently an unpublished workspace tool in `packages/tools/levit_mcp`).
+Read-only Model Context Protocol (MCP) server for live Levit runtime inspection.
+Requires Dart 3.7+.
 
 `levit_mcp` accepts authenticated loopback WebSocket telemetry from running Dart
 and Flutter applications instrumented with `levit_monitor` and exposes structured
@@ -28,16 +28,22 @@ Cursor, Gemini CLI, etc.).
 
 ## Quick Start
 
-### 1. Configure your MCP client
+### 1. Install and configure your MCP client
+
+Activate globally from pub.dev:
+
+```bash
+dart pub global activate levit_mcp
+```
+
+Then configure your MCP client:
 
 ```json
 {
   "mcpServers": {
     "levit": {
-      "command": "dart",
+      "command": "levit_mcp",
       "args": [
-        "run",
-        "/absolute/path/to/levit/packages/tools/levit_mcp/bin/levit_mcp.dart",
         "--port",
         "9200",
         "--token",
@@ -48,7 +54,7 @@ Cursor, Gemini CLI, etc.).
 }
 ```
 
-Or activate from your local checkout:
+Or activate from a local checkout of the Levit monorepo:
 
 ```bash
 dart pub global activate --source path /absolute/path/to/levit/packages/tools/levit_mcp

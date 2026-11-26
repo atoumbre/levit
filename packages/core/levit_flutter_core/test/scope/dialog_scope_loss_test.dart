@@ -24,20 +24,22 @@ void main() {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (_) => LScope.capture(
-                        context,
-                        child: Builder(
-                          builder: (dialogContext) {
-                            try {
-                              final controller = dialogContext.levit
-                                  .find<TestController>();
-                              return Text('Found: ${controller.value()}');
-                            } catch (e) {
-                              return Text('Error: Exception');
-                            }
-                          },
-                        ),
-                      ),
+                      builder:
+                          (_) => LScope.capture(
+                            context,
+                            child: Builder(
+                              builder: (dialogContext) {
+                                try {
+                                  final controller =
+                                      dialogContext.levit
+                                          .find<TestController>();
+                                  return Text('Found: ${controller.value()}');
+                                } catch (e) {
+                                  return Text('Error: Exception');
+                                }
+                              },
+                            ),
+                          ),
                     );
                   },
                 ),
@@ -73,8 +75,11 @@ void main() {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (_) =>
-                          LScope.capture(context, child: const _DeepWidget()),
+                      builder:
+                          (_) => LScope.capture(
+                            context,
+                            child: const _DeepWidget(),
+                          ),
                     );
                   },
                 ),

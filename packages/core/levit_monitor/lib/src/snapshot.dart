@@ -95,11 +95,12 @@ class LevitStateSnapshot {
         }
         final decoded = _decodeScopeProgress(data['scope']);
         final id = decoded['id'] as int;
-        final scope = scopes[id] ??= LevitScopeModel(
-          id: id,
-          name: decoded['name'] as String,
-          parentScopeId: decoded['parentScopeId'] as int?,
-        );
+        final scope =
+            scopes[id] ??= LevitScopeModel(
+              id: id,
+              name: decoded['name'] as String,
+              parentScopeId: decoded['parentScopeId'] as int?,
+            );
         scope.progress = decoded;
         scope._wireProgress = data['scope'] as List;
       case 'scope_create':
@@ -249,9 +250,8 @@ class LevitStateSnapshot {
       'isClosing': flags & 1 != 0,
       'isDisposed': flags & 2 != 0,
       'pendingInitializations': pending,
-      'parentScopeId': parsedAncestry.isEmpty
-          ? null
-          : parsedAncestry.first['id'] as int,
+      'parentScopeId':
+          parsedAncestry.isEmpty ? null : parsedAncestry.first['id'] as int,
       'ancestry': parsedAncestry,
       'ownedChildren': parsedChildren,
       'registrations': parsedRegistrations,
@@ -270,11 +270,12 @@ class LevitStateSnapshot {
         variables.remove(variables.keys.first);
         droppedVariables++;
       }
-      model = variables[id] = LevitReactiveModel(
-        id: id,
-        name: data['name'] as String? ?? '?',
-        ownerId: data['ownerId'] as String?,
-      );
+      model =
+          variables[id] = LevitReactiveModel(
+            id: id,
+            name: data['name'] as String? ?? '?',
+            ownerId: data['ownerId'] as String?,
+          );
     }
     if (data['name'] != null) model.name = data['name'] as String;
     if (data.containsKey('ownerId')) {
@@ -295,13 +296,14 @@ class LevitStateSnapshot {
           data[type == 'reactive_init' ? 'initialValue' : 'newValue'];
       model.value =
           model.isSensitive && data['isSensitive'] != true && incoming != null
-          ? LevitMonitor.obfuscate(incoming)
-          : incoming;
+              ? LevitMonitor.obfuscate(incoming)
+              : incoming;
       model.valueType = data['valueType'] as String?;
     } else if (type == 'graph_change') {
-      model.dependencies = (data['dependencies'] as List)
-          .map((d) => int.parse(d['id'].toString()))
-          .toList();
+      model.dependencies =
+          (data['dependencies'] as List)
+              .map((d) => int.parse(d['id'].toString()))
+              .toList();
     } else if (type == 'listener_add') {
       model.listenerCount++;
     } else if (type == 'listener_remove') {

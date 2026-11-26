@@ -123,9 +123,10 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
 
   _EntryChannel _createChannel(_ReadKind kind, Object? address) {
     if (isDisposed) throw StateError('Collection is closed.');
-    final channel = LevitReactiveMiddleware._hasInitMiddlewares
-        ? LxSpi.createOwned(() => _EntryChannel(this, kind, address))
-        : _EntryChannel(this, kind, address);
+    final channel =
+        LevitReactiveMiddleware._hasInitMiddlewares
+            ? LxSpi.createOwned(() => _EntryChannel(this, kind, address))
+            : _EntryChannel(this, kind, address);
     channel.ownerId = ownerId;
     if (!_hasChannels) {
       _soleChannel = channel;
@@ -352,12 +353,13 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
     }
     final next = _sample(kind, key);
     final previous = channel._value;
-    final same = kind == _ReadKind.keys
-        ? _sameOrder(previous as List, next as List)
-        : kind == _ReadKind.element
-        ? (previous as _Element).exists == (next as _Element).exists &&
-              identical(previous.value, next.value)
-        : previous == next;
+    final same =
+        kind == _ReadKind.keys
+            ? _sameOrder(previous as List, next as List)
+            : kind == _ReadKind.element
+            ? (previous as _Element).exists == (next as _Element).exists &&
+                identical(previous.value, next.value)
+            : previous == next;
     if (!same ||
         force ||
         (kind == _ReadKind.element &&

@@ -17,8 +17,8 @@ void main() {
         MaterialApp(
           home: LScopedView<TestController>.put(
             () => TestController()..count = 10,
-            builder: (context, controller) =>
-                Text('Count: ${controller.count}'),
+            builder:
+                (context, controller) => Text('Count: ${controller.count}'),
             orElse: (context) => const Text('Fallback'),
           ),
         ),
@@ -64,16 +64,18 @@ void main() {
         MaterialApp(
           home: ValueListenableBuilder<bool>(
             valueListenable: showWidget,
-            builder: (context, show, __) => show
-                ? LScopedView<TestController>.put(
-                    () => TestController(),
-                    builder: (context, controller) {
-                      captured = controller;
-                      return Text('Count: ${controller.count}');
-                    },
-                    orElse: (context) => const Text('Fallback'),
-                  )
-                : const Text('Hidden'),
+            builder:
+                (context, show, __) =>
+                    show
+                        ? LScopedView<TestController>.put(
+                          () => TestController(),
+                          builder: (context, controller) {
+                            captured = controller;
+                            return Text('Count: ${controller.count}');
+                          },
+                          orElse: (context) => const Text('Fallback'),
+                        )
+                        : const Text('Hidden'),
           ),
         ),
       );

@@ -42,14 +42,14 @@ void main() {
             child: Column(
               children: [
                 LView<String>(
-                  resolver: (ctx) =>
-                      ctx.levit.findOrNull<String>(tag: 'missing'),
+                  resolver:
+                      (ctx) => ctx.levit.findOrNull<String>(tag: 'missing'),
                   orElse: (_) => const Text('view-missing'),
                   builder: (_, v) => Text('view-$v'),
                 ),
                 LScopedView<String>(
-                  resolver: (ctx) =>
-                      ctx.levit.findOrNull<String>(tag: 'missing'),
+                  resolver:
+                      (ctx) => ctx.levit.findOrNull<String>(tag: 'missing'),
                   orElse: (_) => const Text('scoped-missing'),
                   builder: (_, v) => Text('scoped-$v'),
                 ),

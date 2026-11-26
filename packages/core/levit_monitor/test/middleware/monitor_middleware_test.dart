@@ -41,9 +41,10 @@ void main() {
       final reactive = LxVar(0, name: 'test')..ownerId = 'owner';
       await Future.delayed(Duration.zero);
 
-      final event = transport.events
-          .where((event) => event.toJson()['type'] == 'reactive_init')
-          .first;
+      final event =
+          transport.events
+              .where((event) => event.toJson()['type'] == 'reactive_init')
+              .first;
       expect(event.toJson()['reactiveId'], reactive.id.toString());
       expect(event.toJson()['name'], equals('test'));
       expect(
@@ -59,9 +60,10 @@ void main() {
       reactive.value++;
       await Future.delayed(Duration.zero);
 
-      final event = transport.events
-          .where((event) => event.toJson()['type'] == 'state_change')
-          .first;
+      final event =
+          transport.events
+              .where((event) => event.toJson()['type'] == 'state_change')
+              .first;
       expect(event.toJson()['reactiveId'], reactive.id.toString());
       expect(event.toJson()['name'], equals('r'));
       expect(event.toJson()['newValue'], equals('1'));
@@ -71,9 +73,10 @@ void main() {
       Levit.put(() => 'di_value', tag: 'di_test');
       await Future.delayed(Duration.zero);
 
-      final event = transport.events
-          .where((event) => event.toJson()['type'] == 'di_register')
-          .first;
+      final event =
+          transport.events
+              .where((event) => event.toJson()['type'] == 'di_register')
+              .first;
       expect(event.toJson()['key'], contains('String_di_test'));
       expect(event.toJson()['scopeName'], equals('root'));
     });
@@ -83,9 +86,10 @@ void main() {
       Levit.find<String>(tag: 'di_test');
       await Future.delayed(Duration.zero);
 
-      final event = transport.events
-          .where((event) => event.toJson()['type'] == 'di_resolve')
-          .first;
+      final event =
+          transport.events
+              .where((event) => event.toJson()['type'] == 'di_resolve')
+              .first;
       expect(event.toJson()['key'], contains('String_di_test'));
     });
 
@@ -279,9 +283,10 @@ void main() {
       reactive.value = 1;
       await Future<void>.delayed(Duration.zero);
 
-      final errorEvent = transport.events
-          .where((event) => event.toJson()['type'] == 'reactive_error')
-          .first;
+      final errorEvent =
+          transport.events
+              .where((event) => event.toJson()['type'] == 'reactive_error')
+              .first;
       expect(errorEvent.toJson()['stack'], isNull);
     });
 
@@ -297,9 +302,10 @@ void main() {
       reactive.value = 1;
       await Future<void>.delayed(Duration.zero);
 
-      final errorEvent = transport.events
-          .where((event) => event.toJson()['type'] == 'reactive_error')
-          .first;
+      final errorEvent =
+          transport.events
+              .where((event) => event.toJson()['type'] == 'reactive_error')
+              .first;
       expect(errorEvent.toJson()['stack'], isNotNull);
     });
   });

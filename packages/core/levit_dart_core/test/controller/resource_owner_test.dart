@@ -120,18 +120,19 @@ void main() {
         expect(owner.isClosing, isTrue);
         expect(() => owner.own(1), throwsStateError);
         expect(state.isDisposed, isFalse);
-        final finished = fail
-            ? expectLater(
-                closing,
-                throwsA(
-                  isA<LevitDisposalException>().having(
-                    (e) => e.failures.length,
-                    'failures',
-                    2,
+        final finished =
+            fail
+                ? expectLater(
+                  closing,
+                  throwsA(
+                    isA<LevitDisposalException>().having(
+                      (e) => e.failures.length,
+                      'failures',
+                      2,
+                    ),
                   ),
-                ),
-              )
-            : closing;
+                )
+                : closing;
         release.complete();
         await finished;
         expect(events, ['draining', 'drained', 'resource']);

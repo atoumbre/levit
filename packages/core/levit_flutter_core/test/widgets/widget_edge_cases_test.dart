@@ -130,9 +130,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: LWatch(
-            () => toggle.value
-                ? Text('Value: ${notifier.value}')
-                : const Text('Value: Clean'),
+            () =>
+                toggle.value
+                    ? Text('Value: ${notifier.value}')
+                    : const Text('Value: Clean'),
           ),
         ),
       );
@@ -145,15 +146,11 @@ void main() {
     testWidgets('LScopedView updates correctly', (tester) async {
       final key = GlobalKey();
       await tester.pumpWidget(
-        MaterialApp(
-          home: _UpdateableScopedView(key: key, tag: '1'),
-        ),
+        MaterialApp(home: _UpdateableScopedView(key: key, tag: '1')),
       );
       expect(find.text('Tag: 1'), findsOneWidget);
       await tester.pumpWidget(
-        MaterialApp(
-          home: _UpdateableScopedView(key: key, tag: '2'),
-        ),
+        MaterialApp(home: _UpdateableScopedView(key: key, tag: '2')),
       );
       await tester.pumpAndSettle();
       expect(find.text('Tag: 2'), findsOneWidget);

@@ -189,6 +189,7 @@ class _LScopeState extends State<LScope> {
   @override
   void initState() {
     super.initState();
+    LevitAutoLinkSpi.ensureFlutterDefaultAutoLinking();
     _lifecycle = widget.lifecycle ?? LevitScopeLifecycleController();
     _lifecycle.addListener(_changed);
   }
@@ -333,6 +334,7 @@ class _LAsyncScopeState extends State<LAsyncScope> {
   @override
   void initState() {
     super.initState();
+    LevitAutoLinkSpi.ensureFlutterDefaultAutoLinking();
     _lifecycle = widget.lifecycle ?? LevitScopeLifecycleController();
     _lifecycle.addListener(_changed);
   }

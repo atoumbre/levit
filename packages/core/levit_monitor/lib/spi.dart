@@ -25,6 +25,8 @@ export 'src/monitor_library.dart'
         LevitDependencyResolveEvent,
         LevitDependencyStatus,
         LevitDependencyType,
+        LevitDiagnosticFinding,
+        LevitDiagnosticSeverity,
         LevitFrozenMonitorEvent,
         LevitLogEvent,
         LevitMonitorEvent,
@@ -43,5 +45,6 @@ export 'src/monitor_library.dart'
         LevitScopeCreateEvent,
         LevitScopeDisposeEvent,
         LevitScopeModel,
+        LevitSnapshotDiagnostics,
         LevitSnapshotEvent,
         LevitStateSnapshot;

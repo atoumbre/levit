@@ -341,18 +341,29 @@ class Levit {
 
   static LevitReactiveMiddleware? _autoLinkMiddleware;
   static LevitScopeMiddleware? _autoDisposeMiddleware;
+  static bool _autoLinkingDisabledByUser = false;
 
-  /// Enables automatic linking of reactive state to [LevitController] lifecycles.
+  /// Whether automatic linking of reactive state to [LevitController]
+  /// lifecycles is currently enabled.
+  static bool get isAutoLinkingEnabled => _autoLinkMiddleware != null;
+
+  /// Enables automatic linking of reactive state to [LevitController]
+  /// lifecycles.
   ///
   /// When enabled, [LxReactive] objects created while instantiating or
   /// initializing a [LevitController] are automatically registered through
   /// [LevitController.own] and closed when that controller closes.
   ///
-  /// Call this once during startup (for example in Flutter `main()` before
-  /// `runApp`). Monitoring (`levit_monitor`) does not enable auto-linking.
-  /// Non-reactive resources and reactives created outside construction or
-  /// `onInit` must still be registered explicitly with `own(...)`.
+  /// In Flutter apps, mounting an `LScope` or `LAsyncScope` enables
+  /// auto-linking automatically unless [disableAutoLinking] was explicitly
+  /// called. Calling [enableAutoLinking] in `main()` remains recommended when
+  /// controllers are registered before the first `LScope` mounts, and is still
+  /// required in pure Dart entry points. Monitoring (`levit_monitor`) never
+  /// enables auto-linking. Non-reactive resources and reactives created
+  /// outside construction or `onInit` must still be registered explicitly with
+  /// `own(...)`.
   static void enableAutoLinking() {
+    _autoLinkingDisabledByUser = false;
     if (_autoLinkMiddleware != null) return; // Already enabled
 
     _autoLinkMiddleware = _AutoLinkMiddleware();
@@ -362,8 +373,9 @@ class Levit {
     LevitScope.addMiddleware(_autoDisposeMiddleware!);
   }
 
-  /// Disables automatic linking.
+  /// Disables automatic linking and opts out of automatic Flutter activation.
   static void disableAutoLinking() {
+    _autoLinkingDisabledByUser = true;
     if (_autoLinkMiddleware == null) return; // Already disabled
 
     Lx.removeMiddleware(_autoLinkMiddleware!);

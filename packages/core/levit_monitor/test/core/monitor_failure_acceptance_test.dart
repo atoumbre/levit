@@ -129,8 +129,9 @@ void main() {
       }
       expect(snapshot.taskTrees.length, 256);
       expect(snapshot.taskTrees.containsKey('owner0'), isFalse);
-      final restored = LevitStateSnapshot()
-        ..applyEnvelope(envelope('snapshot', {'state': snapshot.toJson()}));
+      final restored =
+          LevitStateSnapshot()
+            ..applyEnvelope(envelope('snapshot', {'state': snapshot.toJson()}));
       expect(restored.taskTrees, snapshot.taskTrees);
       restored.applyEnvelope(
         envelope('reactive_init', {

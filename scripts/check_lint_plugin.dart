@@ -34,6 +34,8 @@ plugins:
       await_levit_lifecycle: true
       avoid_global_levit_in_widgets: true
       discarded_levit_future: true
+      avoid_redundant_outer_lwatch: true
+      avoid_unscoped_overlay: true
 ''');
     Future<ProcessResult> run(List<String> args) => Process.run(
       Platform.resolvedExecutable,

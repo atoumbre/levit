@@ -8,6 +8,7 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/error/error.dart';
 
 part 'async_rules.dart';
+part 'flutter_rules.dart';
 
 /// Flags mutable plain `LxStatus` fields and retained `.status` snapshots on
 /// Levit resource owners (`avoid_plain_lx_status_fields`).

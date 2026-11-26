@@ -297,9 +297,8 @@ class LevitTaskEngine
       onError: onError,
       cachePolicy: cachePolicy,
       onStart: onStart,
-      onSuccess: onSuccess == null
-          ? null
-          : (dynamic value) => onSuccess(value as T),
+      onSuccess:
+          onSuccess == null ? null : (dynamic value) => onSuccess(value as T),
       onProgress: onProgress,
       onCancel: onCancel,
       onEvent: onEvent,
@@ -395,12 +394,13 @@ class LevitTaskEngine
     late _TaskExecution execution;
     final resolvedGroup = _resolveGroup(group);
     final config = _TaskExecutionConfig(
-      task: (context) => _runInTaskIsolate<I, T>(
-        task: task,
-        input: input,
-        context: context,
-        cancellation: execution.cancellation,
-      ),
+      task:
+          (context) => _runInTaskIsolate<I, T>(
+            task: task,
+            input: input,
+            context: context,
+            cancellation: execution.cancellation,
+          ),
       priority: priority,
       retryPolicy: retryPolicy,
       group: resolvedGroup,
@@ -408,9 +408,8 @@ class LevitTaskEngine
       onError: onError,
       cachePolicy: cachePolicy,
       onStart: onStart,
-      onSuccess: onSuccess == null
-          ? null
-          : (dynamic value) => onSuccess(value as T),
+      onSuccess:
+          onSuccess == null ? null : (dynamic value) => onSuccess(value as T),
       onProgress: onProgress,
       onCancel: onCancel,
       onEvent: onEvent,
@@ -434,9 +433,8 @@ class LevitTaskEngine
   }) {
     // Root work needs no composite identity. Child keys are typed records, so
     // arbitrary user task IDs cannot collide across ownership boundaries.
-    final Object schedulingKey = config.group._root
-        ? taskId
-        : (config.group, taskId);
+    final Object schedulingKey =
+        config.group._root ? taskId : (config.group, taskId);
     var group = _groups[schedulingKey];
     final existing = group?.latest;
 
@@ -492,9 +490,10 @@ class LevitTaskEngine
             cancel: () {},
           );
         case LevitTaskConflictPolicy.restart:
-          final freed = group!.outstanding
-              .where((item) => item.state == _TaskExecutionState.queued)
-              .length;
+          final freed =
+              group!.outstanding
+                  .where((item) => item.state == _TaskExecutionState.queued)
+                  .length;
           if (maxPending != null && pendingCount - freed >= maxPending!) {
             throw LevitTaskQueueFullException(maxPending!);
           }
@@ -569,8 +568,8 @@ class LevitTaskEngine
 
     final disposition =
         existing != null && conflictPolicy == LevitTaskConflictPolicy.restart
-        ? LevitTaskSubmissionDisposition.restarted
-        : LevitTaskSubmissionDisposition.admitted;
+            ? LevitTaskSubmissionDisposition.restarted
+            : LevitTaskSubmissionDisposition.admitted;
     return _handleFor<T>(execution, disposition);
   }
 
@@ -693,13 +692,14 @@ class LevitTaskEngine
     try {
       // Keep admission asynchronous even without caching, without constructing
       // an additional no-op cache future for every execution.
-      final cachedResult = await (config.cachePolicy == null
-          ? null
-          : _readCachedTaskResult<dynamic>(
-              cacheProvider: cacheProvider,
-              taskId: execution.taskId,
-              cachePolicy: config.cachePolicy,
-            ));
+      final cachedResult =
+          await (config.cachePolicy == null
+              ? null
+              : _readCachedTaskResult<dynamic>(
+                cacheProvider: cacheProvider,
+                taskId: execution.taskId,
+                cachePolicy: config.cachePolicy,
+              ));
       if (execution.config.deadline case final deadline?) {
         if (!DateTime.now().isBefore(deadline))
           execution.cancellation.cancel(
@@ -929,9 +929,8 @@ class LevitTaskEngine
         execution,
         type: eventType,
         phase: LevitTaskPhase.completed,
-        progress: outcome == LevitTaskOutcome.succeeded
-            ? 1
-            : execution.progress,
+        progress:
+            outcome == LevitTaskOutcome.succeeded ? 1 : execution.progress,
         outcome: outcome,
         skipReason: skipReason,
       ),
@@ -987,9 +986,10 @@ class LevitTaskEngine
     if (execution.state == _TaskExecutionState.completed) return;
     final onCancel = execution.config.onCancel;
     final onEvent = execution.config.onEvent;
-    final outcome = reason == LevitTaskSkipReason.superseded
-        ? LevitTaskOutcome.superseded
-        : LevitTaskOutcome.cancelled;
+    final outcome =
+        reason == LevitTaskSkipReason.superseded
+            ? LevitTaskOutcome.superseded
+            : LevitTaskOutcome.cancelled;
     final event = _eventFor(
       execution,
       type: LevitTaskEventType.skipped,
@@ -1011,18 +1011,18 @@ class LevitTaskEngine
       execution.completer.completeError(
         reason == LevitTaskSkipReason.superseded
             ? LevitTaskSupersededException(
-                execution.taskId,
-                execution.executionId,
-              )
+              execution.taskId,
+              execution.executionId,
+            )
             : LevitTaskCancelledException(
-                execution.taskId,
-                execution.executionId,
-                reason:
-                    execution.cancellation.reason ??
-                    const LevitTaskCancellationReason(
-                      LevitTaskCancellationKind.requested,
-                    ),
-              ),
+              execution.taskId,
+              execution.executionId,
+              reason:
+                  execution.cancellation.reason ??
+                  const LevitTaskCancellationReason(
+                    LevitTaskCancellationKind.requested,
+                  ),
+            ),
         stackTrace ?? StackTrace.current,
       );
   }
@@ -1104,12 +1104,10 @@ class LevitTaskEngine
       queuedAt: execution.queuedAt,
       startedAt: startedAt,
       finishedAt: end,
-      queueDuration: startedAt == null
-          ? null
-          : startedAt.difference(execution.queuedAt),
-      runDuration: end == null || startedAt == null
-          ? null
-          : end.difference(startedAt),
+      queueDuration:
+          startedAt == null ? null : startedAt.difference(execution.queuedAt),
+      runDuration:
+          end == null || startedAt == null ? null : end.difference(startedAt),
       retryIn: retryIn,
       progress: progress,
       skipReason: skipReason,
@@ -1192,8 +1190,8 @@ class LevitTaskEngine
     execution.cancellation.cancel(
       queuedReason == LevitTaskSkipReason.superseded
           ? const LevitTaskCancellationReason(
-              LevitTaskCancellationKind.superseded,
-            )
+            LevitTaskCancellationKind.superseded,
+          )
           : reason,
     );
     if (execution.state == _TaskExecutionState.queued) {
@@ -1328,9 +1326,8 @@ Future<T> _runInTaskIsolate<I, T>({
     }
     if (raw is List<dynamic>) {
       final errText = raw.isNotEmpty ? raw[0].toString() : 'Isolate error';
-      final stackText = raw.length > 1 && raw[1] != null
-          ? raw[1].toString()
-          : '';
+      final stackText =
+          raw.length > 1 && raw[1] != null ? raw[1].toString() : '';
       completeError(
         createIsolateRemoteError(errText, stackText),
         StackTrace.fromString(stackText),
@@ -1425,9 +1422,9 @@ void _levitTaskIsolateEntry(List<Object?> message) async {
       error is LevitTaskCancelledException
           ? (_IsolateTaskMessage.cancelled, null)
           : (
-              _IsolateTaskMessage.error,
-              (error.toString(), stackTrace.toString()),
-            ),
+            _IsolateTaskMessage.error,
+            (error.toString(), stackTrace.toString()),
+          ),
     );
   } finally {
     context._close();

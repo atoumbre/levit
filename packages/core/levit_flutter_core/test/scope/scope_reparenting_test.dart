@@ -26,16 +26,18 @@ Widget _buildMovedChildScope({
         Expanded(
           child: LScope(
             name: 'left_parent',
-            configure: (scope) =>
-                scope.put<_TestController>(() => _TestController('left')),
+            configure:
+                (scope) =>
+                    scope.put<_TestController>(() => _TestController('left')),
             child: moved ? const SizedBox.shrink() : buildChild(key),
           ),
         ),
         Expanded(
           child: LScope(
             name: 'right_parent',
-            configure: (scope) =>
-                scope.put<_TestController>(() => _TestController('right')),
+            configure:
+                (scope) =>
+                    scope.put<_TestController>(() => _TestController('right')),
             child: moved ? buildChild(key) : const SizedBox.shrink(),
           ),
         ),
@@ -52,8 +54,9 @@ void main() {
       return MaterialApp(
         home: LScope(
           name: 'parent_$label',
-          configure: (scope) =>
-              scope.put<_TestController>(() => _TestController(label)),
+          configure:
+              (scope) =>
+                  scope.put<_TestController>(() => _TestController(label)),
           child: LScope(
             name: 'child',
             child: Builder(
@@ -154,8 +157,9 @@ void main() {
       return MaterialApp(
         home: LScope(
           name: 'parent_$label',
-          configure: (scope) =>
-              scope.put<_TestController>(() => _TestController(label)),
+          configure:
+              (scope) =>
+                  scope.put<_TestController>(() => _TestController(label)),
           child: LAsyncScope(
             configure: (_) async {},
             child: Builder(

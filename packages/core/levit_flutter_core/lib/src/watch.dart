@@ -63,7 +63,29 @@ class _LWatchElement extends ComponentElement
   List<LevitReactiveNotifier>? _newNotifiers;
   Set<LevitReactiveNotifier>? _scratchNotifiers;
   LxListenerContext? _cachedContext;
+  LevitScope? _cachedScope;
+  bool _scopeResolved = false;
   late final VoidCallback _triggerRebuildCallback = _triggerRebuild;
+
+  LevitScope? _resolveNearestScope() {
+    if (!_scopeResolved) {
+      _cachedScope = _ScopeProvider.of(this, listen: true);
+      _scopeResolved = true;
+    }
+    return _cachedScope;
+  }
+
+  @override
+  void didChangeDependencies() {
+    _scopeResolved = false;
+    super.didChangeDependencies();
+  }
+
+  @override
+  void activate() {
+    _scopeResolved = false;
+    super.activate();
+  }
 
   @override
   void addNotifier(LevitReactiveNotifier notifier) {
@@ -266,8 +288,19 @@ class _LWatchElement extends ComponentElement
     LxSpi.proxy = this;
 
     final Widget result;
+    final builder = (widget as LWatch).builder;
+    final scope = _resolveNearestScope();
     try {
-      result = LScope.runBridged(this, (widget as LWatch).builder);
+      if (scope == null || identical(scope, Ls.currentScope)) {
+        result = builder();
+      } else {
+        final previousScope = LsSpi.enterSyncScope(scope);
+        try {
+          result = builder();
+        } finally {
+          LsSpi.exitSyncScope(previousScope);
+        }
+      }
     } finally {
       LxSpi.proxy = previousProxy;
     }
@@ -367,6 +400,8 @@ class _LWatchElement extends ComponentElement
 
   @override
   void unmount() {
+    _cachedScope = null;
+    _scopeResolved = false;
     _runCleanupAll();
     super.unmount();
   }

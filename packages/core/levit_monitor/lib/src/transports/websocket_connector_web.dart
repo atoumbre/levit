@@ -31,35 +31,39 @@ final class _WebWebSocketConnection implements LevitWebSocketConnection {
 
   _WebWebSocketConnection(Uri uri) {
     _socket = _JsWebSocket(uri.toString());
-    _socket.onopen = ((JSAny? _) {
-      if (_closed) return;
-      _open = true;
-      if (!_ready.isCompleted) _ready.complete();
-    }).toJS;
-    _socket.onmessage = ((_JsMessageEvent event) {
-      if (_closed || _incoming.isClosed) return;
-      final data = event.data;
-      if (data != null && data.isA<JSString>()) {
-        _incoming.add((data as JSString).toDart);
-      }
-    }).toJS;
-    _socket.onerror = ((JSAny? _) {
-      final error = StateError('WebSocket connection error.');
-      if (!_ready.isCompleted) {
-        _ready.completeError(error);
-      } else if (!_incoming.isClosed) {
-        _incoming.addError(error);
-      }
-    }).toJS;
-    _socket.onclose = ((JSAny? _) {
-      _open = false;
-      if (!_ready.isCompleted) {
-        _ready.completeError(StateError('WebSocket closed before ready.'));
-      }
-      if (!_incoming.isClosed) {
-        unawaited(_incoming.close());
-      }
-    }).toJS;
+    _socket.onopen =
+        ((JSAny? _) {
+          if (_closed) return;
+          _open = true;
+          if (!_ready.isCompleted) _ready.complete();
+        }).toJS;
+    _socket.onmessage =
+        ((_JsMessageEvent event) {
+          if (_closed || _incoming.isClosed) return;
+          final data = event.data;
+          if (data != null && data.isA<JSString>()) {
+            _incoming.add((data as JSString).toDart);
+          }
+        }).toJS;
+    _socket.onerror =
+        ((JSAny? _) {
+          final error = StateError('WebSocket connection error.');
+          if (!_ready.isCompleted) {
+            _ready.completeError(error);
+          } else if (!_incoming.isClosed) {
+            _incoming.addError(error);
+          }
+        }).toJS;
+    _socket.onclose =
+        ((JSAny? _) {
+          _open = false;
+          if (!_ready.isCompleted) {
+            _ready.completeError(StateError('WebSocket closed before ready.'));
+          }
+          if (!_incoming.isClosed) {
+            unawaited(_incoming.close());
+          }
+        }).toJS;
   }
 
   @override

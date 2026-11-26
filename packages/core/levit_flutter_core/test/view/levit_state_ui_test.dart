@@ -10,8 +10,11 @@ void main() {
       await tester.pumpWidget(
         LView.store(
           counter,
-          builder: (context, count) =>
-              Text('Count: ${count.value}', textDirection: TextDirection.ltr),
+          builder:
+              (context, count) => Text(
+                'Count: ${count.value}',
+                textDirection: TextDirection.ltr,
+              ),
         ),
       );
 
@@ -33,14 +36,16 @@ void main() {
             LScopedView.store(
               state,
               scopeName: 'ScopeA',
-              builder: (context, val) =>
-                  Text('A: ${val.value}', textDirection: TextDirection.ltr),
+              builder:
+                  (context, val) =>
+                      Text('A: ${val.value}', textDirection: TextDirection.ltr),
             ),
             LScopedView.store(
               state,
               scopeName: 'ScopeB',
-              builder: (context, val) =>
-                  Text('B: ${val.value}', textDirection: TextDirection.ltr),
+              builder:
+                  (context, val) =>
+                      Text('B: ${val.value}', textDirection: TextDirection.ltr),
             ),
           ],
         ),

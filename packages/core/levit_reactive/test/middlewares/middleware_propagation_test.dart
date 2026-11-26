@@ -50,8 +50,7 @@ class _TrackingMiddleware extends LevitReactiveMiddleware {
   };
 
   @override
-  LevitReactiveOnBatch? get onBatch =>
-      (next, change) => next;
+  LevitReactiveOnBatch? get onBatch => (next, change) => next;
 
   void reset() {
     beforeCount = 0;

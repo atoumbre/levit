@@ -297,12 +297,9 @@ Future<void> _waitForLevitResult(
   LxAsyncComputed<String> computed,
   String expected,
 ) async {
-  if (computed.valueOrNull == expected) return;
-  final status = await computed.stream.firstWhere(
-    (status) => status.valueOrNull == expected || status is LxError<String>,
-  );
-  if (status is LxError<String>) {
-    throw status.error;
+  final value = await computed.wait;
+  if (value != expected) {
+    throw StateError('Levit async mismatch: expected $expected, got $value');
   }
 }
 

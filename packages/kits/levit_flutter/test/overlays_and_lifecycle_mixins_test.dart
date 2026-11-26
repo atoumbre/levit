@@ -31,21 +31,26 @@ void main() {
               }
               return Scaffold(
                 body: Builder(
-                  builder: (launcherContext) => ElevatedButton(
-                    onPressed: () {
-                      unawaited(
-                        showLevitDialog<void>(
-                          context: launcherContext,
-                          builder: (dialogContext) => LWatch(() {
-                            final tick = rebuildDialog.value;
-                            final value = dialogContext.levit.find<String>();
-                            return AlertDialog(content: Text('$value:$tick'));
-                          }),
-                        ),
-                      );
-                    },
-                    child: const Text('open'),
-                  ),
+                  builder:
+                      (launcherContext) => ElevatedButton(
+                        onPressed: () {
+                          unawaited(
+                            showLevitDialog<void>(
+                              context: launcherContext,
+                              builder:
+                                  (dialogContext) => LWatch(() {
+                                    final tick = rebuildDialog.value;
+                                    final value =
+                                        dialogContext.levit.find<String>();
+                                    return AlertDialog(
+                                      content: Text('$value:$tick'),
+                                    );
+                                  }),
+                            ),
+                          );
+                        },
+                        child: const Text('open'),
+                      ),
                 ),
               );
             }),

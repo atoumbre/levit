@@ -24,27 +24,28 @@ void main() {
         MaterialApp(
           theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
-            '/': (_) => LRouteScope.put(
-              () => TestController()..count = 7,
-              child: Builder(
-                builder: (context) {
-                  final controller = context.levit.find<TestController>();
-                  final route = LRouteScope.routeOf(context);
-                  final visibility = LRouteScope.visibilityOf(context)!;
+            '/':
+                (_) => LRouteScope.put(
+                  () => TestController()..count = 7,
+                  child: Builder(
+                    builder: (context) {
+                      final controller = context.levit.find<TestController>();
+                      final route = LRouteScope.routeOf(context);
+                      final visibility = LRouteScope.visibilityOf(context)!;
 
-                  return Column(
-                    children: [
-                      Text('count:${controller.count}'),
-                      Text('route:${route?.settings.name}'),
-                      LBuilder<LRouteVisibility>(
-                        visibility,
-                        (value) => Text('visibility:${value.name}'),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
+                      return Column(
+                        children: [
+                          Text('count:${controller.count}'),
+                          Text('route:${route?.settings.name}'),
+                          LBuilder<LRouteVisibility>(
+                            visibility,
+                            (value) => Text('visibility:${value.name}'),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
           },
         ),
       );
@@ -174,26 +175,28 @@ void main() {
         MaterialApp(
           theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
-            '/': (_) => LRouteScope(
-              configure: (scope) {
-                scope.put<_ClosingRouteController>(
-                  () => _ClosingRouteController(onClosed: () => closeCount++),
-                );
-              },
-              child: Builder(
-                builder: (context) {
-                  return Scaffold(
-                    body: const Text('home'),
-                    floatingActionButton: FloatingActionButton(
-                      key: _replaceRouteKey,
-                      onPressed: () {
-                        Navigator.of(context).pushReplacementNamed('/next');
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
+            '/':
+                (_) => LRouteScope(
+                  configure: (scope) {
+                    scope.put<_ClosingRouteController>(
+                      () =>
+                          _ClosingRouteController(onClosed: () => closeCount++),
+                    );
+                  },
+                  child: Builder(
+                    builder: (context) {
+                      return Scaffold(
+                        body: const Text('home'),
+                        floatingActionButton: FloatingActionButton(
+                          key: _replaceRouteKey,
+                          onPressed: () {
+                            Navigator.of(context).pushReplacementNamed('/next');
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
             '/next': (_) => const Scaffold(body: Text('next')),
           },
         ),
@@ -217,37 +220,41 @@ void main() {
         MaterialApp(
           theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
-            '/': (_) => LAsyncRouteScope(
-              configure: (scope) async {
-                await Future<void>.delayed(Duration.zero);
-                scope.put<TestController>(() => TestController()..count = 9);
-              },
-              loading: (context) {
-                final visibility = LAsyncRouteScope.visibilityOf(context)!;
-                return LBuilder<LRouteVisibility>(
-                  visibility,
-                  (value) => Text('loading:${value.name}'),
-                );
-              },
-              child: Builder(
-                builder: (context) {
-                  final controller = context.levit.find<TestController>();
-                  final route = LAsyncRouteScope.routeOf(context);
-                  final visibility = LAsyncRouteScope.visibilityOf(context)!;
+            '/':
+                (_) => LAsyncRouteScope(
+                  configure: (scope) async {
+                    await Future<void>.delayed(Duration.zero);
+                    scope.put<TestController>(
+                      () => TestController()..count = 9,
+                    );
+                  },
+                  loading: (context) {
+                    final visibility = LAsyncRouteScope.visibilityOf(context)!;
+                    return LBuilder<LRouteVisibility>(
+                      visibility,
+                      (value) => Text('loading:${value.name}'),
+                    );
+                  },
+                  child: Builder(
+                    builder: (context) {
+                      final controller = context.levit.find<TestController>();
+                      final route = LAsyncRouteScope.routeOf(context);
+                      final visibility =
+                          LAsyncRouteScope.visibilityOf(context)!;
 
-                  return Column(
-                    children: [
-                      Text('count:${controller.count}'),
-                      Text('route:${route?.settings.name}'),
-                      LBuilder<LRouteVisibility>(
-                        visibility,
-                        (value) => Text('visibility:${value.name}'),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
+                      return Column(
+                        children: [
+                          Text('count:${controller.count}'),
+                          Text('route:${route?.settings.name}'),
+                          LBuilder<LRouteVisibility>(
+                            visibility,
+                            (value) => Text('visibility:${value.name}'),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
           },
         ),
       );
@@ -271,21 +278,24 @@ void main() {
             body: Column(
               children: [
                 Builder(
-                  builder: (context) => Text(
-                    'outside:${LAsyncRouteScope.visibilityValueOf(context).name}',
-                  ),
+                  builder:
+                      (context) => Text(
+                        'outside:${LAsyncRouteScope.visibilityValueOf(context).name}',
+                      ),
                 ),
                 LAsyncRouteScope(
                   configure: (_) async {
                     await Future<void>.delayed(Duration.zero);
                   },
-                  loading: (context) => Text(
-                    'loading:${LAsyncRouteScope.visibilityValueOf(context, listen: true).name}',
-                  ),
+                  loading:
+                      (context) => Text(
+                        'loading:${LAsyncRouteScope.visibilityValueOf(context, listen: true).name}',
+                      ),
                   child: Builder(
-                    builder: (context) => Text(
-                      'inside:${LAsyncRouteScope.visibilityValueOf(context, listen: true).name}',
-                    ),
+                    builder:
+                        (context) => Text(
+                          'inside:${LAsyncRouteScope.visibilityValueOf(context, listen: true).name}',
+                        ),
                   ),
                 ),
               ],
@@ -345,26 +355,28 @@ void main() {
         MaterialApp(
           theme: ThemeData(splashFactory: NoSplash.splashFactory),
           routes: {
-            '/': (_) => LAsyncRouteScope(
-              configure: (scope) async {
-                scope.put<_ClosingRouteController>(
-                  () => _ClosingRouteController(onClosed: () => closeCount++),
-                );
-              },
-              child: Builder(
-                builder: (context) {
-                  return Scaffold(
-                    body: const Text('async-home'),
-                    floatingActionButton: FloatingActionButton(
-                      key: _replaceAsyncRouteKey,
-                      onPressed: () {
-                        Navigator.of(context).pushReplacementNamed('/next');
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
+            '/':
+                (_) => LAsyncRouteScope(
+                  configure: (scope) async {
+                    scope.put<_ClosingRouteController>(
+                      () =>
+                          _ClosingRouteController(onClosed: () => closeCount++),
+                    );
+                  },
+                  child: Builder(
+                    builder: (context) {
+                      return Scaffold(
+                        body: const Text('async-home'),
+                        floatingActionButton: FloatingActionButton(
+                          key: _replaceAsyncRouteKey,
+                          onPressed: () {
+                            Navigator.of(context).pushReplacementNamed('/next');
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
             '/next': (_) => const Scaffold(body: Text('next')),
           },
         ),

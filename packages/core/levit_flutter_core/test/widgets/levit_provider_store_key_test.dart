@@ -24,10 +24,11 @@ void main() {
           },
           child: LScope(
             lifecycle: lifecycle,
-            configure: (scope) => scope.applyOverrides([
-              first.overrideWith((_) => 11),
-              remote.overrideWith((_) async => 88),
-            ]),
+            configure:
+                (scope) => scope.applyOverrides([
+                  first.overrideWith((_) => 11),
+                  remote.overrideWith((_) async => 88),
+                ]),
             child: Builder(
               builder: (context) {
                 expect(context.levit.isAsyncStoreRegistered(remote), isTrue);

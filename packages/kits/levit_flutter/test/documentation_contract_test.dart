@@ -17,10 +17,11 @@ void main() {
       MaterialApp(
         home: LScopedView<CounterController>.put(
           () => controller = CounterController(),
-          builder: (context, value) => TextButton(
-            onPressed: value.increment,
-            child: Text('${value.count()}'),
-          ),
+          builder:
+              (context, value) => TextButton(
+                onPressed: value.increment,
+                child: Text('${value.count()}'),
+              ),
         ),
       ),
     );

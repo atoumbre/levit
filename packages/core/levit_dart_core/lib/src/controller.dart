@@ -461,9 +461,8 @@ abstract class LevitController extends LevitScopeDisposable
       for (final resource in owned.toList(growable: false).reversed) {
         try {
           final disposer = disposers?[resource];
-          final cleanup = disposer != null
-              ? disposer()
-              : Levit._levitDisposeItem(resource);
+          final cleanup =
+              disposer != null ? disposer() : Levit._levitDisposeItem(resource);
           if (cleanup is Future) {
             await cleanup;
           }

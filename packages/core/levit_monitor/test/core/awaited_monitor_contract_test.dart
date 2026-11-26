@@ -189,13 +189,14 @@ void main() {
       });
       await started.future;
       await LevitMonitor.flush();
-      final change = sink.events
-          .singleWhere(
-            (event) =>
-                event.toJson()['type'] == 'state_change' &&
-                event.toJson()['reactiveId'] == value.id.toString(),
-          )
-          .toJson();
+      final change =
+          sink.events
+              .singleWhere(
+                (event) =>
+                    event.toJson()['type'] == 'state_change' &&
+                    event.toJson()['reactiveId'] == value.id.toString(),
+              )
+              .toJson();
       expect(
         change['stackTrace'],
         contains('awaited_monitor_contract_test.dart'),

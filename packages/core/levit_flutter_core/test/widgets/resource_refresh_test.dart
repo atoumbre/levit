@@ -39,11 +39,13 @@ void main() {
         home: LStatusBuilder<String?>(
           handle,
           onSuccess: (value) => Text('success:$value'),
-          onWaiting: (status) =>
-              Text('waiting:${status.hasLastValue}:${status.lastValue}'),
-          onError: (status) => Text(
-            'error:${status.hasLastValue}:${status.lastValue}:${status.error}',
-          ),
+          onWaiting:
+              (status) =>
+                  Text('waiting:${status.hasLastValue}:${status.lastValue}'),
+          onError:
+              (status) => Text(
+                'error:${status.hasLastValue}:${status.lastValue}:${status.error}',
+              ),
         ),
       ),
     );

@@ -16,10 +16,11 @@ void main() {
 
     test('.lx creates LxAsyncComputed from async function', () async {
       final count = 1.lx;
-      final delayedDoubled = (() async {
-        await Future.delayed(Duration(milliseconds: 10));
-        return count.value * 2;
-      }).lx;
+      final delayedDoubled =
+          (() async {
+            await Future.delayed(Duration(milliseconds: 10));
+            return count.value * 2;
+          }).lx;
 
       expect(delayedDoubled, isA<LxAsyncComputed<int>>());
 

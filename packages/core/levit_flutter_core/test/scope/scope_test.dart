@@ -55,21 +55,23 @@ void main() {
         MaterialApp(
           home: ValueListenableBuilder<bool>(
             valueListenable: showScope,
-            builder: (context, show, __) => show
-                ? LScope(
-                    configure: (s) {
-                      controller = TestController();
-                      s.put<TestController>(() => controller!);
-                    },
-                    child: Builder(
-                      builder: (context) {
-                        return Text(
-                          'Registered: ${context.levit.isRegistered<TestController>()}',
-                        );
-                      },
-                    ),
-                  )
-                : const Text('Hidden'),
+            builder:
+                (context, show, __) =>
+                    show
+                        ? LScope(
+                          configure: (s) {
+                            controller = TestController();
+                            s.put<TestController>(() => controller!);
+                          },
+                          child: Builder(
+                            builder: (context) {
+                              return Text(
+                                'Registered: ${context.levit.isRegistered<TestController>()}',
+                              );
+                            },
+                          ),
+                        )
+                        : const Text('Hidden'),
           ),
         ),
       );
@@ -109,10 +111,11 @@ void main() {
             children: [
               LScope(
                 name: 'firstScope',
-                configure: (s) => s.put<TestController>(
-                  () => TestController()..count = 1,
-                  tag: 'first',
-                ),
+                configure:
+                    (s) => s.put<TestController>(
+                      () => TestController()..count = 1,
+                      tag: 'first',
+                    ),
                 child: Builder(
                   builder: (context) {
                     return Text(
@@ -123,10 +126,11 @@ void main() {
               ),
               LScope(
                 name: 'secondScope',
-                configure: (s) => s.put<TestController>(
-                  () => TestController()..count = 2,
-                  tag: 'second',
-                ),
+                configure:
+                    (s) => s.put<TestController>(
+                      () => TestController()..count = 2,
+                      tag: 'second',
+                    ),
                 child: Builder(
                   builder: (context) {
                     return Text(
@@ -280,9 +284,11 @@ void main() {
         MaterialApp(
           home: ValueListenableBuilder<bool>(
             valueListenable: showWidget,
-            builder: (context, show, __) => show
-                ? CaptureScopedView(onController: (c) => controller = c)
-                : const Text('Hidden'),
+            builder:
+                (context, show, __) =>
+                    show
+                        ? CaptureScopedView(onController: (c) => controller = c)
+                        : const Text('Hidden'),
           ),
         ),
       );
@@ -411,8 +417,8 @@ class TaggedScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
-      configure: (s) =>
-          s.put<TestController>(() => TestController(), tag: 'special'),
+      configure:
+          (s) => s.put<TestController>(() => TestController(), tag: 'special'),
       resolver: (context) => context.levit.find<TestController>(tag: 'special'),
       builder: (context, controller) => Text('Tagged: ${controller.count}'),
     );
@@ -462,11 +468,12 @@ class OuterScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<TestController>(
-      configure: (s) =>
-          s.put<TestController>(() => TestController()..count = 1),
+      configure:
+          (s) => s.put<TestController>(() => TestController()..count = 1),
       resolver: (context) => context.levit.find<TestController>(),
-      builder: (context, controller) =>
-          InnerScopedView(outerCount: controller.count),
+      builder:
+          (context, controller) =>
+              InnerScopedView(outerCount: controller.count),
     );
   }
 }
@@ -479,11 +486,13 @@ class InnerScopedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LScopedView<AnotherController>(
-      configure: (s) =>
-          s.put<AnotherController>(() => AnotherController()..name = '2'),
+      configure:
+          (s) =>
+              s.put<AnotherController>(() => AnotherController()..name = '2'),
       resolver: (context) => context.levit.find<AnotherController>(),
-      builder: (context, controller) =>
-          Text('Outer: $outerCount, Inner: ${controller.name}'),
+      builder:
+          (context, controller) =>
+              Text('Outer: $outerCount, Inner: ${controller.name}'),
     );
   }
 }

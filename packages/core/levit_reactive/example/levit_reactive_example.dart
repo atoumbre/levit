@@ -22,10 +22,11 @@ void main() {
   count.value++; // Prints: Count: 2, Double: 4
 
   // 5. Build an async computation
-  final asyncValue = (() async {
-    await Future.delayed(Duration(milliseconds: 100));
-    return count.value * 10 + doubleCount.value;
-  }).lx;
+  final asyncValue =
+      (() async {
+        await Future.delayed(Duration(milliseconds: 100));
+        return count.value * 10 + doubleCount.value;
+      }).lx;
 
   // Listen to async status
   asyncValue.addListener(() {

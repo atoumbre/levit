@@ -53,6 +53,10 @@ scripts:
     run: dart run scripts/check_lint_plugin.dart
     description: Verify native analyzer plugin in a real local consumer
 
+  build:devtools:
+    run: cd packages/tools/levit_devtools_extension && dart run devtools_extensions build_and_copy --source=. --dest=../levit_devtools/extension/devtools
+    description: Build and copy the Flutter DevTools extension web bundle into levit_devtools
+
   coverage:
     run: dart run scripts/check_coverage.dart --fail-under=100
     description: Run coverage checks
@@ -76,6 +80,14 @@ scripts:
   report:benchmarks:
     run: flutter test tool/generate_benchmark_report.dart --reporter=compact
     description: Regenerate benchmark report
+    exec:
+      concurrency: 1
+    packageFilters:
+      scope: benchmarks
+
+  report:benchmarks:release:
+    run: dart run tool/generate_release_benchmark_report.dart
+    description: Regenerate native macOS AOT release benchmark report
     exec:
       concurrency: 1
     packageFilters:
@@ -110,3 +122,4 @@ scripts:
         - levit_flutter
         - levit_lints
         - levit_mcp
+        - levit_devtools

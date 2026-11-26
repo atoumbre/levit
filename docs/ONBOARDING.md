@@ -3,7 +3,7 @@
 Levit gives Dart and Flutter apps one simple mental model for **state,
 dependencies, and cleanup**.
 
-Requires **Dart 3.12+** (and **Flutter 3.44+** for Flutter apps).
+Requires **Dart 3.7+** (and **Flutter 3.29+** for Flutter apps; **Dart 3.12+** for the optional `levit_lints` analyzer plugin).
 
 ## The 30-Second Mental Model
 
@@ -38,8 +38,11 @@ In Flutter `main()`, do two things before mounting your UI:
 1. **Call `Levit.enableAutoLinking()`** — any reactive state (`0.lx`,
    `LxComputed`, `LxWorker`, etc.) created during a controller's constructor or
    `onInit()` is automatically linked to that controller and closed when the
-   controller disposes. You don't need manual cleanup boilerplate for everyday
-   reactive state.
+   controller disposes. Mounting an `LScope` or `LAsyncScope` also enables
+   auto-linking automatically in Flutter unless you explicitly call
+   `Levit.disableAutoLinking()`, but calling `Levit.enableAutoLinking()` in
+   `main()` keeps startup explicit and covers controllers registered before the
+   first scope mounts.
 2. **Wrap your app in a root `LScope`** — register long-lived services and
    app-wide controllers once so every screen below can resolve them via
    `context.levit.find<T>()`:
@@ -352,6 +355,8 @@ Future<void> main() async {
 
 ## Where to Go Next
 
+- **[Migrating from Riverpod, Bloc, or GetX](MIGRATING.md):** Side-by-side
+  concept mapping, code translations, gotchas, and incremental adoption.
 - **[Advanced Recipes](ADVANCED.md):** Explicit resource ownership with
   `own(...)` (Flutter controllers, timers, streams, non-auto-linked code),
   multi-step cancellable workflows (`LevitTaskGroup`), keyed caching
@@ -362,6 +367,8 @@ Future<void> main() async {
 - **[Runnable Examples](../examples):** Complete reference apps
   (`task_board`, `async_catalog`, `route_scopes`, `scope_playground`,
   `nexus_studio`).
-- **Optional Diagnostics & Workspace Tools:**
+- **Optional Diagnostics & Developer Tooling:**
   - [levit_monitor](../packages/core/levit_monitor) — opt-in runtime telemetry and redaction.
-  - [levit_lints](../packages/tools/levit_lints) & [levit_mcp](../packages/tools/levit_mcp) — unpublished workspace tools for static lifecycle lints and live AI agent inspection.
+  - [levit_devtools](../packages/tools/levit_devtools) — read-only Flutter DevTools extension (Scopes, Reactives, Tasks, Timeline, Diagnostics) over Dart VM Service.
+  - [levit_lints](../packages/tools/levit_lints) — native Dart analyzer plugin (Dart 3.12+) catching lifecycle, ownership, redundant `LWatch`, and unscoped overlay mistakes in your IDE and CI.
+  - [levit_mcp](../packages/tools/levit_mcp) — read-only MCP server for live runtime inspection by AI coding agents.

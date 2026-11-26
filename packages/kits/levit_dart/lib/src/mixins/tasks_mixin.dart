@@ -668,8 +668,8 @@ mixin LevitReactiveTasksMixin on LevitController {
           }
           handler(error, stackTrace);
         } else {
-          pendingStatus = (prev) =>
-              LxError<dynamic>.fromPrevious(error, stackTrace, prev);
+          pendingStatus =
+              (prev) => LxError<dynamic>.fromPrevious(error, stackTrace, prev);
         }
       },
       onCancel: () {
@@ -688,9 +688,10 @@ mixin LevitReactiveTasksMixin on LevitController {
     final initialEvent = latestEvent;
     final previousStatus = tasks[taskId]?.status ?? LxIdle<dynamic>();
     final initialPhase = initialEvent?.phase ?? LevitTaskPhase.queued;
-    final initialStatus = initialPhase == LevitTaskPhase.completed
-        ? LxIdle<dynamic>.fromPrevious(previousStatus)
-        : LxWaiting<dynamic>.fromPrevious(previousStatus);
+    final initialStatus =
+        initialPhase == LevitTaskPhase.completed
+            ? LxIdle<dynamic>.fromPrevious(previousStatus)
+            : LxWaiting<dynamic>.fromPrevious(previousStatus);
     tasks[taskId] = LevitTaskDetails(
       status: initialStatus,
       executionId: execution.executionId,

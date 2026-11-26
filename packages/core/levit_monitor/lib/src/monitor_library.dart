@@ -21,6 +21,7 @@ export '../levit_monitor_protocol.dart';
 export 'transports/websocket_connection.dart';
 
 part 'core.dart';
+part 'diagnostics.dart';
 part 'event.dart';
 part 'middleware.dart';
 part 'snapshot.dart';

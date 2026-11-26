@@ -1,0 +1,8 @@
+dartdoc:
+  showUndocumentedCategories: true
+  categories:
+    "DevTools Integration": {}
+    "VM Service Protocol": {}
+  categoryOrder:
+    - "DevTools Integration"
+    - "VM Service Protocol"

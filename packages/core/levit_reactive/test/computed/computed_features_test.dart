@@ -39,9 +39,10 @@ void main() {
 
       final memo = LxComputed(
         () => source.value.toList(),
-        equals: (a, b) =>
-            a.length == b.length &&
-            a.asMap().entries.every((e) => b[e.key] == e.value),
+        equals:
+            (a, b) =>
+                a.length == b.length &&
+                a.asMap().entries.every((e) => b[e.key] == e.value),
       );
 
       // Collect successful values

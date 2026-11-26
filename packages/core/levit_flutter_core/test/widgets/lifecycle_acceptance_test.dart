@@ -199,13 +199,14 @@ void main() {
       (tester) async {
         final first = LevitScopeLifecycleController();
         final next = LevitScopeLifecycleController();
-        Widget view(LevitScopeLifecycleController lifecycle) => asynchronous
-            ? LAsyncScope(
-                lifecycle: lifecycle,
-                configure: (_) async {},
-                child: const SizedBox(),
-              )
-            : LScope(lifecycle: lifecycle, child: const SizedBox());
+        Widget view(LevitScopeLifecycleController lifecycle) =>
+            asynchronous
+                ? LAsyncScope(
+                  lifecycle: lifecycle,
+                  configure: (_) async {},
+                  child: const SizedBox(),
+                )
+                : LScope(lifecycle: lifecycle, child: const SizedBox());
         await tester.pumpWidget(view(first));
         await tester.pumpAndSettle();
         await tester.pumpWidget(view(next));
@@ -223,21 +224,22 @@ void main() {
         final left = LevitScopeLifecycleController();
         final right = LevitScopeLifecycleController();
         var reads = 0;
-        final Widget view = asynchronous
-            ? LAsyncView<int>(
-                key: key,
-                builder: (context, value) {
-                  reads++;
-                  return Text('$value');
-                },
-              )
-            : LView<int>(
-                key: key,
-                builder: (context, value) {
-                  reads++;
-                  return Text('$value');
-                },
-              );
+        final Widget view =
+            asynchronous
+                ? LAsyncView<int>(
+                  key: key,
+                  builder: (context, value) {
+                    reads++;
+                    return Text('$value');
+                  },
+                )
+                : LView<int>(
+                  key: key,
+                  builder: (context, value) {
+                    reads++;
+                    return Text('$value');
+                  },
+                );
         Widget tree(bool onLeft) => Directionality(
           textDirection: TextDirection.ltr,
           child: Row(

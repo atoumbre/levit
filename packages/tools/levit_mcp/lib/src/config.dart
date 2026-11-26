@@ -97,9 +97,8 @@ final class LevitMcpConfig {
     this.maxVariables = 4096,
     this.maxTaskTreeDepth = 16,
     Random? random,
-  }) : token = (token == null || token.isEmpty)
-           ? generateAuthToken(random)
-           : token,
+  }) : token =
+           (token == null || token.isEmpty) ? generateAuthToken(random) : token,
        tokenGenerated = token == null || token.isEmpty,
        allowWebOrigins = Set.unmodifiable(allowWebOrigins) {
     if (port < 0 || port > 65535) {
@@ -126,48 +125,49 @@ final class LevitMcpConfig {
   }
 
   /// Builds the CLI argument parser for `levit_mcp`.
-  static ArgParser buildArgParser() => ArgParser()
-    ..addOption(
-      'port',
-      abbr: 'p',
-      defaultsTo: '$defaultPort',
-      help:
-          'Loopback port for LevitWebSocketTransport connections (0 for auto).',
-    )
-    ..addOption(
-      'token',
-      abbr: 't',
-      help:
-          'Shared secret token required by producers '
-          '(defaults to LEVIT_MCP_TOKEN or a generated token).',
-    )
-    ..addMultiOption(
-      'allow-web-origin',
-      help:
-          'Allow a specific browser Origin header for Flutter Web debug apps '
-          '(e.g. http://localhost:8080). May be repeated.',
-    )
-    ..addOption(
-      'history-capacity',
-      defaultsTo: '500',
-      help: 'Maximum number of recent events retained per session.',
-    )
-    ..addOption(
-      'max-sessions',
-      defaultsTo: '16',
-      help: 'Maximum number of sessions tracked simultaneously.',
-    )
-    ..addOption(
-      'max-connections',
-      defaultsTo: '32',
-      help: 'Maximum concurrent WebSocket producer connections.',
-    )
-    ..addFlag(
-      'help',
-      abbr: 'h',
-      negatable: false,
-      help: 'Print usage information and exit.',
-    );
+  static ArgParser buildArgParser() =>
+      ArgParser()
+        ..addOption(
+          'port',
+          abbr: 'p',
+          defaultsTo: '$defaultPort',
+          help:
+              'Loopback port for LevitWebSocketTransport connections (0 for auto).',
+        )
+        ..addOption(
+          'token',
+          abbr: 't',
+          help:
+              'Shared secret token required by producers '
+              '(defaults to LEVIT_MCP_TOKEN or a generated token).',
+        )
+        ..addMultiOption(
+          'allow-web-origin',
+          help:
+              'Allow a specific browser Origin header for Flutter Web debug apps '
+              '(e.g. http://localhost:8080). May be repeated.',
+        )
+        ..addOption(
+          'history-capacity',
+          defaultsTo: '500',
+          help: 'Maximum number of recent events retained per session.',
+        )
+        ..addOption(
+          'max-sessions',
+          defaultsTo: '16',
+          help: 'Maximum number of sessions tracked simultaneously.',
+        )
+        ..addOption(
+          'max-connections',
+          defaultsTo: '32',
+          help: 'Maximum concurrent WebSocket producer connections.',
+        )
+        ..addFlag(
+          'help',
+          abbr: 'h',
+          negatable: false,
+          help: 'Print usage information and exit.',
+        );
 
   /// Usage text for CLI `--help` output.
   static String get usage => buildArgParser().usage;
@@ -202,9 +202,8 @@ final class LevitMcpConfig {
 
     final cliToken = results.option('token');
     final envToken = environment['LEVIT_MCP_TOKEN'];
-    final effectiveToken = (cliToken != null && cliToken.isNotEmpty)
-        ? cliToken
-        : envToken;
+    final effectiveToken =
+        (cliToken != null && cliToken.isNotEmpty) ? cliToken : envToken;
 
     return LevitMcpConfig(
       port: parsePositiveInt('port', min: 0, max: 65535),

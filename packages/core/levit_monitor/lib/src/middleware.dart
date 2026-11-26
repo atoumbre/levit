@@ -56,14 +56,15 @@ class LevitMonitorMiddleware
 
   /// Immutable JSON-only snapshot of current scopes, dependencies, variables,
   /// and task trees.
-  Map<String, dynamic> get snapshot => LevitEventEnvelope({
-    'sessionId': sessionId,
-    'seq': 0,
-    'type': 'snapshot',
-    'category': 'snapshot',
-    ..._stateSnapshot.toJson(),
-    'droppedEvents': droppedEvents,
-  }).data;
+  Map<String, dynamic> get snapshot =>
+      LevitEventEnvelope({
+        'sessionId': sessionId,
+        'seq': 0,
+        'type': 'snapshot',
+        'category': 'snapshot',
+        ..._stateSnapshot.toJson(),
+        'droppedEvents': droppedEvents,
+      }).data;
 
   /// Creates a monitor middleware targeting [transport] (defaults to
   /// [LevitConsoleTransport]).
@@ -285,9 +286,9 @@ class LevitMonitorMiddleware
             identical(nextEnvelope, pending.envelope)
                 ? pending
                 : LevitFrozenMonitorEvent._captured(
-                    nextEnvelope,
-                    pending.timestamp,
-                  ),
+                  nextEnvelope,
+                  pending.timestamp,
+                ),
           );
         }
         _pending

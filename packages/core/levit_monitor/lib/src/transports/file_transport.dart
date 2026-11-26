@@ -58,18 +58,19 @@ class LevitFileTransport extends LevitTransport {
   }
 
   @override
-  Future<void> close() => _closing ??= () async {
-    try {
-      await flush();
-    } catch (_) {
-      /* Recorded; still release the sink. */
-    }
-    try {
-      await _sink.close();
-    } catch (error, stack) {
-      _recordFailure(error, stack);
-    }
-    await _sinkDone;
-    if (_failures.isNotEmpty) throw LevitMonitorException(_failures);
-  }();
+  Future<void> close() =>
+      _closing ??= () async {
+        try {
+          await flush();
+        } catch (_) {
+          /* Recorded; still release the sink. */
+        }
+        try {
+          await _sink.close();
+        } catch (error, stack) {
+          _recordFailure(error, stack);
+        }
+        await _sinkDone;
+        if (_failures.isNotEmpty) throw LevitMonitorException(_failures);
+      }();
 }

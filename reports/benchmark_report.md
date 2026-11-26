@@ -1,5 +1,5 @@
 # Benchmark Results
-Date: 2026-11-26 07:36:45.448586
+Date: 2026-11-26 11:17:37.335117
 
 ## Environment
 | Key | Value |
@@ -26,11 +26,11 @@ Methodology: 2 (not comparable with earlier app results)
 Classification: Comparative
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| Vanilla | 502 | 678 | 529.7 | 439-822 | 75.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 566 | 698 | 587.8 | 523-864 | 61.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| GetX | 802 | 892 | 810.2 | 750-962 | 42.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 3685 | 4471 | 3810.8 | 3425-5335 | 329.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| BLoC | 82450 | 88600 | 83378.8 | 77098-132384 | 6287.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 520 | 765 | 560.5 | 436-1395 | 134.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 554 | 716 | 578.5 | 514-873 | 66.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 803 | 910 | 816.1 | 737-1312 | 73.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 3655 | 3946 | 3687.1 | 3459-4262 | 149.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| BLoC | 81205 | 85560 | 81146.2 | 76739-87508 | 3263.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Diamond Graph (Observed Updates)
 Measurement: Completed logic work (wall time)  
@@ -39,11 +39,11 @@ Classification: Approximate
 Note: Consumes the final diamond result after every root write. Intermediate notification counts can differ.
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| Vanilla | 51 | 80 | 58.2 | 49-243 | 27.1 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 52 | 106 | 63.6 | 48-228 | 25.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 1539 | 1686 | 1538.3 | 1412-1810 | 85.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| RxDart | 1670 | 1810 | 1696.0 | 1618-2325 | 85.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| GetX | 16646 | 28597 | 18427.5 | 14755-47097 | 4700.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 51 | 78 | 59.6 | 49-197 | 20.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 53 | 88 | 61.2 | 51-254 | 28.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| RxDart | 1721 | 1842 | 1733.7 | 1602-1953 | 68.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 1809 | 3807 | 2444.4 | 1464-15382 | 2237.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 15847 | 17423 | 18848.0 | 15153-128397 | 16764.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Fan Out Update
 Measurement: Completed logic work (wall time)  
@@ -51,11 +51,11 @@ Methodology: 2 (not comparable with earlier app results)
 Classification: Comparative
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| Vanilla | 7 | 14 | 8.5 | 6-37 | 4.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| GetX | 14 | 21 | 15.2 | 11-39 | 3.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 39 | 88 | 46.4 | 30-256 | 28.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 125 | 180 | 136.3 | 108-500 | 44.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| RxDart | 480 | 572 | 492.2 | 464-846 | 48.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 7 | 14 | 8.7 | 6-60 | 6.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 15 | 28 | 17.3 | 12-54 | 6.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 39 | 133 | 51.5 | 30-210 | 33.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 146 | 257 | 160.3 | 110-540 | 60.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| RxDart | 511 | 648 | 531.7 | 469-897 | 65.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Fan In Update
 Measurement: Completed logic work (wall time)  
@@ -63,11 +63,11 @@ Methodology: 2 (not comparable with earlier app results)
 Classification: Comparative
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| Vanilla | 13 | 25 | 15.4 | 10-72 | 9.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| GetX | 13 | 29 | 16.9 | 10-124 | 14.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 15 | 27 | 16.8 | 13-43 | 5.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| RxDart | 45 | 92 | 51.3 | 34-147 | 21.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 400 | 553 | 424.3 | 357-670 | 64.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 13 | 34 | 17.3 | 10-82 | 10.1 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 14 | 35 | 16.9 | 10-49 | 7.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 16 | 34 | 17.3 | 12-42 | 6.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| RxDart | 46 | 90 | 55.0 | 34-209 | 27.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 418 | 583 | 437.9 | 355-647 | 63.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Async Computed
 Measurement: Completed logic work (wall time)  
@@ -76,11 +76,11 @@ Classification: Approximate
 Note: Measures sequential async recomputation using each framework's closest async primitive.
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| Vanilla | 743 | 1126 | 782.2 | 606-1405 | 158.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| GetX | 916 | 1201 | 968.2 | 787-2218 | 179.1 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| RxDart | 1368 | 1783 | 1415.4 | 1128-1869 | 187.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 1491 | 2110 | 1554.5 | 1138-2639 | 303.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 1829 | 2431 | 1870.6 | 1422-2697 | 310.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 725 | 1143 | 793.9 | 578-2043 | 241.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 879 | 1176 | 936.0 | 764-1495 | 143.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 1149 | 1623 | 1208.5 | 953-1780 | 209.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| RxDart | 1367 | 1840 | 1420.5 | 1128-2634 | 245.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 1467 | 2332 | 1540.3 | 1098-3263 | 372.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Batch vs Un-batched
 Measurement: Completed logic work (wall time)  
@@ -89,11 +89,11 @@ Classification: Feature Demo
 Note: Levit uses a native batching primitive; others measure un-batched closest equivalents.
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| ValueNotifier (substitute) | 18 | 40 | 21.0 | 16-61 | 8.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| GetX | 21 | 35 | 24.2 | 20-95 | 11.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 41 | 92 | 47.0 | 22-180 | 27.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 86 | 188 | 113.0 | 75-704 | 82.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Vanilla | 136 | 228 | 150.0 | 129-308 | 32.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| ValueNotifier (substitute) | 17 | 26 | 19.1 | 16-76 | 7.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 21 | 39 | 24.8 | 19-81 | 10.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 40 | 134 | 52.6 | 20-304 | 42.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 79 | 162 | 98.3 | 72-671 | 68.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 139 | 203 | 150.8 | 128-320 | 28.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Warm Root DI Lookup
 Measurement: Completed logic work (wall time)  
@@ -102,11 +102,11 @@ Classification: Feature Demo
 Note: DI containers are not first-class primitives in every framework.
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| Custom map (substitute) | 6 | 17 | 8.4 | 5-97 | 10.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Vanilla | 6 | 11 | 7.2 | 5-29 | 3.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 19 | 46 | 22.7 | 13-220 | 22.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 22 | 43 | 28.9 | 21-240 | 26.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| GetX | 119 | 184 | 130.0 | 115-269 | 25.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Custom map (substitute) | 7 | 16 | 8.4 | 6-37 | 5.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 7 | 12 | 7.7 | 6-37 | 4.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 20 | 76 | 26.7 | 14-230 | 28.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 22 | 41 | 26.7 | 20-204 | 20.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 120 | 182 | 132.3 | 113-276 | 26.1 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Computed Chain (Deep Propagation)
 Measurement: Completed logic work (wall time)  
@@ -115,11 +115,11 @@ Classification: Approximate
 Note: An observed leaf consumes every root update through the closest computed/stream primitive.
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| Levit | 86 | 144 | 95.8 | 79-253 | 24.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Vanilla | 212 | 331 | 229.1 | 194-495 | 51.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| GetX | 358 | 450 | 372.3 | 342-458 | 32.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| BLoC | 32807 | 33927 | 32666.7 | 30644-34552 | 827.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 108689 | 113276 | 108611.1 | 99112-185376 | 8523.1 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 87 | 142 | 95.5 | 80-244 | 23.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 215 | 348 | 233.2 | 197-469 | 47.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 363 | 450 | 378.0 | 332-691 | 50.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| BLoC | 32804 | 36093 | 33779.3 | 32232-91260 | 6005.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 103556 | 104652 | 104225.4 | 102148-162194 | 6008.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Virtualized List: Visible Row Update (UI)
 Measurement: Widget-test pump wall time (not device rendering)  
@@ -127,11 +127,11 @@ Methodology: 2 (not comparable with earlier app results)
 Classification: Comparative
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| GetX | 1042 | 1528 | 1089.2 | 733-2163 | 248.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Vanilla | 1089 | 1472 | 1128.2 | 763-3609 | 340.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 1279 | 1692 | 1269.5 | 771-2569 | 317.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 1684 | 2612 | 1819.7 | 988-7020 | 704.1 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| BLoC | 2499 | 3647 | 2594.1 | 1516-5073 | 676.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 1306 | 1833 | 1334.2 | 822-2196 | 270.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 1408 | 2282 | 1497.8 | 786-2667 | 396.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 1411 | 1936 | 1421.5 | 785-2230 | 341.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 1778 | 2935 | 1854.4 | 986-3694 | 525.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| BLoC | 2400 | 3944 | 2573.3 | 1648-5114 | 663.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Nested Leaf Rebuild (UI)
 Measurement: Widget-test pump wall time (not device rendering)  
@@ -139,11 +139,11 @@ Methodology: 2 (not comparable with earlier app results)
 Classification: Comparative
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| GetX | 767 | 1115 | 802.6 | 518-1663 | 181.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 777 | 1010 | 784.7 | 523-1232 | 134.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Vanilla | 815 | 1136 | 829.3 | 512-1208 | 163.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| BLoC | 821 | 1403 | 907.3 | 551-2731 | 365.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 1045 | 2116 | 1133.1 | 577-4371 | 492.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 730 | 1898 | 927.2 | 514-6276 | 661.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| BLoC | 814 | 1237 | 871.6 | 574-1461 | 190.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 816 | 1131 | 819.2 | 508-1496 | 192.4 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 850 | 1245 | 886.0 | 524-1655 | 199.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 1090 | 2226 | 1239.5 | 593-4808 | 585.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Dynamic Grid Churn (UI)
 Measurement: Widget-test pump wall time (not device rendering)  
@@ -151,11 +151,11 @@ Methodology: 2 (not comparable with earlier app results)
 Classification: Comparative
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| GetX | 7820 | 17793 | 9535.0 | 6026-70985 | 7772.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 8438 | 10858 | 8847.3 | 7126-20983 | 1972.9 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| BLoC | 9036 | 13098 | 9367.0 | 6995-21298 | 2399.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 9142 | 13462 | 9649.6 | 7014-36065 | 3602.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Vanilla | 10460 | 18269 | 11592.0 | 7604-44294 | 5194.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 8632 | 10708 | 9044.4 | 7181-20760 | 2045.6 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 8726 | 13561 | 9483.2 | 7208-22837 | 2636.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| BLoC | 8897 | 11213 | 9161.1 | 7381-22097 | 2188.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 8945 | 12581 | 9631.5 | 7441-51475 | 4764.5 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 10635 | 14258 | 10990.7 | 7818-26705 | 2536.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 
 ## Progress Bar State Update (UI)
 Measurement: Widget-test pump wall time (not device rendering)  
@@ -163,9 +163,9 @@ Methodology: 2 (not comparable with earlier app results)
 Classification: Comparative
 | Implementation | Median (µs) | p95 (µs) | Mean (µs) | Min-Max (µs) | StdDev (µs) | Samples | Status |
 |---|---|---|---|---|---|---|---|
-| Vanilla | 161 | 341 | 193.6 | 135-796 | 88.8 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Riverpod | 173 | 428 | 233.3 | 142-2123 | 219.0 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| GetX | 244 | 472 | 288.9 | 167-1586 | 172.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| BLoC | 266 | 476 | 304.1 | 175-1988 | 197.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
-| Levit | 293 | 563 | 365.6 | 199-2773 | 308.1 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Vanilla | 160 | 310 | 193.5 | 140-897 | 100.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Riverpod | 179 | 435 | 228.8 | 151-884 | 127.7 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| GetX | 240 | 572 | 297.2 | 172-1658 | 197.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| BLoC | 256 | 545 | 313.0 | 178-1177 | 165.3 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
+| Levit | 304 | 584 | 364.9 | 212-2359 | 264.2 | 100 | OK — The benchmark completed successfully, its results passed verification, and its resources were cleaned up successfully. |
 

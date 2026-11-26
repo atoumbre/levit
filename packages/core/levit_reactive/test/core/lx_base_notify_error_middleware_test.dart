@@ -5,11 +5,14 @@ class ErrorCaptureMiddleware extends LevitReactiveMiddleware {
   Object? lastError;
   LxReactive? lastContext;
   @override
-  void Function(Object, StackTrace?, LxReactive?)? get onReactiveError =>
-      (e, s, c) {
-        lastError = e;
-        lastContext = c;
-      };
+  void Function(Object, StackTrace?, LxReactive?)? get onReactiveError => (
+    e,
+    s,
+    c,
+  ) {
+    lastError = e;
+    lastContext = c;
+  };
 }
 
 void main() {

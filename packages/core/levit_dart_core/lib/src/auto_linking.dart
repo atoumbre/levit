@@ -153,9 +153,10 @@ class _AutoLinkScope {
         final dynamic result = LxSpi.runWithOwner(
           key,
           () => runZoned(
-            () => instance is LevitController
-                ? instance._runInitialization(() => (onInit as dynamic)())
-                : (onInit as dynamic)(),
+            () =>
+                instance is LevitController
+                    ? instance._runInitialization(() => (onInit as dynamic)())
+                    : (onInit as dynamic)(),
             zoneValues: {_captureKey: captured, _captureStateKey: state},
           ),
         );
@@ -214,9 +215,10 @@ void _onReactiveInit(LxReactive reactive) {
   }
 
   final zone = Zone.current;
-  final captureState = _AutoLinkScope._activeCaptureScopes > 0
-      ? zone[_AutoLinkScope._captureStateKey]
-      : null;
+  final captureState =
+      _AutoLinkScope._activeCaptureScopes > 0
+          ? zone[_AutoLinkScope._captureStateKey]
+          : null;
 
   if (LxSpi.isConstructingOwned) {
     LxSpi.deferAutoLink(reactive, () => _captureReactiveIfNeeded(reactive));
@@ -369,5 +371,23 @@ abstract final class LevitAutoLinkSpi {
       (captured, result) {},
       ownerId: ownerId,
     );
+  }
+
+  /// Enables auto-linking unless the application explicitly opted out via
+  /// [Levit.disableAutoLinking].
+  ///
+  /// Used by Flutter scope hosts (`LScope` / `LAsyncScope`) so widget-scoped
+  /// controllers receive auto-linking by default.
+  static void ensureFlutterDefaultAutoLinking() {
+    if (!Levit.isAutoLinkingEnabled && !Levit._autoLinkingDisabledByUser) {
+      Levit.enableAutoLinking();
+    }
+  }
+
+  /// Clears the explicit opt-out flag recorded by [Levit.disableAutoLinking].
+  ///
+  /// Intended for test isolation when verifying first-mount Flutter defaults.
+  static void resetAutoLinkingPreference() {
+    Levit._autoLinkingDisabledByUser = false;
   }
 }

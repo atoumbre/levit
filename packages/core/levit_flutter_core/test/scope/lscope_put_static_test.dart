@@ -10,8 +10,10 @@ void main() {
         () => TestController()..count = 123,
         child: MaterialApp(
           home: Builder(
-            builder: (context) =>
-                Text('Count: ${context.levit.find<TestController>().count}'),
+            builder:
+                (context) => Text(
+                  'Count: ${context.levit.find<TestController>().count}',
+                ),
           ),
         ),
       ),

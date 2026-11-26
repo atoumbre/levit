@@ -11,9 +11,10 @@ final class LevitIsolateSendPort {
 /// Unsupported receive port stub for platforms without `dart:isolate`.
 final class LevitIsolateReceivePort {
   /// Returns the paired send port (unsupported on this platform).
-  LevitIsolateSendPort get sendPort => throw UnsupportedError(
-    'Dart isolates are not supported on this platform.',
-  );
+  LevitIsolateSendPort get sendPort =>
+      throw UnsupportedError(
+        'Dart isolates are not supported on this platform.',
+      );
 
   /// Subscribes to incoming messages (unsupported on this platform).
   StreamSubscription<dynamic> listen(void Function(dynamic message) onData) =>

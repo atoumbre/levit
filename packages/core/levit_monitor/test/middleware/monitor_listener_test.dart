@@ -48,9 +48,10 @@ void main() {
 
       await Future.delayed(Duration.zero);
 
-      final event = transport.events
-          .where((event) => event.toJson()['type'] == 'listener_add')
-          .first;
+      final event =
+          transport.events
+              .where((event) => event.toJson()['type'] == 'listener_add')
+              .first;
       expect(event.toJson()['reactiveId'], equals(reactive.id.toString()));
       expect(event.toJson()['context'], equals(ctx.toJson()));
     });
@@ -82,9 +83,10 @@ void main() {
 
       await Future.delayed(Duration.zero);
 
-      final event = transport.events
-          .where((event) => event.toJson()['type'] == 'listener_remove')
-          .first;
+      final event =
+          transport.events
+              .where((event) => event.toJson()['type'] == 'listener_remove')
+              .first;
       expect(event.toJson()['reactiveId'], equals(reactive.id.toString()));
       expect(event.toJson()['context'], equals(removeCtx.toJson()));
     });
@@ -102,9 +104,10 @@ void main() {
 
       await Future.delayed(Duration.zero);
 
-      final event = transport.events
-          .where((event) => event.toJson()['type'] == 'listener_add')
-          .first;
+      final event =
+          transport.events
+              .where((event) => event.toJson()['type'] == 'listener_add')
+              .first;
       // Should capture the immediate context (inner)
       // Note: Current implementation replaces context, doesn't merge.
       expect(event.toJson()['context'], equals(innerCtx.toJson()));

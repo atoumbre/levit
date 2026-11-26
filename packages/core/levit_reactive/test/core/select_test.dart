@@ -55,9 +55,10 @@ void main() {
     );
 
     test('should support nested objects', () {
-      final user = {
-        'profile': {'name': 'John', 'age': 30},
-      }.lx;
+      final user =
+          {
+            'profile': {'name': 'John', 'age': 30},
+          }.lx;
 
       final nameSelect = user.select((val) => val['profile']!['name']);
 

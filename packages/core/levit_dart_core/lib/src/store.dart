@@ -491,9 +491,13 @@ final class _LevitStoreKey {
 
   @override
   String toString() {
-    final variantLabel = variant == null
-        ? 'default'
-        : Object.hash(_variantSalt, variant).toUnsigned(32).toRadixString(16);
+    final variantLabel =
+        variant == null
+            ? 'default'
+            : Object.hash(
+              _variantSalt,
+              variant,
+            ).toUnsigned(32).toRadixString(16);
     return 'store#${identityHashCode(definition)}:$variantLabel';
   }
 }

@@ -110,24 +110,28 @@ void main() {
       final hookError = StateError('hook');
       final other = StateError('other close');
       final owner = Owner(
-        before: () => throw LevitDisposalException([
-          LevitDisposalFailure(
-            resource: 'hook',
-            error: hookError,
-            stackTrace: StackTrace.current,
-          ),
-        ]),
+        before:
+            () =>
+                throw LevitDisposalException([
+                  LevitDisposalFailure(
+                    resource: 'hook',
+                    error: hookError,
+                    stackTrace: StackTrace.current,
+                  ),
+                ]),
       );
       final work = owner.own(Work(events, error));
       owner.own(
         Object(),
-        dispose: (_) => throw LevitDisposalException([
-          LevitDisposalFailure(
-            resource: 'other',
-            error: other,
-            stackTrace: StackTrace.current,
-          ),
-        ]),
+        dispose:
+            (_) =>
+                throw LevitDisposalException([
+                  LevitDisposalFailure(
+                    resource: 'other',
+                    error: other,
+                    stackTrace: StackTrace.current,
+                  ),
+                ]),
       );
       owner.own(() {
         events.add('dependency closed');

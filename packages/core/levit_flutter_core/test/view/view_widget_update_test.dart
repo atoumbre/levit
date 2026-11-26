@@ -21,9 +21,11 @@ void main() {
               children: [
                 LView<TestController>(
                   // Resolver that captures local state to simulate change
-                  resolver: (context) => (tester.takeException() == null)
-                      ? controller1
-                      : controller2, // This is a bit hacky, let's just use a key change or parent state
+                  resolver:
+                      (context) =>
+                          (tester.takeException() == null)
+                              ? controller1
+                              : controller2, // This is a bit hacky, let's just use a key change or parent state
                   builder: (context, c) => Text(c.label),
                 ),
                 ElevatedButton(

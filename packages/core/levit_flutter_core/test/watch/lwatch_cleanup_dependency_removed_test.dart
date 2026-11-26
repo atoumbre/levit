@@ -9,9 +9,10 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: LWatch(
-          () => toggle.value
-              ? Text('V: ${notifier.value}')
-              : const Text('V: Clean'),
+          () =>
+              toggle.value
+                  ? Text('V: ${notifier.value}')
+                  : const Text('V: Clean'),
         ),
       ),
     );

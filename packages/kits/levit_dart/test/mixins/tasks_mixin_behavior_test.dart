@@ -208,9 +208,10 @@ void main() {
 
         // 2. Deserialization failure
         await controller.taskEngine.cacheProvider.write('cache_fail', {
-          'expiresAt': DateTime.now()
-              .add(const Duration(hours: 1))
-              .millisecondsSinceEpoch,
+          'expiresAt':
+              DateTime.now()
+                  .add(const Duration(hours: 1))
+                  .millisecondsSinceEpoch,
           'data': {'v': -1},
         });
         final failResult = await controller.runTask(
@@ -226,9 +227,10 @@ void main() {
 
         // 3. Expiration
         await controller.taskEngine.cacheProvider.write('cache_expire', {
-          'expiresAt': DateTime.now()
-              .subtract(const Duration(hours: 1))
-              .millisecondsSinceEpoch,
+          'expiresAt':
+              DateTime.now()
+                  .subtract(const Duration(hours: 1))
+                  .millisecondsSinceEpoch,
           'data': {'v': 200},
         });
         final expireResult = await controller.runTask(

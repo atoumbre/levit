@@ -48,10 +48,17 @@ class _LBuilderElement<T> extends ComponentElement
 
   @override
   Widget build() {
-    return LScope.runBridged(
-      this,
-      () => (widget as LBuilder<T>).builder((widget as LBuilder<T>).x.value),
-    );
+    final w = widget as LBuilder<T>;
+    final scope = _resolveNearestScope();
+    if (scope == null || identical(scope, Ls.currentScope)) {
+      return w.builder(w.x.value);
+    }
+    final previous = LsSpi.enterSyncScope(scope);
+    try {
+      return w.builder(w.x.value);
+    } finally {
+      LsSpi.exitSyncScope(previous);
+    }
   }
 
   @override
@@ -131,10 +138,17 @@ class _LSelectBuilderElement<T> extends ComponentElement
 
   @override
   Widget build() {
-    return LScope.runBridged(
-      this,
-      () => (widget as LSelectorBuilder<T>).builder(_computed.value),
-    );
+    final w = widget as LSelectorBuilder<T>;
+    final scope = _resolveNearestScope();
+    if (scope == null || identical(scope, Ls.currentScope)) {
+      return w.builder(_computed.value);
+    }
+    final previous = LsSpi.enterSyncScope(scope);
+    try {
+      return w.builder(_computed.value);
+    } finally {
+      LsSpi.exitSyncScope(previous);
+    }
   }
 
   @override
@@ -215,21 +229,31 @@ class _LStatusBuilderElement<T> extends ComponentElement
 
   @override
   Widget build() {
-    return LScope.runBridged(this, () {
-      final w = widget as LStatusBuilder<T>;
-      final status = w.x.value;
+    final w = widget as LStatusBuilder<T>;
+    final scope = _resolveNearestScope();
+    if (scope == null || identical(scope, Ls.currentScope)) {
+      return _buildStatus(w);
+    }
+    final previous = LsSpi.enterSyncScope(scope);
+    try {
+      return _buildStatus(w);
+    } finally {
+      LsSpi.exitSyncScope(previous);
+    }
+  }
 
-      return switch (status) {
-        LxIdle<T>() =>
-          w.onIdle?.call(status) ??
-              w.onWaiting?.call(LxWaiting<T>.fromPrevious(status)) ??
-              const SizedBox.shrink(),
-        LxWaiting<T>() => w.onWaiting?.call(status) ?? const SizedBox.shrink(),
-        LxError<T>(:final error) =>
-          w.onError?.call(status) ?? Center(child: Text('Error: $error')),
-        LxSuccess<T>(:final value) => w.onSuccess(value),
-      };
-    });
+  Widget _buildStatus(LStatusBuilder<T> w) {
+    final status = w.x.value;
+    return switch (status) {
+      LxIdle<T>() =>
+        w.onIdle?.call(status) ??
+            w.onWaiting?.call(LxWaiting<T>.fromPrevious(status)) ??
+            const SizedBox.shrink(),
+      LxWaiting<T>() => w.onWaiting?.call(status) ?? const SizedBox.shrink(),
+      LxError<T>(:final error) =>
+        w.onError?.call(status) ?? Center(child: Text('Error: $error')),
+      LxSuccess<T>(:final value) => w.onSuccess(value),
+    };
   }
 
   @override
@@ -241,7 +265,36 @@ class _LStatusBuilderElement<T> extends ComponentElement
 
 mixin _LReactiveElementMixin<W extends Widget> on ComponentElement {
   LxListenerContext? _cachedContext;
+  LevitScope? _cachedScope;
+  bool _scopeResolved = false;
   late final VoidCallback _onNotifyCallback = onNotify;
+
+  LevitScope? _resolveNearestScope() {
+    if (!_scopeResolved) {
+      _cachedScope = _ScopeProvider.of(this, listen: true);
+      _scopeResolved = true;
+    }
+    return _cachedScope;
+  }
+
+  @override
+  void didChangeDependencies() {
+    _scopeResolved = false;
+    super.didChangeDependencies();
+  }
+
+  @override
+  void activate() {
+    _scopeResolved = false;
+    super.activate();
+  }
+
+  @override
+  void unmount() {
+    _cachedScope = null;
+    _scopeResolved = false;
+    super.unmount();
+  }
 
   void onNotify() {
     if (mounted) markNeedsBuild();

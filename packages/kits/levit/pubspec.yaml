@@ -8,11 +8,11 @@ topics:
   - framework
 
 environment:
-  sdk: ^3.12.0
+  sdk: ^3.7.0
 
 dependencies:
   levit_dart: ^0.1.0-beta.1
-  
+
 dev_dependencies:
   test: ^1.24.0
-  lints: ^6.0.0
+  lints: '>=5.1.1 <7.0.0'

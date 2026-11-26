@@ -72,9 +72,12 @@ void main() {
       expect(registerEvent, isNotEmpty, reason: 'DI register event not found');
       expect(registerEvent['key'], contains('_TestService_test_tag'));
 
-      final stateEvents = events
-          .where((e) => e['category'] == 'state' && e['type'] == 'state_change')
-          .toList();
+      final stateEvents =
+          events
+              .where(
+                (e) => e['category'] == 'state' && e['type'] == 'state_change',
+              )
+              .toList();
       expect(stateEvents, isNotEmpty, reason: 'State change event not found');
       expect(stateEvents.first['newValue'], '1');
       expect(stateEvents.first['name'], 'test_sig');

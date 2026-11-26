@@ -266,11 +266,12 @@ class LevitMonitor {
   }) => _serialize(() async {
     await _detachNow();
     final all = [if (transport != null) transport, ...?transports];
-    final sink = all.isEmpty
-        ? LevitConsoleTransport()
-        : all.length == 1
-        ? all.single
-        : LevitMultiTransport(all);
+    final sink =
+        all.isEmpty
+            ? LevitConsoleTransport()
+            : all.length == 1
+            ? all.single
+            : LevitMultiTransport(all);
     final middleware = LevitMonitorMiddleware(
       transport: sink,
       includeStackTrace: includeStackTrace,

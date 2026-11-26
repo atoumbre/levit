@@ -171,7 +171,8 @@ That trade can be worth it in larger systems and unnecessary in smaller ones.
 The pitch is backed by concrete material in this repo:
 
 - Benchmark methodology: [`benchmarks/README.md`](../benchmarks/README.md)
-- Comparative results: [`reports/benchmark_report.md`](../reports/benchmark_report.md)
+- Comparative results (headless debug `flutter_test`): [`reports/benchmark_report.md`](../reports/benchmark_report.md)
+- Native AOT release results: [`reports/release_benchmark_report.md`](../reports/release_benchmark_report.md)
 - Stress results for reactive, DI, and Flutter bindings: [`reports/stress_test_report.md`](../reports/stress_test_report.md)
 - Worked examples: [`examples/`](../examples), [`packages/kits/levit_flutter/example/README.md`](../packages/kits/levit_flutter/example/README.md)
 
@@ -211,7 +212,7 @@ If you are evaluating Levit, start with the entry point that matches the job you
 From there:
 
 - Use the root [`README.md`](../README.md) for ecosystem structure and quick onboarding.
-- Follow [ONBOARDING.md](ONBOARDING.md) for a step-by-step first feature, and [ADVANCED.md](ADVANCED.md) for structured tasks, queries, and interop.
+- Follow [ONBOARDING.md](ONBOARDING.md) for a step-by-step first feature, [MIGRATING.md](MIGRATING.md) when coming from Riverpod/Bloc/GetX, and [ADVANCED.md](ADVANCED.md) for structured tasks, queries, and interop.
 - Use package READMEs and inline DartDoc for individual API contracts.
 
 ## Runtime and Ecosystem Boundary

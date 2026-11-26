@@ -1,0 +1,5 @@
+name: levit_devtools
+issueTracker: https://github.com/softilab/levit/issues
+version: 0.1.0-beta.1
+materialIconCodePoint: '0xe3b8'
+requiresConnection: true

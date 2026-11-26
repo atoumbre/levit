@@ -147,9 +147,10 @@ class _LViewState<T> extends State<LView<T>> {
   void didUpdateWidget(LView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    final shouldUpdate = (widget.args != null || oldWidget.args != null)
-        ? !_argsMatch(widget.args, oldWidget.args)
-        : false;
+    final shouldUpdate =
+        (widget.args != null || oldWidget.args != null)
+            ? !_argsMatch(widget.args, oldWidget.args)
+            : false;
 
     if (shouldUpdate) {
       controller = _resolveController();

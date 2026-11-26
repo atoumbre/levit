@@ -43,10 +43,11 @@ dart pub add levit:^0.1.0-beta.1
 
 ## Start with scopes → owners → state → widgets
 
-Requires Dart 3.12+ and Flutter 3.44+ for Flutter apps. Choose the lifetime first,
+Requires Dart 3.7+ and Flutter 3.29+ for Flutter apps (Dart 3.12+ for the optional `levit_lints` native analyzer plugin). Choose the lifetime first,
 register its owner, keep state on that owner, then observe it from focused widgets.
-Follow the [onboarding guide](docs/ONBOARDING.md) and use
-[advanced helpers](docs/ADVANCED.md) when needed.
+Follow the [onboarding guide](docs/ONBOARDING.md), the
+[migration guide](docs/MIGRATING.md) (coming from Riverpod, Bloc, or GetX), and
+use [advanced helpers](docs/ADVANCED.md) when needed.
 
 ## Quick Start
 
@@ -132,7 +133,7 @@ Levit takes a different position: scope ownership, cleanup, and reactive propaga
 
 The proposition is not just conceptual. This repo includes:
 
-- Cross-framework benchmarks under a shared harness: [`benchmarks/README.md`](./benchmarks/README.md), [`reports/benchmark_report.md`](./reports/benchmark_report.md)
+- Cross-framework benchmarks under a shared harness: [`benchmarks/README.md`](./benchmarks/README.md), [`reports/benchmark_report.md`](./reports/benchmark_report.md) *(headless debug `flutter_test`)*, [`reports/release_benchmark_report.md`](./reports/release_benchmark_report.md) *(native macOS AOT release)*
 - Stress tests for reactive, DI, and Flutter lifecycle behavior: [`stress_tests/README.md`](./stress_tests/README.md), [`reports/stress_test_report.md`](./reports/stress_test_report.md)
 - Examples that show feature scopes, async patterns, and route ownership in practice: [`examples/`](./examples)
 
@@ -148,8 +149,9 @@ The proposition is not just conceptual. This repo includes:
 | Reactive primitives only | [`levit_reactive`](./packages/core/levit_reactive) | Owns `LxVar`, `LxComputed`, `LxFuture`, `LxStream`, `LxWorker`, and batch propagation. |
 | Scoped DI & lifecycle only | [`levit_scope`](./packages/core/levit_scope) | Owns hierarchical `LevitScope`, aliases, factories, and deterministic LIFO disposal. |
 | Runtime telemetry and diagnostics | [`levit_monitor`](./packages/core/levit_monitor) | Opt-in; add separately when you need redaction, snapshots, or event export. |
-| Lifecycle & reactive analyzer rules *(workspace tool)* | [`levit_lints`](./packages/tools/levit_lints) | Native Dart analyzer plugin; no runtime dependency. |
-| Live runtime MCP server *(workspace tool)* | [`levit_mcp`](./packages/tools/levit_mcp) | Read-only stdio MCP server over authenticated loopback WebSockets. |
+| Lifecycle & reactive analyzer rules | [`levit_lints`](./packages/tools/levit_lints) | Native Dart analyzer plugin (Dart 3.12+); no runtime dependency. |
+| Flutter DevTools extension | [`levit_devtools`](./packages/tools/levit_devtools) | Read-only Flutter DevTools tab over Dart VM Service (zero server/token setup). |
+| Live runtime MCP server | [`levit_mcp`](./packages/tools/levit_mcp) | Read-only stdio MCP server over authenticated loopback WebSockets. |
 | Agent authoring skill | [`skills/levit`](./skills/levit/SKILL.md) | Portable Agent Skill with Levit patterns and best practices. |
 
 ## Architecture Model

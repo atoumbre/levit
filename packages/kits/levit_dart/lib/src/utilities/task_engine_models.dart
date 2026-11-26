@@ -641,14 +641,14 @@ class LevitTaskExecution<T> {
   late final Future<LevitTaskResult<T>> outcome = result
       .then<LevitTaskResult<T>>(
         LevitTaskSuccess<T>.new,
-        onError: (Object error, StackTrace stack) => switch (error) {
-          LevitTaskSupersededException() => LevitTaskSuperseded<T>(),
-          LevitTaskCancelledException(:final reason) => LevitTaskCancelled<T>(
-            reason,
-          ),
-          LevitTaskDroppedException() => LevitTaskDropped<T>(),
-          _ => LevitTaskFailure<T>(error, stack),
-        },
+        onError:
+            (Object error, StackTrace stack) => switch (error) {
+              LevitTaskSupersededException() => LevitTaskSuperseded<T>(),
+              LevitTaskCancelledException(:final reason) =>
+                LevitTaskCancelled<T>(reason),
+              LevitTaskDroppedException() => LevitTaskDropped<T>(),
+              _ => LevitTaskFailure<T>(error, stack),
+            },
       );
 
   final void Function() _cancel;
@@ -868,9 +868,10 @@ class LevitTaskTracker extends LevitTaskMiddleware implements LevitDisposable {
   void onTaskEvent(LevitTaskEvent event) {
     if (_disposed) return;
     final current = executions[event.executionId];
-    executions[event.executionId] = current == null
-        ? LevitTaskExecutionSummary.fromEvent(event)
-        : current.apply(event);
+    executions[event.executionId] =
+        current == null
+            ? LevitTaskExecutionSummary.fromEvent(event)
+            : current.apply(event);
     _prune();
   }
 

@@ -8,18 +8,20 @@ import 'package:levit_monitor/spi.dart';
 class _WireTimestamp extends LevitLogEvent {
   _WireTimestamp() : super(sessionId: 'custom', level: LevitLogLevel.info);
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['timestamp'] = '2026-01-02T03:04:05.123456Z'
-    ..['category'] = 'overridden';
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['timestamp'] = '2026-01-02T03:04:05.123456Z'
+        ..['category'] = 'overridden';
 }
 
 class _CustomChange extends LevitReactiveChangeEvent {
   _CustomChange({required super.reactive, required super.change})
     : super(sessionId: 'custom');
   @override
-  Map<String, dynamic> toJson() => super.toJson()
-    ..['timestamp'] = '2026-01-02T03:04:05.123456Z'
-    ..['extra'] = 'preserved';
+  Map<String, dynamic> toJson() =>
+      super.toJson()
+        ..['timestamp'] = '2026-01-02T03:04:05.123456Z'
+        ..['extra'] = 'preserved';
 }
 
 void main() {

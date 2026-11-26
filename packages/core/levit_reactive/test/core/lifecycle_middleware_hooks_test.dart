@@ -14,8 +14,7 @@ class TestHistoryMiddleware extends LevitReactiveMiddleware {
 class TestObserver extends LevitReactiveMiddleware {
   int initCount = 0;
   @override
-  void Function(LxReactive reactive)? get onInit =>
-      (reactive) => initCount++;
+  void Function(LxReactive reactive)? get onInit => (reactive) => initCount++;
 }
 
 void main() {

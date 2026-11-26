@@ -16,7 +16,7 @@ final plugin = LevitLintsPlugin();
 
 /// Native Dart analyzer plugin registering all Levit diagnostics.
 ///
-/// Registers seven rules when loaded by the analysis server:
+/// Registers nine rules when loaded by the analysis server:
 /// - [AvoidPlainLxStatusFields] (`avoid_plain_lx_status_fields`)
 /// - [AvoidPreconstructedLevitPut] (`avoid_preconstructed_levit_put`)
 /// - [MustCallSuperLevitLifecycle] (`must_call_super_levit_lifecycle`)
@@ -24,6 +24,8 @@ final plugin = LevitLintsPlugin();
 /// - [AwaitLevitLifecycle] (`await_levit_lifecycle`)
 /// - [AvoidGlobalLevitInWidgets] (`avoid_global_levit_in_widgets`)
 /// - [DiscardedLevitFuture] (`discarded_levit_future`)
+/// - [AvoidRedundantOuterLWatch] (`avoid_redundant_outer_lwatch`)
+/// - [AvoidUnscopedOverlay] (`avoid_unscoped_overlay`)
 ///
 /// Individual diagnostics are toggled under `plugins.levit_lints.diagnostics`
 /// in the consuming project's root `analysis_options.yaml`.
@@ -42,6 +44,8 @@ class LevitLintsPlugin extends Plugin {
       ..registerLintRule(UnownedLevitResource())
       ..registerLintRule(AwaitLevitLifecycle())
       ..registerLintRule(AvoidGlobalLevitInWidgets())
-      ..registerLintRule(DiscardedLevitFuture());
+      ..registerLintRule(DiscardedLevitFuture())
+      ..registerLintRule(AvoidRedundantOuterLWatch())
+      ..registerLintRule(AvoidUnscopedOverlay());
   }
 }

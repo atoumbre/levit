@@ -24,7 +24,7 @@ Repo Map
 packages/core/       levit_scope, levit_reactive, levit_dart_core,
                      levit_flutter_core, levit_monitor
 packages/kits/       levit, levit_dart, levit_flutter
-packages/tools/      levit_lints, levit_mcp (unpublished workspace tools)
+packages/tools/      levit_devtools, levit_devtools_extension, levit_lints, levit_mcp
 examples/            runnable reference apps
 ```
 
@@ -541,18 +541,21 @@ imports both packages.
 Use one stable token per concern. Re-registering with the same token replaces
 behavior in place.
 
-Optional Workspace Tooling
---------------------------
+Optional Tooling Packages
+-------------------------
 
-These tools currently live privately in packages/tools/ (publish_to: none):
+Tooling packages live in packages/tools/:
 
+- levit_devtools (Dart 3.7+): read-only Flutter DevTools extension host and
+  LevitVmServiceTransport over dart:developer (UI source in
+  packages/tools/levit_devtools_extension).
 - levit_lints (Dart 3.12+): native analyzer plugin checking
   await_levit_lifecycle, avoid_global_levit_in_widgets, discarded_levit_future,
   must_call_super_levit_lifecycle, unowned_levit_resource,
-  avoid_plain_lx_status_fields, and avoid_preconstructed_levit_put. Configure
-  via path: in root analysis_options.yaml.
-- levit_mcp: read-only stdio MCP server accepting authenticated loopback
-  LevitWebSocketTransport telemetry from running Dart/Flutter apps.
+  avoid_plain_lx_status_fields, avoid_preconstructed_levit_put,
+  avoid_redundant_outer_lwatch, and avoid_unscoped_overlay.
+- levit_mcp (Dart 3.7+): read-only stdio MCP server accepting authenticated
+  loopback LevitWebSocketTransport telemetry from running Dart/Flutter apps.
 
 
 Anti-Patterns
@@ -609,6 +612,7 @@ codecs, storage adapters, and persistent task caches are intentionally kept
 outside runtime dependencies.
 
 - Onboarding: docs/ONBOARDING.md (scopes → owners → state → widgets)
+- Migrating from Riverpod / Bloc / GetX: docs/MIGRATING.md
 - Advanced patterns: docs/ADVANCED.md
 - Rationale & tradeoffs: docs/WHY_LEVIT.md
-- SDK requirements: Dart 3.12+, Flutter 3.44+.
+- SDK requirements: Dart 3.7+, Flutter 3.29+ (Dart 3.12+ for levit_lints).

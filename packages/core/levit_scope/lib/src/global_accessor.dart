@@ -13,6 +13,23 @@ abstract final class LsSpi {
     return _zoneScopeKey;
   }
 
+  /// Synchronously sets [scope] as [Ls.currentScope] and returns the previous
+  /// synchronous override for restoration via [exitSyncScope].
+  ///
+  /// Enables zero-closure scope bridging inside hot-path synchronous frames
+  /// (such as Flutter `Element.build`). Always pair with [exitSyncScope] in a
+  /// `try`/`finally` block.
+  static LevitScope? enterSyncScope(LevitScope scope) {
+    final previous = Ls._syncScope;
+    Ls._syncScope = scope;
+    return previous;
+  }
+
+  /// Restores the synchronous scope override returned by [enterSyncScope].
+  static void exitSyncScope(LevitScope? previous) {
+    Ls._syncScope = previous;
+  }
+
   /// Synchronously binds [scope] as [Ls.currentScope] for the duration of [fn]
   /// without allocating a new [Zone].
   ///
@@ -20,12 +37,11 @@ abstract final class LsSpi {
   /// and restore it when they exit. Intended for synchronous build frames
   /// (such as Flutter `Widget.build`).
   static R runSyncWithScope<R>(LevitScope scope, R Function() fn) {
-    final previous = Ls._syncScope;
-    Ls._syncScope = scope;
+    final previous = enterSyncScope(scope);
     try {
       return fn();
     } finally {
-      Ls._syncScope = previous;
+      exitSyncScope(previous);
     }
   }
 }

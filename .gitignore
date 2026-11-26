@@ -42,4 +42,5 @@ pana_report.md
 # Keep only the recurring benchmark and stress reports in Git.
 reports/*
 !reports/benchmark_report.md
+!reports/release_benchmark_report.md
 !reports/stress_test_report.md

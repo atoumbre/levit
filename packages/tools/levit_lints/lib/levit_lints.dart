@@ -20,6 +20,8 @@
 ///       unowned_levit_resource: true
 ///       avoid_plain_lx_status_fields: true
 ///       avoid_preconstructed_levit_put: true
+///       avoid_redundant_outer_lwatch: true
+///       avoid_unscoped_overlay: true
 /// ```
 ///
 /// ## Rules
@@ -41,6 +43,12 @@
 /// - [AvoidPreconstructedLevitPut] (`avoid_preconstructed_levit_put`): Prevent
 ///   `Levit.put(() => existingOwner)` registrations that bypass builder-scoped
 ///   auto-linking.
+/// - [AvoidRedundantOuterLWatch] (`avoid_redundant_outer_lwatch`): Avoid
+///   returning a root `LWatch` inside `LView` / `LScopedView` / `LAsyncView`
+///   when `autoWatch` is enabled.
+/// - [AvoidUnscopedOverlay] (`avoid_unscoped_overlay`): Prefer
+///   `showLevitDialog` / `showLevitModalBottomSheet` or `LScope.capture` over
+///   raw Flutter overlays inside Levit Flutter widgets.
 ///
 /// Suppress an intentional exception with a namespaced ignore comment, e.g.:
 /// `// ignore: levit_lints/avoid_global_levit_in_widgets`.

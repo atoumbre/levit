@@ -19,8 +19,7 @@ class TestTrackingMiddleware extends LevitReactiveMiddleware {
 
   // Pass-through batch
   @override
-  LevitReactiveOnBatch? get onBatch =>
-      (next, change) => next;
+  LevitReactiveOnBatch? get onBatch => (next, change) => next;
 
   void reset() {
     beforeCount = 0;

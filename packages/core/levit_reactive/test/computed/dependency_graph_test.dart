@@ -7,11 +7,13 @@ class DepGraphCapture extends LevitReactiveMiddleware {
   List<LxReactive>? lastReactives;
 
   @override
-  void Function(LxReactive, List<LxReactive>)? get onGraphChange =>
-      (computed, dependencies) {
-        lastTarget = computed;
-        lastReactives = dependencies;
-      };
+  void Function(LxReactive, List<LxReactive>)? get onGraphChange => (
+    computed,
+    dependencies,
+  ) {
+    lastTarget = computed;
+    lastReactives = dependencies;
+  };
 }
 
 void main() {

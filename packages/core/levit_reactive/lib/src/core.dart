@@ -853,8 +853,8 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     final trackedReactive = resolvedReactive ?? this;
     final LevitReactiveNotifier trackedNotifier =
         trackedReactive is LevitReactiveNotifier
-        ? trackedReactive as LevitReactiveNotifier
-        : this;
+            ? trackedReactive as LevitReactiveNotifier
+            : this;
 
     if (identical(trackedReactive, _LevitReactiveCore._lastReportedReactive) &&
         identical(observer, _LevitReactiveCore._lastReportedObserver)) {
@@ -903,9 +903,8 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       valueType: T,
       oldValue: oldValue,
       newValue: val,
-      stackTrace: _LevitReactiveCore.captureStackTrace
-          ? StackTrace.current
-          : null,
+      stackTrace:
+          _LevitReactiveCore.captureStackTrace ? StackTrace.current : null,
       restore: (v) {
         _value = v;
         _version++;
@@ -1096,9 +1095,8 @@ abstract class LxBase<T> extends LevitReactiveNotifier
       valueType: T,
       oldValue: _value,
       newValue: _value,
-      stackTrace: _LevitReactiveCore.captureStackTrace
-          ? StackTrace.current
-          : null,
+      stackTrace:
+          _LevitReactiveCore.captureStackTrace ? StackTrace.current : null,
       restore: (v) {
         _value = v;
         _controller?.add(_value);

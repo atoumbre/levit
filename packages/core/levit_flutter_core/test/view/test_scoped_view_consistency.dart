@@ -16,8 +16,8 @@ void main() {
           home: LScopedView<TestController>.put(
             () => TestController()..count = 42,
             tag: 'my-tag',
-            builder: (context, controller) =>
-                Text('Count: ${controller.count}'),
+            builder:
+                (context, controller) => Text('Count: ${controller.count}'),
           ),
         ),
       );

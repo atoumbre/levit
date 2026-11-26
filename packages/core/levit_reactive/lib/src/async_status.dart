@@ -68,9 +68,10 @@ final class LxIdle<T> extends LxStatus<T> {
   const LxIdle.retained(T lastValue) : super(lastValue, hasLastValue: true);
 
   /// Preserves the presence of previous data across status transitions.
-  factory LxIdle.fromPrevious(LxStatus<T> previous) => previous.hasLastValue
-      ? LxIdle.retained(previous.lastValue as T)
-      : LxIdle<T>();
+  factory LxIdle.fromPrevious(LxStatus<T> previous) =>
+      previous.hasLastValue
+          ? LxIdle.retained(previous.lastValue as T)
+          : LxIdle<T>();
 
   @override
   String toString() => 'LxIdle<$T>(lastValue: $lastValue)';
@@ -108,9 +109,10 @@ final class LxWaiting<T> extends LxStatus<T> {
   const LxWaiting.retained(T lastValue) : super(lastValue, hasLastValue: true);
 
   /// Preserves the presence of previous data across status transitions.
-  factory LxWaiting.fromPrevious(LxStatus<T> previous) => previous.hasLastValue
-      ? LxWaiting.retained(previous.lastValue as T)
-      : LxWaiting<T>();
+  factory LxWaiting.fromPrevious(LxStatus<T> previous) =>
+      previous.hasLastValue
+          ? LxWaiting.retained(previous.lastValue as T)
+          : LxWaiting<T>();
 
   @override
   String toString() => 'LxWaiting<$T>(lastValue: $lastValue)';
@@ -170,9 +172,10 @@ final class LxError<T> extends LxStatus<T> {
     Object error,
     StackTrace? stack,
     LxStatus<T> previous,
-  ) => previous.hasLastValue
-      ? LxError.retained(error, previous.lastValue as T, stack)
-      : LxError(error, stack);
+  ) =>
+      previous.hasLastValue
+          ? LxError.retained(error, previous.lastValue as T, stack)
+          : LxError(error, stack);
 
   @override
   String toString() => 'LxError<$T>($error, lastValue: $lastValue)';
@@ -251,8 +254,8 @@ extension LxStatusReactiveExtensions<T> on LxReadable<LxStatus<T>> {
 
     final terminalStatus = await stream.firstWhere(
       (status) => status is LxSuccess<T> || status is LxError<T>,
-      orElse: () =>
-          throw StateError('Async operation stream closed unexpectedly.'),
+      orElse:
+          () => throw StateError('Async operation stream closed unexpectedly.'),
     );
 
     if (terminalStatus is LxSuccess<T>) return terminalStatus.value;

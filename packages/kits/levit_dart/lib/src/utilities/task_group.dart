@@ -252,13 +252,14 @@ final class LevitTaskGroupException implements Exception {
       'LevitTaskGroupException(${failures.map((error) => error.error).join('; ')})';
 }
 
-DateTime? _earliestDeadline(DateTime? a, DateTime? b) => a == null
-    ? b
-    : b == null
-    ? a
-    : a.isBefore(b)
-    ? a
-    : b;
+DateTime? _earliestDeadline(DateTime? a, DateTime? b) =>
+    a == null
+        ? b
+        : b == null
+        ? a
+        : a.isBefore(b)
+        ? a
+        : b;
 
 /// A structured-concurrency coordination boundary for tasks and child groups.
 ///
@@ -531,16 +532,17 @@ final class LevitTaskGroup
     DateTime? deadline,
     LevitTaskCachePolicy<T>? cachePolicy,
     LevitTaskMetadata? metadata,
-  }) => submit(
-    body,
-    id: id,
-    priority: priority,
-    conflictPolicy: conflictPolicy,
-    retryPolicy: retryPolicy,
-    deadline: deadline,
-    cachePolicy: cachePolicy,
-    metadata: metadata,
-  ).result;
+  }) =>
+      submit(
+        body,
+        id: id,
+        priority: priority,
+        conflictPolicy: conflictPolicy,
+        retryPolicy: retryPolicy,
+        deadline: deadline,
+        cachePolicy: cachePolicy,
+        metadata: metadata,
+      ).result;
 
   /// Cooperatively cancels this group, every child group, and every admitted
   /// task using [reason].

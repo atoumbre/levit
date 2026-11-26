@@ -153,20 +153,21 @@ mixin LevitTimeMixin on LevitController {
     cancelAllTimers();
     final failures = <LevitDisposalFailure>[];
     // Request cancellation for every countdown before awaiting any IO cleanup.
-    final cleanup = _countdowns.map((countdown) {
-      return Future<void>.sync(countdown.dispose).catchError((
-        Object error,
-        StackTrace stack,
-      ) {
-        failures.add(
-          LevitDisposalFailure(
-            resource: countdown,
-            error: error,
-            stackTrace: stack,
-          ),
-        );
-      });
-    }).toList();
+    final cleanup =
+        _countdowns.map((countdown) {
+          return Future<void>.sync(countdown.dispose).catchError((
+            Object error,
+            StackTrace stack,
+          ) {
+            failures.add(
+              LevitDisposalFailure(
+                resource: countdown,
+                error: error,
+                stackTrace: stack,
+              ),
+            );
+          });
+        }).toList();
     await Future.wait(cleanup);
     _countdowns.clear();
     if (failures.isNotEmpty) throw LevitDisposalException(failures);

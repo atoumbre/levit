@@ -207,11 +207,11 @@ final class _EnvelopeFields extends MapBase<String, dynamic> {
     _checkMutable();
     _data[key] =
         value == null ||
-            value is String ||
-            value is bool ||
-            (value is num && value.isFinite)
-        ? value
-        : LevitEventEnvelope._freeze(value, HashSet<Object>.identity());
+                value is String ||
+                value is bool ||
+                (value is num && value.isFinite)
+            ? value
+            : LevitEventEnvelope._freeze(value, HashSet<Object>.identity());
   }
 
   @override

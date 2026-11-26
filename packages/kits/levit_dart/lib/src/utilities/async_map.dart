@@ -101,12 +101,12 @@ final class _AsyncMapResource<T>
            _AsyncMapFrame<T>(null, false),
            name: name,
            isSensitive: true,
-           onListen: onActivityChanged == null
-               ? null
-               : () => onActivityChanged(true),
-           onCancel: onActivityChanged == null
-               ? null
-               : () => onActivityChanged(false),
+           onListen:
+               onActivityChanged == null ? null : () => onActivityChanged(true),
+           onCancel:
+               onActivityChanged == null
+                   ? null
+                   : () => onActivityChanged(false),
          ),
        ) {
     if (ownerId != null) _state.ownerId = ownerId;

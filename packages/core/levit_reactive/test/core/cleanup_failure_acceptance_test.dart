@@ -9,8 +9,7 @@ class DisposeHook extends LevitReactiveMiddleware {
   final void Function(void Function(), LxReactive) action;
   @override
   LevitReactiveOnDispose get onDispose =>
-      (next, reactive) =>
-          () => action(next, reactive);
+      (next, reactive) => () => action(next, reactive);
 }
 
 class ObservationHook extends LevitReactiveMiddleware

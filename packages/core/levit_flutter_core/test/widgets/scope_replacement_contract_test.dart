@@ -109,8 +109,8 @@ void main() {
           scope.put(() => _Resource(Future<void>.value(), fail: true));
         }
       },
-      error: (_, error) =>
-          const Text('failed', textDirection: TextDirection.ltr),
+      error:
+          (_, error) => const Text('failed', textDirection: TextDirection.ltr),
       child: const Text('ready', textDirection: TextDirection.ltr),
     );
     await tester.pumpWidget(build(1));

@@ -13,6 +13,7 @@ const _docPackages = <String>[
   'packages/kits/levit_flutter',
   'packages/tools/levit_lints',
   'packages/tools/levit_mcp',
+  'packages/tools/levit_devtools',
 ];
 
 Future<void> main(List<String> args) async {
