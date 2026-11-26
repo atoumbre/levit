@@ -5,7 +5,6 @@ part of '../levit_flutter_core.dart';
 /// Initializes the scope using an asynchronous [configure] callback and
 /// only renders [child] when initialization completes.
 ///
-/// // Example usage:
 /// ```dart
 /// LAsyncScope(
 ///   configure: (scope) async {
@@ -16,6 +15,8 @@ part of '../levit_flutter_core.dart';
 ///   child: const DataPage(),
 /// )
 /// ```
+///
+/// {@category Flutter Widgets & Interop}
 class LAsyncScope extends StatefulWidget {
   /// An async callback to register dependencies.
   /// The child will not render until this Future completes.
@@ -31,10 +32,11 @@ class LAsyncScope extends StatefulWidget {
   /// label for diagnostics.
   final String? name;
 
-  /// Optional builder for the loading state.
+  /// Optional builder for the loading state. Defaults to `SizedBox.shrink()`.
   final Widget Function(BuildContext context)? loading;
 
-  /// Optional builder for the error state.
+  /// Optional builder for the error state. Defaults to a [Text] describing the
+  /// error.
   final Widget Function(BuildContext context, Object error)? error;
 
   /// Optional dependency keys for reactive re-initialization.
@@ -43,6 +45,7 @@ class LAsyncScope extends StatefulWidget {
   /// Optional completion/retry handle; must remain stable while mounted.
   final LevitScopeLifecycleController? lifecycle;
 
+  /// Creates an asynchronously initialized widget-tree-bound dependency scope.
   const LAsyncScope({
     super.key,
     required this.configure,

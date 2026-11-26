@@ -17,11 +17,12 @@ Future<T> _resolveAsyncStore<T>(
   bool localOnly,
 ) => store.findIn(LScope.of(context) ?? Ls.currentScope, localOnly: localOnly);
 
-/// A widget that consumes a [LevitController] and builds UI.
+/// A widget that consumes a dependency of type [T] from the nearest scope and builds UI.
 ///
-/// [LView] combines finding a controller and building a reactive widget tree.
-/// When [autoWatch] is `true` (the default), [buildView] / [builder] run inside
-/// an [LWatch], so reactive reads rebuild the view automatically.
+/// [LView] combines resolving an existing dependency (such as a
+/// [LevitController], service, or store value) with building a reactive widget
+/// tree. When [autoWatch] is `true` (the default), [buildView] / [builder] run
+/// inside an [LWatch], so reactive reads rebuild the view automatically.
 ///
 /// With [autoWatch] enabled, read reactives directly in [buildView] / [builder].
 /// Do **not** wrap the entire return value in another [LWatch] — that creates a
@@ -29,33 +30,36 @@ Future<T> _resolveAsyncStore<T>(
 /// [autoWatch] to `false` when you manage watching yourself.
 ///
 /// Usage:
-/// 1.  **Subclass:**
-///     ```dart
-///     class HomePage extends LView<HomeController> {
-///       @override
-///       Widget buildView(BuildContext context, HomeController controller) {
-///         return Text(controller.title());
-///       }
-///     }
-///     ```
-/// 2.  **Builder:**
-///     ```dart
-///     LView<HomeController>(
-///       builder: (context, controller) => Text(controller.title()),
-///     );
-///     ```
+/// 1. **Subclass:**
+///    ```dart
+///    class HomePage extends LView<HomeController> {
+///      @override
+///      Widget buildView(BuildContext context, HomeController controller) {
+///        return Text(controller.title());
+///      }
+///    }
+///    ```
+/// 2. **Builder:**
+///    ```dart
+///    LView<HomeController>(
+///      builder: (context, controller) => Text(controller.title()),
+///    );
+///    ```
+///
+/// {@category Flutter Widgets & Interop}
 class LView<T> extends StatefulWidget {
   /// Resolves the dependency from the context.
   ///
-  /// Returns `null` when the dependency is not registered.
+  /// Defaults to `context.levit.findOrNull<T>()` when omitted. Returns `null`
+  /// when the dependency is not registered.
   final T? Function(BuildContext context)? resolver;
 
-  /// Builds the widget tree using the resolved [controller].
+  /// Builds the widget tree using the resolved dependency instance.
   final Widget Function(BuildContext context, T controller)? builder;
 
-  /// Fallback widget when the controller cannot be resolved.
+  /// Fallback widget when the dependency cannot be resolved.
   ///
-  /// If the resolution returns `null` and no [orElse] is provided,
+  /// If resolution returns `null` and no [orElse] is provided,
   /// a [StateError] is thrown.
   final Widget Function(BuildContext context)? orElse;
 
@@ -69,7 +73,7 @@ class LView<T> extends StatefulWidget {
   /// another lookup; changing these keys or the bound scope does.
   final List<Object?>? args;
 
-  /// Creates a view with a dependency factory and a builder.
+  /// Creates a consuming view with an optional [resolver] and [builder].
   const LView({
     super.key,
     this.resolver,
@@ -79,7 +83,7 @@ class LView<T> extends StatefulWidget {
     this.args,
   });
 
-  /// Consumes a store, inheriting ancestor state unless [localOnly] is true.
+  /// Consumes a store, inheriting ancestor state unless [localOnly] is `true`.
   factory LView.store(
     LevitStore<T> state, {
     Key? key,
@@ -185,25 +189,40 @@ class _LViewState<T> extends State<LView<T>> {
 
 /// A specialized view for asynchronous dependencies.
 ///
-/// [LAsyncView] resolves a [Future] dependency and renders [loading], [error],
-/// or [builder] (success) states. The resolution logic is memoized to prevent
-/// infinite re-fetching.
+/// [LAsyncView] resolves a [Future] dependency (defaulting to
+/// `context.levit.findAsync<T>()`) and renders [loading], [error], or
+/// [builder] / [buildView] (success) states. Resolution is memoized per bound
+/// scope; use [args] to re-trigger resolution when inputs change.
 ///
-/// Use [args] to forcefully re-trigger the resolution when arguments change.
+/// When [autoWatch] is `true` (default), read reactives directly in
+/// [buildView] / [builder] without wrapping the entire return in another
+/// [LWatch].
+///
+/// ```dart
+/// LAsyncView<CatalogController>(
+///   loading: (_) => const CircularProgressIndicator(),
+///   error: (_, err) => Text('Failed: $err'),
+///   builder: (context, controller) => CatalogList(controller.items),
+/// );
+/// ```
+///
+/// {@category Flutter Widgets & Interop}
 class LAsyncView<T> extends StatefulWidget {
   /// Resolves the dependency asynchronously from the context.
+  ///
+  /// Defaults to `context.levit.findAsync<T>()` when omitted.
   final Future<T> Function(BuildContext context)? resolver;
 
-  /// Builds the widget tree using the resolved [controller].
+  /// Builds the widget tree using the resolved dependency instance.
   final Widget Function(BuildContext context, T controller)? builder;
 
-  /// Whether to wrap the view in an [LWatch].
+  /// Whether to wrap [buildView] / [builder] in an [LWatch]. Defaults to `true`.
   final bool autoWatch;
 
-  /// Builder for the loading state.
+  /// Builder for the loading state. Defaults to `SizedBox.shrink()`.
   final Widget Function(BuildContext context)? loading;
 
-  /// Builder for the error state.
+  /// Builder for the error state. Defaults to `Center(child: Text('Error: $err'))`.
   final Widget Function(BuildContext context, Object error)? error;
 
   /// Explicit keys for re-resolution. Resolver identity alone does not trigger
@@ -221,7 +240,7 @@ class LAsyncView<T> extends StatefulWidget {
     this.args,
   });
 
-  /// Consumes an async store, inheriting ancestor state unless [localOnly] is true.
+  /// Consumes an async store, inheriting ancestor state unless [localOnly] is `true`.
   factory LAsyncView.store(
     LevitAsyncStore<T> store, {
     Key? key,
@@ -252,10 +271,18 @@ class LAsyncView<T> extends StatefulWidget {
     );
   }
 
+  /// Builds the loading placeholder while async resolution is pending.
+  ///
+  /// Subclasses may override this instead of passing [loading]. Defaults to
+  /// `SizedBox.shrink()`.
   @protected
   Widget buildLoading(BuildContext context) =>
       loading?.call(context) ?? const SizedBox.shrink();
 
+  /// Builds the error widget when async resolution fails with [err].
+  ///
+  /// Subclasses may override this instead of passing [error]. Defaults to
+  /// `Center(child: Text('Error: $err'))`.
   @protected
   Widget buildError(BuildContext context, Object err) =>
       error?.call(context, err) ?? Center(child: Text('Error: $err'));

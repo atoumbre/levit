@@ -19,11 +19,30 @@ final class _ResourceFrame<T> {
   }
 }
 
-/// Stable observation of one lazily constructed, exclusively owned producer.
-/// Refresh connects a new producer only after cleanup of the old one finishes.
+/// Stable observation of one lazily constructed, exclusively owned reactive
+/// producer.
+///
+/// The producer is created on first read or listener attachment and closed when
+/// replaced via [refresh] or when [close] is called. [refresh] connects a new
+/// producer only after cleanup of the previous one finishes.
+///
+/// Own [LxResource] in a controller via `own(...)` or await [close] directly.
+///
+/// ```dart
+/// final session = LxResource<LxStatus<String>, LxFuture<String>>(
+///   () => LxFuture(fetchToken()),
+///   name: 'session',
+/// );
+/// await session.refresh();
+/// await session.close();
+/// ```
+///
+/// {@category Reactive State}
 final class LxResource<T, R extends LxReactive<T>>
     implements LxReadable<T>, LxAsyncResource {
   final R Function() _create;
+
+  /// Optional descriptive name applied to this resource and its producers.
   final String? name;
   final LxVar<_ResourceFrame<T>> _state;
   R? _current;
@@ -38,6 +57,12 @@ final class LxResource<T, R extends LxReactive<T>>
   Future<void>? _closingFuture;
   final List<AsyncError> _failures = [];
 
+  /// Creates a lazily constructed [LxResource] using the given producer factory.
+  ///
+  /// * [name]: Optional diagnostic label forwarded to created producers.
+  /// * [ownerId]: Optional owner identifier forwarded to created producers.
+  /// * [onActivityChanged]: Optional callback notified when this resource gains
+  ///   its first listener (`true`) or loses its last listener (`false`).
   LxResource(
     this._create, {
     this.name,
@@ -58,13 +83,39 @@ final class LxResource<T, R extends LxReactive<T>>
 
   @override
   int get id => _state.id;
+
+  /// Whether [close] or [requestCancel] has been initiated on this resource.
   bool get isClosed => _closing;
+
+  /// Whether [close] has finished tearing down this resource and its producer.
   bool get isDisposed => _disposed;
+
+  /// Whether this resource currently has at least one active listener.
   bool get isActive => _state.hasListener;
+
+  /// Whether a [refresh] replacement is currently in progress.
+  ///
+  /// Reactive: reading this getter registers a dependency in active observers.
   bool get isReplacing => _state.value.replacing;
+
+  /// Whether at least one value has been published by a producer.
+  ///
+  /// Reactive: reading this getter registers a dependency in active observers.
   bool get hasLastValue => _state.value.hasData;
+
+  /// The most recently published value, or `null` if none has been published.
+  ///
+  /// Reactive: reading this getter registers a dependency in active observers.
   T? get lastValue => _state.value.data;
+
+  /// The error from the latest failed producer creation or read, if any.
+  ///
+  /// Reactive: reading this getter registers a dependency in active observers.
   Object? get refreshError => _state.value.failure?.error;
+
+  /// The stack trace associated with [refreshError], if any.
+  ///
+  /// Reactive: reading this getter registers a dependency in active observers.
   StackTrace? get refreshStackTrace => _state.value.failure?.stackTrace;
 
   void _ensureOpen() {
@@ -231,7 +282,7 @@ final class LxResource<T, R extends LxReactive<T>>
     if (errors.isNotEmpty) throw LxCleanupException(errors);
   }
 
-  /// Complete after the replacement has attached and supplied a readable value.
+  /// Completes after the replacement has attached and supplied a readable value.
   Future<void> refresh() {
     _ensureOpen();
     assertCanClose();
@@ -334,6 +385,12 @@ final class LxResource<T, R extends LxReactive<T>>
     if (errors.isNotEmpty) throw LxCleanupException(errors);
   }
 
+  /// Cancels active work, drains pending replacements, closes the owned
+  /// producer, and releases internal reactive state.
+  ///
+  /// Idempotent: subsequent calls return the same [Future]. Throws a
+  /// [StateError] if called reentrantly from inside producer construction or
+  /// execution, and throws [LxCleanupException] if any cleanup step fails.
   Future<void> close() {
     assertCanClose();
     if (_closingFuture case final pending?) return pending;

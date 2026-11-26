@@ -43,6 +43,3 @@ pana_report.md
 reports/*
 !reports/benchmark_report.md
 !reports/stress_test_report.md
-
-# The publishable inspector's bundled web assets.
-!packages/tools/levit_devtools/lib/assets/**

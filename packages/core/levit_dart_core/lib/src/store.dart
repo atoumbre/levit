@@ -3,8 +3,10 @@ part of 'dart_core_library.dart';
 /// A bridge for interacting with the dependency injection system from a [LevitStore].
 ///
 /// [LevitRef] allows stores to find other dependencies, register new ones,
-/// and manage their own lifecycle via [onDispose]. It provides a scoped access
+/// and manage their own lifecycle via [onDispose]. It provides scoped access
 /// to the [Levit] tree without needing global static access.
+///
+/// {@category Controllers & Stores}
 abstract class LevitRef {
   /// The [LevitScope] that owns this store instance.
   LevitScope get scope;
@@ -90,22 +92,38 @@ abstract class LevitRef {
 /// [LevitStore] works like a "recipe" for creating state. Unlike [LevitController],
 /// which you register manually, [LevitStore] is passed around by reference and
 /// instantiated on demand. Lookups inherit an ancestor instance by default;
-/// pass `localOnly: true` to create or reuse an instance in the current scope.
-/// Builders run once, so return reactive objects for state that changes.
+/// pass `localOnly: true` to create or reuse an instance in the target scope.
+/// Builders run once per successful scope/tag initialization, so return
+/// reactive objects for state that changes and register owned resources with
+/// `ref.own(...)`.
 ///
-/// When you call [find], it lazy-loads the instance in the current scope.
+/// ```dart
+/// final counterStore = LevitStore<LxInt>((ref) {
+///   return ref.own(0.lx.named('counter'));
+/// });
+///
+/// final count = counterStore.find();
+/// count.increment();
+/// ```
+///
+/// {@category Controllers & Stores}
 class LevitStore<T> {
   final T Function(LevitRef ref) _builder;
 
-  /// Creates a scoped store definition from [builder].
+  /// Creates a scoped store definition from the given builder function.
   ///
-  /// [builder] runs once per scope/tag instance when the store is first resolved.
+  /// The builder runs once per scope/tag instance on first successful
+  /// resolution; if it throws synchronously, subsequent resolutions retry it.
   LevitStore(this._builder);
 
   late final _LevitStoreKey _defaultKey = _LevitStoreKey(this, null);
 
-  /// Overrides this recipe in a receiving scope, before its first lookup there.
-  /// Override builders use the same ownership rules as ordinary store builders.
+  /// Overrides this recipe in a receiving scope, before its first local lookup.
+  ///
+  /// Override builders follow the same ownership rules as ordinary store
+  /// builders. Installing the returned [LevitOverride] throws a [StateError] if
+  /// this store (for the matching [tag]) has already been resolved locally in
+  /// the target scope.
   LevitOverride overrideWith(T Function(LevitRef ref) builder, {Object? tag}) {
     final key = tag == null ? _defaultKey : _LevitStoreKey(this, tag);
     return _LevitStoreOverride<T>._((scope) {
@@ -120,7 +138,8 @@ class LevitStore<T> {
 
   /// Creates an asynchronous store definition from [builder].
   ///
-  /// Returns a [LevitAsyncStore] that resolves to `T` instead of `Future<T>`.
+  /// Returns a [LevitAsyncStore] typed over `T` (rather than `Future<T>`) for
+  /// async lookup and widget APIs such as `findAsyncStore` and `LAsyncView.store`.
   static LevitAsyncStore<T> async<T>(Future<T> Function(LevitRef ref) builder) {
     return LevitAsyncStore<T>(builder);
   }
@@ -128,9 +147,9 @@ class LevitStore<T> {
   /// Finds or creates the store instance within [scope].
   ///
   /// Uses optional [tag] to isolate independent instances of the same store definition.
-  /// With [localOnly], reuse or create only in [scope].
+  /// With [localOnly], reuse or create only in [scope] without inheriting from ancestors.
   ///
-  /// Throws if [builder] throws while creating the store value.
+  /// Throws any error thrown while building the store value.
   T findIn(LevitScope scope, {Object? tag, bool localOnly = false}) {
     final instanceKey = tag != null ? _LevitStoreKey(this, tag) : _defaultKey;
 
@@ -174,11 +193,12 @@ class LevitStore<T> {
     return scope.isInstantiated<_LevitStoreInstance>(tag: instanceKey);
   }
 
-  /// Finds the value of this store in the active scope.
+  /// Finds the value of this store in [Levit.currentScope].
   ///
-  /// Uses optional [tag] to select an instance variant.
+  /// Uses optional [tag] to select an instance variant. Inherits an ancestor
+  /// instance by default unless [localOnly] is `true`.
   ///
-  /// Throws if no active scope is available or value creation fails.
+  /// Throws any error thrown while creating the store value.
   T find({Object? tag, bool localOnly = false}) =>
       findIn(Ls.currentScope, tag: tag, localOnly: localOnly);
 
@@ -194,10 +214,22 @@ class LevitStore<T> {
   String toString() => 'LevitStore<$T>(id: $hashCode)';
 }
 
-/// A specialized store for asynchronous initialization.
+/// A specialized store recipe for asynchronous initialization.
 ///
-/// Unlike `LevitStore<Future<T>>`, this type provides ergonomic lookup methods
-/// that always resolve to `Future<T>` (single await).
+/// Carries the resolved value type `T` directly (rather than `Future<T>`) so
+/// async APIs such as `findAsyncStore`, `overrideAsyncStore`, and async view
+/// widgets can expose `T` cleanly while resolving via `Future<T>`.
+///
+/// ```dart
+/// final configStore = LevitStore.async<AppConfig>((ref) async {
+///   final client = ref.find<HttpClient>();
+///   return await client.fetchConfig();
+/// });
+///
+/// final config = await configStore.find();
+/// ```
+///
+/// {@category Controllers & Stores}
 class LevitAsyncStore<T> {
   final LevitStore<Future<T>> _inner;
 
@@ -226,9 +258,10 @@ class LevitAsyncStore<T> {
     return _inner.findIn(scope, tag: tag, localOnly: localOnly);
   }
 
-  /// Finds and resolves the store value in the active scope.
+  /// Finds and resolves the store value in [Levit.currentScope].
   ///
-  /// Throws if no active scope is available or initialization fails.
+  /// Inherits an ancestor instance by default unless [localOnly] is `true`.
+  /// Throws if initialization fails.
   Future<T> find({Object? tag, bool localOnly = false}) =>
       findIn(Ls.currentScope, tag: tag, localOnly: localOnly);
 
@@ -370,7 +403,13 @@ class _LevitStoreInstance extends LevitController implements LevitRef {
 }
 
 /// A typed, reusable store override. Installation never modifies an ancestor.
+///
+/// {@category Controllers & Stores}
 abstract interface class LevitOverride {
+  /// Installs this override into [scope].
+  ///
+  /// Throws a [StateError] if the target store has already been resolved
+  /// locally in [scope].
   void installIn(LevitScope scope);
 }
 
@@ -381,20 +420,47 @@ final class _LevitStoreOverride<T> implements LevitOverride {
   void installIn(LevitScope scope) => _install(scope);
 }
 
-/// Production and test scopes share the same explicit override mechanism.
+/// Extension methods for installing [LevitStore] and [LevitAsyncStore]
+/// overrides into any [LevitScope].
+///
+/// Production scopes and test scopes share this same explicit override
+/// mechanism.
+///
+/// ```dart
+/// final testScope = Levit.createScope('test');
+/// testScope.applyOverrides([
+///   counterStore.overrideWith((ref) => ref.own(42.lx)),
+/// ]);
+/// ```
+///
+/// {@category Controllers & Stores}
 extension LevitScopeStoreOverrides on LevitScope {
+  /// Installs every override in [overrides] into this scope in iteration order.
+  ///
+  /// Throws a [StateError] if any overridden store has already been resolved
+  /// locally in this scope.
   void applyOverrides(Iterable<LevitOverride> overrides) {
     for (final override in overrides) {
       override.installIn(this);
     }
   }
 
+  /// Overrides [store] locally in this scope with [builder] (optionally scoped
+  /// to [tag]).
+  ///
+  /// Must be called before [store] is first resolved locally in this scope;
+  /// otherwise throws a [StateError].
   void overrideStore<T>(
     LevitStore<T> store,
     T Function(LevitRef) builder, {
     Object? tag,
   }) => store.overrideWith(builder, tag: tag).installIn(this);
 
+  /// Overrides async [store] locally in this scope with [builder] (optionally
+  /// scoped to [tag]).
+  ///
+  /// Must be called before [store] is first resolved locally in this scope;
+  /// otherwise throws a [StateError].
   void overrideAsyncStore<T>(
     LevitAsyncStore<T> store,
     Future<T> Function(LevitRef) builder, {

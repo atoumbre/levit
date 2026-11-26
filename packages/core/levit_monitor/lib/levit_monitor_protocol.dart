@@ -6,7 +6,13 @@ import 'dart:collection';
 
 /// A JSON-only envelope. No live reactive, dependency or application object is
 /// retained. Redaction must happen before construction, at the producer boundary.
+///
+/// Rejects cyclic structures ([JsonCyclicError]) and non-finite numbers or
+/// non-JSON values (`JsonUnsupportedObjectError`).
+///
+/// {@category Middleware & Monitoring}
 final class LevitEventEnvelope {
+  /// Deeply frozen JSON payload map backing this envelope.
   final Map<String, dynamic> data;
   LevitEventEnvelope._(this.data);
 
@@ -72,11 +78,23 @@ final class LevitEventEnvelope {
       fields._sealed = true;
     }
   }
+
+  /// The session identifier stored under `data['sessionId']`.
   String get sessionId => data['sessionId'] as String;
+
+  /// The monotonic event sequence number stored under `data['seq']`.
   int get seq => data['seq'] as int;
+
+  /// The wire event type stored under `data['type']`.
   String get type => data['type'] as String;
+
+  /// The wire event category stored under `data['category']`.
   String get category => data['category'] as String;
+
+  /// Returns the deeply immutable JSON map backing this envelope.
   Map<String, dynamic> toJson() => data;
+
+  /// Serializes this envelope to a JSON string.
   String encode() => jsonEncode(data);
 
   static Object? _freeze(

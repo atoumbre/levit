@@ -138,8 +138,6 @@ void teardown() {
 
 Factory results implementing `LevitScopeDisposable` or `LevitDisposable` belong to the scope that registers the factory, including lookups through a child scope. Removal closes results in reverse creation order and awaits pending async construction. A result that arrives after removal is closed and rejected to its resolver. Factories survive ordinary resets only when registered with `permanent: true`; forced deletion/reset and scope disposal release them. Await deletion before replacement.
 
-See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md) before upgrading.
-
 ## 0.1.0 ownership contracts
 
 Await `dispose`, `delete`, and `reset`: pending construction and initialization

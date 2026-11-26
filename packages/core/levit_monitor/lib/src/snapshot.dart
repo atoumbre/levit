@@ -2,18 +2,49 @@ part of 'monitor_library.dart';
 
 /// Redacted shadow state with optional bounded event retention (off by default).
 /// Only immutable JSON envelopes are retained; live application objects are not.
+///
+/// {@category SPI}
 class LevitStateSnapshot {
+  /// Active scopes keyed by scope ID.
   final scopes = <int, LevitScopeModel>{};
+
+  /// Active dependency registrations keyed by `'<scopeId>:<registrationKey>'`.
   final dependencies = <String, LevitDependencyModel>{};
+
+  /// Active reactive variables keyed by reactive ID.
   final variables = <int, LevitReactiveModel>{};
+
+  /// Live task tree payloads bridged via `levit.tasks` / `tree` custom events
+  /// (bounded FIFO at 256 entries; removed when `closed == true`).
   final taskTrees = <String, Map<String, dynamic>>{};
+
+  /// Maximum number of [LevitEventEnvelope]s retained in [events] (`0` disables
+  /// history retention).
   final int maxEvents;
+
+  /// Maximum number of reactive variable models retained before evicting oldest
+  /// entries.
+  final int maxVariables;
   final ListQueue<LevitEventEnvelope> _eventCache = ListQueue();
+
+  /// Total history events evicted due to [maxEvents].
   int droppedHistoryEvents = 0;
+
+  /// Total reactive variable models evicted due to [maxVariables].
+  int droppedVariables = 0;
+
+  /// Unmodifiable view of retained [LevitEventEnvelope] history.
   List<LevitEventEnvelope> get events => List.unmodifiable(_eventCache);
-  LevitStateSnapshot({this.maxEvents = 0}) {
+
+  /// Creates an empty shadow-state snapshot.
+  ///
+  /// Throws a [RangeError] if [maxEvents] < 0 or [maxVariables] < 1.
+  LevitStateSnapshot({this.maxEvents = 0, this.maxVariables = 4096}) {
     if (maxEvents < 0) throw RangeError.value(maxEvents, 'maxEvents');
+    if (maxVariables < 1) throw RangeError.value(maxVariables, 'maxVariables');
   }
+
+  /// Serializes the current shadow state into a JSON-compatible map.
   Map<String, dynamic> toJson() => {
     'scopes': scopes.values.map((e) => e.toJson()).toList(),
     'dependencies': dependencies.values.map((e) => e.toJson()).toList(),
@@ -22,7 +53,10 @@ class LevitStateSnapshot {
     'historyComplete': false,
     'historyCapacity': maxEvents,
     'droppedHistoryEvents': droppedHistoryEvents,
+    'droppedVariables': droppedVariables,
   };
+
+  /// Freezes [event] and applies its envelope to this snapshot.
   void applyEvent(LevitMonitorEvent event) =>
       applyEnvelope(event.freeze().envelope);
 
@@ -42,15 +76,12 @@ class LevitStateSnapshot {
   void applyEnvelope(LevitEventEnvelope envelope) {
     final data = envelope.data;
     if (envelope.type == 'snapshot') {
-      _restore(Map<String, dynamic>.from(data['state'] as Map));
-      return;
-    }
-    if (maxEvents > 0) {
-      if (_eventCache.length == maxEvents) {
-        _eventCache.removeFirst();
-        droppedHistoryEvents++;
+      final rawState = data['state'];
+      if (rawState is! Map) {
+        throw const FormatException('Invalid snapshot state payload.');
       }
-      _eventCache.add(envelope);
+      _restore(Map<String, dynamic>.from(rawState));
+      return;
     }
     final scopeId = data['scopeId'] as int?;
     final key = data['key'] as String?;
@@ -62,16 +93,15 @@ class LevitStateSnapshot {
             'Unsupported scope progress version: ${data['version']}',
           );
         }
-        final record = data['scope'] as List;
-        final id = record[0] as int;
-        final ancestry = record[4] as List;
+        final decoded = _decodeScopeProgress(data['scope']);
+        final id = decoded['id'] as int;
         final scope = scopes[id] ??= LevitScopeModel(
           id: id,
-          name: record[1] as String,
-          parentScopeId: ancestry.isEmpty ? null : ancestry.first[0] as int,
+          name: decoded['name'] as String,
+          parentScopeId: decoded['parentScopeId'] as int?,
         );
-        scope._wireProgress = record;
-        scope._progress = null;
+        scope.progress = decoded;
+        scope._wireProgress = data['scope'] as List;
       case 'scope_create':
         scopes[scopeId!] = LevitScopeModel(
           id: scopeId,
@@ -81,6 +111,7 @@ class LevitStateSnapshot {
       case 'scope_dispose':
         scopes.remove(scopeId);
         dependencies.removeWhere((_, value) => value.scopeId == scopeId);
+        variables.removeWhere((_, value) => value.scopeId == scopeId);
       case 'di_register':
         scopes.putIfAbsent(
           scopeId!,
@@ -134,43 +165,96 @@ class LevitStateSnapshot {
       default:
         if (data['reactiveId'] != null) _applyVariable(data, envelope.type);
     }
+    if (maxEvents > 0) {
+      if (_eventCache.length == maxEvents) {
+        _eventCache.removeFirst();
+        droppedHistoryEvents++;
+      }
+      _eventCache.add(envelope);
+    }
   }
 
-  static Map<String, dynamic> _decodeScopeProgress(List record) {
-    final ancestry = record[4] as List;
-    final flags = record[2] as int;
+  static Map<String, dynamic> _decodeScopeProgress(Object? raw) {
+    if (raw is! List || raw.length < 7) {
+      throw const FormatException('Invalid scope progress record.');
+    }
+    final id = raw[0];
+    final name = raw[1];
+    final flags = raw[2];
+    final pending = raw[3];
+    final ancestry = raw[4];
+    final ownedChildren = raw[5];
+    final registrations = raw[6];
+    if (id is! int ||
+        name is! String ||
+        flags is! int ||
+        pending is! int ||
+        ancestry is! List ||
+        ownedChildren is! List ||
+        registrations is! List) {
+      throw const FormatException('Invalid scope progress field types.');
+    }
+    final parsedAncestry = <Map<String, dynamic>>[];
+    for (final parent in ancestry) {
+      if (parent is! List ||
+          parent.length < 2 ||
+          parent[0] is! int ||
+          parent[1] is! String) {
+        throw const FormatException('Invalid scope progress ancestry entry.');
+      }
+      parsedAncestry.add({'id': parent[0], 'name': parent[1]});
+    }
+    final parsedChildren = <Map<String, dynamic>>[];
+    for (final child in ownedChildren) {
+      if (child is! List ||
+          child.length < 2 ||
+          child[0] is! int ||
+          child[1] is! String) {
+        throw const FormatException('Invalid scope progress child entry.');
+      }
+      parsedChildren.add({'id': child[0], 'name': child[1]});
+    }
+    final parsedRegistrations = <Map<String, dynamic>>[];
+    for (final entry in registrations) {
+      if (entry is! List ||
+          entry.length < 6 ||
+          entry[0] is! String ||
+          entry[1] is! String ||
+          (entry[2] != null && entry[2] is! String) ||
+          entry[3] is! int ||
+          entry[4] is! int ||
+          entry[5] is! int) {
+        throw const FormatException(
+          'Invalid scope progress registration entry.',
+        );
+      }
+      final entryFlags = entry[3] as int;
+      parsedRegistrations.add({
+        'key': entry[0] as String,
+        'type': entry[1] as String,
+        'aliasOf': entry[2] as String?,
+        'isFactory': entryFlags & 1 != 0,
+        'isAsync': entryFlags & 2 != 0,
+        'isLazy': entryFlags & 4 != 0,
+        'permanent': entryFlags & 8 != 0,
+        'isInstantiated': entryFlags & 16 != 0,
+        'isClosing': entryFlags & 32 != 0,
+        'pendingInitializations': entry[4] as int,
+        'ownedInstances': entry[5] as int,
+      });
+    }
     return {
-      'id': record[0] as int,
-      'name': record[1] as String,
+      'id': id,
+      'name': name,
       'isClosing': flags & 1 != 0,
       'isDisposed': flags & 2 != 0,
-      'pendingInitializations': record[3] as int,
-      'parentScopeId': ancestry.isEmpty
+      'pendingInitializations': pending,
+      'parentScopeId': parsedAncestry.isEmpty
           ? null
-          : (ancestry.first as List)[0] as int,
-      'ancestry': [
-        for (final parent in ancestry) {'id': parent[0], 'name': parent[1]},
-      ],
-      'ownedChildren': [
-        for (final child in record[5] as List)
-          {'id': child[0], 'name': child[1]},
-      ],
-      'registrations': [
-        for (final entry in record[6] as List)
-          {
-            'key': entry[0] as String,
-            'type': entry[1] as String,
-            'aliasOf': entry[2] as String?,
-            'isFactory': (entry[3] as int) & 1 != 0,
-            'isAsync': (entry[3] as int) & 2 != 0,
-            'isLazy': (entry[3] as int) & 4 != 0,
-            'permanent': (entry[3] as int) & 8 != 0,
-            'isInstantiated': (entry[3] as int) & 16 != 0,
-            'isClosing': (entry[3] as int) & 32 != 0,
-            'pendingInitializations': entry[4] as int,
-            'ownedInstances': entry[5] as int,
-          },
-      ],
+          : parsedAncestry.first['id'] as int,
+      'ancestry': parsedAncestry,
+      'ownedChildren': parsedChildren,
+      'registrations': parsedRegistrations,
     };
   }
 
@@ -180,11 +264,18 @@ class LevitStateSnapshot {
       variables.remove(id);
       return;
     }
-    final model = variables[id] ??= LevitReactiveModel(
-      id: id,
-      name: data['name'] as String? ?? '?',
-      ownerId: data['ownerId'] as String?,
-    );
+    var model = variables[id];
+    if (model == null) {
+      if (variables.length >= maxVariables) {
+        variables.remove(variables.keys.first);
+        droppedVariables++;
+      }
+      model = variables[id] = LevitReactiveModel(
+        id: id,
+        name: data['name'] as String? ?? '?',
+        ownerId: data['ownerId'] as String?,
+      );
+    }
     if (data['name'] != null) model.name = data['name'] as String;
     if (data.containsKey('ownerId')) {
       model.ownerId = data['ownerId'] as String?;
@@ -216,17 +307,15 @@ class LevitStateSnapshot {
   }
 
   void _restore(Map<String, dynamic> state) {
-    scopes.clear();
-    dependencies.clear();
-    variables.clear();
-    taskTrees.clear();
-    _eventCache.clear();
+    final nextTaskTrees = <String, Map<String, dynamic>>{};
     for (final entry in (state['taskTrees'] as Map? ?? {}).entries.take(256)) {
-      taskTrees[entry.key as String] = Map<String, dynamic>.from(
+      nextTaskTrees[entry.key as String] = Map<String, dynamic>.from(
         entry.value as Map,
       );
     }
-    droppedHistoryEvents = state['droppedHistoryEvents'] as int? ?? 0;
+    final nextDroppedHistory = state['droppedHistoryEvents'] as int? ?? 0;
+    var nextDroppedVariables = state['droppedVariables'] as int? ?? 0;
+    final nextScopes = <int, LevitScopeModel>{};
     for (final s in state['scopes'] as List? ?? []) {
       final scope = LevitScopeModel(
         id: s['id'] as int,
@@ -234,8 +323,9 @@ class LevitStateSnapshot {
         parentScopeId: s['parentScopeId'] as int?,
       );
       scope.progress = Map<String, dynamic>.from(s['progress'] as Map? ?? {});
-      scopes[scope.id] = scope;
+      nextScopes[scope.id] = scope;
     }
+    final nextDependencies = <String, LevitDependencyModel>{};
     for (final d in state['dependencies'] as List? ?? []) {
       final dep = LevitDependencyModel(
         scopeId: d['scopeId'] as int,
@@ -249,8 +339,9 @@ class LevitStateSnapshot {
         ),
         value: d['value'] as String?,
       );
-      dependencies['${dep.scopeId}:${dep.key}'] = dep;
+      nextDependencies['${dep.scopeId}:${dep.key}'] = dep;
     }
+    final nextVariables = <int, LevitReactiveModel>{};
     for (final v in state['variables'] as List? ?? []) {
       final model = LevitReactiveModel(
         id: v['id'] as int,
@@ -262,8 +353,28 @@ class LevitStateSnapshot {
       model.valueType = v['valueType'] as String?;
       model.listenerCount = v['listenerCount'] as int? ?? 0;
       model.dependencies = List<int>.from(v['dependencies'] as List? ?? []);
-      variables[model.id] = model;
+      if (!nextVariables.containsKey(model.id) &&
+          nextVariables.length >= maxVariables) {
+        nextVariables.remove(nextVariables.keys.first);
+        nextDroppedVariables++;
+      }
+      nextVariables[model.id] = model;
     }
+    scopes
+      ..clear()
+      ..addAll(nextScopes);
+    dependencies
+      ..clear()
+      ..addAll(nextDependencies);
+    variables
+      ..clear()
+      ..addAll(nextVariables);
+    taskTrees
+      ..clear()
+      ..addAll(nextTaskTrees);
+    _eventCache.clear();
+    droppedHistoryEvents = nextDroppedHistory;
+    droppedVariables = nextDroppedVariables;
   }
 }
 
@@ -271,6 +382,8 @@ class LevitStateSnapshot {
 ///
 /// A [LevitScopeModel] describes a scope node (including its parent relationship) in
 /// a transport-friendly form.
+///
+/// {@category SPI}
 class LevitScopeModel {
   /// The scope identifier.
   final int id;
@@ -282,15 +395,15 @@ class LevitScopeModel {
   final int? parentScopeId;
 
   /// Initialization and cleanup metadata from the latest progress event.
-  /// Compact records expand on observation, preserving the same named fields.
-  Map<String, dynamic> get progress =>
-      _progress ??= LevitStateSnapshot._decodeScopeProgress(_wireProgress!);
+  Map<String, dynamic> get progress => _progress;
+
+  /// Replaces the scope's progress metadata and invalidates cached wire fields.
   set progress(Map<String, dynamic> value) {
     _progress = value;
     _wireProgress = null;
   }
 
-  Map<String, dynamic>? _progress = const {};
+  Map<String, dynamic> _progress = const {};
   List? _wireProgress;
 
   /// Creates a scope snapshot model.
@@ -310,15 +423,39 @@ class LevitScopeModel {
 }
 
 /// The lifecycle state of a dependency registration within a scope.
-enum LevitDependencyStatus { registered, creating, active }
+///
+/// {@category SPI}
+enum LevitDependencyStatus {
+  /// Registered lazily and not yet instantiated.
+  registered,
+
+  /// Currently running its builder or asynchronous initialization.
+  creating,
+
+  /// Instantiated and active in its scope.
+  active,
+}
 
 /// A coarse classification of a resolved dependency instance.
-enum LevitDependencyType { controller, store, other }
+///
+/// {@category SPI}
+enum LevitDependencyType {
+  /// A `LevitController` instance.
+  controller,
+
+  /// A `LevitStore` / `LevitAsyncStore` instance holder.
+  store,
+
+  /// Any other service or dependency object.
+  other,
+}
 
 /// A serializable representation of a dependency registration.
 ///
 /// A [LevitDependencyModel] describes the registration metadata and current instance
 /// state as observed by [LevitStateSnapshot].
+///
+/// {@category SPI}
 class LevitDependencyModel {
   /// The owning scope identifier.
   final int scopeId;
@@ -341,7 +478,9 @@ class LevitDependencyModel {
   /// The detected instance classification.
   LevitDependencyType type;
 
-  /// A string representation of the instance, if available.
+  /// A runtime-type placeholder for the active instance (formatted as
+  /// `'<TypeName>'`), or `null` when not yet instantiated. Never retains or
+  /// stringifies application instance data.
   String? value;
 
   /// Creates a dependency snapshot model.
@@ -382,6 +521,8 @@ class LevitDependencyModel {
 ///
 /// A [LevitReactiveModel] describes a reactive variable, including its owner
 /// information, listener count, and dependency graph links.
+///
+/// {@category SPI}
 class LevitReactiveModel {
   /// The reactive identifier.
   final int id;

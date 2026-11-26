@@ -1,0 +1,12 @@
+dartdoc:
+  showUndocumentedCategories: true
+  categories:
+    "Plugin": {}
+    "Lifecycle Rules": {}
+    "Reactive Rules": {}
+    "Flutter Rules": {}
+  categoryOrder:
+    - "Plugin"
+    - "Lifecycle Rules"
+    - "Reactive Rules"
+    - "Flutter Rules"

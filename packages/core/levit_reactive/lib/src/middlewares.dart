@@ -6,6 +6,8 @@ int _batchCounter = 0;
 ///
 /// Captured by [LevitReactiveMiddleware] to support logging, debugging,
 /// and undo/redo operations.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveChange<T> {
   /// The timestamp of the change, computed lazily on first access.
   DateTime get timestamp => _timestamp ??= DateTime.now();
@@ -23,7 +25,9 @@ class LevitReactiveChange<T> {
   /// The stack trace at the moment of change, if enabled.
   final StackTrace? stackTrace;
 
-  /// A callback to restore the variable to this state.
+  /// A callback that writes a supplied `value` back to the reactive variable.
+  ///
+  /// Call `restore?.call(oldValue)` to undo or `restore?.call(newValue)` to redo.
   final void Function(dynamic value)? restore;
 
   /// Creates a record of a state change.
@@ -38,12 +42,16 @@ class LevitReactiveChange<T> {
 
   bool _propagationStopped = false;
 
-  /// Prevents subsequent middlewares from processing this specific change.
+  /// Marks this change as handled for cooperative downstream middlewares.
+  ///
+  /// The middleware chain does not skip subsequent middlewares automatically;
+  /// downstream middlewares should inspect [isPropagationStopped], or an
+  /// intercepting middleware can omit calling `next` to short-circuit execution.
   void stopPropagation() {
     _propagationStopped = true;
   }
 
-  /// Returns `true` if a middleware has stopped the propagation of this change.
+  /// Returns `true` if a middleware called [stopPropagation] on this change.
   bool get isPropagationStopped => _propagationStopped;
 
   @override
@@ -56,6 +64,8 @@ class LevitReactiveChange<T> {
 ///
 /// Implements [LevitReactiveChange] to allow composite observation of multiple
 /// simultaneous state transitions.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveBatch implements LevitReactiveChange<void> {
   /// The individual (reactive, change) pairs within this batch.
   final List<(LxReactive, LevitReactiveChange)> entries;
@@ -137,6 +147,8 @@ class LevitReactiveBatch implements LevitReactiveChange<void> {
 /// *   Graph updates ([onGraphChange])
 /// *   Listener activity ([startedListening], [stoppedListening])
 /// *   Errors ([onReactiveError])
+///
+/// {@category Middleware & Monitoring}
 abstract class LevitReactiveMiddleware {
   /// Base constructor.
   const LevitReactiveMiddleware();
@@ -307,7 +319,7 @@ abstract class LevitReactiveMiddleware {
   LevitReactiveOnSet? get onSet => null;
 
   /// Intercepts batch operations. Await completion only when
-  /// [LevitReactiveBatch.isAsync] is true; synchronous boundaries close on return.
+  /// [LevitReactiveBatch.isAsync] is `true`; synchronous boundaries close on return.
   LevitReactiveOnBatch? get onBatch => null;
 
   /// Intercepts disposal.
@@ -333,7 +345,9 @@ abstract class LevitReactiveMiddleware {
   get onReactiveError => null;
 }
 
-/// Helper typedefs for middleware interception.
+/// Function signature for [LevitReactiveMiddleware.onSet] wrappers.
+///
+/// {@category Middleware & Monitoring}
 typedef LevitReactiveOnSet =
     void Function(dynamic value) Function(
       void Function(dynamic value) next,
@@ -341,14 +355,18 @@ typedef LevitReactiveOnSet =
       LevitReactiveChange<dynamic> change,
     );
 
-/// Helper typedefs for middleware interception.
+/// Function signature for [LevitReactiveMiddleware.onBatch] wrappers.
+///
+/// {@category Middleware & Monitoring}
 typedef LevitReactiveOnBatch =
     dynamic Function() Function(
       dynamic Function() next,
       LevitReactiveBatch change,
     );
 
-/// Helper typedefs for middleware interception.
+/// Function signature for [LevitReactiveMiddleware.onDispose] wrappers.
+///
+/// {@category Middleware & Monitoring}
 typedef LevitReactiveOnDispose =
     void Function() Function(void Function() next, LxReactive reactive);
 
@@ -463,7 +481,15 @@ abstract class _LevitReactiveMiddlewareChain {
   }
 }
 
-/// Optional metadata observations, independent of value notifications.
+/// Optional SPI observer for reactive metadata mutations (`name`, `ownerId`,
+/// `isSensitive`), independent of value notifications.
+///
+/// Implement on a [LevitReactiveMiddleware] registered via `Lx.addMiddleware`
+/// (or `Levit.addStateMiddleware`).
+///
+/// {@category SPI}
 abstract interface class LevitReactiveMetadataObserver {
+  /// Called when metadata (`name`, `ownerId`, or `isSensitive`) changes on
+  /// [reactive].
   void onReactiveMetadata(LxReactive reactive);
 }

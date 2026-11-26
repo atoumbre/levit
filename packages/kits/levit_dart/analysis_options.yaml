@@ -1,2 +1,7 @@
-analysis_options:
-  include: package:lints/recommended.yaml
+include: ../../../analysis_options.yaml
+
+linter:
+  rules:
+    comment_references: true
+    public_member_api_docs: true
+    curly_braces_in_flow_control_structures: false

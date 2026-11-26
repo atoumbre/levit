@@ -1,10 +1,30 @@
 part of '../kit_library.dart';
 
-/// A mixin for [LevitController] that centralizes time-based operations like
-/// debouncing, throttling, intervals, and countdowns.
+/// A mixin for [LevitController] that manages debouncing, throttling,
+/// periodic intervals, and reactive countdowns tied to the controller lifecycle.
 ///
-/// This unified mixin replaces separate debounce/periodic implementations
-/// to ensure consistent lifecycle management and memory safety.
+/// Note that [debounce], [throttle], and [startInterval] share a single timer
+/// ID namespace: reusing an `id` across them cancels any existing timer with
+/// that ID. [cancelTimer] and [cancelAllTimers] affect only those timers, not
+/// countdowns created with [startCountdown].
+///
+/// Timers and countdowns are cleaned up automatically during [onBeforeClose].
+/// Subclasses overriding [onBeforeClose] must await `super.onBeforeClose()`.
+///
+/// ```dart
+/// class SearchController extends LevitController with LevitTimeMixin {
+///   final query = ''.lx;
+///
+///   void onQueryChanged(String value) {
+///     query.value = value;
+///     debounce('search', const Duration(milliseconds: 300), () {
+///       runSearch(query());
+///     });
+///   }
+/// }
+/// ```
+///
+/// {@category Loops, Timers & Selection}
 mixin LevitTimeMixin on LevitController {
   final _timers = <String, Timer>{};
   final _countdowns = <LevitCountdown>[];
@@ -31,8 +51,8 @@ mixin LevitTimeMixin on LevitController {
   /// *   [duration]: The lockout duration after execution.
   /// *   [callback]: The function to execute.
   ///
-  /// Ensures the callback runs at most once every [duration].
-  /// If called during the cool down period, the call is ignored.
+  /// Executes [callback] immediately on the leading edge and ignores
+  /// subsequent calls with the same [id] during the [duration] cooldown period.
   void throttle(String id, Duration duration, void Function() callback) {
     if (_timers.containsKey(id)) return;
 
@@ -58,15 +78,20 @@ mixin LevitTimeMixin on LevitController {
     _timers[id] = Timer.periodic(duration, callback);
   }
 
-  /// Starts a reactive countdown.
+  /// Starts a reactive countdown and registers it for automatic cleanup when
+  /// this controller closes.
   ///
-  /// Returns an [LevitCountdown] object that exposes the [LevitCountdown.remaining]
-  /// duration and control methods (pause, resume, stop).
+  /// Returns a [LevitCountdown] that exposes [LevitCountdown.remaining]
+  /// and control methods (`pause`, `resume`, `start`, `stop`). The countdown
+  /// starts immediately.
   ///
-  /// *   [duration]: The non-negative total duration to count down.
-  /// *   [interval]: The positive maximum interval between updates (default: 1 second).
-  /// *   [onTick]: Called on each delivered update, including the final zero.
-  /// *   [onFinish]: Called when the countdown reaches zero.
+  /// * [duration]: The non-negative total duration to count down.
+  /// * [interval]: The positive maximum interval between updates (default: 1 second).
+  /// * [onTick]: Called on each delivered update, including the terminal zero.
+  /// * [onFinish]: Called when the countdown reaches zero.
+  ///
+  /// Throws a [StateError] if this controller is closing or disposed, or an
+  /// [ArgumentError] if [duration] is negative or [interval] is not positive.
   LevitCountdown startCountdown({
     required Duration duration,
     Duration interval = const Duration(seconds: 1),
@@ -88,13 +113,15 @@ mixin LevitTimeMixin on LevitController {
     return countdown;
   }
 
-  /// Cancels a specific timer by [id].
+  /// Cancels a specific timer created by [debounce], [throttle], or
+  /// [startInterval] by [id]. Does not affect countdowns from [startCountdown].
   void cancelTimer(String id) {
     _timers[id]?.cancel();
     _timers.remove(id);
   }
 
-  /// Cancels all active timers (debounce, throttle, interval).
+  /// Cancels all active timers created by [debounce], [throttle], or
+  /// [startInterval]. Does not affect countdowns from [startCountdown].
   void cancelAllTimers() {
     for (final timer in _timers.values) {
       timer.cancel();
@@ -156,6 +183,8 @@ mixin LevitTimeMixin on LevitController {
 /// [start] begins a new run at [totalDuration]; [stop] resets without finishing.
 /// Callbacks are synchronous. [dispose] cancels timing immediately and awaits
 /// closure of [remaining]. A controller can own a standalone countdown with `own`.
+///
+/// {@category Loops, Timers & Selection}
 class LevitCountdown implements LevitDisposable {
   /// The non-negative duration of each run.
   final Duration totalDuration;

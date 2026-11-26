@@ -4,6 +4,8 @@ part of 'reactive_library.dart';
 ///
 /// Tracks execution frequency, duration, and error states.
 /// Useful for profiling side-effects.
+///
+/// {@category Reactive State}
 class LxWorkerStat {
   /// How many times the worker callback has run.
   final int runCount;
@@ -67,16 +69,17 @@ class LxWorkerStat {
 /// A reactive observer for side-effects.
 ///
 /// [LxWorker] executes a callback whenever a [source] reactive changes.
-/// Unlike [LxComputed], it does not produce a new value but performs an action
-/// (e.g., logging, navigation, saving to DB).
+/// Unlike [LxComputed], it does not produce a derived value; instead it runs an
+/// action (such as reloading data, logging, or persisting state).
 ///
-/// // Example usage:
 /// ```dart
 /// final count = 0.lx;
 ///
-/// // Log every change
-/// final worker = LxWorker(count, (v) => print('Changed: $v'));
+/// final worker = LxWorker(count, (value) => log('Changed: $value'));
+/// // Remember to own(worker) in a controller or await worker.close().
 /// ```
+///
+/// {@category Reactive State}
 class LxWorker<T> extends LxBase<LxWorkerStat>
     with _LxAsyncLifecycle<LxWorkerStat> {
   /// The observed value. This worker borrows its source.
@@ -95,9 +98,27 @@ class LxWorker<T> extends LxBase<LxWorkerStat>
   bool _trailingExecutionRequested = false;
   late T _trailingValue;
 
+  /// Whether execution statistics ([LxWorkerStat]) are collected for this
+  /// worker (inherits `Levit.enableWatchMonitoring` / `Lx.enableWatchMonitoring`
+  /// when not overridden).
   bool get isMonitoringEnabled => _enableMonitoring ?? Lx.enableWatchMonitoring;
 
-  /// Observes [source], tracking asynchronous callback completion.
+  /// Observes [source], running [callback] on each update and tracking
+  /// asynchronous completion.
+  ///
+  /// * [onError]: Handles errors from `source.stream`. Passing [onError]
+  ///   switches observation from synchronous `addListener` to asynchronous
+  ///   `stream.listen`.
+  /// * [onProcessingError]: Handles errors thrown by [callback] (excluding
+  ///   [LxCancelledException], which is suppressed).
+  /// * [enableMonitoring]: Overrides global worker monitoring
+  ///   (`Levit.enableWatchMonitoring` / `Lx.enableWatchMonitoring`) for this
+  ///   worker.
+  /// * [name]: Optional diagnostic label.
+  /// * [concurrency]: Controls overlapping async executions (defaults to
+  ///   [LxAsyncConcurrency.latest]).
+  ///
+  /// The caller owns the worker and must `own(...)` or `await close()` it.
   LxWorker(
     this.source,
     FutureOr<void> Function(T value) callback, {
@@ -227,7 +248,10 @@ class LxWorker<T> extends LxBase<LxWorkerStat>
     if (cancellation != null) _trackWork(cancellation);
   }
 
-  /// Triggers [callback] when a boolean [source] becomes `true`.
+  /// Triggers [callback] on every notification where boolean [source] is `true`.
+  ///
+  /// Unlike [onRising], this also runs if [source] re-notifies while already
+  /// `true` (for example via `refresh()`).
   static LxWorker<bool> watchTrue(
     LxReadable<bool> source,
     FutureOr<void> Function() callback, {
@@ -238,7 +262,10 @@ class LxWorker<T> extends LxBase<LxWorkerStat>
     }, onProcessingError: onProcessingError);
   }
 
-  /// Triggers [callback] when a boolean [source] becomes `false`.
+  /// Triggers [callback] on every notification where boolean [source] is `false`.
+  ///
+  /// Unlike [onFalling], this also runs if [source] re-notifies while already
+  /// `false` (for example via `refresh()`).
   static LxWorker<bool> watchFalse(
     LxReadable<bool> source,
     FutureOr<void> Function() callback, {
@@ -331,7 +358,8 @@ class LxWorker<T> extends LxBase<LxWorkerStat>
     );
   }
 
-  /// Runs immediately and ignores updates during the throttle interval.
+  /// Runs [callback] immediately on the first change notification and ignores
+  /// subsequent updates during [duration] (leading-edge throttle).
   static LxWorker<T> throttle<T>(
     LxReadable<T> source,
     Duration duration,
@@ -376,6 +404,8 @@ class LxWorker<T> extends LxBase<LxWorkerStat>
 }
 
 /// Extensions for creating watchers from any reactive source.
+///
+/// {@category Reactive State}
 extension LxReactiveWatchExtensions<T> on LxReadable<T> {
   /// Attaches a listener to this reactive value.
   ///

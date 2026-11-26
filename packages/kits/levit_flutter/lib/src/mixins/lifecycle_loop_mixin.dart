@@ -1,11 +1,38 @@
 part of '../../levit_flutter.dart';
 
-/// A mixin that synchronizes execution loops with the app lifecycle.
+/// A mixin that synchronizes [LevitLoopEngine] services with the Flutter
+/// application lifecycle.
 ///
-/// Automatically pauses all tasks in the [loopEngine] when the app enters the
-/// background, and resumes them when the app returns to the foreground.
+/// Automatically calls [LevitLoopEngine.pauseAllServices] when the app enters
+/// [AppLifecycleState.paused], [AppLifecycleState.inactive],
+/// [AppLifecycleState.hidden], or [AppLifecycleState.detached], and calls
+/// [LevitLoopEngine.resumeAllServices] when the app returns to
+/// [AppLifecycleState.resumed].
+///
+/// Services marked `permanent: true` remain running unless
+/// [pausePermanentServicesOnBackground] is overridden to `true`. Services
+/// individually paused via [LevitLoopEngine.pauseService] are not resumed
+/// automatically. Subclasses overriding [onInit], [requestCancel], or
+/// [onClose] must delegate to `super`.
 ///
 /// Requires [LevitLoopMixin].
+///
+/// ```dart
+/// class TelemetryController extends LevitController
+///     with LevitLoopMixin, LevitLoopLifecycleMixin {
+///   @override
+///   void onInit() {
+///     super.onInit();
+///     loopEngine.startLoop(
+///       'metrics',
+///       () async => await flushMetrics(),
+///       delay: const Duration(seconds: 30),
+///     );
+///   }
+/// }
+/// ```
+///
+/// {@category Flutter Widgets & Interop}
 mixin LevitLoopLifecycleMixin on LevitController, LevitLoopMixin {
   _LifecycleLoopObserver? _lifecycleObserver;
 
@@ -38,9 +65,12 @@ mixin LevitLoopLifecycleMixin on LevitController, LevitLoopMixin {
     return super.onClose();
   }
 
-  /// Whether to pause services marked as "permanent" when the app is backgrounded.
+  /// Whether to also pause and resume services marked `permanent: true` when
+  /// the app leaves and returns to the foreground.
   ///
-  /// Defaults to `false` (permanent services continue running).
+  /// Passed as `force` to both [LevitLoopEngine.pauseAllServices] and
+  /// [LevitLoopEngine.resumeAllServices]. Defaults to `false` (permanent
+  /// services continue running).
   bool get pausePermanentServicesOnBackground => false;
 }
 

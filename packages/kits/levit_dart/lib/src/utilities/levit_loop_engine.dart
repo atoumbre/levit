@@ -3,6 +3,8 @@ part of '../kit_library.dart';
 /// A service that can be started, paused, resumed, and stopped.
 ///
 /// It exposes a reactive [status] for state tracking and error reporting.
+///
+/// {@category Loops, Timers & Selection}
 abstract class LevitLoopService {
   /// Reactive status of the service.
   LxReactive<LxStatus<dynamic>> get status;
@@ -26,6 +28,8 @@ abstract class LevitLoopService {
 /// *   Sequential loop execution with delays.
 /// *   Isolate-based loops for heavy background work.
 /// *   Centralized start/pause/resume/stop control for all registered services.
+///
+/// {@category Loops, Timers & Selection}
 class LevitLoopEngine
     implements LevitDisposable, LevitDrainable, LevitExecutionBoundary {
   static final Object _executionZone = Object();
@@ -41,9 +45,9 @@ class LevitLoopEngine
   ///
   /// Await [stopService] before replacing an existing [id].
   ///
-  /// If [permanent] is true, the service will resist standard calls to [pauseAllServices].
-  /// It will only be paused if [force] is set to true.
-  /// However, even permanent services are stopped when the engine is disposed.
+  /// If [permanent] is `true`, the service resists standard calls to
+  /// [pauseAllServices] and is only paused when `pauseAllServices(force: true)`
+  /// is called. Even permanent services are stopped when the engine is disposed.
   T registerService<T extends LevitLoopService>(
     String id,
     T service, {
@@ -143,10 +147,13 @@ class LevitLoopEngine
     }
   }
 
-  /// Resumes all registered services.
+  /// Resumes registered services that were bulk-paused via [pauseAllServices].
   ///
-  /// If [force] is true, resumes all services including permanent ones.
-  /// If [force] is false (default), resumes only non-permanent services.
+  /// Services individually paused via [pauseService] remain paused until
+  /// [resumeService] is called for their ID.
+  ///
+  /// If [force] is `true`, also resumes permanent services.
+  /// If [force] is `false` (default), resumes only non-permanent services.
   void resumeAllServices({bool force = false}) {
     for (final entry in _services.entries) {
       if (force || !_permanentServices.contains(entry.key)) {

@@ -167,8 +167,6 @@ content with `LScope.capture` when they need page-local dependencies.
 
 Consuming views resolve initially, when their bound scope changes, or when explicit `args` change. A new resolver closure alone does not refetch. Scoped views continue recreating their scope when ownership arguments change. Pass `localOnly: true` to `.store` constructors to isolate a store from ancestor instances. Register shared dependencies explicitly in their owning scope; use `LScopedView.put` or `LAsyncScopedView.put` for view-owned dependencies.
 
-See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md) before upgrading.
-
 ## 0.1.0 scope replacement
 
 Scope replacement is serialized. While the previous generation initializes or

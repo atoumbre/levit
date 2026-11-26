@@ -47,7 +47,6 @@ Future<void> main() async {
         'lib/session_replacement.dart',
       ],
     ),
-    ('.', ['dart', 'run', 'scripts/build_devtools.dart']),
   ];
   for (final (path, command) in checks) {
     print('Browser contract: $path');

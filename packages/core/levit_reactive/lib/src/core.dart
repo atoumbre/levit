@@ -277,22 +277,40 @@ class _LevitReactiveCore {
   }
 }
 
-/// The foundational interface for all reactive objects.
+/// The foundational read-only interface for reactive sources.
 ///
-/// [LxReactive] unifies various reactive sources (variables, futures, streams)
-/// under a consistent API for observation and notification.
+/// [LxReadable] unifies reactive sources (variables, computed values,
+/// collections, collection entries, resources, futures, and streams) under a
+/// consistent API for observation and notification.
 ///
-/// Implementations of this interface can be tracked by [LxComputed]
-/// and other observers.
+/// Implementations of this interface can be tracked by [LxComputed],
+/// [LxWorker], and Flutter observers without exposing mutating or ownership
+/// controls.
+///
+/// {@category Reactive State}
 abstract interface class LxReadable<T> {
+  /// The current value of this reactive source.
+  ///
+  /// Reading this getter registers the source as a dependency of the currently
+  /// active observer (for example inside an [LxComputed]).
   T get value;
+
+  /// A unique runtime identifier for this reactive source.
   int get id;
+
+  /// A broadcast [Stream] that emits updates as the value changes.
   Stream<T> get stream;
+
+  /// Registers a synchronous [listener] to be called on value updates.
   void addListener(void Function() listener);
+
+  /// Unregisters a previously registered [listener].
   void removeListener(void Function() listener);
 }
 
 /// A reactive source whose owner may refresh and close it.
+///
+/// {@category Reactive State}
 abstract interface class LxReactive<T> implements LxReadable<T> {
   /// The current state of the reactive object.
   ///
@@ -312,7 +330,7 @@ abstract interface class LxReactive<T> implements LxReadable<T> {
   /// Unregisters a previously added [listener].
   void removeListener(void Function() listener);
 
-  /// Triggers a notification listeners without changing the value.
+  /// Triggers a notification to listeners without changing the value.
   ///
   /// This ensures that all current listeners are notified of the current state,
   /// and any associated streams emit the latest value.
@@ -325,16 +343,22 @@ abstract interface class LxReactive<T> implements LxReadable<T> {
 
   /// An optional descriptive name for debugging and profiling.
   String? get name;
+
+  /// Updates the descriptive [name] and notifies metadata observers.
   set name(String? value);
 
-  /// The registration key of the owning controller, if applicable.
+  /// The registration key of the owning scope resource, if applicable.
   String? get ownerId;
+
+  /// Updates the owning [ownerId] and notifies metadata observers.
   set ownerId(String? value);
 
   /// Whether this reactive object contains sensitive data.
   ///
-  /// If true, the value will be obfuscated in monitor events and logs.
+  /// If `true`, the value is obfuscated in monitor events and logs.
   bool get isSensitive;
+
+  /// Updates the [isSensitive] flag and notifies metadata observers.
   set isSensitive(bool value);
 }
 
@@ -342,16 +366,21 @@ abstract interface class LxReactive<T> implements LxReadable<T> {
 ///
 /// [LevitReactiveObserver] is implemented by components that need to respond
 /// to changes in reactive state without manual subscription management.
+///
+/// {@category SPI}
 abstract class LevitReactiveObserver {
-  /// Internal: Registers a [LevitReactiveNotifier] dependency.
+  /// Registers a [LevitReactiveNotifier] dependency with this observer.
   void addNotifier(LevitReactiveNotifier notifier);
 
-  /// Internal: Tracks the reactive source for dependency graph visualization.
+  /// Tracks the [LxReactive] source for dependency graph visualization.
   void addReactive(LxReactive reactive) {}
 }
 
-/// Optional interface for observers that can canonicalize reactive reads.
+/// Optional SPI interface for observers that canonicalize reactive reads.
+///
+/// {@category SPI}
 abstract interface class LevitReactiveReadResolver {
+  /// Returns the canonical [LxReactive] to attribute a read of [reactive] to.
   LxReactive resolveReactiveRead(LxReactive reactive);
 }
 
@@ -370,6 +399,8 @@ abstract interface class LevitReactiveReadResolver {
 ///     dependency patterns.
 /// 4.  **Zero-Allocation Snapshots**: Caches listener lists to avoid allocation
 ///     during notification cycles.
+///
+/// {@category SPI}
 class LevitReactiveNotifier {
   void Function()? _singleListener;
   Set<void Function()>? _setListeners;
@@ -394,6 +425,7 @@ class LevitReactiveNotifier {
   /// Returns the current depth in the dependency graph.
   int get graphDepth => _graphDepth;
 
+  /// Creates a reactive notifier with no initial listeners.
   LevitReactiveNotifier();
 
   /// Adds a listener.
@@ -639,6 +671,8 @@ class LevitReactiveNotifier {
 ///
 /// [LxBase] provides the core mechanics for value storage, stream propagation,
 /// and middleware integration.
+///
+/// {@category SPI}
 abstract class LxBase<T> extends LevitReactiveNotifier
     implements LxReactive<T> {
   static int _nextId = 0;
@@ -656,7 +690,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     _notifyMetadata();
   }
 
-  /// Custom equality function. When null, uses `==`.
+  /// Custom equality function. When `null`, uses `==`.
   final bool Function(T previous, T current)? equals;
 
   /// Creates a reactive wrapper around [initial].
@@ -681,10 +715,10 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   T _value;
   StreamController<T>? _controller;
 
-  /// Called when the stream is listened to.
+  /// Called when the first listener (via [addListener] or [stream]) attaches.
   final void Function()? onListen;
 
-  /// Called when the stream is cancelled.
+  /// Called when the last listener (both direct and [stream]) detaches.
   final void Function()? onCancel;
 
   bool _isActive = false;
@@ -920,7 +954,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   }
 
   /// Hook for subclasses to clean up binding resources during [close].
-  /// Overridden by [_LxBindable].
+  /// Overridden by `_LxMutable`.
   FutureOr<void> _cleanupBinding() {}
 
   Future<void>? _closeFuture;
@@ -1077,11 +1111,15 @@ abstract class LxBase<T> extends LevitReactiveNotifier
 
 /// Mutation and explicitly owned stream binding for writable reactive values.
 mixin _LxMutable<T> on LxBase<T> implements LxAsyncResource {
+  /// Applies an in-place [mutator] to the current value and notifies listeners
+  /// via [refresh].
   void mutate(void Function(T value) mutator) {
     mutator(_value);
     refresh();
   }
 
+  /// Replaces the current value with the result of [fn], reading the current
+  /// value without registering a reactive dependency.
   void updateValue(T Function(T val) fn) => _setValueInternal(fn(_value));
 
   Stream<T>? _boundStream;
@@ -1163,6 +1201,8 @@ mixin _LxMutable<T> on LxBase<T> implements LxAsyncResource {
 /// A standard context descriptor for reactive listeners.
 ///
 /// Used to identify "who" is listening to a reactive variable.
+///
+/// {@category Reactive State}
 class LxListenerContext {
   /// The string representation of the listener's runtime type.
   final String type;
@@ -1184,7 +1224,14 @@ class LxListenerContext {
 }
 
 /// Derives an independently owned selector from an observation-only source.
+///
+/// {@category Reactive State}
 extension LxReadableSelection<T> on LxReadable<T> {
+  /// Creates an eager, `staticDeps: true` [LxComputed] projecting this source
+  /// through [selector].
+  ///
+  /// The caller owns the returned [LxComputed] and must `own(...)` or
+  /// `await close()` it when no longer needed.
   LxComputed<R> select<R>(R Function(T value) selector) =>
       LxComputed(() => selector(value), staticDeps: true, eager: true);
 }

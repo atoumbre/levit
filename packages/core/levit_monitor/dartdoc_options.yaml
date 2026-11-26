@@ -1,0 +1,8 @@
+dartdoc:
+  showUndocumentedCategories: true
+  categories:
+    "Middleware & Monitoring": {}
+    "SPI": {}
+  categoryOrder:
+    - "Middleware & Monitoring"
+    - "SPI"

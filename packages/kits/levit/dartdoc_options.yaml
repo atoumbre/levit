@@ -1,0 +1,18 @@
+dartdoc:
+  showUndocumentedCategories: true
+  categories:
+    "Scopes & DI": {}
+    "Controllers & Stores": {}
+    "Reactive State": {}
+    "Tasks & Concurrency": {}
+    "Loops, Timers & Selection": {}
+    "Middleware & Monitoring": {}
+    "Testing": {}
+  categoryOrder:
+    - "Scopes & DI"
+    - "Controllers & Stores"
+    - "Reactive State"
+    - "Tasks & Concurrency"
+    - "Loops, Timers & Selection"
+    - "Middleware & Monitoring"
+    - "Testing"

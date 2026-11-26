@@ -5,12 +5,13 @@ part of '../levit_flutter_core.dart';
 /// Use [LBuilder] when you want to be explicit about the dependency, or when
 /// avoiding the overhead of proxy-tracking in [LWatch].
 ///
-/// // Example usage:
 /// ```dart
 /// LBuilder(counter, (value) {
 ///   return Text('Count: $value');
 /// });
 /// ```
+///
+/// {@category Flutter Widgets & Interop}
 class LBuilder<T> extends Widget {
   /// The builder function used to generate the widget tree.
   final Widget Function(T x) builder;
@@ -68,19 +69,21 @@ class _LBuilderElement<T> extends ComponentElement
   }
 }
 
-/// A widget that manages a local [LxComputed].
+/// A widget that manages a local [LxComputed] and rebuilds only when its
+/// derived value changes according to `==`.
 ///
 /// Useful for observing a derived value that is only needed for this specific
 /// widget subtree. The computed value is automatically disposed when the
-/// widget is unmounted.
+/// widget is unmounted (or recreated if [valueBuilder] changes identity).
 ///
-/// // Example usage:
 /// ```dart
 /// LSelectorBuilder(
-///   () => user.firstName() + user.lastName(),
+///   () => '${user.firstName()} ${user.lastName()}',
 ///   (fullName) => Text('Hello $fullName'),
 /// );
 /// ```
+///
+/// {@category Flutter Widgets & Interop}
 class LSelectorBuilder<T> extends Widget {
   /// The function that computes the value to observe.
   final T Function() valueBuilder;
@@ -157,7 +160,6 @@ class _LSelectBuilderElement<T> extends ComponentElement
 /// Eliminates boilerplate when handling loading, error, and success states
 /// of an asynchronous reactive value.
 ///
-/// // Example usage:
 /// ```dart
 /// LStatusBuilder(
 ///   userStatus,
@@ -166,6 +168,8 @@ class _LSelectBuilderElement<T> extends ComponentElement
 ///   onError: (status) => ErrorView(status.error),
 /// );
 /// ```
+///
+/// {@category Flutter Widgets & Interop}
 class LStatusBuilder<T> extends Widget {
   /// The reactive status to observe.
   final LxReadable<LxStatus<T>> x;
@@ -173,13 +177,16 @@ class LStatusBuilder<T> extends Widget {
   /// Called when the status is [LxSuccess].
   final Widget Function(T data) onSuccess;
 
-  /// Called when simple waiting logic is needed.
+  /// Called when the status is [LxWaiting], and used as a fallback for
+  /// [LxIdle] when [onIdle] is `null`. Defaults to `SizedBox.shrink()`.
   final Widget Function(LxWaiting<T> status)? onWaiting;
 
-  /// Called when the status is [LxError].
+  /// Called when the status is [LxError]. Defaults to
+  /// `Center(child: Text('Error: ${status.error}'))`.
   final Widget Function(LxError<T> status)? onError;
 
-  /// Called when the status is [LxIdle].
+  /// Called when the status is [LxIdle]. Falls back to [onWaiting] (with a
+  /// waiting view retaining any previous value) or `SizedBox.shrink()`.
   final Widget Function(LxIdle<T> status)? onIdle;
 
   /// Creates a status-aware builder.

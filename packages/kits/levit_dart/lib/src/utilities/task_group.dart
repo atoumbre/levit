@@ -1,33 +1,97 @@
 part of '../kit_library.dart';
 
-/// Sibling failure behavior. Controller roots supervise unrelated work.
-enum LevitTaskGroupPolicy { cancelOnError, supervisor }
+/// Controls how a [LevitTaskGroup] responds when one of its child tasks or
+/// child groups fails.
+///
+/// Engine root groups use [supervisor] so independent top-level workflows do
+/// not cancel one another.
+///
+/// {@category Tasks & Concurrency}
+enum LevitTaskGroupPolicy {
+  /// Cancels all sibling tasks and child groups as soon as one child fails.
+  cancelOnError,
 
+  /// Allows sibling tasks and child groups to continue running when one fails.
+  supervisor,
+}
+
+/// Categorizes why a task execution or [LevitTaskGroup] was cancelled.
+///
+/// {@category Tasks & Concurrency}
 enum LevitTaskCancellationKind {
+  /// Cancellation was explicitly requested by calling `cancel()`.
   requested,
+
+  /// The owning controller, engine, or scope began closing.
   ownerClosed,
+
+  /// An enclosing parent [LevitTaskGroup] was cancelled.
   parentCancelled,
+
+  /// A sibling failed in a [LevitTaskGroupPolicy.cancelOnError] group.
   siblingFailed,
+
+  /// The task or group deadline expired.
   deadlineExceeded,
+
+  /// A replacement submission superseded this execution (for example under
+  /// [LevitTaskConflictPolicy.restart] or [LevitTaskConflictPolicy.coalesceLatest]).
   superseded,
 }
 
-/// Machine-readable cancellation metadata; cancellation never implies completion.
+/// Machine-readable cancellation metadata attached to cancelled tasks and
+/// groups; cancellation signals a request and never implies completion.
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskCancellationReason {
+  /// The structured category describing why cancellation occurred.
   final LevitTaskCancellationKind kind;
+
+  /// Optional human-readable diagnostic message.
   final String? message;
+
+  /// Creates a cancellation reason with [kind] and optional [message].
   const LevitTaskCancellationReason(this.kind, [this.message]);
+
   @override
   String toString() => message == null ? kind.name : '${kind.name}: $message';
 }
 
-/// Explicit error classification with bounded exponential retry delays.
+/// Retry schedule combining explicit error classification with bounded
+/// exponential backoff and jitter.
+///
+/// ```dart
+/// final retryPolicy = LevitRetryPolicy(
+///   maxRetries: 3,
+///   initialDelay: const Duration(milliseconds: 250),
+///   maxDelay: const Duration(seconds: 10),
+///   shouldRetry: (error, _) => error is TimeoutException,
+/// );
+/// ```
+///
+/// {@category Tasks & Concurrency}
 final class LevitRetryPolicy {
+  /// Maximum number of retry attempts after the initial attempt fails.
   final int maxRetries;
+
+  /// Predicate returning `true` when `error` should be retried.
   final bool Function(Object error, StackTrace stack) shouldRetry;
+
+  /// Base delay before the first retry attempt (defaults to 500 ms).
   final Duration initialDelay;
+
+  /// Upper bound on computed retry delays (defaults to 30 seconds).
   final Duration maxDelay;
+
+  /// Fractional jitter factor in `[0.0, 1.0]` applied symmetrically around the
+  /// exponential delay (defaults to `0.2`).
   final double jitter;
+
+  /// Creates a retry policy with explicit [shouldRetry] classification.
+  ///
+  /// Throws a [RangeError] if [maxRetries] < 0 or [jitter] is outside
+  /// `[0.0, 1.0]`, or an [ArgumentError] if delays are negative or
+  /// [initialDelay] exceeds [maxDelay].
   LevitRetryPolicy({
     required this.shouldRetry,
     this.maxRetries = 3,
@@ -46,6 +110,11 @@ final class LevitRetryPolicy {
     if (!jitter.isFinite || jitter < 0 || jitter > 1)
       throw RangeError.range(jitter, 0, 1, 'jitter');
   }
+
+  /// Computes the backoff delay for 1-based retry [attempt] (`initialDelay *
+  /// 2^(attempt - 1)` capped at [maxDelay], adjusted by [jitter]).
+  ///
+  /// Supply [randomValue] in `[0.0, 1.0]` for deterministic testing.
   Duration delayFor(int attempt, {double? randomValue}) {
     final capped = math.min(
       maxDelay.inMicroseconds.toDouble(),
@@ -58,20 +127,42 @@ final class LevitRetryPolicy {
   }
 }
 
+/// Thrown synchronously when [LevitTaskEngine.maxPending] is reached and a new
+/// submission cannot be queued.
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskQueueFullException implements Exception {
+  /// The configured pending queue capacity that was reached.
   final int capacity;
+
+  /// Creates a queue-full exception recording [capacity].
   const LevitTaskQueueFullException(this.capacity);
+
   @override
   String toString() =>
       'Task queue has reached its $capacity pending submissions.';
 }
 
+/// Completed asynchronously on a task handle when a submission is ignored under
+/// [LevitTaskConflictPolicy.drop].
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskDroppedException implements Exception {
+  /// The logical task ID whose submission was dropped.
   final String taskId;
+
+  /// Creates a dropped-task exception for [taskId].
   const LevitTaskDroppedException(this.taskId);
 }
 
+/// Subtype of [LevitTaskCancelledException] thrown when an execution is
+/// replaced under [LevitTaskConflictPolicy.restart] or
+/// [LevitTaskConflictPolicy.coalesceLatest].
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskSupersededException extends LevitTaskCancelledException {
+  /// Creates a superseded-task exception with
+  /// [LevitTaskCancellationKind.superseded].
   const LevitTaskSupersededException(super.taskId, super.executionId)
     : super(
         reason: const LevitTaskCancellationReason(
@@ -80,38 +171,82 @@ final class LevitTaskSupersededException extends LevitTaskCancelledException {
       );
 }
 
+/// Sealed outcome union returned by [LevitTaskExecution.outcome] so callers can
+/// exhaustively pattern-match terminal task states without catching exceptions.
+///
+/// {@category Tasks & Concurrency}
 sealed class LevitTaskResult<T> {
+  /// Creates a [LevitTaskResult].
   const LevitTaskResult();
 }
 
+/// Terminal [LevitTaskResult] representing successful completion with [value].
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskSuccess<T> extends LevitTaskResult<T> {
+  /// The value produced by the task (or served from cache).
   final T value;
+
+  /// Creates a success result holding [value].
   const LevitTaskSuccess(this.value);
 }
 
+/// Terminal [LevitTaskResult] representing an unhandled task failure.
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskFailure<T> extends LevitTaskResult<T> {
+  /// The error thrown by the task.
   final Object error;
+
+  /// The stack trace captured with [error].
   final StackTrace stackTrace;
+
+  /// Creates a failure result holding [error] and [stackTrace].
   const LevitTaskFailure(this.error, this.stackTrace);
 }
 
+/// Terminal [LevitTaskResult] representing cooperative cancellation.
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskCancelled<T> extends LevitTaskResult<T> {
+  /// The structured reason describing why cancellation occurred.
   final LevitTaskCancellationReason reason;
+
+  /// Creates a cancelled result with [reason].
   const LevitTaskCancelled(this.reason);
 }
 
+/// Terminal [LevitTaskResult] indicating a submission was ignored under
+/// [LevitTaskConflictPolicy.drop].
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskDropped<T> extends LevitTaskResult<T> {
+  /// Creates a dropped result.
   const LevitTaskDropped();
 }
 
+/// Terminal [LevitTaskResult] indicating an execution was replaced under
+/// [LevitTaskConflictPolicy.restart] or
+/// [LevitTaskConflictPolicy.coalesceLatest].
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskSuperseded<T> extends LevitTaskResult<T> {
+  /// Creates a superseded result.
   const LevitTaskSuperseded();
 }
 
+/// Aggregate exception thrown by [LevitTaskGroup.run] or
+/// [LevitTaskGroup.dispose] when one or more failures occurred within the group.
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskGroupException implements Exception {
+  /// Unmodifiable list of failures collected from the group body and children.
   final List<AsyncError> failures;
+
+  /// Creates a group exception containing [failures].
   LevitTaskGroupException(Iterable<AsyncError> failures)
     : failures = List.unmodifiable(failures);
+
   @override
   String toString() =>
       'LevitTaskGroupException(${failures.map((error) => error.error).join('; ')})';
@@ -125,17 +260,45 @@ DateTime? _earliestDeadline(DateTime? a, DateTime? b) => a == null
     ? a
     : b;
 
-/// A coordination boundary. Its body and child groups do not occupy worker slots;
-/// only submitted leaf tasks do. Always return/await child group bodies.
+/// A structured-concurrency coordination boundary for tasks and child groups.
+///
+/// Group bodies and child groups do not occupy worker slots on [engine] — only
+/// submitted leaf tasks do. Always await child group bodies so work settles
+/// inside the enclosing boundary.
+///
+/// ```dart
+/// final summary = await controller.taskGroup.runGroup((group) async {
+///   final user = group.schedule((ctx) => api.fetchUser(id));
+///   final prefs = group.schedule((ctx) => api.fetchPrefs(id));
+///   return (await user, await prefs);
+/// }, name: 'load_profile');
+/// ```
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskGroup
     implements LevitDrainable, LevitDisposable, LevitExecutionBoundary {
   static int _nextId = 0;
+
+  /// The currently executing [LevitTaskGroup] in this [Zone], if any.
   static LevitTaskGroup? get current => _currentTaskZone?.group;
+
+  /// Unique runtime identifier for this group.
   final String id;
+
+  /// Diagnostic name for this group.
   final String name;
+
+  /// The [LevitTaskEngine] executing tasks admitted into this group.
   final LevitTaskEngine engine;
+
+  /// The parent group, or `null` for an engine's root group.
   final LevitTaskGroup? parent;
+
+  /// Sibling failure policy ([LevitTaskGroupPolicy.cancelOnError] or
+  /// [LevitTaskGroupPolicy.supervisor]).
   final LevitTaskGroupPolicy policy;
+
+  /// Effective absolute deadline, clamped to the earliest ancestor deadline.
   final DateTime? deadline;
   final Set<LevitTaskGroup> _children = {};
   final Set<_TaskExecution> _tasks = {};
@@ -172,7 +335,13 @@ final class LevitTaskGroup
     }
   }
 
-  /// Creates a child of [parent], the current group, or the engine's root.
+  /// Creates a child group under [parent], the active [current] group on
+  /// [engine], or `engine.rootGroup`.
+  ///
+  /// [name] defaults to `'workflow'` and [policy] defaults to
+  /// [LevitTaskGroupPolicy.cancelOnError]. If [deadline] is provided, it is
+  /// clamped to the parent's deadline. Throws an [ArgumentError] if [parent]
+  /// belongs to a different engine.
   factory LevitTaskGroup({
     required LevitTaskEngine engine,
     LevitTaskGroup? parent,
@@ -195,13 +364,23 @@ final class LevitTaskGroup
     );
   }
 
+  /// Whether cancellation has been requested for this group.
   bool get isCancelled => _cancellation.isCancelled;
+
+  /// Whether this group has sealed admissions or been cancelled.
   bool get isClosing => _sealed || isCancelled;
+
+  /// Whether the group body, all submitted tasks, and all child groups have
+  /// finished.
   bool get isComplete => _complete;
+
+  /// Structured reason for cancellation, or `null` if not cancelled.
   LevitTaskCancellationReason? get cancellationReason => _cancellation.reason;
+
+  /// Completes when cancellation is requested on this group.
   Future<void> get cancelled => _cancellation.cancelled;
 
-  /// Terminal completion signal. Await [run] or [dispose] for failures.
+  /// Terminal completion signal. Await [run] or [dispose] to observe failures.
   Future<void> get done => _done.future;
 
   void _ensureAdmission() {
@@ -252,7 +431,13 @@ final class LevitTaskGroup
     }
   }
 
-  /// Runs one workflow body and waits for every descendant, including finally.
+  /// Runs one workflow [body] and waits for every admitted task and child group
+  /// to settle (including `finally` blocks).
+  ///
+  /// May only be called once on a fresh non-root group outside any leaf task
+  /// running on [engine] (otherwise throws [StateError]). Throws
+  /// [LevitTaskGroupException] if failures occurred, or
+  /// [LevitTaskCancelledException] if cancelled.
   Future<T> run<T>(FutureOr<T> Function(LevitTaskGroup group) body) async {
     _ensureAdmission();
     if (_root || _bodyStarted)
@@ -312,6 +497,8 @@ final class LevitTaskGroup
     ).run(body);
   }
 
+  /// Submits a leaf task to [engine] owned by this group and returns its
+  /// [LevitTaskExecution] handle.
   LevitTaskExecution<T> submit<T>(
     FutureOr<T> Function(LevitTaskContext) body, {
     String? id,
@@ -333,6 +520,8 @@ final class LevitTaskGroup
     metadata: metadata,
   );
 
+  /// Schedules a leaf task in this group and returns its eventual result
+  /// [Future] (shorthand for `submit(...).result`).
   Future<T> schedule<T>(
     FutureOr<T> Function(LevitTaskContext) body, {
     String? id,
@@ -353,6 +542,8 @@ final class LevitTaskGroup
     metadata: metadata,
   ).result;
 
+  /// Cooperatively cancels this group, every child group, and every admitted
+  /// task using [reason].
   void cancel([
     LevitTaskCancellationReason reason = const LevitTaskCancellationReason(
       LevitTaskCancellationKind.requested,
@@ -407,6 +598,8 @@ final class LevitTaskGroup
     engine._notifyTaskTree();
   }
 
+  /// Throws a [StateError] if called from inside a running leaf task on
+  /// [engine] or from inside this group's own active [run] body.
   @override
   void assertCanDispose() {
     if (identical(_currentTaskZone?.execution?.config.group.engine, engine)) {
@@ -422,8 +615,11 @@ final class LevitTaskGroup
     }
   }
 
+  /// Requests cooperative cancellation of this group and its descendants.
   @override
   void requestCancel() => cancel();
+
+  /// Cancels this group and waits until [done] completes.
   @override
   Future<void> drain() async {
     assertCanDispose();
@@ -431,6 +627,8 @@ final class LevitTaskGroup
     await done;
   }
 
+  /// Cancels this group, waits for all descendants to settle, and throws
+  /// [LevitTaskGroupException] if any failures occurred.
   @override
   Future<void> dispose() async {
     assertCanDispose();
@@ -444,19 +642,44 @@ final Object _taskZoneKey = Object();
 typedef _TaskZone = ({LevitTaskGroup group, _TaskExecution? execution});
 _TaskZone? get _currentTaskZone => Zone.current[_taskZoneKey] as _TaskZone?;
 
-/// Immutable, value-free live task tree. Completed executions remain available
-/// through the bounded task tracker/event stream instead of accumulating here.
+/// Immutable, value-free snapshot of a live [LevitTaskGroup] tree.
+///
+/// Completed executions remain available through [LevitTaskTracker] or
+/// [LevitTaskMiddleware] instead of accumulating here.
+///
+/// {@category Tasks & Concurrency}
 final class LevitTaskTreeSnapshot {
+  /// Unique group identifier.
   final String id;
+
+  /// Human-readable group name.
   final String name;
+
+  /// Parent group identifier, or `null` for the root group.
   final String? parentId;
+
+  /// Whether this group is closing or cancelled.
   final bool isClosing;
+
+  /// Whether this group and all its descendants have completed.
   final bool isComplete;
+
+  /// Effective absolute deadline for this group, if any.
   final DateTime? deadline;
+
+  /// Cancellation reason, if this group was cancelled.
   final LevitTaskCancellationReason? cancellationReason;
+
+  /// Number of queued leaf tasks directly inside this group.
   final int pendingCount;
+
+  /// Number of running leaf tasks directly inside this group.
   final int runningCount;
+
+  /// Unmodifiable list of active execution IDs directly inside this group.
   final List<String> executionIds;
+
+  /// Unmodifiable list of child group snapshots.
   final List<LevitTaskTreeSnapshot> children;
   LevitTaskTreeSnapshot._(LevitTaskGroup group)
     : id = group.id,

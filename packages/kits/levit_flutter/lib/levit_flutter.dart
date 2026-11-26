@@ -1,9 +1,43 @@
 /// Recommended single-import kit for Flutter applications using Levit.
 ///
-/// This library composes `levit_flutter_core`, `levit_dart`, and package-local
-/// Flutter utilities into one import surface. For advanced task orchestration,
-/// also import `package:levit_flutter/tasks.dart`.
-library levit_flutter_kit;
+/// Composes `levit_flutter_core`, `levit_dart`, and Flutter-specific kit
+/// utilities into one import surface while hiding low-level `Ls` and `Lx`
+/// facades in favor of [Levit] and `context.levit`.
+///
+/// ### Flutter kit additions
+/// * [showLevitDialog] / [showLevitModalBottomSheet]: Imperative overlays that
+///   capture the nearest widget scope via [LScope.capture].
+/// * [LKeepAlive]: Preserves scrollable subtrees and their scoped controllers.
+/// * [LevitAppLifecycleMixin]: Bridges Flutter [AppLifecycleState] callbacks to
+///   [LevitController].
+/// * [LevitLoopLifecycleMixin]: Automatically pauses and resumes
+///   [LevitLoopEngine] services with the app lifecycle.
+///
+/// ### Additional entry points
+/// * `package:levit_flutter/tasks.dart`: Standalone `LevitTaskEngine`,
+///   `LevitTaskGroup`, caching, middleware, tracking, and `LevitTaskResult`.
+/// * `package:levit_flutter/levit_testing.dart`: Isolated `LevitTestScope` and
+///   typed overrides for widget and unit tests.
+///
+/// ```dart
+/// import 'package:flutter/widgets.dart';
+/// import 'package:levit_flutter/levit_flutter.dart';
+///
+/// void main() {
+///   Levit.enableAutoLinking();
+///   runApp(
+///     LScopedView<CounterController>.put(
+///       () => CounterController(),
+///       builder: (context, controller) => Text('${controller.count()}'),
+///     ),
+///   );
+/// }
+/// ```
+///
+/// @docImport 'package:levit_dart/levit_dart.dart';
+/// @docImport 'package:levit_flutter_core/levit_flutter_core.dart';
+/// @docImport 'src/overlays.dart';
+library;
 
 import 'dart:async';
 

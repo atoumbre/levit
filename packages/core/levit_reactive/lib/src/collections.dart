@@ -3,15 +3,16 @@ part of 'reactive_library.dart';
 /// A reactive list that notifies observers on modification.
 ///
 /// [LxList] implements [List] and intercepts all mutating operations
-/// (add, remove, sort, etc.) to trigger reactive updates.
+/// (`add`, `remove`, `sort`, etc.) to trigger reactive updates.
 ///
-/// // Example usage:
 /// ```dart
 /// final items = <String>[].lx;
 ///
 /// // Adding an item triggers observers
 /// items.add('active');
 /// ```
+///
+/// {@category Reactive State}
 class LxList<E> extends LxVar<List<E>>
     with _PreciseCollection<List<E>, E>
     implements List<E> {
@@ -407,15 +408,16 @@ class _ListIndexMap<E> extends UnmodifiableMapBase<int, E> {
 /// A reactive map that notifies observers on modification.
 ///
 /// [LxMap] implements [Map] and intercepts all mutating operations
-/// (operator []=, remove, clear, etc.) to trigger reactive updates.
+/// (`operator []=`, `remove`, `clear`, etc.) to trigger reactive updates.
 ///
-/// // Example usage:
 /// ```dart
 /// final settings = {'theme': 'dark'}.lx;
 ///
 /// // Update triggers observers
 /// settings['theme'] = 'light';
 /// ```
+///
+/// {@category Reactive State}
 class LxMap<K, V> extends LxVar<Map<K, V>>
     with _PreciseCollection<Map<K, V>, V>
     implements Map<K, V> {
@@ -594,6 +596,8 @@ class LxMap<K, V> extends LxVar<Map<K, V>>
 ///
 /// [LxSet] implements [Set] and intercepts all mutating operations
 /// (add, remove, etc.) to trigger reactive updates.
+///
+/// {@category Reactive State}
 class LxSet<E> extends LxVar<Set<E>> implements Set<E> {
   /// Creates a reactive set.
   ///
@@ -800,19 +804,25 @@ class LxSet<E> extends LxVar<Set<E>> implements Set<E> {
 }
 
 /// Helper extensions for creating reactive collections.
+///
+/// {@category Reactive State}
 extension LxListExtension<E> on List<E> {
-  /// Converts this list into reactive [LxList].
+  /// Converts this list into a reactive [LxList].
   LxList<E> get lx => LxList<E>.from(this);
 }
 
 /// Helper extensions for creating reactive maps.
+///
+/// {@category Reactive State}
 extension LxMapExtension<K, V> on Map<K, V> {
-  /// Converts this map into reactive [LxMap].
+  /// Converts this map into a reactive [LxMap].
   LxMap<K, V> get lx => LxMap<K, V>.from(this);
 }
 
 /// Helper extensions for creating reactive sets.
+///
+/// {@category Reactive State}
 extension LxSetExtension<E> on Set<E> {
-  /// Converts this set into reactive [LxSet].
+  /// Converts this set into a reactive [LxSet].
   LxSet<E> get lx => LxSet<E>.from(this);
 }

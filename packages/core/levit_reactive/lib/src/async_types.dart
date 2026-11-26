@@ -1,8 +1,10 @@
 part of 'reactive_library.dart';
 
 /// Determines what an [LxStream] does when its current source completes.
+///
+/// {@category Reactive State}
 enum LxStreamCompletionPolicy {
-  /// Permanently closes the reactive. This preserves the legacy behavior.
+  /// Permanently closes the reactive when the source stream completes.
   close,
 
   /// Retains the latest state and permits an explicit future restart.
@@ -16,17 +18,22 @@ enum LxStreamCompletionPolicy {
 /// the [LxStream] itself has active observers or listeners.
 ///
 /// Key Features:
-/// *   **Status Tracking**: Automatically emits [LxSuccess], [LxError], or [LxWaiting].
-/// *   **Lazy Subscription**: Minimizes resource usage by pausing the source when unused.
-/// *   **Rx Operations**: Includes [map], [where], [expand] (etc.) that return new [LxStream]s.
+/// * **Status Tracking**: Automatically emits [LxSuccess], [LxError], or [LxWaiting].
+/// * **Lazy Subscription**: Minimizes resource usage by cancelling the source subscription when unused.
+/// * **Rx Operations**: Includes [map], [where], [expand], and other operators that return new [LxStream]s.
 ///
-/// // Example usage:
 /// ```dart
-/// final counter = Stream.periodic(Duration(seconds: 1), (i) => i).lx;
+/// final ticks = Stream.periodic(const Duration(seconds: 1), (i) => i).lx;
 ///
-/// // UI automatically rebuilds on new events
-/// LWatch(() => Text('${counter.value.data}'));
+/// final label = LxComputed(() => switch (ticks.status) {
+///   LxSuccess(:final value) => 'Tick $value',
+///   LxWaiting() => 'Waiting...',
+///   LxError(:final error) => 'Error: $error',
+///   LxIdle() => 'Idle',
+/// });
 /// ```
+///
+/// {@category Reactive State}
 class LxStream<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
   StreamController<T>? _valueController;
   StreamSubscription<T>? _activeSubscription;
@@ -68,7 +75,10 @@ class LxStream<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
     );
   }
 
-  /// Creates an [LxStream] in an [LxIdle] state.
+  /// Creates an [LxStream] without an active source stream.
+  ///
+  /// Starts in [LxIdle] when [initial] is `null`, or in [LxSuccess] holding
+  /// [initial] when a non-null initial value is supplied.
   factory LxStream.idle({
     T? initial,
     LxStreamCompletionPolicy completionPolicy = LxStreamCompletionPolicy.close,
@@ -263,21 +273,21 @@ class LxStream<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
 /// A reactive wrapper for a [Future].
 ///
 /// [LxFuture] tracks the execution state ([LxStatus]) of an asynchronous operation.
-/// It creates a synchronous access point for the Future's current status (idle, waiting, success, error).
+/// It provides a synchronous access point for the [Future]'s current status
+/// ([LxIdle], [LxWaiting], [LxSuccess], or [LxError]).
 ///
-/// // Example usage:
 /// ```dart
 /// final user = fetchUser().lx;
 ///
-/// LWatch(() {
-///   return switch (user.status) {
-///     LxWaiting() => CircularProgressIndicator(),
-///     LxError(error: var e) => Text('Error: $e'),
-///     LxSuccess(data: var u) => UserProfile(u),
-///     _ => SizedBox(),
-///   };
+/// final summary = LxComputed(() => switch (user.status) {
+///   LxWaiting() => 'Loading...',
+///   LxError(:final error) => 'Error: $error',
+///   LxSuccess(:final value) => 'Hello, ${value.name}',
+///   LxIdle() => 'Idle',
 /// });
 /// ```
+///
+/// {@category Reactive State}
 class LxFuture<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
   /// Executes [future] immediately and tracks its status.
   LxFuture(Future<T> future, {T? initial, LxStatus<T>? previous})
@@ -296,7 +306,10 @@ class LxFuture<T> extends _LxAsyncVal<T> with _LxAsyncLifecycle<LxStatus<T>> {
     return LxFuture<T>(futureCallback(), initial: initial);
   }
 
-  /// Creates an [LxFuture] in an [LxIdle] state.
+  /// Creates an [LxFuture] without starting an asynchronous operation.
+  ///
+  /// Starts in [LxIdle] when [initial] is `null`, or in [LxSuccess] holding
+  /// [initial] when a non-null initial value is supplied.
   LxFuture.idle({T? initial})
     : super(
         _LxAsyncVal.initialStatus<T>(initial, idle: true),
@@ -379,12 +392,16 @@ abstract class _LxAsyncVal<T> extends LxBase<LxStatus<T>> {
 }
 
 /// Extensions for converting [Stream]s to [LxStream]s.
+///
+/// {@category Reactive State}
 extension LxStreamExtension<T> on Stream<T> {
   /// Converts this [Stream] into a reactive [LxStream].
   LxStream<T> get lx => LxStream<T>(this);
 }
 
 /// Extensions for converting [Future]s to [LxFuture]s.
+///
+/// {@category Reactive State}
 extension LxFutureExtension<T> on Future<T> {
   /// Converts this [Future] into a reactive [LxFuture].
   LxFuture<T> get lx => LxFuture<T>(this);

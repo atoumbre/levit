@@ -4,6 +4,8 @@ part of 'scope_library.dart';
 ///
 /// Implement this interface to create middleware for logging, profiling, or
 /// custom lifecycle management.
+///
+/// {@category Middleware & Monitoring}
 abstract class LevitScopeMiddleware {
   /// Creates a [LevitScopeMiddleware].
   const LevitScopeMiddleware();
@@ -15,9 +17,10 @@ abstract class LevitScopeMiddleware {
   /// Failures are aggregated after every disposal observer has been attempted.
   void onScopeDispose(int scopeId, String scopeName) {}
 
-  /// Called when a dependency matches a registration request.
+  /// Called when a dependency or alias is registered in a scope.
   ///
-  /// This triggers on [LevitScope.put], [LevitScope.lazyPut], and their variants.
+  /// This triggers on [LevitScope.put], [LevitScope.lazyPut],
+  /// [LevitScope.lazyPutAsync], and [LevitScope.bindExisting].
   void onDependencyRegister(
     int scopeId,
     String scopeName,
@@ -27,9 +30,11 @@ abstract class LevitScopeMiddleware {
     int? parentScopeId,
   }) {}
 
-  /// Called when a dependency instance is resolved.
+  /// Called when a dependency resolution instantiates a lazy or factory
+  /// registration, or resolves an uncached alias.
   ///
-  /// This triggers when [LevitScope.find] or its variants successfully return an instance.
+  /// Already-instantiated singletons returned from the scope's instance cache
+  /// do not invoke this callback on subsequent reads.
   void onDependencyResolve(
     int scopeId,
     String scopeName,

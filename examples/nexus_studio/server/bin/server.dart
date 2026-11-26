@@ -5,15 +5,18 @@ import 'package:nexus_studio_shared/shared.dart';
 
 Future<void> main() async {
   Levit.enableAutoLinking();
-  // Connect to LevitDevTools in debug mode
+  // Connect to levit_mcp in debug mode
+  const token = String.fromEnvironment('LEVIT_MCP_TOKEN');
   final transport = LevitWebSocketTransport.connect(
     const String.fromEnvironment(
-      'LEVIT_INSPECTOR_URL',
+      'LEVIT_MCP_URL',
       defaultValue: 'ws://127.0.0.1:9200/ws',
     ),
     appId: 'nexus-server',
-    onError: (e) =>
-        print('⚠️ DevTool Server not available. Running without monitoring.'),
+    token: token.isEmpty ? null : token,
+    onError: (e) => print(
+      '⚠️ levit_mcp relay not available. Running without remote monitoring.',
+    ),
   );
 
   await LevitMonitor.attach(

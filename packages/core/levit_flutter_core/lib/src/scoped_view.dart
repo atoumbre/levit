@@ -2,21 +2,25 @@ part of '../levit_flutter_core.dart';
 
 /// A widget that manages its own dependency scope and builds a view.
 ///
-/// [LScopedView] creates a new [LevitScope] for its subtree, registers dependencies
-/// via [configure] / [onConfigureScope], and then builds the UI using [LView].
-/// When the widget is unmounted, the scope and all its dependencies are disposed.
+/// [LScopedView] creates a new [LScope] for its subtree, registers dependencies
+/// via [configure] / [onConfigureScope], resolves [T] inside that scope, and
+/// renders [buildView] / [builder] (wrapped in [LWatch] when [autoWatch] is
+/// `true`). When the widget is unmounted, the scope and all its dependencies
+/// are disposed. Changing [args] recreates the internal [LScope] and re-runs
+/// [onConfigureScope].
 ///
-/// Sub-classing with [onConfigureScope] is a first-class pattern alongside
+/// Subclassing with [onConfigureScope] is a first-class pattern alongside
 /// [LScopedView.put]. With [autoWatch] `true` (default), read reactives directly
 /// in [buildView]; do not wrap the entire return in [LWatch].
 ///
-/// // Example usage:
 /// ```dart
 /// LScopedView<ProfileController>.put(
 ///   () => ProfileController(),
 ///   builder: (context, controller) => ProfilePage(controller),
 /// );
 /// ```
+///
+/// {@category Flutter Widgets & Interop}
 class LScopedView<T> extends LView<T> {
   /// Optional callback to register dependencies in the internal scope.
   final void Function(LevitScope scope)? configure;
@@ -28,6 +32,7 @@ class LScopedView<T> extends LView<T> {
   /// identity. Set [scopeName] only when you want a stable label.
   final String? scopeName;
 
+  /// Creates a scoped view that owns a child [LScope] and resolves [T].
   const LScopedView({
     super.key,
     this.configure,
@@ -39,7 +44,11 @@ class LScopedView<T> extends LView<T> {
     super.args,
   });
 
-  /// Syntax sugar for consuming a [LevitStore] within a new scope.
+  /// Creates a child scope and consumes [LevitStore] [state].
+  ///
+  /// Note: [localOnly] defaults to `false`, so this inherits an ancestor
+  /// instance of [state] unless `localOnly: true` is passed to create/reuse an
+  /// instance exclusively inside this widget's new child scope.
   factory LScopedView.store(
     LevitStore<T> state, {
     Key? key,
@@ -134,14 +143,23 @@ class _LScopedViewState<T> extends State<LScopedView<T>> {
   }
 }
 
-/// A widget that creates a synchronous scope but resolves its controller asynchronously.
+/// A widget that creates a synchronous [LScope] and resolves [T] asynchronously
+/// via [LAsyncView].
 ///
-/// [LAsyncScopedView] initializes the scope immediately with [LScope], then
-/// uses [LAsyncView] to wait for async controller resolution.
+/// With [autoWatch] `true` (default), read reactives directly in
+/// [buildView] / [builder] without wrapping the entire return in [LWatch].
+/// Changing [args] recreates the internal [LScope] and re-runs async
+/// resolution.
 ///
-/// In short:
-/// - **Sync scope setup**
-/// - **Async controller resolution**
+/// ```dart
+/// LAsyncScopedView<CatalogController>.put(
+///   () async => await CatalogController.load(),
+///   loading: (_) => const CircularProgressIndicator(),
+///   builder: (context, controller) => CatalogView(controller),
+/// );
+/// ```
+///
+/// {@category Flutter Widgets & Interop}
 class LAsyncScopedView<T> extends LAsyncView<T> {
   /// Optional callback to register dependencies in the internal scope.
   final void Function(LevitScope scope)? configure;
@@ -153,6 +171,8 @@ class LAsyncScopedView<T> extends LAsyncView<T> {
   /// label for diagnostics.
   final String? scopeName;
 
+  /// Creates an async scoped view that owns a child [LScope] and resolves [T]
+  /// asynchronously.
   const LAsyncScopedView({
     super.key,
     this.configure,
@@ -165,7 +185,11 @@ class LAsyncScopedView<T> extends LAsyncView<T> {
     this.scopeName,
   });
 
-  /// Syntax sugar for consuming a [LevitAsyncStore] within a new scope.
+  /// Creates a child scope and consumes [LevitAsyncStore] [store].
+  ///
+  /// Note: [localOnly] defaults to `false`, so this inherits an ancestor
+  /// instance of [store] unless `localOnly: true` is passed to create/reuse an
+  /// instance exclusively inside this widget's new child scope.
   factory LAsyncScopedView.store(
     LevitAsyncStore<T> store, {
     Key? key,

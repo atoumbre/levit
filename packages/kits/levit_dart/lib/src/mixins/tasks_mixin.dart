@@ -85,9 +85,37 @@ Future<void> _drainTaskEngineBeforeClose(
   if (failures.isNotEmpty) throw LevitDisposalException.aggregate(failures);
 }
 
-/// Adds named task execution, conflict policies, retries, and cancellation.
+/// Adds named task execution, conflict policies, retries, and cancellation to a
+/// [LevitController] without UI-facing reactive task state.
+///
+/// The owned [taskEngine] drains and disposes in [onBeforeClose] before other
+/// owned resources close. Subclasses overriding [onInit] or [onBeforeClose]
+/// must delegate to `super` (`super.onInit()` and `await super.onBeforeClose()`).
+///
+/// For reactive busy state, progress selectors, and per-task [LxStatus], use
+/// [LevitReactiveTasksMixin]. To reference advanced task types such as
+/// `LevitTaskEngine`, `LevitTaskGroup`, or `LevitTaskCachePolicy` directly,
+/// import `package:levit_dart/tasks.dart` (or `package:levit/tasks.dart` /
+/// `package:levit_flutter/tasks.dart`).
+///
+/// ```dart
+/// class SyncController extends LevitController with LevitTasksMixin {
+///   Future<void> syncNow() => runTask(
+///     (ctx) async {
+///       ctx.throwIfCancelled();
+///       await api.sync();
+///     },
+///     id: 'sync',
+///     conflictPolicy: LevitTaskConflictPolicy.join,
+///   );
+/// }
+/// ```
+///
+/// {@category Tasks & Concurrency}
 mixin LevitTasksMixin on LevitController {
   /// The controller-owned task engine.
+  ///
+  /// Throws a [StateError] if accessed after this controller is closed.
   LevitTaskEngine get taskEngine => _tasksEngineFor(
     this,
     maxConcurrentTasks: maxConcurrentTasks,
@@ -105,7 +133,7 @@ mixin LevitTasksMixin on LevitController {
   /// Optional controller-local task event observer.
   void Function(LevitTaskEvent event)? get onTaskEvent => null;
 
-  /// Optional persistent cache provider.
+  /// Optional custom task cache provider. Defaults to an in-memory cache.
   LevitTaskCacheProvider? get taskCacheProvider => null;
 
   /// Maximum number of concurrent task executions.
@@ -189,9 +217,40 @@ mixin LevitTasksMixin on LevitController {
       _drainTaskEngineBeforeClose(this, () => super.onBeforeClose());
 }
 
-/// Adds reactive task state and selectors to [LevitController].
+/// Adds reactive task state, progress aggregation, and selectors to a
+/// [LevitController].
+///
+/// Exposes [tasks], [isBusy], [hasBlockingTasks], [totalProgress], and filtered
+/// selectors ([taskStatus], [isTaskRunning], [isBusyWhere], [progressWhere]).
+/// The owned [taskEngine] drains and disposes in [onBeforeClose] before other
+/// owned resources close. Subclasses overriding [onInit] or [onBeforeClose]
+/// must delegate to `super` (`super.onInit()` and `await super.onBeforeClose()`).
+///
+/// To reference advanced task types such as `LevitTaskEngine`,
+/// `LevitTaskGroup`, or `LevitTaskMetadata` directly, import
+/// `package:levit_dart/tasks.dart` (or `package:levit/tasks.dart` /
+/// `package:levit_flutter/tasks.dart`).
+///
+/// ```dart
+/// class ReportsController extends LevitController with LevitReactiveTasksMixin {
+///   Future<String> generateReport() => runTask<String>(
+///     (ctx) async {
+///       ctx.reportProgress(0.5);
+///       ctx.throwIfCancelled();
+///       return await api.buildReport();
+///     },
+///     id: 'report',
+///     conflictPolicy: LevitTaskConflictPolicy.restart,
+///     retryPolicy: const LevitRetryPolicy(maxRetries: 2),
+///   );
+/// }
+/// ```
+///
+/// {@category Tasks & Concurrency}
 mixin LevitReactiveTasksMixin on LevitController {
   /// The controller-owned task engine.
+  ///
+  /// Throws a [StateError] if accessed after this controller is closed.
   LevitTaskEngine get taskEngine => _tasksEngineFor(
     this,
     maxConcurrentTasks: maxConcurrentTasks,
@@ -200,15 +259,20 @@ mixin LevitReactiveTasksMixin on LevitController {
     onTaskEvent: onTaskEvent,
   );
 
+  /// Supervisor boundary (`taskEngine.rootGroup`) for independent workflows
+  /// owned by this controller.
   LevitTaskGroup get taskGroup => taskEngine.rootGroup;
 
   /// Maximum number of concurrent task executions.
   int get maxConcurrentTasks => 8;
 
-  /// Maximum number of terminal logical task entries retained.
+  /// Target cap on the total number of entries retained in [tasks].
+  ///
+  /// When adding a new logical task ID at or above this limit, at most one
+  /// oldest completed entry is evicted.
   int get maxTaskHistory => 50;
 
-  /// Optional persistent cache provider.
+  /// Optional custom task cache provider. Defaults to an in-memory cache.
   LevitTaskCacheProvider? get taskCacheProvider => null;
 
   /// Optional delay before terminal entries are removed.
@@ -216,13 +280,15 @@ mixin LevitReactiveTasksMixin on LevitController {
 
   void Function(Object error, StackTrace stackTrace)? _onTaskError;
 
-  /// Optional global error handler for tasks in this controller.
+  /// Optional default error handler for terminal task failures in this controller.
   void Function(Object error, StackTrace stackTrace)? get onTaskError =>
       _onTaskError;
 
   /// Optional controller-local task event observer.
   void Function(LevitTaskEvent event)? get onTaskEvent => null;
 
+  /// Updates the default error handler and reconfigures the active [taskEngine]
+  /// if already initialized.
   set onTaskError(void Function(Object, StackTrace)? value) {
     _onTaskError = value;
     _taskEngines[this]?.config(onTaskError: value);
@@ -236,19 +302,28 @@ mixin LevitReactiveTasksMixin on LevitController {
   LxComputed<bool>? _hasBlockingTasks;
   bool _reactiveTaskStateInitialized = false;
 
-  /// Weighted progress across all retained tasks.
+  /// Weighted progress (`0.0` to `1.0`) across all retained tasks.
+  ///
+  /// Computes the weighted average where [LxSuccess] contributes `1.0`,
+  /// [LxWaiting] contributes its `progress`, and other statuses contribute
+  /// `0.0` (returns `0.0` when total weight is `0`). Throws a [StateError] if
+  /// accessed after this controller is closed.
   LxComputed<double> get totalProgress {
     _ensureReactiveTaskState();
     return _totalProgress!;
   }
 
-  /// Whether any latest logical execution is queued or running.
+  /// Whether any latest logical execution is queued, running, or waiting to retry.
+  ///
+  /// Throws a [StateError] if accessed after this controller is closed.
   LxComputed<bool> get isBusy {
     _ensureReactiveTaskState();
     return _isBusy!;
   }
 
-  /// Whether any active task is marked as blocking.
+  /// Whether any active task is marked as blocking user interaction.
+  ///
+  /// Throws a [StateError] if accessed after this controller is closed.
   LxComputed<bool> get hasBlockingTasks {
     _ensureReactiveTaskState();
     return _hasBlockingTasks!;
@@ -299,7 +374,7 @@ mixin LevitReactiveTasksMixin on LevitController {
     };
   }
 
-  /// Whether logical [id] is queued or running.
+  /// Whether logical [id] is queued, running, or waiting to retry.
   bool isTaskRunning(String id) {
     final phase = tasks[id]?.phase;
     return phase == LevitTaskPhase.queued ||
@@ -310,7 +385,7 @@ mixin LevitReactiveTasksMixin on LevitController {
   /// Latest progress for logical [id].
   double taskProgress(String id) => tasks[id]?.progress ?? 0;
 
-  /// Whether matching tasks contain any queued or running work.
+  /// Whether matching tasks contain any queued, running, or retry-waiting work.
   bool isBusyWhere({String? category, bool? blocksUserInteraction}) {
     return tasks.values.any((details) {
       if (!_matchesTaskFilter(
@@ -411,7 +486,13 @@ mixin LevitReactiveTasksMixin on LevitController {
     _ensureReactiveTaskState();
   }
 
-  /// Executes [task] and tracks the latest execution for its logical ID.
+  /// Executes [task] and tracks the latest execution for its logical [id] in
+  /// [tasks].
+  ///
+  /// [weight] must be finite and non-negative (defaults to `1.0`); throws a
+  /// [RangeError] otherwise. Joined and dropped submissions preserve the
+  /// existing [tasks] entry without overwriting it. Cancellation reverts the
+  /// status to [LxIdle] while retaining the last successful value.
   Future<T> runTask<T>(
     FutureOr<T> Function(LevitTaskContext context) task, {
     String? id,
@@ -535,7 +616,11 @@ mixin LevitReactiveTasksMixin on LevitController {
     return execution.result;
   }
 
-  /// Executes a top-level/static isolate task and tracks its state.
+  /// Executes a top-level or static isolate [task] with [input] and tracks its
+  /// reactive state in [tasks].
+  ///
+  /// Both [input] and the return value [T] must be sendable across isolate
+  /// boundaries. See [runTask] for parameter and state-tracking semantics.
   Future<T> runIsolateTask<I, T>(
     LevitIsolateTask<I, T> task,
     I input, {
@@ -711,7 +796,11 @@ mixin LevitReactiveTasksMixin on LevitController {
     });
   }
 
-  /// Validates and reports progress for the latest running execution of [id].
+  /// Validates and reports progress (`0.0` to `1.0`) for the latest running
+  /// execution of [id].
+  ///
+  /// Throws a [RangeError] if [value] is non-finite or outside `[0.0, 1.0]`.
+  /// Does nothing if [id] is not tracked in [tasks].
   void updateTaskProgress(String id, double value) {
     if (!value.isFinite || value < 0 || value > 1) {
       throw RangeError.range(value, 0, 1, 'value');

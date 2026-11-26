@@ -4,6 +4,8 @@ part of '../levit_flutter_core.dart';
 /// A controller belongs to one scope widget for that widget's lifetime.
 /// Initialization is tracked before user callbacks run, including reentrant
 /// replacement requests. Listener-triggered close still awaits resource drain.
+///
+/// {@category Flutter Widgets & Interop}
 class LevitScopeLifecycleController implements Listenable {
   final _ScopeChanges _changes = _ScopeChanges();
   final Completer<void> _closed = Completer<void>();
@@ -20,11 +22,20 @@ class LevitScopeLifecycleController implements Listenable {
   Object? _cleanupError;
   StackTrace? _cleanupStack;
 
-  /// The scope is published only after its initialization succeeds.
+  /// The active [LevitScope], published only after initialization succeeds and
+  /// while not closing; otherwise `null`.
   LevitScope? get scope => isReady ? _scope : null;
+
+  /// Whether a scope is initialized and actively available via [scope].
   bool get isReady => _ready && !(_scope?.isClosing ?? true);
+
+  /// Whether a scope replacement or initialization is currently running.
   bool get isLoading => _running && !_closing;
+
+  /// The latest initialization or cleanup failure, if any.
   Object? get error => _error;
+
+  /// The stack trace associated with [error], if any.
   StackTrace? get stackTrace => _stackTrace;
 
   /// Completes once all currently requested replacements have settled.
@@ -40,7 +51,12 @@ class LevitScopeLifecycleController implements Listenable {
   void removeListener(VoidCallback listener) =>
       _changes.removeListener(listener);
 
-  /// Serializes replacement and coalesces requests to the latest configuration.
+  /// Serializes scope replacement under [parent] with [name] and [initialize],
+  /// coalescing rapid requests to the latest configuration.
+  ///
+  /// Throws a [StateError] if [close] has already started. If a prior cleanup
+  /// error is latched, subsequent [replace] calls keep surfacing that error
+  /// until [retry] is called.
   Future<void> replace({
     required LevitScope parent,
     required String name,
@@ -63,7 +79,9 @@ class LevitScopeLifecycleController implements Listenable {
     return settled;
   }
 
-  /// Retries the latest configuration after a failed initialization or cleanup.
+  /// Clears any latched cleanup error and retries the latest configuration.
+  ///
+  /// Throws a [StateError] if closing or if [replace] has never been called.
   Future<void> retry() {
     if (_closing) throw StateError('Scope lifecycle is closing.');
     final request = _lastRequest;

@@ -149,6 +149,8 @@ LevitMonitor.emitCustomEvent in the application composition layer.
 
 Enable optional levit_lints in analysis_options.yaml for lifecycle, ownership,
 registration, and reactive-status diagnostics (Dart 3.12+).
+Use levit_mcp (`dart run levit_mcp`) for read-only live runtime inspection via
+MCP, and distribute `skills/levit/` as a portable Agent Skill for Levit 0.1.0 apps.
 
 
 Anti-Patterns

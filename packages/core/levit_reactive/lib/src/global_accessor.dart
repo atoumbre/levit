@@ -1,9 +1,15 @@
 part of 'reactive_library.dart';
 
-/// The global entry point for the Levit reactive engine.
+/// The low-level global entry point for the Levit reactive engine.
 ///
 /// [Lx] provides static access to core functionality, including configuration,
-/// dependency tracking, and batching.
+/// untracked reads, middleware registration, and batching.
+///
+/// High-level kits (`levit`, `levit_dart`, and `levit_flutter`) intentionally
+/// hide [Lx] in favor of the unified `Levit` facade (`Levit.batch`,
+/// `Levit.batchAsync`, `Levit.untracked`, `Levit.isBatching`).
+///
+/// {@category Reactive State}
 class Lx {
   /// Reads reactive state without subscribing an enclosing consumer.
   static R untracked<R>(R Function() read) {
@@ -28,6 +34,7 @@ class Lx {
   /// Whether to capture stack traces on state changes (performance intensive).
   static bool get captureStackTrace => _LevitReactiveCore.captureStackTrace;
 
+  /// Sets whether stack traces are captured on state changes.
   static set captureStackTrace(bool value) {
     _LevitReactiveCore.captureStackTrace = value;
   }
@@ -39,6 +46,8 @@ class Lx {
   /// When `true`, watchers track execution counts and durations.
   static bool get enableWatchMonitoring => _enableWatchMonitoring;
 
+  /// Sets whether performance monitoring is enabled globally for [LxWorker]
+  /// instances.
   static set enableWatchMonitoring(bool value) {
     _enableWatchMonitoring = value;
   }
@@ -86,7 +95,9 @@ class Lx {
   /// Executes [callback] in a synchronous batch.
   ///
   /// Notifications for all variables mutated inside the batch are deferred
-  /// until the callback completes, ensuring only a single notification per variable.
+  /// until the outermost batch completes (or throws), ensuring at most one
+  /// notification per variable. Nested calls coalesce into the enclosing batch.
+  /// Do not pass an `async` callback here; use [batchAsync] for async work.
   static R batch<R>(R Function() callback) {
     return _LevitReactiveCore.batch(callback);
   }
@@ -108,6 +119,8 @@ class Lx {
 }
 
 /// Low-level runtime hooks exposed via `package:levit_reactive/spi.dart`.
+///
+/// {@category SPI}
 abstract final class LxSpi {
   static List<(LxReactive, void Function())>? _construction;
 
@@ -160,8 +173,12 @@ abstract final class LxSpi {
   static bool get hasListenerMiddlewares =>
       LevitReactiveMiddleware._hasListenerMiddlewares;
 
-  /// The context passed to [LevitReactiveMiddleware.startedListening]
-  /// and [LevitReactiveMiddleware.stoppedListening].
+  /// Runs [fn] with [context] installed as the active [listenerContext].
+  ///
+  /// [LevitReactiveMiddleware.startedListening] and
+  /// [LevitReactiveMiddleware.stoppedListening] receive [context] for listener
+  /// changes triggered synchronously inside [fn]. The previous context is
+  /// restored when [fn] completes or throws.
   static T runWithContext<T>(LxListenerContext context, T Function() fn) {
     return _LevitReactiveCore.runWithContext(context, fn);
   }

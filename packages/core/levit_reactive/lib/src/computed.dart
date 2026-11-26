@@ -1,6 +1,8 @@
 part of 'reactive_library.dart';
 
 /// Controls admission of overlapping asynchronous reactive computations.
+///
+/// {@category Reactive State}
 enum LxAsyncConcurrency {
   /// Launch every invalidation and publish only the latest execution result.
   latest,
@@ -16,7 +18,6 @@ enum LxAsyncConcurrency {
 /// verifies each read before reusing an unchanged dependency order; conditional
 /// or reordered reads still update subscriptions automatically.
 ///
-/// // Example usage:
 /// ```dart
 /// final firstName = 'John'.lx;
 /// final lastName = 'Doe'.lx;
@@ -24,6 +25,8 @@ enum LxAsyncConcurrency {
 /// // Updates only when firstName or lastName changes
 /// final fullName = LxComputed(() => '${firstName()} ${lastName()}');
 /// ```
+///
+/// {@category Reactive State}
 class LxComputed<T> extends _ComputedBase<T> {
   final T Function() _compute;
   final bool Function(T previous, T current)? _equals;
@@ -46,8 +49,9 @@ class LxComputed<T> extends _ComputedBase<T> {
 
   /// Creates a synchronous computed value.
   ///
-  /// The [compute] function is called to calculate the value.
-  /// Use [staticDeps] to optimize performance if the dependency graph never changes.
+  /// The supplied computation function is called to calculate the value.
+  /// Use [staticDeps] to optimize performance when the dependency graph does
+  /// not change while active.
   /// Use [equals] to define custom equality logic.
   LxComputed(
     this._compute, {
@@ -135,10 +139,6 @@ class LxComputed<T> extends _ComputedBase<T> {
     );
   }
 
-  /// Creates a deferred computation that runs in a microtask and returns [LxStatus].
-  ///
-  /// This is useful when you want to convert a synchronous calculation into
-  /// a status-wrapped asynchronous flow without explicitly using async/await.
   /// Creates a deferred computation that runs in a microtask and returns [LxStatus].
   ///
   /// This is useful when you want to convert a synchronous calculation into
@@ -427,15 +427,17 @@ class LxComputed<T> extends _ComputedBase<T> {
 /// An asynchronous computed value that reflects state transitions via [LxStatus].
 ///
 /// [LxAsyncComputed] derives state from async operations, automatically tracking
-/// dependencies. It exposes the current status (Success, Error, Waiting) of the calculation.
+/// dependencies. It exposes the current status ([LxWaiting], [LxSuccess], or
+/// [LxError]) of the calculation.
 ///
-/// // Example usage:
 /// ```dart
 /// final userId = 1.lx;
 ///
 /// // Re-fetches user whenever userId changes
 /// final user = LxAsyncComputed(() => fetchUser(userId()));
 /// ```
+///
+/// {@category Reactive State}
 class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
     with _LxAsyncLifecycle<LxStatus<T>> {
   final Future<T> Function() _compute;
@@ -670,9 +672,13 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
     _setValueInternal(LxSuccess<T>(result));
   }
 
+  /// The current asynchronous computation [LxStatus] (alias for [value]).
   LxStatus<T> get status => value;
 
-  /// Whether there are active listeners.
+  /// Re-runs the asynchronous computation if this computed value is active.
+  ///
+  /// Respects [concurrency] when an execution is already in progress and is a
+  /// no-op while inactive, closing, or disposed.
   void refresh() => _run();
 
   @override
@@ -1124,9 +1130,11 @@ final ZoneSpecification _staticAsyncZoneSpec = ZoneSpecification(
 /// Kept as a function for API compatibility.
 ZoneSpecification _asyncZoneSpec() => _staticAsyncZoneSpec;
 
-/// Extension to create [LxComputed] from a synchronous function.
+/// Extension to create an [LxComputed] from a synchronous function.
+///
+/// {@category Reactive State}
 extension LxFunctionExtension<T> on T Function() {
-  /// Transforms this function into a [LxComputed] value.
+  /// Transforms this function into an [LxComputed] value.
   ///
   /// ```dart
   /// final count = 0.lx;
@@ -1134,15 +1142,18 @@ extension LxFunctionExtension<T> on T Function() {
   /// ```
   LxComputed<T> get lx => LxComputed<T>(this);
 
-  /// Transforms this function into a [LxComputed] value with static dependencies.
+  /// Transforms this function into an [LxComputed] value with static dependencies.
   ///
-  /// The dependency graph is built only once.
+  /// The dependency graph is captured once per active lifecycle and reused until
+  /// all listeners detach.
   LxComputed<T> get lxStatic => LxComputed<T>(this, staticDeps: true);
 }
 
-/// Extension to create [LxAsyncComputed] from an asynchronous function.
+/// Extension to create an [LxAsyncComputed] from an asynchronous function.
+///
+/// {@category Reactive State}
 extension LxAsyncFunctionExtension<T> on Future<T> Function() {
-  /// Transforms this async function into a [LxAsyncComputed] value.
+  /// Transforms this async function into an [LxAsyncComputed] value.
   ///
   /// ```dart
   /// final userId = 1.lx;
@@ -1150,9 +1161,10 @@ extension LxAsyncFunctionExtension<T> on Future<T> Function() {
   /// ```
   LxAsyncComputed<T> get lx => LxComputed.async<T>(this);
 
-  /// Transforms this async function into a [LxAsyncComputed] value with static dependencies.
+  /// Transforms this async function into an [LxAsyncComputed] value with static dependencies.
   ///
-  /// The dependency graph is built only once.
+  /// The dependency graph is captured once per active lifecycle and reused until
+  /// all listeners detach.
   LxAsyncComputed<T> get lxStatic =>
       LxComputed.async<T>(this, staticDeps: true);
 }

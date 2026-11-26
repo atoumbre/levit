@@ -4,9 +4,16 @@ part of 'dart_core_library.dart';
 ///
 /// [Levit] unifies the capabilities of `levit_scope` (Dependency Injection)
 /// and `levit_reactive` (Reactivity) into a single, cohesive API. It manages
-/// controller lifecycles, configuration, and global middleware.
+/// controller lifecycles, configuration, reactive batching, and global
+/// middleware.
 ///
-/// Use [put] to register dependencies and [find] to retrieve them.
+/// Use [put] / [lazyPut] / [lazyPutAsync] to register dependencies and [find]
+/// to resolve them in pure Dart. In Flutter widget trees that use `LScope`,
+/// prefer `context.levit.find<T>()` over bare [Levit.find]. Call
+/// [enableAutoLinking] once at startup (for example in Flutter `main()` before
+/// `runApp`).
+///
+/// {@category Scopes & DI}
 class Levit {
   // ------------------------------------------------------------
   //    Reactive API accessors
@@ -18,6 +25,7 @@ class Levit {
   /// Use only for debugging.
   static bool get captureStackTrace => Lx.captureStackTrace;
 
+  /// Sets whether stack traces are captured on state changes.
   static set captureStackTrace(bool value) {
     Lx.captureStackTrace = value;
   }
@@ -25,6 +33,7 @@ class Levit {
   /// Whether to monitor performance metrics for [LxWorker].
   static bool get enableWatchMonitoring => Lx.enableWatchMonitoring;
 
+  /// Sets whether performance metrics are collected for [LxWorker] instances.
   static set enableWatchMonitoring(bool value) {
     Lx.enableWatchMonitoring = value;
   }
@@ -34,7 +43,6 @@ class Levit {
   /// Notifications are deferred until the batch completes, ensuring that
   /// observers are only notified once even if multiple values change.
   ///
-  /// // Example usage:
   /// ```dart
   /// Levit.batch(() {
   ///   firstName.value = 'Jane';
@@ -104,11 +112,11 @@ class Levit {
   /// Instantiates and registers a dependency.
   ///
   /// The [builder] is executed immediately.
-  /// If [permanent] is true, the instance survives a *non-forced* [reset].
-  /// Scope dispose always resets with `force: true`, so permanents do not leak
-  /// across disposed scopes. Prefer permanent on root / long-lived scopes.
+  /// If [permanent] is `true`, the instance survives a *non-forced* [reset].
+  /// Scope disposal always force-clears permanent registrations so they do not
+  /// leak across disposed scopes. Prefer `permanent: true` on root or
+  /// long-lived scopes.
   ///
-  /// // Example usage:
   /// ```dart
   /// final service = Levit.put(() => AuthService());
   /// ```
@@ -120,9 +128,10 @@ class Levit {
   ///
   /// The [builder] runs only when the dependency is first requested.
   ///
-  /// *   If [isFactory] is true, [builder] runs on every request.
-  /// *   If [permanent] is true, registration survives a *non-forced* [reset].
-  ///     Scope dispose always force-clears permanents.
+  /// * If [isFactory] is `true`, [builder] runs on every request and the
+  ///   registering scope owns any disposable results.
+  /// * If [permanent] is `true`, registration survives a *non-forced* [reset].
+  ///   Scope disposal always force-clears permanent registrations.
   static void lazyPut<S>(
     S Function() builder, {
     Object? tag,
@@ -140,8 +149,8 @@ class Levit {
   /// Registers an asynchronous lazy dependency builder.
   ///
   /// Retrieve the instance using [findAsync].
-  /// If [permanent] is true, registration survives a *non-forced* [reset].
-  /// Scope dispose always force-clears permanents.
+  /// If [permanent] is `true`, registration survives a *non-forced* [reset].
+  /// Scope disposal always force-clears permanent registrations.
   static Future<S> Function() lazyPutAsync<S>(
     Future<S> Function() builder, {
     Object? tag,
@@ -156,7 +165,16 @@ class Levit {
     );
   }
 
-  /// Binds [Alias] to an existing local singleton [Concrete].
+  /// Binds [Alias] to an existing local singleton [Concrete] without creating
+  /// a second ownership lifecycle.
+  ///
+  /// Use [sourceTag] to select a tagged [Concrete] registration and [tag] to
+  /// disambiguate the alias. Deleting the alias does not dispose [Concrete].
+  ///
+  /// ```dart
+  /// Levit.put(() => HttpUsersRepository());
+  /// Levit.bindExisting<UsersRepository, HttpUsersRepository>();
+  /// ```
   static void bindExisting<Alias, Concrete extends Alias>({
     Object? sourceTag,
     Object? tag,
@@ -164,9 +182,8 @@ class Levit {
     Ls.bindExisting<Alias, Concrete>(sourceTag: sourceTag, tag: tag);
   }
 
-  /// Finds a registered instance of type [S].
+  /// Finds a registered instance of type [S] in [currentScope].
   ///
-  /// // Example usage:
   /// ```dart
   /// final service = Levit.find<AuthService>();
   /// ```
@@ -186,7 +203,7 @@ class Levit {
     return Ls.findAsync<S>(tag: tag);
   }
 
-  /// Asynchronously finds an instance of type [S], or returning `null`.
+  /// Asynchronously finds an instance of type [S], or returns `null`.
   static Future<S?> findOrNullAsync<S>({Object? tag}) async {
     return Ls.findOrNullAsync<S>(tag: tag);
   }
@@ -201,38 +218,53 @@ class Levit {
     return Ls.isInstantiated<S>(tag: tag);
   }
 
-  /// Removes the registration for [S] and disposes of the instance.
+  /// Removes the local registration for [S] and awaits disposal of any owned instances.
   ///
-  /// If the instance implements [LevitScopeDisposable], its `onClose` method is called.
-  /// If [force] is true, deletes even if the dependency was marked as `permanent`.
+  /// Disposes [LevitScopeDisposable] (`onClose`), [LevitDisposable] (`dispose`),
+  /// and disposable factory results owned by this registration. Removing an
+  /// alias created by [bindExisting] removes only the alias without disposing
+  /// the canonical instance.
+  ///
+  /// If [force] is `true`, deletes even if the dependency was marked as `permanent`.
+  /// Always `await` deletion before replacing an instantiated registration.
   /// Returns `true` if a registration was found and removed.
   static Future<bool> delete<S>({Object? tag, bool force = false}) {
     return Ls.delete<S>(tag: tag, force: force);
   }
 
-  /// Disposes of all non-permanent dependencies in the current scope.
+  /// Disposes all non-permanent dependencies in the current scope.
   ///
-  /// If [force] is true, also disposes of permanent dependencies.
+  /// If [force] is `true`, also disposes permanent dependencies. Always `await`
+  /// completion so asynchronous cleanup finishes deterministically.
   static Future<void> reset({bool force = false}) {
     return Ls.reset(force: force);
   }
 
-  /// Creates a new child scope branching from the current active scope.
+  /// Creates a new child scope branching from [currentScope].
   ///
   /// Child scopes can override parent dependencies and provide their own
-  /// isolated lifecycle. The [name] is used for profiling and logs.
+  /// isolated lifecycle. The [name] is used for profiling and logs. When
+  /// [ownedByParent] is `true` (default), disposing the parent automatically
+  /// disposes this child first; always `await scope.dispose()` when done.
   static LevitScope createScope(String name, {bool ownedByParent = true}) {
     return Ls.createScope(name, ownedByParent: ownedByParent);
   }
 
-  /// Runs [callback] in a fresh child scope and disposes it automatically.
+  /// Runs [callback] in a fresh child scope and awaits its disposal on exit.
   ///
-  /// This helper is useful in tests and short-lived workflows where manual
+  /// This helper is ideal for tests and short-lived workflows where manual
   /// `createScope`/`dispose` plumbing adds noise.
   ///
   /// Uses [name] for scope diagnostics and middleware metadata.
   /// If [parentScope] is provided, the child scope is created under that scope;
-  /// otherwise it is created under the current scope.
+  /// otherwise it is created under [currentScope].
+  ///
+  /// ```dart
+  /// final ping = await Levit.runInScope(() async {
+  ///   Levit.put(() => ApiClient());
+  ///   return await Levit.find<ApiClient>().ping();
+  /// });
+  /// ```
   ///
   /// Returns the value returned by [callback].
   ///
@@ -261,6 +293,10 @@ class Levit {
   static List<String> get registeredKeys => Ls.registeredKeys;
 
   /// Adds a global middleware for receiving dependency injection events.
+  ///
+  /// Pass a stable [token] per concern so re-registering with the same token
+  /// replaces the previous middleware in place and allows cleanup via
+  /// [removeDependencyMiddlewareByToken].
   static void addDependencyMiddleware(
     LevitScopeMiddleware middleware, {
     Object? token,
@@ -268,17 +304,20 @@ class Levit {
     Ls.addMiddleware(middleware, token: token);
   }
 
-  /// Removes a DI middleware.
+  /// Removes a previously registered DI middleware.
   static void removeDependencyMiddleware(LevitScopeMiddleware middleware) {
     Ls.removeMiddleware(middleware);
   }
 
-  /// Removes a DI middleware by [token].
+  /// Removes a DI middleware by [token]. Returns `true` if one was removed.
   static bool removeDependencyMiddlewareByToken(Object token) {
     return Ls.removeMiddlewareByToken(token);
   }
 
-  /// Adds a middleware to the list of active middlewares.
+  /// Adds a global reactive state middleware.
+  ///
+  /// Pass a stable [token] per concern so re-registering replaces in place and
+  /// cleanup can use [removeStateMiddlewareByToken].
   static void addStateMiddleware(
     LevitReactiveMiddleware middleware, {
     Object? token,
@@ -286,12 +325,12 @@ class Levit {
     Lx.addMiddleware(middleware, token: token);
   }
 
-  /// Removes a middleware from the list of active middlewares.
+  /// Removes a global reactive state middleware.
   static void removeStateMiddleware(LevitReactiveMiddleware middleware) {
     Lx.removeMiddleware(middleware);
   }
 
-  /// Removes a state middleware by [token].
+  /// Removes a state middleware by [token]. Returns `true` if one was removed.
   static bool removeStateMiddlewareByToken(Object token) {
     return Lx.removeMiddlewareByToken(token);
   }
@@ -303,11 +342,17 @@ class Levit {
   static LevitReactiveMiddleware? _autoLinkMiddleware;
   static LevitScopeMiddleware? _autoDisposeMiddleware;
 
-  /// Enables automatic linking of reactive state to resource-owner lifecycles.
+  /// Enables automatic linking of reactive state to controller and resource-owner lifecycles.
   ///
   /// When enabled, [LxReactive] objects created while instantiating or
-  /// initializing a returned [LevitResourceOwner] are automatically registered
-  /// through [LevitResourceOwner.own] and disposed with that owner.
+  /// initializing a [LevitController] (or any SPI `LevitResourceOwner`) are
+  /// automatically registered through [LevitController.own] and closed when
+  /// that owner closes.
+  ///
+  /// Call this once during startup (for example in Flutter `main()` before
+  /// `runApp`). Monitoring (`levit_monitor`) does not enable auto-linking.
+  /// Non-reactive resources and reactives created outside construction or
+  /// `onInit` must still be registered explicitly with `own(...)`.
   static void enableAutoLinking() {
     if (_autoLinkMiddleware != null) return; // Already enabled
 
@@ -367,8 +412,10 @@ class Levit {
 }
 
 /// Fluent extensions for naming and configuring reactive objects.
+///
+/// {@category Reactive State}
 extension LxNamingExtension<R extends LxReactive> on R {
-  /// assigns a debug [name] to this reactive object.
+  /// Assigns a debug [name] to this reactive object and returns `this`.
   R named(String name) {
     this.name = name;
     return this;

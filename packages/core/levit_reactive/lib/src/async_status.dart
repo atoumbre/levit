@@ -5,6 +5,8 @@ part of 'reactive_library.dart';
 /// [LxStatus] provides a type-safe way to represent the standard states of
 /// asynchronous operations: [LxIdle], [LxWaiting], [LxSuccess], and [LxError].
 /// It supports "stale-while-revalidate" by optionally holding a [lastValue].
+///
+/// {@category Reactive State}
 sealed class LxStatus<T> {
   /// The most recent successful value of type [T], if any.
   final T? lastValue;
@@ -45,6 +47,8 @@ sealed class LxStatus<T> {
 }
 
 /// Status: Idle (the operation has not been initiated).
+///
+/// {@category Reactive State}
 final class LxIdle<T> extends LxStatus<T> {
   static final Map<Type, LxIdle<dynamic>> _cache = {};
 
@@ -82,6 +86,8 @@ final class LxIdle<T> extends LxStatus<T> {
 }
 
 /// Status: Waiting (the operation is active).
+///
+/// {@category Reactive State}
 final class LxWaiting<T> extends LxStatus<T> {
   static final Map<Type, LxWaiting<dynamic>> _cache = {};
 
@@ -120,6 +126,8 @@ final class LxWaiting<T> extends LxStatus<T> {
 }
 
 /// Status: Success (the operation completed with a result).
+///
+/// {@category Reactive State}
 final class LxSuccess<T> extends LxStatus<T> {
   /// The resulting value of the operation.
   final T value;
@@ -139,6 +147,8 @@ final class LxSuccess<T> extends LxStatus<T> {
 }
 
 /// Status: Error (the operation failed).
+///
+/// {@category Reactive State}
 final class LxError<T> extends LxStatus<T> {
   /// The error object thrown during the operation.
   final Object error;
@@ -149,9 +159,13 @@ final class LxError<T> extends LxStatus<T> {
   /// Creates an error status optionally carrying the [lastValue].
   const LxError(this.error, [this.stackTrace, T? lastValue]) : super(lastValue);
 
+  /// Creates an error status explicitly retaining [lastValue] (even when
+  /// [lastValue] is `null` for a nullable type `T`).
   const LxError.retained(this.error, T lastValue, [this.stackTrace])
     : super(lastValue, hasLastValue: true);
 
+  /// Creates an error status carrying over [LxStatus.lastValue] from [previous]
+  /// if [previous] retained a value.
   factory LxError.fromPrevious(
     Object error,
     StackTrace? stack,
@@ -175,6 +189,8 @@ final class LxError<T> extends LxStatus<T> {
 }
 
 /// Ergonomic extensions for interacting with reactive async status sources.
+///
+/// {@category Reactive State}
 extension LxStatusReactiveExtensions<T> on LxReadable<LxStatus<T>> {
   /// Returns the current value if the status is [LxSuccess], otherwise `null`.
   T? get valueOrNull => value.valueOrNull;
@@ -206,6 +222,8 @@ extension LxStatusReactiveExtensions<T> on LxReadable<LxStatus<T>> {
   /// Returns the [LxStatus.lastValue] (the most recent successful value).
   T? get lastValue => value.lastValue;
 
+  /// Whether [lastValue] holds a retained previous successful value (useful
+  /// when `T` is nullable).
   bool get hasLastValue => value.hasLastValue;
 
   /// Force-retrieves the current value if the status is [LxSuccess].
@@ -221,10 +239,11 @@ extension LxStatusReactiveExtensions<T> on LxReadable<LxStatus<T>> {
     throw StateError('Async operation has no value yet (status: $statusLabel)');
   }
 
-  /// Returns a Future that completes when the operation reaches a terminal state.
+  /// Returns a [Future] that completes when the operation reaches a terminal state.
   ///
-  /// If the current state is [LxSuccess] or [LxError], the Future completes
-  /// immediately. Otherwise, it waits for the next transition to a terminal state.
+  /// If the current state is [LxSuccess] or [LxError], the [Future] completes
+  /// immediately. Otherwise, it waits for the next transition to a terminal
+  /// state, throwing a [StateError] if the stream closes first.
   Future<T> get wait async {
     final s = value;
     if (s is LxSuccess<T>) return Future.value(s.value);
@@ -240,7 +259,10 @@ extension LxStatusReactiveExtensions<T> on LxReadable<LxStatus<T>> {
     throw (terminalStatus as LxError<T>).error;
   }
 
-  /// Specialized listen for async status that allows handling individual states.
+  /// Creates an [LxWorker] dispatching callbacks by [LxStatus] variant.
+  ///
+  /// The caller owns the returned [LxWorker] and must `own(...)` or `close()`
+  /// it when no longer needed.
   LxWorker<LxStatus<T>> listen(
     void Function(T value) onSuccess, {
     void Function()? onIdle,

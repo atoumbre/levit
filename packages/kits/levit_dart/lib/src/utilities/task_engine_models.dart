@@ -1,6 +1,8 @@
 part of '../kit_library.dart';
 
 /// Priority levels for task execution.
+///
+/// {@category Tasks & Concurrency}
 enum LevitTaskPriority {
   /// High priority tasks are processed before normal tasks.
   high,
@@ -13,64 +15,133 @@ enum LevitTaskPriority {
 }
 
 /// Defines what happens when a logical task ID already has pending work.
+///
+/// {@category Tasks & Concurrency}
 enum LevitTaskConflictPolicy {
-  /// Reject the new submission with [LevitTaskConflictException].
+  /// Synchronously rejects the new submission with a `LevitTaskConflictException`
+  /// (exported by `tasks.dart`).
   reject,
 
-  /// Return the result of the latest outstanding execution.
+  /// Shares the result of the latest outstanding execution.
   join,
 
-  /// Ignore the new submission with a typed dropped exception.
+  /// Ignores the new submission; its handle completes with a
+  /// `LevitTaskDroppedException` (exported by `tasks.dart`).
   drop,
 
-  /// Cooperatively cancel outstanding work and admit the replacement.
+  /// Cooperatively cancels outstanding work (completing prior handles with a
+  /// `LevitTaskSupersededException`) and admits the replacement.
   restart,
 
-  /// Run every submission in FIFO order for the same logical task ID.
+  /// Runs every submission in FIFO order for the same logical task ID.
   enqueue,
 
-  /// Retain one trailing execution and replace it with the latest submission.
+  /// Retains one trailing execution and replaces it with the latest submission.
   coalesceLatest,
 }
 
-/// The scheduling phase represented by a [LevitTaskEvent].
-enum LevitTaskPhase { queued, running, retryWaiting, completed }
+/// The scheduling phase of a tracked task execution (exposed via
+/// [LevitTaskDetails.phase] and `LevitTaskEvent.phase` in `tasks.dart`).
+///
+/// {@category Tasks & Concurrency}
+enum LevitTaskPhase {
+  /// Admitted and waiting in the priority queue for a worker slot.
+  queued,
+
+  /// Currently executing an attempt on a worker slot.
+  running,
+
+  /// Waiting for its retry backoff delay before the next attempt.
+  retryWaiting,
+
+  /// Reached a terminal state (succeeded, failed, cancelled, dropped, or rejected).
+  completed,
+}
 
 /// Terminal outcomes for task executions and rejected submissions.
+///
+/// {@category Tasks & Concurrency}
 enum LevitTaskOutcome {
+  /// Task completed normally and produced a result.
   succeeded,
+
+  /// Task exhausted retries (or failed with a non-retryable error).
   failed,
+
+  /// Task was cooperatively cancelled (requested, owner closed, deadline, etc.).
   cancelled,
+
+  /// Execution was replaced by a newer submission (`restart` / `coalesceLatest`).
   superseded,
+
+  /// Submission was ignored under [LevitTaskConflictPolicy.drop].
   dropped,
+
+  /// Submission was rejected synchronously under [LevitTaskConflictPolicy.reject].
   rejected,
+
+  /// Task returned a fresh result directly from cache without running.
   cacheHit,
 }
 
 /// Lifecycle event types emitted by [LevitTaskEngine].
+///
+/// {@category Tasks & Concurrency}
 enum LevitTaskEventType {
+  /// Execution was admitted and added to the priority queue.
   queued,
+
+  /// Execution acquired a worker slot and started an attempt.
   started,
+
+  /// Running execution reported a progress update.
   progress,
+
+  /// Attempt failed with a retryable error and a retry timer was scheduled.
   retryScheduled,
+
+  /// Execution completed successfully.
   finished,
+
+  /// Execution terminated with an unhandled error.
   failed,
+
+  /// Execution was skipped (cache hit, cancelled, superseded, or dropped).
   skipped,
+
+  /// Submission was rejected due to a conflict or full queue.
   rejected,
+
+  /// Submission replaced a pending trailing task under `coalesceLatest`.
   coalesced,
 }
 
-/// Reasons why a task execution was skipped.
+/// Reasons why a task execution was skipped without completing normally.
+///
+/// {@category Tasks & Concurrency}
 enum LevitTaskSkipReason {
+  /// Served directly from [LevitTaskCacheProvider].
   cacheHit,
+
+  /// Cancelled while still waiting in the queue.
   cancelledWhileQueued,
+
+  /// Cancelled after dequeueing but before the task body started.
   cancelledBeforeStart,
+
+  /// Cancelled while or after the task body ran.
   cancelledAfterRun,
+
+  /// Superseded by a newer submission for the same logical task ID.
   superseded,
+
+  /// Ignored under [LevitTaskConflictPolicy.drop].
   dropped,
 }
 
 /// Describes a logical task conflict rejected by the engine.
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskConflictException implements Exception {
   /// The logical ID that already has outstanding work.
   final String taskId;
@@ -83,7 +154,13 @@ class LevitTaskConflictException implements Exception {
       'LevitTaskConflictException: task "$taskId" already has outstanding work.';
 }
 
-/// Thrown by [LevitTaskContext.throwIfCancelled] after cancellation.
+/// Exception indicating that a task execution was cooperatively cancelled.
+///
+/// Thrown by [LevitTaskContext.throwIfCancelled] as well as by the task engine
+/// or task group when an execution is cancelled while queued, before start,
+/// after run, on deadline expiration, or on owner/engine disposal.
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskCancelledException implements Exception {
   /// The logical task ID.
   final String taskId;
@@ -91,6 +168,7 @@ class LevitTaskCancelledException implements Exception {
   /// The unique execution ID.
   final String executionId;
 
+  /// Structured reason explaining why cancellation occurred.
   final LevitTaskCancellationReason reason;
 
   /// Creates a cooperative cancellation exception.
@@ -109,6 +187,8 @@ class LevitTaskCancelledException implements Exception {
 }
 
 /// Stable, low-cardinality metadata attached to task executions.
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskMetadata {
   /// A stable human-readable operation name.
   final String? debugName;
@@ -164,6 +244,8 @@ class _LevitTaskCancellation {
 }
 
 /// Context passed to every task attempt.
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskContext {
   /// The stable logical task ID.
   final String taskId;
@@ -175,7 +257,11 @@ class LevitTaskContext {
   final int attempt;
 
   final _LevitTaskCancellation _cancellation;
+
+  /// The [LevitTaskGroup] owning this task execution.
   final LevitTaskGroup group;
+
+  /// Effective absolute deadline for this execution, if any.
   final DateTime? deadline;
   final void Function(double value) _reportProgress;
 
@@ -193,6 +279,7 @@ class LevitTaskContext {
   /// Whether cooperative cancellation has been requested.
   bool get isCancelled => _cancellation.isCancelled;
 
+  /// Structured reason for cancellation, or `null` if not cancelled.
   LevitTaskCancellationReason? get cancellationReason => _cancellation.reason;
 
   /// Completes when cooperative cancellation is requested.
@@ -210,6 +297,9 @@ class LevitTaskContext {
   }
 
   /// Reports progress in the inclusive `0.0` to `1.0` range.
+  ///
+  /// Throws a [RangeError] if [value] is non-finite or outside `[0.0, 1.0]`,
+  /// and throws [LevitTaskCancelledException] if cancellation was requested.
   void reportProgress(double value) {
     if (!value.isFinite || value < 0 || value > 1) {
       throw RangeError.range(value, 0, 1, 'value');
@@ -220,6 +310,8 @@ class LevitTaskContext {
 }
 
 /// Message-safe context provided inside a task isolate.
+///
+/// {@category Tasks & Concurrency}
 class LevitIsolateTaskContext {
   /// The stable logical task ID.
   final String taskId;
@@ -233,6 +325,9 @@ class LevitIsolateTaskContext {
   final ReceivePort _cancellationPort;
   final SendPort _eventPort;
   bool _isCancelled = false;
+
+  /// Structured cancellation reason received by the isolate, or `null` if not
+  /// cancelled.
   LevitTaskCancellationReason? cancellationReason;
   final Completer<void> _cancelled = Completer<void>();
 
@@ -273,7 +368,11 @@ class LevitIsolateTaskContext {
     }
   }
 
-  /// Reports progress in the inclusive `0.0` to `1.0` range.
+  /// Reports progress in the inclusive `0.0` to `1.0` range back to the host
+  /// isolate.
+  ///
+  /// Throws a [RangeError] if [value] is non-finite or outside `[0.0, 1.0]`,
+  /// and throws [LevitTaskCancelledException] if cancellation was requested.
   void reportProgress(double value) {
     if (!value.isFinite || value < 0 || value > 1) {
       throw RangeError.range(value, 0, 1, 'value');
@@ -286,15 +385,28 @@ class LevitIsolateTaskContext {
 }
 
 /// A top-level or static task entrypoint suitable for isolate execution.
+///
+/// {@category Tasks & Concurrency}
 typedef LevitIsolateTask<I, T> =
     FutureOr<T> Function(I input, LevitIsolateTaskContext context);
 
 /// Structured lifecycle event emitted by [LevitTaskEngine].
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskEvent {
+  /// The kind of lifecycle transition represented by this event.
   final LevitTaskEventType type;
+
+  /// Identifier of the owning [LevitTaskGroup], if any.
   final String? groupId;
+
+  /// Identifier of the parent [LevitTaskGroup], if any.
   final String? parentGroupId;
+
+  /// Effective absolute deadline for this execution, if any.
   final DateTime? deadline;
+
+  /// Structured cancellation reason, when cancelled.
   final LevitTaskCancellationReason? cancellationReason;
 
   /// Stable logical task ID.
@@ -306,23 +418,58 @@ class LevitTaskEvent {
   /// Diagnostic path of the owner that scheduled the execution.
   final String ownerPath;
 
+  /// Scheduling phase after this transition.
   final LevitTaskPhase phase;
+
+  /// Low-cardinality task metadata.
   final LevitTaskMetadata metadata;
+
+  /// Assigned scheduling priority.
   final LevitTaskPriority priority;
+
+  /// Attempt counter (`0` while queued, then 1-based).
   final int attempt;
+
+  /// Configured maximum retry count for this execution.
   final int maxRetries;
+
+  /// Timestamp when this event was emitted.
   final DateTime timestamp;
+
+  /// Timestamp when this execution was queued.
   final DateTime queuedAt;
+
+  /// Timestamp when execution started, if started.
   final DateTime? startedAt;
+
+  /// Timestamp when execution reached a terminal state, if finished.
   final DateTime? finishedAt;
+
+  /// Time spent waiting in the queue before starting, if measured.
   final Duration? queueDuration;
+
+  /// Elapsed execution time from start to finish, if measured.
   final Duration? runDuration;
+
+  /// Scheduled delay before the next retry attempt, for [LevitTaskEventType.retryScheduled].
   final Duration? retryIn;
+
+  /// Reported progress in `[0.0, 1.0]`, if available.
   final double? progress;
+
+  /// Reason the execution was skipped, for [LevitTaskEventType.skipped].
   final LevitTaskSkipReason? skipReason;
+
+  /// Terminal outcome, when complete.
   final LevitTaskOutcome? outcome;
+
+  /// Unhandled error object, for [LevitTaskEventType.failed] or retryable failures.
   final Object? error;
+
+  /// Stack trace associated with [error], if available.
   final StackTrace? stackTrace;
+
+  /// Whether this execution runs in a spawned [Isolate].
   final bool runsInIsolate;
 
   /// Compatibility view of [LevitTaskMetadata.debugName].
@@ -331,6 +478,7 @@ class LevitTaskEvent {
   /// Compatibility alias for [runsInIsolate].
   bool get runInIsolate => runsInIsolate;
 
+  /// Creates a structured [LevitTaskEvent].
   LevitTaskEvent({
     required this.type,
     this.groupId,
@@ -386,7 +534,13 @@ class LevitTaskEvent {
   }
 }
 
-/// Receives task events from every [LevitTaskEngine] in this isolate.
+/// Receives structured task events from every [LevitTaskEngine] in this isolate.
+///
+/// Registrations are isolate-global; pass a stable `token` to [add] and remove
+/// it via [removeByToken] during teardown. Exceptions thrown inside
+/// [onTaskEvent] are isolated so instrumentation cannot disrupt application work.
+///
+/// {@category Tasks & Concurrency}
 abstract class LevitTaskMiddleware {
   /// Creates a task middleware.
   const LevitTaskMiddleware();
@@ -442,16 +596,34 @@ abstract class LevitTaskMiddleware {
   }
 }
 
-/// How a submitted task related to existing work.
+/// How a submitted task related to existing work for the same logical task ID.
+///
+/// {@category Tasks & Concurrency}
 enum LevitTaskSubmissionDisposition {
+  /// Admitted as a fresh independent execution.
   admitted,
+
+  /// Attached to an existing in-flight execution under [LevitTaskConflictPolicy.join].
   joined,
+
+  /// Ignored under [LevitTaskConflictPolicy.drop].
   dropped,
+
+  /// Replaced prior outstanding execution(s) under [LevitTaskConflictPolicy.restart].
   restarted,
+
+  /// Replaced or queued as the single trailing slot under [LevitTaskConflictPolicy.coalesceLatest].
   coalesced,
 }
 
 /// A lightweight handle for one scheduled or joined execution.
+///
+/// [result] is pre-marked with `.ignore()` internally so callers that only
+/// await [outcome] will not trigger unhandled zone errors. Calling [cancel] on
+/// a [LevitTaskSubmissionDisposition.joined] handle cancels the shared
+/// underlying execution.
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskExecution<T> {
   /// Stable logical task ID.
   final String taskId;
@@ -501,29 +673,71 @@ class LevitTaskExecution<T> {
   void cancel() => _cancel();
 }
 
-/// A dependency-free summary retained by [LevitTaskTracker].
+/// A dependency-free summary of one task execution retained by [LevitTaskTracker].
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskExecutionSummary {
+  /// Stable logical task ID.
   final String taskId;
+
+  /// Unique admitted execution ID.
   final String executionId;
+
+  /// Diagnostic path of the scheduling owner.
   final String ownerPath;
+
+  /// Owning [LevitTaskGroup] ID, if any.
   final String? groupId;
+
+  /// Parent [LevitTaskGroup] ID, if any.
   final String? parentGroupId;
+
+  /// Effective absolute deadline, if any.
   final DateTime? deadline;
+
+  /// Structured cancellation reason, when cancelled.
   final LevitTaskCancellationReason? cancellationReason;
+
+  /// Latest scheduling phase.
   final LevitTaskPhase phase;
+
+  /// Stable task metadata.
   final LevitTaskMetadata metadata;
+
+  /// Assigned scheduling priority.
   final LevitTaskPriority priority;
+
+  /// Latest attempt count (`0` while queued, then 1-based).
   final int attempt;
+
+  /// Timestamp when queued.
   final DateTime queuedAt;
+
+  /// Timestamp when execution started, if started.
   final DateTime? startedAt;
+
+  /// Timestamp when execution finished, if finished.
   final DateTime? finishedAt;
+
+  /// Measured queue wait duration, if available.
   final Duration? queueDuration;
+
+  /// Measured run duration, if available.
   final Duration? runDuration;
+
+  /// Latest progress in `[0.0, 1.0]`.
   final double progress;
+
+  /// Terminal outcome, when complete.
   final LevitTaskOutcome? outcome;
+
+  /// Latest failure error object, if any.
   final Object? error;
+
+  /// Stack trace associated with [error], if any.
   final StackTrace? stackTrace;
 
+  /// Creates a task execution summary.
   const LevitTaskExecutionSummary({
     required this.taskId,
     required this.executionId,
@@ -547,6 +761,7 @@ class LevitTaskExecutionSummary {
     this.stackTrace,
   });
 
+  /// Creates an initial [LevitTaskExecutionSummary] from [event].
   factory LevitTaskExecutionSummary.fromEvent(LevitTaskEvent event) {
     return LevitTaskExecutionSummary(
       taskId: event.taskId,
@@ -572,6 +787,8 @@ class LevitTaskExecutionSummary {
     );
   }
 
+  /// Returns an updated summary incorporating [event] while preserving earlier
+  /// timestamps, durations, progress, and outcome when omitted in [event].
   LevitTaskExecutionSummary apply(LevitTaskEvent event) {
     return LevitTaskExecutionSummary(
       taskId: taskId,
@@ -602,6 +819,8 @@ class LevitTaskExecutionSummary {
 ///
 /// Registration is explicit:
 /// `own(LevitTaskTracker()..attach())`.
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskTracker extends LevitTaskMiddleware implements LevitDisposable {
   /// Maximum number of terminal summaries retained.
   final int maxHistory;
@@ -611,6 +830,8 @@ class LevitTaskTracker extends LevitTaskMiddleware implements LevitDisposable {
     'taskExecutions',
   );
 
+  /// Reactive flag that is `true` while any non-completed tracked execution
+  /// has `metadata.blocksUserInteraction == true`.
   late final LxComputed<bool> hasBlockingTasks = (() {
     return executions.values.any(
       (summary) =>
@@ -622,14 +843,18 @@ class LevitTaskTracker extends LevitTaskMiddleware implements LevitDisposable {
   bool _attached = false;
   bool _disposed = false;
 
-  /// Creates a detached tracker.
+  /// Creates a detached tracker retaining up to [maxHistory] terminal summaries
+  /// (defaults to `100`; throws [RangeError] if negative).
   LevitTaskTracker({this.maxHistory = 100}) {
     if (maxHistory < 0) {
       throw RangeError.range(maxHistory, 0, null, 'maxHistory');
     }
   }
 
-  /// Registers this tracker as global task middleware.
+  /// Registers this tracker as global [LevitTaskMiddleware] (optionally under
+  /// [token]) and returns `this` for cascade chaining.
+  ///
+  /// Throws a [StateError] if already disposed.
   LevitTaskTracker attach({Object? token}) {
     if (_disposed) {
       throw StateError('A disposed LevitTaskTracker cannot be attached.');
@@ -671,7 +896,12 @@ class LevitTaskTracker extends LevitTaskMiddleware implements LevitDisposable {
   }
 }
 
-/// Interface for persistent task result caching.
+/// Interface for task result caching.
+///
+/// Ships with [LevitTaskCacheProvider.inMemory] for in-memory caching. Custom
+/// or persistent storage adapters can implement this interface.
+///
+/// {@category Tasks & Concurrency}
 abstract class LevitTaskCacheProvider {
   /// Base constructor.
   const LevitTaskCacheProvider();
@@ -708,6 +938,8 @@ class _InMemoryTaskCacheProvider implements LevitTaskCacheProvider {
 }
 
 /// Configuration for caching a task's result.
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskCachePolicy<T> {
   /// Unique key for the cached result. If null, the task ID is used.
   final String? key;
@@ -731,6 +963,8 @@ class LevitTaskCachePolicy<T> {
 }
 
 /// Represents the latest tracked execution of a logical task.
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskDetails {
   /// The current reactive status of the task.
   final LxStatus<dynamic> status;
@@ -740,9 +974,17 @@ class LevitTaskDetails {
 
   /// Diagnostic path of the scheduling owner.
   final String ownerPath;
+
+  /// Owning [LevitTaskGroup] ID, if any.
   final String? groupId;
+
+  /// Parent [LevitTaskGroup] ID, if any.
   final String? parentGroupId;
+
+  /// Effective absolute deadline, if any.
   final DateTime? deadline;
+
+  /// Structured cancellation reason, when cancelled.
   final LevitTaskCancellationReason? cancellationReason;
 
   /// Current scheduling phase.
@@ -754,7 +996,8 @@ class LevitTaskDetails {
   /// Scheduling priority.
   final LevitTaskPriority priority;
 
-  /// Current one-based attempt number.
+  /// Current attempt number (`0` while queued before execution starts, then
+  /// 1-based: `1`, `2`, ...).
   final int attempt;
 
   /// Terminal outcome, when complete.
@@ -769,10 +1012,19 @@ class LevitTaskDetails {
   /// Whether the task has started executing.
   final bool started;
 
+  /// Timestamp when this execution was queued, if known.
   final DateTime? queuedAt;
+
+  /// Timestamp when this execution started, if started.
   final DateTime? startedAt;
+
+  /// Timestamp when this execution reached a terminal state, if finished.
   final DateTime? finishedAt;
+
+  /// Measured duration spent waiting in the queue, if available.
   final Duration? queueDuration;
+
+  /// Measured duration spent running, if available.
   final Duration? runDuration;
 
   /// Creates task details.

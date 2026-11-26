@@ -1,22 +1,29 @@
 part of 'scope_library.dart';
 
 /// Low-level runtime hooks exposed via `package:levit_scope/spi.dart`.
+///
+/// {@category SPI}
 abstract final class LsSpi {
   /// The [Zone] key used to identify the active [LevitScope].
   static final Object zoneScopeKey = Object();
 }
 
-/// The global entry point for accessing the [LevitScope] system.
+/// The low-level global entry point for accessing the [LevitScope] system.
 ///
 /// [Ls] ("Levit Scope") acts as a static proxy to the currently active [LevitScope].
 /// It uses [Zone] values to determine the current scope context, defaulting to the
 /// root scope if none is active.
 ///
-/// // Example usage:
+/// High-level kits (`levit`, `levit_dart`, and `levit_flutter`) intentionally
+/// hide [Ls] in favor of the unified `Levit` facade (`Levit.currentScope`,
+/// `Levit.put`, `Levit.find`, etc.).
+///
 /// ```dart
-/// // Finds 'AuthService' in the current scope
+/// // Finds AuthService in the current scope
 /// final auth = Ls.find<AuthService>();
 /// ```
+///
+/// {@category Scopes & DI}
 class Ls {
   static final _root = LevitScope.root();
 
@@ -35,7 +42,6 @@ class Ls {
   ///
   /// The [builder] is executed immediately.
   ///
-  /// // Example usage:
   /// ```dart
   /// Ls.put(() => MyService());
   /// ```
@@ -181,8 +187,14 @@ class Ls {
 }
 
 /// Extensions for executing code within a specific [LevitScope].
+///
+/// {@category Scopes & DI}
 extension LevitScopeImplicitScopeExtension on LevitScope {
-  /// Executes [callback] with this scope as the active [Ls.currentScope].
+  /// Executes [callback] with this scope bound as the active scope in the
+  /// current [Zone].
+  ///
+  /// Unlike `Levit.runInScope`, this does not dispose the scope when [callback]
+  /// completes; the caller remains responsible for awaiting [LevitScope.dispose].
   ///
   /// Returns the result of [callback].
   R run<R>(R Function() callback) {

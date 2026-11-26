@@ -1,0 +1,10 @@
+dartdoc:
+  showUndocumentedCategories: true
+  categories:
+    "Reactive State": {}
+    "Middleware & Monitoring": {}
+    "SPI": {}
+  categoryOrder:
+    - "Reactive State"
+    - "Middleware & Monitoring"
+    - "SPI"

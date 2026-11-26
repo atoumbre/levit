@@ -38,7 +38,7 @@ bool _scopeArgsMatch(List<Object?>? a, List<Object?>? b) {
   return true;
 }
 
-/// Generates a unique diagnostic scope name when callers omit [name]/[scopeName].
+/// Generates a unique diagnostic scope name when callers omit `name` or `scopeName`.
 ///
 /// [typeSource] is typically the widget (so subclasses like `HomePage` appear in
 /// logs), or a string label for framework fallbacks. [host] should be a stable

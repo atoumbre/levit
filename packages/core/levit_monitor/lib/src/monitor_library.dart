@@ -3,7 +3,7 @@
 /// Public consumers should import `package:levit_monitor/levit_monitor.dart`.
 /// Inspector and DevTools integrations should import `package:levit_monitor/spi.dart`
 /// or `package:levit_monitor/levit_monitor_protocol.dart`.
-library levit_monitor;
+library;
 
 import 'dart:async';
 import 'dart:collection';

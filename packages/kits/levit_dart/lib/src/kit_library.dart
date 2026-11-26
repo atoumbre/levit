@@ -3,7 +3,7 @@
 /// Public consumers should import `package:levit_dart/levit_dart.dart` (or
 /// `package:levit/levit.dart`), and opt into advanced task orchestration via
 /// `package:levit_dart/tasks.dart` (or `package:levit/tasks.dart`).
-library levit_dart;
+library;
 
 import 'dart:async';
 import 'dart:collection';

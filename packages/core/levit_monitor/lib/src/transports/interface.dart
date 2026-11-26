@@ -5,6 +5,8 @@ part of '../monitor_library.dart';
 /// [LevitTransport] defines how [LevitMonitorEvent]s are delivered to developers,
 /// logs, or visualization tools. Implementations can range from simple
 /// console printing to complex network-based telemetry.
+///
+/// {@category Middleware & Monitoring}
 abstract class LevitTransport {
   /// Dispatches the [event] to the transport destination.
   ///

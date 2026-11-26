@@ -85,13 +85,10 @@ must resolve page- or app-local dependencies with `context.levit.find`
 - Fine-grained rebuild behavior inherited from reactive core bindings.
 - Composition-first kit design with explicit package boundaries.
 
-See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md) before upgrading.
-
-
 ### Local mount hooks
 
 Use a local `StatefulWidget` when a subtree needs mount/unmount callbacks.
-The [MountObserver example](example/lib/mount_observer.dart) demonstrates
+The [MountObserver example](https://github.com/softilab/levit/blob/main/packages/kits/levit_flutter/example/lib/mount_observer.dart) demonstrates
 `initState` and `dispose`. It reports widget lifetime, not viewport visibility.
 Own asynchronous cleanup in a scope and await its lifecycle controller's `closed`
 signal from tests or the surrounding feature boundary. `LKeepAlive` remains
@@ -153,7 +150,7 @@ interoperability with Flutter's existing APIs and adds no persistence dependency
 Run `flutter run -t lib/countdown_interop.dart` from `example/` for a feature-owned
 countdown displayed through ValueListenableBuilder with pause, resume and restart.
 
-Start with [scopes → owners → state → widgets](../../../docs/ONBOARDING.md).
+Start with [scopes → owners → state → widgets](https://github.com/softilab/levit/blob/main/docs/ONBOARDING.md).
 Selection/time, numeric helpers, keep-alive, static dependencies and async batching
-are covered in [advanced documentation](../../../docs/ADVANCED.md).
+are covered in [advanced documentation](https://github.com/softilab/levit/blob/main/docs/ADVANCED.md).
 Requires Dart 3.12+ and Flutter 3.44+.

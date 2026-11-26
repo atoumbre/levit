@@ -2,10 +2,13 @@ part of 'monitor_library.dart';
 
 /// The base class for all diagnostic events in the Levit ecosystem.
 ///
-/// [LevitMonitorEvent] provides a common schema for both state changes and
-/// dependency injection events, ensuring they can be serialized and correlated.
+/// [LevitMonitorEvent] provides a common schema for reactive state transitions,
+/// dependency injection and scope lifecycle events, logs, custom events, and
+/// state snapshots so they can be serialized and correlated.
+///
+/// {@category Middleware & Monitoring}
 sealed class LevitMonitorEvent {
-  /// A monotonically increasing sequence number within the current session.
+  /// A monotonically increasing sequence number across the process lifetime.
   final int seq;
 
   /// The precise timestamp when the event was captured.
@@ -113,11 +116,18 @@ sealed class LevitMonitorEvent {
 // Reactive Events
 // ============================================================================
 
-/// Base class for events related to the reactive state engine ([Lx]).
+/// Base class for events tied to a specific [LxReactive] instance.
+///
+/// Note: [LevitReactiveBatchEvent] and [LevitReactiveErrorEvent] extend
+/// [LevitMonitorEvent] directly rather than [LevitReactiveEvent], because they
+/// may span multiple reactives or lack a single reactive target.
+///
+/// {@category Middleware & Monitoring}
 sealed class LevitReactiveEvent extends LevitMonitorEvent {
   /// The reactive object that triggered the event.
   final LxReactive reactive;
 
+  /// Creates a reactive monitor event bound to [reactive].
   LevitReactiveEvent({required super.sessionId, required this.reactive});
 
   @override
@@ -129,7 +139,10 @@ sealed class LevitReactiveEvent extends LevitMonitorEvent {
 }
 
 /// Event triggered when a new reactive variable is instantiated.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveInitEvent extends LevitReactiveEvent {
+  /// Creates a reactive initialization event.
   LevitReactiveInitEvent({required super.sessionId, required super.reactive});
   @override
   Map<String, dynamic> toJson() => {
@@ -144,7 +157,10 @@ class LevitReactiveInitEvent extends LevitReactiveEvent {
 }
 
 /// Event triggered when a reactive object's lifecycle ends.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveDisposeEvent extends LevitReactiveEvent {
+  /// Creates a reactive disposal event.
   LevitReactiveDisposeEvent({
     required super.sessionId,
     required super.reactive,
@@ -157,6 +173,8 @@ class LevitReactiveDisposeEvent extends LevitReactiveEvent {
 }
 
 /// Event triggered by a single state mutation.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveChangeEvent extends LevitReactiveEvent {
   /// The change record intercepted from the middleware.
   final LevitReactiveChange change;
@@ -164,6 +182,7 @@ class LevitReactiveChangeEvent extends LevitReactiveEvent {
   /// Optional call stack captured at the write boundary for update attribution.
   final StackTrace? stackTrace;
 
+  /// Creates a reactive state-change event.
   LevitReactiveChangeEvent({
     required super.sessionId,
     required super.reactive,
@@ -234,10 +253,13 @@ class LevitReactiveChangeEvent extends LevitReactiveEvent {
 }
 
 /// Event triggered at the completion of a reactive batch.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveBatchEvent extends LevitMonitorEvent {
-  /// The batch record containing all mutations occurred within the scope.
+  /// The batch record containing all mutations that occurred within the batch.
   final LevitReactiveBatch change;
 
+  /// Creates a reactive batch completion event.
   LevitReactiveBatchEvent({required super.sessionId, required this.change});
 
   @override
@@ -268,10 +290,13 @@ class LevitReactiveBatchEvent extends LevitMonitorEvent {
 }
 
 /// Event triggered when a computed value's dependency graph is updated.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveGraphChangeEvent extends LevitReactiveEvent {
   /// The current set of dependencies for the reactive object.
   final List<LxReactive> dependencies;
 
+  /// Creates a reactive dependency-graph change event.
   LevitReactiveGraphChangeEvent({
     required super.sessionId,
     required super.reactive,
@@ -289,10 +314,13 @@ class LevitReactiveGraphChangeEvent extends LevitReactiveEvent {
 }
 
 /// Event triggered when a new listener subscribes to a reactive object.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveListenerAddedEvent extends LevitReactiveEvent {
   /// Context data about the listener (e.g., Widget label, runtimeType).
   final LxListenerContext? context;
 
+  /// Creates a listener-added event.
   LevitReactiveListenerAddedEvent({
     required super.sessionId,
     required super.reactive,
@@ -310,10 +338,13 @@ class LevitReactiveListenerAddedEvent extends LevitReactiveEvent {
 }
 
 /// Event triggered when a listener unsubscribes from a reactive object.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveListenerRemovedEvent extends LevitReactiveEvent {
   /// Context data about the listener.
   final LxListenerContext? context;
 
+  /// Creates a listener-removed event.
   LevitReactiveListenerRemovedEvent({
     required super.sessionId,
     required super.reactive,
@@ -330,7 +361,10 @@ class LevitReactiveListenerRemovedEvent extends LevitReactiveEvent {
   };
 }
 
-/// Event triggered when an unhandled exception occurs in a reactive listener.
+/// Event triggered when an unhandled exception is reported during reactive
+/// notification or computation.
+///
+/// {@category Middleware & Monitoring}
 class LevitReactiveErrorEvent extends LevitMonitorEvent {
   /// The reactive object context where the error occurred (optional).
   final LxReactive? reactive;
@@ -341,6 +375,7 @@ class LevitReactiveErrorEvent extends LevitMonitorEvent {
   /// The stack trace associated with the error.
   final StackTrace? stack;
 
+  /// Creates a reactive error event.
   LevitReactiveErrorEvent({
     required super.sessionId,
     this.reactive,
@@ -371,6 +406,8 @@ class LevitReactiveErrorEvent extends LevitMonitorEvent {
 // ============================================================================
 
 /// Base class for events related to the dependency injection system ([Levit]).
+///
+/// {@category Middleware & Monitoring}
 sealed class LevitDependencyEvent extends LevitMonitorEvent {
   /// The unique identifier of the scope where the event occurred.
   final int scopeId;
@@ -384,6 +421,7 @@ sealed class LevitDependencyEvent extends LevitMonitorEvent {
   /// Metadata about the dependency at the time of the event.
   final LevitDependency info;
 
+  /// Creates a dependency or scope lifecycle event.
   LevitDependencyEvent({
     required super.sessionId,
     required this.scopeId,
@@ -405,10 +443,15 @@ sealed class LevitDependencyEvent extends LevitMonitorEvent {
 }
 
 /// Event triggered when a new scope is created.
+///
 /// Wire metadata describes the scope; dependency-only flags are omitted.
+///
+/// {@category Middleware & Monitoring}
 class LevitScopeCreateEvent extends LevitDependencyEvent {
+  /// The parent scope identifier, or `null` for a root scope.
   final int? parentScopeId;
 
+  /// Creates a scope creation event.
   LevitScopeCreateEvent({
     required super.sessionId,
     required super.scopeId,
@@ -428,8 +471,12 @@ class LevitScopeCreateEvent extends LevitDependencyEvent {
 }
 
 /// Event triggered when a scope is disposed, after all cleanup attempts finish.
+///
 /// Wire metadata describes the scope; dependency-only flags are omitted.
+///
+/// {@category Middleware & Monitoring}
 class LevitScopeDisposeEvent extends LevitDependencyEvent {
+  /// Creates a scope disposal event.
   LevitScopeDisposeEvent({
     required super.sessionId,
     required super.scopeId,
@@ -447,8 +494,14 @@ class LevitScopeDisposeEvent extends LevitDependencyEvent {
 }
 
 /// Event triggered when a dependency is registered with a scope.
+///
+/// {@category Middleware & Monitoring}
 class LevitDependencyRegisterEvent extends LevitDependencyEvent {
+  /// Registration source (for example `'put'`, `'lazyPut'`, `'putFactory'`,
+  /// `'lazyPutAsync'`, `'putFactoryAsync'`, or `'bindExisting'`).
   final String source;
+
+  /// Creates a dependency registration event.
   LevitDependencyRegisterEvent({
     required super.sessionId,
     required super.scopeId,
@@ -465,6 +518,8 @@ class LevitDependencyRegisterEvent extends LevitDependencyEvent {
 }
 
 /// Event triggered when a dependency instance creation begins.
+///
+/// {@category Middleware & Monitoring}
 class LevitDependencyInstanceCreateEvent extends LevitDependencyEvent {
   /// Creates a new [LevitDependencyInstanceCreateEvent].
   LevitDependencyInstanceCreateEvent({
@@ -481,6 +536,8 @@ class LevitDependencyInstanceCreateEvent extends LevitDependencyEvent {
 }
 
 /// Event triggered when a dependency instance is fully initialized and ready.
+///
+/// {@category Middleware & Monitoring}
 class LevitDependencyInstanceReadyEvent extends LevitDependencyEvent {
   /// The resulting instance.
   final dynamic instance;
@@ -511,8 +568,14 @@ class LevitDependencyInstanceReadyEvent extends LevitDependencyEvent {
 }
 
 /// Event triggered when a dependency is successfully resolved.
+///
+/// {@category Middleware & Monitoring}
 class LevitDependencyResolveEvent extends LevitDependencyEvent {
+  /// Resolution source (for example `'find'`, `'findAsync'`, `'findAlias'`, or
+  /// `'findAliasAsync'`).
   final String source;
+
+  /// Creates a dependency resolution event.
   LevitDependencyResolveEvent({
     required super.sessionId,
     required super.scopeId,
@@ -534,8 +597,11 @@ class LevitDependencyResolveEvent extends LevitDependencyEvent {
 }
 
 /// Event triggered when a dependency is removed from a scope.
+///
+/// {@category Middleware & Monitoring}
 class LevitDependencyDeleteEvent extends LevitDependencyEvent {
-  /// The origin or reason for the deletion (e.g., 'manual', 'scope_destroy').
+  /// The origin of the deletion (for example `'delete'`, `'deleteAlias'`,
+  /// `'reset'`, or `'dispose'`).
   final String source;
 
   /// Creates a new [LevitDependencyDeleteEvent].
@@ -559,6 +625,8 @@ class LevitDependencyDeleteEvent extends LevitDependencyEvent {
 // ============================================================================
 
 /// Event triggered for custom application logs.
+///
+/// {@category Middleware & Monitoring}
 class LevitLogEvent extends LevitMonitorEvent {
   /// The severity level of the log.
   final LevitLogLevel level;
@@ -575,6 +643,7 @@ class LevitLogEvent extends LevitMonitorEvent {
   /// An optional stack trace associated with the log.
   final StackTrace? stackTrace;
 
+  /// Creates a structured log event.
   LevitLogEvent({
     required super.sessionId,
     required this.level,
@@ -676,6 +745,8 @@ final class _ScopeProgressEvent extends LevitMonitorEvent {
 ///
 /// Custom events let optional packages bridge their own event models into the
 /// monitor without making `levit_monitor` depend on those packages.
+///
+/// {@category Middleware & Monitoring}
 class LevitCustomMonitorEvent extends LevitMonitorEvent {
   /// Stable namespace owned by the event producer.
   final String namespace;
@@ -781,9 +852,13 @@ class LevitCustomMonitorEvent extends LevitMonitorEvent {
 // ============================================================================
 
 /// Event containing a full state snapshot for reconnection.
+///
+/// {@category Middleware & Monitoring}
 class LevitSnapshotEvent extends LevitMonitorEvent {
+  /// The serialized shadow state payload.
   final Map<String, dynamic> state;
 
+  /// Creates a snapshot event holding [state].
   LevitSnapshotEvent({required super.sessionId, required this.state});
 
   @override
@@ -795,7 +870,10 @@ class LevitSnapshotEvent extends LevitMonitorEvent {
 }
 
 /// The only event form retained by monitor queues and passed to transports.
+///
+/// {@category Middleware & Monitoring}
 final class LevitFrozenMonitorEvent extends LevitMonitorEvent {
+  /// The deeply immutable wire envelope backing this frozen event.
   final LevitEventEnvelope envelope;
   // Capture already owns the DateTime. Reparsing its wire representation adds
   // a regexp/date conversion to every event without strengthening immutability.
@@ -806,6 +884,8 @@ final class LevitFrozenMonitorEvent extends LevitMonitorEvent {
         timestamp: timestamp,
       );
 
+  /// Creates a frozen monitor event from an existing [envelope] whose
+  /// `data['timestamp']` is a valid ISO-8601 string.
   LevitFrozenMonitorEvent(this.envelope)
     : super(
         sessionId: envelope.sessionId,
@@ -817,7 +897,10 @@ final class LevitFrozenMonitorEvent extends LevitMonitorEvent {
 }
 
 /// Name, ownership or sensitivity changed without changing the reactive value.
+///
+/// {@category Middleware & Monitoring}
 final class LevitReactiveMetadataEvent extends LevitReactiveEvent {
+  /// Creates a reactive metadata-change event.
   LevitReactiveMetadataEvent({
     required super.sessionId,
     required super.reactive,

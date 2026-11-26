@@ -2,23 +2,25 @@ part of 'scope_library.dart';
 
 /// An interface for objects that participate in the [LevitScope] lifecycle.
 ///
-/// Implement this interface to receive callbacks for initialization and disposal.
-/// This mechanism ensures deterministic cleanup when the owning scope is disposed.
+/// Extend or implement this class to receive callbacks for initialization,
+/// scope attachment, and disposal. This ensures deterministic cleanup when the
+/// owning scope is disposed.
 ///
-/// // Example usage:
 /// ```dart
-/// class MyService implements LevitScopeDisposable {
+/// class MyService extends LevitScopeDisposable {
 ///   @override
 ///   void onInit() {
-///     print('Service initialized');
+///     // Initialize internal state.
 ///   }
 ///
 ///   @override
-///   void onClose() {
-///     print('Service disposed');
+///   Future<void> onClose() async {
+///     // Release resources asynchronously.
 ///   }
 /// }
 /// ```
+///
+/// {@category Scopes & DI}
 abstract class LevitScopeDisposable {
   /// Creates a [LevitScopeDisposable].
   const LevitScopeDisposable();
@@ -50,18 +52,26 @@ abstract class LevitScopeDisposable {
 /// Unlike [LevitScopeDisposable], this contract has no initialization hooks.
 /// A directly registered instance implementing this interface is owned by its
 /// registration scope and disposed when that registration is removed.
+///
+/// {@category Scopes & DI}
 abstract interface class LevitDisposable {
   /// Releases resources held by this object.
   FutureOr<void> dispose();
 }
 
 /// A boundary that rejects cleanup from work that it is currently draining.
+///
+/// {@category SPI}
 abstract interface class LevitExecutionBoundary {
+  /// Throws a [StateError] if called synchronously from inside work currently
+  /// owned or drained by this boundary.
   void assertCanDispose();
 }
 
 /// Owned asynchronous work that must settle before dependencies are released.
 /// Cancellation is a request; [drain] observes actual completion.
+///
+/// {@category SPI}
 abstract interface class LevitDrainable {
   /// Stops admission and requests cooperative cancellation immediately.
   void requestCancel();
@@ -71,6 +81,8 @@ abstract interface class LevitDrainable {
 }
 
 /// One failure captured while a scope or resource owner was being disposed.
+///
+/// {@category Scopes & DI}
 final class LevitDisposalFailure {
   /// The resource whose cleanup failed.
   final Object resource;
@@ -97,6 +109,8 @@ final class LevitDisposalFailure {
 /// Cleanup always continues after an individual failure. Callers receive this
 /// exception only after every selected resource has been given a chance to
 /// close.
+///
+/// {@category Scopes & DI}
 final class LevitDisposalException implements Exception {
   /// All failures in deterministic disposal order.
   final List<LevitDisposalFailure> failures;
@@ -147,6 +161,8 @@ final class LevitDisposalException implements Exception {
 ///
 /// This class tracks the lifecycle state, creation strategy, and persistence
 /// settings for a specific registration.
+///
+/// {@category Scopes & DI}
 class LevitDependency<S> {
   /// The resolved instance, or `null` if not yet instantiated.
   S? instance;
@@ -159,11 +175,10 @@ class LevitDependency<S> {
 
   /// Whether the registration persists across a non-forced [LevitScope.reset].
   ///
-  /// [LevitScope.dispose] always calls [LevitScope.reset] with `force: true`,
-  /// so permanent dependencies do not survive disposed scopes (including
-  /// unmounted [LScope] widgets and typical widget-test tear-down). Prefer
-  /// `permanent: true` on root / long-lived scopes; on short-lived page scopes
-  /// it does not extend lifetime past widget unmount.
+  /// [LevitScope.dispose] always force-clears permanent registrations, so
+  /// permanent dependencies do not survive disposed scopes (including unmounted
+  /// UI scopes and test scopes). Prefer `permanent: true` on root or long-lived
+  /// scopes; on short-lived scopes it does not extend lifetime past disposal.
   final bool permanent;
 
   /// Whether the instance creation is deferred until the first lookup.
@@ -282,10 +297,17 @@ class _LevitScopeKey {
 /// 3.  **Isolation**: Dependencies registered in a child scope are not visible to parents.
 ///
 /// ## Lifecycle
-/// When a scope is disposed via [dispose]:
-/// *   All locally registered dependencies implementing [LevitScopeDisposable]
-///     will receive a [LevitScopeDisposable.onClose] callback.
-/// *   The scope becomes unusable and should be discarded.
+/// When a scope is disposed via `await scope.dispose()`:
+/// * Owned child scopes are disposed first in reverse creation order (LIFO).
+/// * All locally owned dependencies — including [LevitScopeDisposable]
+///   (`onClose`), [LevitDisposable] (`dispose`), and disposable factory results
+///   — are cancelled, drained, and closed in reverse registration order,
+///   including `permanent: true` registrations.
+/// * Multiple cleanup errors are collected and rethrown together as a
+///   [LevitDisposalException].
+/// * The scope becomes unusable and should be discarded.
+///
+/// {@category Scopes & DI}
 class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   /// Internal counter for unique scope IDs.
   static int _nextId = 0;
@@ -369,14 +391,13 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   /// The [builder] is called immediately. If a dependency of type [S] with the
   /// same [tag] already exists, await [delete] before registering its replacement.
   ///
-  /// // Example usage:
   /// ```dart
   /// scope.put(() => AuthService());
   /// ```
   ///
   /// Use [permanent] to survive a *non-forced* [reset] only.
-  /// [dispose] always resets with `force: true`, so permanents do not leak
-  /// across disposed scopes. Prefer permanent on root / long-lived scopes.
+  /// [dispose] always force-clears permanent registrations so they do not leak
+  /// across disposed scopes. Prefer `permanent: true` on root or long-lived scopes.
   ///
   /// Returns the created instance.
   S put<S>(S Function() builder, {Object? tag, bool permanent = false}) {
@@ -444,8 +465,8 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   /// Otherwise (default), the instance is cached and treated as a singleton within this scope.
   ///
   /// Use [permanent] to survive a *non-forced* [reset] only.
-  /// [dispose] always resets with `force: true`. Prefer permanent on root /
-  /// long-lived scopes.
+  /// [dispose] always force-clears permanent registrations. Prefer
+  /// `permanent: true` on root or long-lived scopes.
   void lazyPut<S>(
     S Function() builder, {
     Object? tag,
@@ -501,8 +522,8 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   /// Otherwise, the result is cached.
   ///
   /// Use [permanent] to survive a *non-forced* [reset] only.
-  /// [dispose] always resets with `force: true`. Prefer permanent on root /
-  /// long-lived scopes.
+  /// [dispose] always force-clears permanent registrations. Prefer
+  /// `permanent: true` on root or long-lived scopes.
   ///
   /// Returns a function that allows retrieving the dependency (shortcut for `findAsync`).
   Future<S> Function() lazyPutAsync<S>(
@@ -1267,7 +1288,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   }
 
   /// Releases a disposable factory result early, without removing its recipe.
-  /// Returns false when [instance] is not owned by the resolved factory.
+  /// Returns `false` when [instance] is not owned by the resolved factory.
   /// Waits for admitted registration initialization, then cancels, drains and
   /// closes the instance. Releasing work cannot await its own disposal.
   /// Failures also remain observable through registration/scope disposal.
@@ -1556,7 +1577,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   ///
   /// [name] is used for debugging.
   /// Children are owned by default and close before this scope's dependencies.
-  /// Set [ownedByParent] to false for an explicitly borrowed lookup relationship.
+  /// Set [ownedByParent] to `false` for an explicitly borrowed lookup relationship.
   LevitScope createScope(String name, {bool ownedByParent = true}) {
     _ensureUsable();
     assert(() {
@@ -1932,10 +1953,15 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     return true;
   }
 
+  /// Returns `true` if [middleware] is currently registered.
   static bool containsMiddleware(LevitScopeMiddleware middleware) =>
       _middlewares.contains(middleware);
+
+  /// Returns `true` if a middleware is currently registered under [token].
   static bool containsMiddlewareToken(Object token) =>
       _middlewaresByToken.containsKey(token);
+
+  /// Returns `true` if at least one [LevitScopeMiddleware] is registered.
   static bool get hasMiddlewares => _middlewares.isNotEmpty;
 
   void _notifyRegister(String key, LevitDependency info, String source) {

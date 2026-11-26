@@ -135,13 +135,13 @@ Set sensitivity **at construction**, for example
 sensitivity later cannot retract events already delivered. Custom events use
 `sensitive: true` to redact attributes and error details before retention.
 
-## Local inspector and platform imports
+## Live MCP inspection and platform imports
 
-Run the optional `levit_devtools` CLI, then attach with
-`LevitWebSocketTransport.connect('ws://127.0.0.1:9200/ws', appId: 'my-app')`.
-The standalone tool includes sessions, ownership/reactions, update details, pending
-cleanup, optional task trees, filtering, a bounded timeline and redacted JSON export.
-See [levit_devtools](../../tools/levit_devtools/README.md).
+Connect a running app to the read-only `levit_mcp` server with
+`LevitWebSocketTransport.connect('ws://127.0.0.1:9200/ws', appId: 'my-app', token: 'dev-local-token')`.
+`levit_mcp` exposes live sessions, scope trees, reactive graphs, bounded timelines,
+optional task trees, and deterministic runtime diagnostics to MCP-compatible AI agents.
+See [levit_mcp](https://github.com/softilab/levit/blob/main/packages/tools/levit_mcp/README.md).
 
 The default library and `levit_monitor_protocol.dart` support browsers. File output
 is IO-only: import `package:levit_monitor/levit_monitor_io.dart` for `LevitFileTransport`.
@@ -157,12 +157,10 @@ WebSocket shutdown drains subscription cancellation and socket closure, includin
 failure paths after disconnect. Cleanup failures propagate from awaited `flush`
 or `close`; they are not sent to an unrelated asynchronous error handler.
 
-[example/task_adapter.dart](example/task_adapter.dart) demonstrates a borrowing
+[example/task_adapter.dart](https://github.com/softilab/levit/blob/main/packages/core/levit_monitor/example/task_adapter.dart) demonstrates a borrowing
 application bridge from a task engine to `levit.tasks/tree` custom events. Own it
 after its engine so it unsubscribes before the engine is released. Runtime monitor
 packages have no dependency on the task kit.
-
-See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md).
 
 Scope progress retains changed ownership/initialization/cleanup snapshots;
 identical consecutive descriptions do not emit another derived progress event.

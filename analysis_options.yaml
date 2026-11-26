@@ -12,6 +12,4 @@ analyzer:
 
 linter:
   rules:
-    # Add project-specific rules here
-    # prefer_single_quotes: true  # Example
-    # directives_ordering: true   # Example
+    comment_references: true

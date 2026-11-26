@@ -134,8 +134,7 @@ The tracker consumes structured middleware events and does not require
 controllers to publish into a second task model.
 
 Task groups, inherited deadlines and cancellation trees are available in 0.1.0.
-See [structured workflows below](#structured-workflows-in-010) and the
-[architecture summary](../../../proposals/structured_concurrency.md).
+See [structured workflows below](#structured-workflows-in-010).
 
 ## Optional monitor bridge
 
@@ -189,8 +188,6 @@ Keep this adapter in the application composition layer. Do not add
 `await taskEngine.dispose()` closes admission, signals cancellation, and waits for running execution bodies and cleanup. Both task mixins drain in `onBeforeClose`, before other controller-owned resources are released. `cancelAll()` only signals cancellation.
 
 There is no implicit timeout or hard cancellation. Uncooperative work delays disposal. An application timeout does not complete the underlying cleanup. Tasks must not await disposal of their own engine or controller; release task-local resources in their own `finally` blocks. Put dependent resource cleanup under `own` so the preparation hook runs first.
-
-See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md) before upgrading.
 
 ## 0.1.0 loop completion
 
@@ -317,7 +314,7 @@ the controller starts closing. For deterministic tests, pass a controlled `Stopw
 to the standalone constructor; the countdown exclusively controls that stopwatch.
 
 Persistence codecs/storage and persistent task caches belong to the independent
-[ecosystem roadmap](../../../docs/ecosystem_roadmap.md), outside runtime dependencies.
+[ecosystem roadmap](https://github.com/softilab/levit/blob/main/docs/ecosystem_roadmap.md), outside runtime dependencies.
 
 Task queue accounting maintains the number of pending leaf entries without
 rescanning the execution map on submission. Joins and coalesced replacements

@@ -1,0 +1,12 @@
+dartdoc:
+  showUndocumentedCategories: true
+  categories:
+    "Server & Configuration": {}
+    "Relay & Security": {}
+    "Session & Diagnostics": {}
+    "MCP Protocol": {}
+  categoryOrder:
+    - "Server & Configuration"
+    - "Relay & Security"
+    - "Session & Diagnostics"
+    - "MCP Protocol"

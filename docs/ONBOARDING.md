@@ -206,12 +206,13 @@ interoperability or additional resource composition. The
 inline DartDoc describe individual contracts.
 
 [levit_monitor](../packages/core/levit_monitor) adds optional runtime diagnostics.
-The repository also contains [levit_lints](../packages/tools/levit_lints) and the
-[local inspector](../packages/tools/levit_devtools); both tools are currently
-private workspace packages. Use the lint plugin's checkout-path configuration
-and run the inspector from its package directory with
-`dart run bin/levit_devtools.dart` after workspace setup. See
-[diagnostic boundaries](ADVANCED.md#diagnostics-and-ecosystem-boundaries) before
+For tooling, the repository provides:
+
+- [levit_lints](../packages/tools/levit_lints) — native Dart analyzer rules for lifecycle and reactive safety.
+- [levit_mcp](../packages/tools/levit_mcp) — read-only MCP server for live runtime inspection by AI agents (`dart run levit_mcp`).
+- [skills/levit](../skills/levit/SKILL.md) — portable Agent Skill encoding Levit 0.1.0 idioms and migration guidance.
+
+See [diagnostic boundaries](ADVANCED.md#diagnostics-and-ecosystem-boundaries) before
 attaching telemetry.
 
 Storage, schema migrations and persistence integrations are planned separately

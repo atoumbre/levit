@@ -3,7 +3,23 @@ import 'dart:convert';
 import 'dart:io';
 import '../../levit_monitor.dart';
 
-/// A transport that writes [LevitMonitorEvent]s to a file.
+/// An IO-only transport that appends frozen [LevitMonitorEvent]s to a file as
+/// newline-delimited JSON (NDJSON).
+///
+/// Available from `package:levit_monitor/levit_monitor_io.dart` (not supported
+/// in browser builds). Asynchronous `IOSink` errors are recorded immediately
+/// and surfaced as [LevitMonitorException] on [flush] or [close]. Calling
+/// [send] after [close] starts throws a [StateError].
+///
+/// ```dart
+/// import 'package:levit_monitor/levit_monitor_io.dart';
+///
+/// await LevitMonitor.attach(
+///   transport: LevitFileTransport('logs/levit_events.ndjson'),
+/// );
+/// ```
+///
+/// {@category Middleware & Monitoring}
 class LevitFileTransport extends LevitTransport {
   final File _file;
   late final IOSink _sink;
@@ -11,7 +27,7 @@ class LevitFileTransport extends LevitTransport {
   Future<void>? _closing;
   final List<AsyncError> _failures = [];
 
-  /// Creates a new [LevitFileTransport] writing to [filePath].
+  /// Creates a [LevitFileTransport] opening [filePath] in [FileMode.append].
   LevitFileTransport(String filePath) : _file = File(filePath) {
     _sink = _file.openWrite(mode: FileMode.append);
     // Observe asynchronous IO failures immediately, even before flush/close.

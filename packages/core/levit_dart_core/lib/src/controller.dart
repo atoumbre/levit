@@ -1,6 +1,8 @@
 part of 'dart_core_library.dart';
 
 /// A lifecycle boundary that owns arbitrary cleanup resources.
+///
+/// {@category SPI}
 abstract interface class LevitResourceOwner {
   /// Registers [resource] for deterministic cleanup and returns it.
   T own<T>(T resource, {FutureOr<void> Function(T resource)? dispose});
@@ -16,6 +18,8 @@ abstract interface class LevitResourceOwner {
 ///
 /// Apply this mixin to a [LevitScopeDisposable] when a non-controller resource
 /// needs the same ownership semantics as [LevitController].
+///
+/// {@category SPI}
 mixin LevitResourceOwnership on LevitScopeDisposable
     implements LevitResourceOwner, LevitDrainable, LevitExecutionBoundary {
   bool _resourceClosing = false;
@@ -325,10 +329,11 @@ final class _OwnerInitialization {
 /// [LevitController] manages the lifecycle of application logic, providing
 /// automated resource cleanup and integration with the dependency injection system.
 ///
-/// Implementers should override [onInit] for setup and [onClose] for cleanup.
-/// Use [own] to simplify resource management.
+/// Implementers should override [onInit] for setup, [onBeforeClose] for async
+/// draining before owned resources close, and [onClose] for custom cleanup.
+/// Always call `super.onInit()`, `await super.onBeforeClose()`, and
+/// `await super.onClose()` in overrides. Use [own] to register owned resources.
 ///
-/// // Example usage:
 /// ```dart
 /// class CounterController extends LevitController {
 ///   final count = 0.lx;
@@ -353,10 +358,17 @@ final class _OwnerInitialization {
 /// [LxWorker] is an [LxReactive], so [own] closes it with the controller.
 ///
 /// Lifecycle:
-/// 1.  **Construction**: Instance created.
-/// 2.  **Attachment**: Linked to a [LevitScope].
-/// 3.  **Initialization**: [onInit] called.
-/// 4.  **Disposal**: [onClose] called when scope closes.
+/// 1. **Construction**: Instance created.
+/// 2. **Initialization**: [onInit] runs before scope attachment (`scope` and
+///    `registrationKey` are still `null`).
+/// 3. **Attachment**: [didAttachToScope] binds [scope] and [registrationKey]
+///    and reconciles owned reactive owner paths.
+/// 4. **Pre-close & Drain**: [requestCancel] and [onBeforeClose] run before
+///    owned resources close.
+/// 5. **Disposal**: [onClose] disposes all resources registered via [own] in
+///    LIFO order when removed from the scope or when the owning scope closes.
+///
+/// {@category Controllers & Stores}
 abstract class LevitController extends LevitScopeDisposable
     with LevitResourceOwnership {
   bool _initialized = false;
@@ -368,10 +380,14 @@ abstract class LevitController extends LevitScopeDisposable
   /// distinguish active teardown from completed disposal.
   bool get isClosed => isClosing || isDisposed;
 
-  /// Whether the initialization phase is complete.
+  /// Whether `super.onInit()` has executed on this controller.
+  ///
+  /// Flips synchronously inside `super.onInit()` and does not wait for
+  /// asynchronous work started by subclasses.
   bool get isInitialized => _initialized;
 
-  /// The registration key used to identify this instance in [Levit].
+  /// The registration key assigned to this instance in its owning [scope], or
+  /// `null` before [didAttachToScope] runs.
   String? get registrationKey => _registrationKey;
 
   LevitScope? _scope;
@@ -394,9 +410,12 @@ abstract class LevitController extends LevitScopeDisposable
 
   /// Attaches this controller to an owning [scope] with an optional registration [key].
   ///
-  /// This method is called by the DI runtime when the controller is resolved.
-  /// It updates ownership metadata for already tracked reactive resources so
-  /// diagnostics and disposal ownership remain accurate.
+  /// Called once by the DI runtime immediately after [onInit] when the
+  /// controller is instantiated (during `put` or on first resolution of
+  /// `lazyPut`/`lazyPutAsync`). Updates ownership metadata for already tracked
+  /// reactive resources so diagnostics and disposal ownership remain accurate.
+  ///
+  /// Subclasses that override this method must call `super.didAttachToScope`.
   ///
   /// Throws no exceptions intentionally; internal failures are logged.
   @override
@@ -452,20 +471,21 @@ abstract class LevitController extends LevitScopeDisposable
     }
   }
 
-  /// Called immediately after the controller is initialized.
+  /// Called immediately after the controller is instantiated, before [didAttachToScope].
   ///
-  /// Override to perform setup logic like starting API calls or setting up listeners.
-  /// Use [own] here to ensure resources are tracked.
+  /// Override to perform setup logic such as starting initial loads or
+  /// registering workers via [own]. Subclasses must call `super.onInit()`.
   @override
   @mustCallSuper
   void onInit() {
     _initialized = true;
   }
 
-  /// Called when the controller is removed from memory.
+  /// Called when the controller is removed from its scope or its owning scope is disposed.
   ///
-  /// Releases all resources registered via [own].
-  /// Override to perform additional custom cleanup.
+  /// Drains active work and releases all resources registered via [own] in LIFO
+  /// order. Subclasses overriding this method must `await` or return
+  /// `super.onClose()`.
   @override
   @mustCallSuper
   FutureOr<void> onClose() => super.onClose();

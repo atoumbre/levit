@@ -1,9 +1,32 @@
 part of '../kit_library.dart';
 
-/// A standalone engine for named, cancellable asynchronous work.
+/// A standalone engine for named, prioritized, cancellable asynchronous work.
 ///
-/// The engine provides global priority/concurrency scheduling while conflict
-/// policies define ordering for submissions that share a logical task ID.
+/// Provides weighted fair priority scheduling (`4 high : 2 normal : 1 low`),
+/// bounded concurrency, structured concurrency via [rootGroup], cooperative
+/// cancellation, retries, caching, and isolate execution. Conflict policies
+/// ([LevitTaskConflictPolicy]) define ordering for submissions that share a
+/// logical task ID.
+///
+/// Always own this engine in a controller via `own(...)` or await [dispose]
+/// when done; disposal waits cooperatively for active runners to finish.
+///
+/// ```dart
+/// final engine = LevitTaskEngine(maxConcurrent: 4);
+/// final execution = engine.submit<String>(
+///   (ctx) async {
+///     ctx.reportProgress(0.5);
+///     ctx.throwIfCancelled();
+///     return await fetchReport();
+///   },
+///   id: 'report',
+///   conflictPolicy: LevitTaskConflictPolicy.restart,
+/// );
+/// final outcome = await execution.outcome;
+/// await engine.dispose();
+/// ```
+///
+/// {@category Tasks & Concurrency}
 class LevitTaskEngine
     implements LevitDisposable, LevitDrainable, LevitExecutionBoundary {
   final Set<Future<void>> _runners = {};
@@ -12,8 +35,14 @@ class LevitTaskEngine
 
   int _maxConcurrent;
 
-  /// Null is explicit unbounded opt-in; defaults to 256 pending entries.
+  /// Maximum number of queued leaf entries before new admissions throw
+  /// [LevitTaskQueueFullException].
+  ///
+  /// `null` explicitly opts into an unbounded queue; defaults to `256`.
   final int? maxPending;
+
+  /// The root supervisor [LevitTaskGroup] owning all top-level tasks and child
+  /// groups submitted to this engine.
   late final LevitTaskGroup rootGroup = LevitTaskGroup._(
     this,
     null,
@@ -22,12 +51,19 @@ class LevitTaskEngine
     root: true,
   );
   LxVar<LevitTaskTreeSnapshot>? _taskTree;
+
+  /// Lazy reactive snapshot of this engine's structured task-group tree.
+  ///
+  /// Closed automatically when this engine is disposed.
   LxReadable<LevitTaskTreeSnapshot> get taskTree =>
       _taskTree ??= LxVar(LevitTaskTreeSnapshot._(rootGroup));
   int _pendingCount = 0;
 
-  /// Pending leaf entries; joins and coalesced replacements share their entry.
+  /// Number of queued leaf entries; joined and coalesced replacements share
+  /// their underlying queue entry.
   int get pendingCount => _pendingCount;
+
+  /// Number of task executions currently running.
   int get runningCount => _activeExecutions.length;
   int _priorityCursor = 0;
   static const _priorityCycle = [
@@ -60,6 +96,9 @@ class LevitTaskEngine
   }
 
   /// The maximum number of concurrent admitted executions.
+  ///
+  /// Setting a new value immediately schedules the queue pump to admit queued
+  /// work. Throws a [RangeError] if set to a value less than `1`.
   int get maxConcurrent => _maxConcurrent;
 
   set maxConcurrent(int value) {
@@ -73,7 +112,7 @@ class LevitTaskEngine
   /// The cache provider used by this engine.
   LevitTaskCacheProvider cacheProvider;
 
-  /// Optional global error handler for terminal task failures.
+  /// Optional default error handler for terminal task failures.
   void Function(Object error, StackTrace stackTrace)? onTaskError;
 
   /// Optional local lifecycle instrumentation callback.
@@ -91,7 +130,19 @@ class LevitTaskEngine
   bool _pumpScheduled = false;
   bool _disposed = false;
 
-  /// Creates a task engine with [maxConcurrent] workers.
+  /// Creates a task engine with [maxConcurrent] worker slots.
+  ///
+  /// * [maxConcurrent]: Maximum simultaneous executions (must be >= 1).
+  /// * [maxPending]: Queue capacity limit (defaults to `256`; `null` for
+  ///   unbounded; must be >= 1 when non-null).
+  /// * [cacheProvider]: Cache backend; defaults to
+  ///   [LevitTaskCacheProvider.inMemory].
+  /// * [onTaskError]: Optional fallback handler for terminal task errors.
+  /// * [onTaskEvent]: Optional observer for all [LevitTaskEvent]s emitted by
+  ///   this engine.
+  /// * [ownerPath]: Diagnostic owner label attached to events (defaults to `'?'`).
+  ///
+  /// Throws a [RangeError] if [maxConcurrent] < 1 or [maxPending] < 1.
   LevitTaskEngine({
     required int maxConcurrent,
     this.maxPending = 256,
@@ -141,10 +192,18 @@ class LevitTaskEngine
     LevitTaskMiddleware._emit(event);
   }
 
-  /// Schedules [task] and returns only its eventual result.
+  /// Schedules [task] and returns its eventual result [Future].
   ///
-  /// Use [submit] when execution identity or per-execution cancellation is
-  /// required. Cancellation, dropping, and superseding throw typed exceptions.
+  /// Shorthand for `submit(...).result`. Use [submit] when you need execution
+  /// identity, per-execution cancellation, or a non-throwing [LevitTaskResult]
+  /// via [LevitTaskExecution.outcome].
+  ///
+  /// Throws [LevitTaskConflictException] synchronously under
+  /// [LevitTaskConflictPolicy.reject], [LevitTaskQueueFullException] when
+  /// [maxPending] is exceeded, or [StateError] when disposed. Cancellation,
+  /// dropping, and superseding reject the returned [Future] with
+  /// [LevitTaskCancelledException], [LevitTaskDroppedException], or
+  /// [LevitTaskSupersededException].
   Future<T> schedule<T>(
     FutureOr<T> Function(LevitTaskContext context) task, {
     String? id,
@@ -183,7 +242,25 @@ class LevitTaskEngine
     ).result;
   }
 
-  /// Submits [task] and returns its execution identity and result.
+  /// Submits [task] and returns a [LevitTaskExecution] handle exposing
+  /// execution identity, [LevitTaskExecution.result],
+  /// [LevitTaskExecution.outcome], and cooperative [LevitTaskExecution.cancel].
+  ///
+  /// * [id]: Logical task ID used for conflict handling and cancellation;
+  ///   auto-generated when omitted.
+  /// * [priority]: Scheduling priority (defaults to [LevitTaskPriority.normal]).
+  /// * [conflictPolicy]: Behavior when [id] already has outstanding work
+  ///   (defaults to [LevitTaskConflictPolicy.reject]).
+  /// * [retryPolicy]: Optional retry schedule for failures.
+  /// * [group]: Owning [LevitTaskGroup] (defaults to the active group on this
+  ///   engine, or [rootGroup]).
+  /// * [deadline]: Optional absolute deadline, clamped to [group]'s deadline.
+  /// * [onError] / [onStart] / [onSuccess] / [onProgress] / [onCancel] / [onEvent]:
+  ///   Optional per-execution lifecycle callbacks.
+  /// * [cachePolicy]: Optional caching configuration using [cacheProvider].
+  /// * [metadata]: Structured task metadata; overrides [debugName] if both are
+  ///   provided.
+  /// * [debugName]: Convenience label when [metadata] is omitted.
   LevitTaskExecution<T> submit<T>(
     FutureOr<T> Function(LevitTaskContext context) task, {
     String? id,
@@ -237,7 +314,11 @@ class LevitTaskEngine
     );
   }
 
-  /// Schedules a message-safe top-level/static [task] in a new isolate.
+  /// Schedules a top-level or static [task] in a spawned [Isolate] and returns
+  /// its eventual result [Future].
+  ///
+  /// Both [input] and the returned [T] must be sendable across isolate
+  /// boundaries. Shorthand for `submitIsolate(...).result`.
   Future<T> scheduleIsolate<I, T>(
     LevitIsolateTask<I, T> task,
     I input, {
@@ -278,7 +359,12 @@ class LevitTaskEngine
     ).result;
   }
 
-  /// Submits a message-safe top-level/static [task] in a new isolate.
+  /// Submits a top-level or static [task] to run in a spawned [Isolate] and
+  /// returns its [LevitTaskExecution] handle.
+  ///
+  /// [task] must be a top-level function or static method, and both [input] and
+  /// the returned [T] must be sendable across isolate boundaries. See [submit]
+  /// for parameter semantics.
   LevitTaskExecution<T> submitIsolate<I, T>(
     LevitIsolateTask<I, T> task,
     I input, {
@@ -1025,7 +1111,11 @@ class LevitTaskEngine
     );
   }
 
-  /// Reports progress for the latest running execution of logical [id].
+  /// Reports [progress] (`0.0` to `1.0`) for the latest running execution of
+  /// logical [id].
+  ///
+  /// Throws a [RangeError] if [progress] is non-finite or outside `[0.0, 1.0]`.
+  /// Does nothing if no execution for [id] is currently running.
   void updateProgress(String id, double progress) {
     if (!progress.isFinite || progress < 0 || progress > 1) {
       throw RangeError.range(progress, 0, 1, 'progress');
@@ -1036,6 +1126,11 @@ class LevitTaskEngine
   }
 
   /// Dynamically updates engine configuration.
+  ///
+  /// Non-null values update [maxConcurrent], [cacheProvider], and [ownerPath]
+  /// (`null` leaves them unchanged). For [onTaskError] and [onTaskEvent],
+  /// omitting the argument leaves the current callback unchanged, while
+  /// explicitly passing `null` clears the callback.
   void config({
     int? maxConcurrent,
     LevitTaskCacheProvider? cacheProvider,
@@ -1065,7 +1160,10 @@ class LevitTaskEngine
     }
   }
 
-  /// Cooperatively cancels one admitted execution.
+  /// Cooperatively cancels one admitted execution by [executionId].
+  ///
+  /// Returns `true` if a matching execution was found (even if already
+  /// completed), or `false` if [executionId] is unknown.
   bool cancelExecution(String executionId) {
     final execution = _executions[executionId];
     if (execution == null) return false;
@@ -1124,9 +1222,10 @@ class LevitTaskEngine
     if (_disposed) throw StateError('LevitTaskEngine is disposed.');
   }
 
-  /// Stops admissions, cancels work, and waits for execution cleanup.
-  /// Cancellation is cooperative: an uncooperative task delays completion.
-  /// A task must not await disposal of its own engine or controller.
+  /// Throws a [StateError] if called synchronously from inside a task or group
+  /// body running on this engine.
+  ///
+  /// Tracked work cannot await disposal of its own engine or controller.
   @override
   void assertCanDispose() {
     if (identical(_currentTaskZone?.execution?.config.group.engine, this) ||
@@ -1138,6 +1237,8 @@ class LevitTaskEngine
     }
   }
 
+  /// Stops new task admissions and cooperatively cancels all active and queued
+  /// work in [rootGroup].
   @override
   void requestCancel() {
     if (_disposed) return;
@@ -1147,6 +1248,11 @@ class LevitTaskEngine
     );
   }
 
+  /// Cancels admitted work and waits until all active runners and cleanup
+  /// handlers finish.
+  ///
+  /// Throws a [StateError] if called from inside tracked work on this engine,
+  /// and throws a [LevitDisposalException] if cleanup handlers fail.
   @override
   Future<void> drain() async {
     assertCanDispose();
@@ -1160,6 +1266,11 @@ class LevitTaskEngine
       throw LevitDisposalException.aggregate(_cleanupFailures);
   }
 
+  /// Stops admissions, cancels work, and waits for execution cleanup.
+  ///
+  /// Cancellation is cooperative: an uncooperative task delays completion.
+  /// A task must not await disposal of its own engine or controller.
+  /// Safe to call multiple times; subsequent calls return the same [Future].
   @override
   Future<void> dispose() {
     assertCanDispose();

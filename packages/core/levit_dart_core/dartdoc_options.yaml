@@ -1,0 +1,16 @@
+dartdoc:
+  showUndocumentedCategories: true
+  categories:
+    "Scopes & DI": {}
+    "Controllers & Stores": {}
+    "Reactive State": {}
+    "Middleware & Monitoring": {}
+    "Testing": {}
+    "SPI": {}
+  categoryOrder:
+    - "Scopes & DI"
+    - "Controllers & Stores"
+    - "Reactive State"
+    - "Middleware & Monitoring"
+    - "Testing"
+    - "SPI"

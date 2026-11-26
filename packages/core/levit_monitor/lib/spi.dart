@@ -1,8 +1,15 @@
 /// Service Provider Interface (SPI) and inspector models for `levit_monitor`.
 ///
-/// Exposes [LevitMonitorMiddleware], [LevitStateSnapshot], shadow state models,
-/// and all granular [LevitMonitorEvent] subtypes for DevTools, custom
-/// inspectors, and benchmarks.
+/// Exposes [LevitMonitorMiddleware], [LevitStateSnapshot], [LevitEventEnvelope],
+/// shadow state models ([LevitScopeModel], [LevitDependencyModel],
+/// [LevitReactiveModel]), and all granular [LevitMonitorEvent] subtypes for
+/// DevTools, custom inspectors, and benchmarks.
+///
+/// Note: Types referenced in middleware and event signatures such as
+/// `LevitTransport`, `LevitLogLevel`, and `LevitMonitorException` are exported
+/// by `package:levit_monitor/levit_monitor.dart`.
+///
+/// @docImport 'src/monitor_library.dart';
 library;
 
 export 'levit_monitor_protocol.dart';

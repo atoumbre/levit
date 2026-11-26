@@ -171,8 +171,6 @@ void teardown() {
 
 `batchAsync` defers notifications only in the current execution context. Concurrent batches flush independently; nested batches merge into their enclosing open batch. Errors still flush collected changes. Work escaping a completed callback runs under an enclosing open context or ordinary notification delivery. Outside writes notify immediately, even when they affect a shared reactive that another batch touched. Values are shared: batching is not transaction isolation or rollback. `Lx.isBatching` describes the current context.
 
-See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md) before upgrading.
-
 ## 0.1.0 asynchronous lifetimes
 
 Reactive `close()` returns a `Future<void>`. Closing stops notification and

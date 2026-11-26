@@ -345,6 +345,8 @@ class _LiveCaptureList extends ListBase<LxReactive> {
 }
 
 /// Internal auto-linking hooks exposed via `package:levit_dart_core/spi.dart`.
+///
+/// {@category SPI}
 abstract final class LevitAutoLinkSpi {
   /// The [Zone] key used to store the active auto-link capture list.
   static Object get captureKey => _AutoLinkScope.captureKey;

@@ -1,0 +1,14 @@
+dartdoc:
+  showUndocumentedCategories: true
+  categories:
+    "Flutter Widgets & Interop": {}
+    "Scopes & DI": {}
+    "Controllers & Stores": {}
+    "Reactive State": {}
+    "Middleware & Monitoring": {}
+  categoryOrder:
+    - "Flutter Widgets & Interop"
+    - "Scopes & DI"
+    - "Controllers & Stores"
+    - "Reactive State"
+    - "Middleware & Monitoring"

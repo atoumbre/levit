@@ -2,15 +2,22 @@ part of '../levit_flutter_core.dart';
 
 /// A widget that rebuilds when reactive state changes.
 ///
-/// [LWatch] tracks which [LxReactive] values are accessed within its [builder]
-/// and automatically triggers a rebuild when any of them change.
+/// [LWatch] tracks which [LxReadable] values are accessed during each execution
+/// of [builder] (dynamically reconciling conditional reads) and automatically
+/// triggers a rebuild when any tracked source notifies. Wrap reads in
+/// [Levit.untracked] to read without subscribing.
 ///
-/// // Example usage:
+/// When inside an [LView] or [LScopedView] with `autoWatch: true` (default),
+/// do not wrap the entire return tree in an outer [LWatch]; use nested [LWatch]
+/// only for narrower partial rebuilds.
+///
 /// ```dart
 /// LWatch(() {
 ///   return Text('Count: ${controller.count()}');
 /// });
 /// ```
+///
+/// {@category Flutter Widgets & Interop}
 class LWatch extends Widget {
   /// The builder function used to generate the widget tree.
   final Widget Function() builder;

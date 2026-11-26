@@ -6,6 +6,8 @@ part of 'monitor_library.dart';
 /// intercept and capture lifecycle events from across the entire framework.
 /// It acts as the bridge between internal state transitions and the external
 /// [LevitTransport].
+///
+/// {@category SPI}
 class LevitMonitorMiddleware
     implements
         LevitReactiveMiddleware,
@@ -18,13 +20,19 @@ class LevitMonitorMiddleware
   /// within a single application run.
   late final String sessionId;
 
-  /// Whether to capture and include stack trace information for events.
+  /// Whether to capture stack traces on state-change events and include error
+  /// stack traces on reactive-error events.
   bool includeStackTrace;
 
   /// The primary destination for captured events.
+  ///
+  /// Prefer [updateTransport] rather than direct assignment so pending events
+  /// flush and the previous transport closes cleanly.
   LevitTransport transport;
 
   final LevitStateSnapshot _stateSnapshot;
+
+  /// Maximum number of buffered outbound events before dropping oldest entries.
   final int maxPendingEvents;
   final ListQueue<LevitFrozenMonitorEvent> _pending = ListQueue();
   final List<AsyncError> _failures = [];
@@ -36,9 +44,18 @@ class LevitMonitorMiddleware
   bool _closed = false;
   bool _paused = false;
   int _droppedEvents = 0;
+
+  /// Total events dropped by this middleware buffer and [transport].
   int get droppedEvents => _droppedEvents + transport.droppedEvents;
+
+  /// Number of frozen events currently queued for delivery to [transport].
   int get pendingEvents => _pending.length;
+
+  /// Bounded unmodifiable history of captured [LevitEventEnvelope]s.
   List<LevitEventEnvelope> get history => _stateSnapshot.events;
+
+  /// Immutable JSON-only snapshot of current scopes, dependencies, variables,
+  /// and task trees.
   Map<String, dynamic> get snapshot => LevitEventEnvelope({
     'sessionId': sessionId,
     'seq': 0,
@@ -48,6 +65,10 @@ class LevitMonitorMiddleware
     'droppedEvents': droppedEvents,
   }).data;
 
+  /// Creates a monitor middleware targeting [transport] (defaults to
+  /// [LevitConsoleTransport]).
+  ///
+  /// Throws a [RangeError] if [maxPendingEvents] < 1 or [historyCapacity] < 0.
   LevitMonitorMiddleware({
     LevitTransport? transport,
     this.includeStackTrace = false,
@@ -62,6 +83,10 @@ class LevitMonitorMiddleware
     this.sessionId = sessionId ?? _generateSessionId();
   }
 
+  /// Registers this middleware on `Levit` state and DI channels and subscribes
+  /// to [LevitTransport.onConnect].
+  ///
+  /// Idempotent; throws a [StateError] if already closed.
   void enable() {
     if (_closed) throw StateError('Monitor is closed.');
     if (_enabled) return;
@@ -97,6 +122,8 @@ class LevitMonitorMiddleware
     );
   }
 
+  /// Unregisters this middleware from `Levit` channels and cancels the
+  /// `onConnect` subscription without closing [transport].
   void disable() {
     if (!_enabled) return;
     _enabled = false;
@@ -113,6 +140,12 @@ class LevitMonitorMiddleware
     }
   }
 
+  /// Serializes replacing [transport] and/or updating [includeStackTrace].
+  ///
+  /// Flushes and closes the previous transport, re-subscribes to `onConnect`,
+  /// emits a reconnect snapshot to the new transport, and throws
+  /// [LevitMonitorException] if any delivery or cleanup step failed. Throws a
+  /// [StateError] if already closed.
   Future<void> updateTransport({
     LevitTransport? transport,
     bool? includeStackTrace,

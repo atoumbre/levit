@@ -1,6 +1,8 @@
 part of '../monitor_library.dart';
 
 /// Log levels for Levit Monitor events.
+///
+/// {@category Middleware & Monitoring}
 enum LevitLogLevel {
   /// No output.
   off(Level.off, 10000),
@@ -14,16 +16,19 @@ enum LevitLogLevel {
   /// Warning level.
   warning(Level.warning, 4000),
 
-  /// Info level (default for DI events).
+  /// Info level (default for DI register, DI delete, and scope progress events).
   info(Level.info, 3000),
 
-  /// Debug level (default for init, dispose, graph changes).
+  /// Debug level (default for batch, reactive init/dispose/graph/metadata,
+  /// listener add/remove, DI resolve/create/init, scope create/dispose, and
+  /// snapshot events).
   debug(Level.debug, 2000),
 
   /// Trace level (default for state changes).
   trace(Level.trace, 1000),
 
-  /// All output.
+  /// All output (for threshold configuration only; do not assign as an event
+  /// log level).
   all(Level.all, 0);
 
   final Level _loggerLevel;
@@ -36,16 +41,23 @@ enum LevitLogLevel {
 
 /// Configuration for log level overrides per event type.
 ///
-/// This allows fine-grained control over which events are logged at which level.
+/// Allows fine-grained control over the [LevitLogLevel] assigned to each
+/// monitor event type. Only loggable levels (`trace` through `fatal`) may be
+/// assigned — using [LevitLogLevel.off] or [LevitLogLevel.all] as an event
+/// level throws an [ArgumentError] in `package:logger`. To suppress specific
+/// event types completely, use [LevitMonitor.setFilter].
 ///
 /// ```dart
 /// LevitConsoleTransport(
-///   levelOverrides: LevitLogLevelConfig(
+///   minLevel: LevitLogLevel.debug,
+///   levelOverrides: const LevitLogLevelConfig(
 ///     stateChange: LevitLogLevel.debug, // Promote state changes to debug
-///     diResolve: LevitLogLevel.off,     // Suppress DI resolve logs
+///     diResolve: LevitLogLevel.trace,   // Demote DI resolve below minLevel
 ///   ),
 /// )
 /// ```
+///
+/// {@category Middleware & Monitoring}
 class LevitLogLevelConfig {
   /// Log level for state change events.
   final LevitLogLevel? stateChange;
@@ -83,6 +95,7 @@ class LevitLogLevelConfig {
   /// Log level for listener removed events.
   final LevitLogLevel? listenerRemove;
 
+  /// Creates per-event-type log level overrides for [LevitConsoleTransport].
   const LevitLogLevelConfig({
     this.stateChange,
     this.batch,
@@ -103,11 +116,13 @@ class LevitLogLevelConfig {
   final LevitLogLevel? reactiveError;
 }
 
-/// A transport that logs events to the console using the `logger` package.
+/// A transport that logs events to the console using `package:logger`.
 ///
-/// This transport provides structured logging with configurable log levels
-/// for each event type. It uses the popular `logger` package for beautiful,
-/// readable console output.
+/// Provides structured logging with configurable log levels for each event
+/// type. When attached through [LevitMonitor], events are frozen into
+/// [LevitEventEnvelope]s before delivery and logged as JSON strings; unfrozen
+/// typed events passed directly to [send] are formatted with human-readable
+/// summaries.
 ///
 /// ## Default Log Levels
 ///
@@ -115,53 +130,58 @@ class LevitLogLevelConfig {
 /// |------------|---------------|
 /// | State Change | `trace` |
 /// | Batch | `debug` |
-/// | Reactive Init | `debug` |
-/// | Reactive Dispose | `debug` |
-/// | Graph Change | `debug` |
-/// | DI Register | `info` |
-/// | DI Resolve | `debug` |
-/// | DI Delete | `info` |
-/// | DI Create | `debug` |
-/// | DI Init | `debug` |
+/// | Reactive Init / Dispose / Graph / Metadata | `debug` |
+/// | Listener Add / Remove | `debug` |
+/// | Reactive Error | `error` |
+/// | DI Register / Delete | `info` |
+/// | DI Resolve / Create / Init | `debug` |
+/// | Scope Create / Dispose | `debug` |
+/// | Scope Progress | `info` |
+/// | Snapshot | `debug` |
+/// | Log / Custom | Event's own `level` |
 ///
 /// ## Usage
 ///
 /// ```dart
 /// // Basic usage with defaults
-/// LevitMonitor.attach(transport: LevitConsoleTransport());
+/// await LevitMonitor.attach(transport: LevitConsoleTransport());
 ///
 /// // Customize minimum log level (hide trace/debug)
-/// LevitMonitor.attach(
+/// await LevitMonitor.attach(
 ///   transport: LevitConsoleTransport(minLevel: LevitLogLevel.info),
 /// );
 ///
-/// // Override specific event levels
-/// LevitMonitor.attach(
+/// // Promote or demote specific event levels relative to minLevel
+/// await LevitMonitor.attach(
 ///   transport: LevitConsoleTransport(
-///     levelOverrides: LevitLogLevelConfig(
-///       stateChange: LevitLogLevel.debug,      // Promote state changes
-///       diResolve: LevitLogLevel.off,          // Suppress resolve logs
+///     minLevel: LevitLogLevel.debug,
+///     levelOverrides: const LevitLogLevelConfig(
+///       stateChange: LevitLogLevel.debug,
+///       diResolve: LevitLogLevel.trace,
 ///     ),
 ///   ),
 /// );
 /// ```
+///
+/// {@category Middleware & Monitoring}
 class LevitConsoleTransport extends LevitTransport {
   /// The minimum log level to output.
   ///
-  /// Events below this level will be suppressed.
+  /// Events below this level are suppressed.
   final LevitLogLevel minLevel;
 
   /// Optional overrides for log levels per event type.
   final LevitLogLevelConfig? levelOverrides;
 
-  /// The underlying logger instance.
+  // The underlying logger instance.
   final Logger _logger;
 
   /// Creates a new [LevitConsoleTransport].
   ///
   /// * [minLevel]: Minimum log level to output. Defaults to [LevitLogLevel.trace].
   /// * [levelOverrides]: Optional per-event-type log level overrides.
-  /// * [printer]: Optional custom [LogPrinter]. Defaults to [PrettyPrinter].
+  /// * [printer]: Optional custom `LogPrinter` from `package:logger`. Defaults
+  ///   to `PrettyPrinter`.
   LevitConsoleTransport({
     this.minLevel = LevitLogLevel.trace,
     this.levelOverrides,

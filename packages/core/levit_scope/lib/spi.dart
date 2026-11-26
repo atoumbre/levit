@@ -1,7 +1,10 @@
 /// Service Provider Interface (SPI) for cross-package integrations with `levit_scope`.
 ///
-/// Exposes scope drainage, execution boundary, progress observation, and zone
-/// key hooks used by higher Levit layers without cluttering the app barrel.
+/// Exposes [LsSpi], [LevitDrainable], [LevitExecutionBoundary], and
+/// [LevitScopeProgressObserver] for higher Levit layers without cluttering the
+/// application-facing barrel.
+///
+/// @docImport 'src/scope_library.dart';
 library;
 
 export 'src/scope_library.dart'

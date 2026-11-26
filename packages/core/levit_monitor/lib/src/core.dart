@@ -1,27 +1,36 @@
 part of 'monitor_library.dart';
 
 /// Function signature for sensitive data obfuscation.
+///
+/// {@category Middleware & Monitoring}
 typedef LevitObfuscator = String Function(dynamic value);
 
 /// The authoritative entry point for application monitoring and diagnostics.
 ///
 /// [LevitMonitor] acts as a unified hub that collects events from both the
 /// dependency injection system and the reactive state engine. It processes
-/// these events through a filtering pipeline and dispatches them to a
-/// [LevitTransport] for inspection or storage.
+/// these events through a filtering and redaction pipeline and dispatches them
+/// to a [LevitTransport] for inspection or storage.
+///
+/// Monitoring never enables auto-linking; call `Levit.enableAutoLinking()`
+/// explicitly during bootstrap. `levit_monitor` remains independent of
+/// `levit_dart` — bridge task events through [emitCustomEvent] in the
+/// application composition layer.
+///
+/// {@category Middleware & Monitoring}
 class LevitMonitor {
   static LevitMonitorMiddleware? _middleware;
 
-  /// The active predicate used to filter outgoing events.
+  // The active predicate used to filter outgoing events.
   static bool Function(LevitMonitorEvent event)? _filter;
 
-  /// The active obfuscator used for sensitive data.
+  // The active obfuscator used for sensitive data.
   static LevitObfuscator _obfuscator = (value) => '***';
 
-  /// The minimum log level to emit. Logs below this level will be dropped.
+  // The minimum log level for LevitMonitor.log* calls.
   static LevitLogLevel _logLevel = LevitLogLevel.all;
 
-  /// Returns the current minimum log level.
+  /// Returns the current minimum log level applied to [log] calls.
   static LevitLogLevel get logLevel => _logLevel;
 
   /// Returns the current event filter, if any.
@@ -49,12 +58,19 @@ class LevitMonitor {
     _obfuscator = obfuscator ?? (value) => '***';
   }
 
-  /// Sets the minimum log level for [LevitMonitor].
+  /// Sets the minimum log level for [log] and `log*` helper methods.
+  ///
+  /// Does not filter [emitCustomEvent] or reactive/DI events; use [setFilter]
+  /// or transport-level configuration (such as [LevitConsoleTransport.minLevel])
+  /// to filter those events.
   static void setLogLevel(LevitLogLevel level) {
     _logLevel = level;
   }
 
-  /// Obfuscates a [value] if it is considered sensitive.
+  /// Unconditionally obfuscates [value] using the configured [LevitObfuscator].
+  ///
+  /// Callers are responsible for checking sensitivity before invoking this
+  /// method. Falls back to `'***'` if the configured obfuscator throws.
   static dynamic obfuscate(dynamic value) {
     try {
       return _obfuscator(value);
@@ -209,14 +225,6 @@ class LevitMonitor {
     stackTrace: stackTrace,
   );
 
-  /// Bootstraps the monitoring system and attaches it to the application.
-  ///
-  /// By default, [LevitMonitor] uses a [LevitConsoleTransport] which pipes JSON-encoded
-  /// events to standard output.
-  ///
-  /// *   [transport]: A single destination for monitor events.
-  /// *   [transports]: A list of destinations for monitor events. If provided,
-  ///     it will be combined with [transport] if both are present.
   static Future<void> _lifecycle = Future.value();
   static bool? _previousWorkerMonitoring;
   static Future<void> _serialize(Future<void> Function() action) {
@@ -228,7 +236,26 @@ class LevitMonitor {
     return operation;
   }
 
-  /// Enables bounded event history and worker statistics only when requested.
+  /// Bootstraps the monitoring system and attaches it to the application.
+  ///
+  /// Detaches any previously attached monitor before installing the new one.
+  /// By default, uses a [LevitConsoleTransport] that writes formatted events to
+  /// the console via `package:logger`.
+  ///
+  /// Monitoring does not enable auto-linking; call `Levit.enableAutoLinking()`
+  /// explicitly during application startup.
+  ///
+  /// * [transport]: A single destination for monitor events.
+  /// * [transports]: A list of destinations for monitor events. Combined with
+  ///   [transport] via [LevitMultiTransport] when multiple destinations are given.
+  /// * [historyCapacity]: Bounded number of [LevitEventEnvelope]s retained in
+  ///   [history]. Defaults to `0` (disabled).
+  /// * [maxPendingEvents]: Maximum buffered outbound events before oldest
+  ///   pending events are dropped. Defaults to `1024`.
+  /// * [includeStackTrace]: Captures call stacks on state-change events and
+  ///   preserves error stacks on reactive-error events when `true`.
+  /// * [enableWorkerStatistics]: Enables `LxWorker` statistics while attached
+  ///   and restores the previous setting on [detach].
   static Future<void> attach({
     LevitTransport? transport,
     List<LevitTransport>? transports,
@@ -274,18 +301,36 @@ class LevitMonitor {
   static Future<void> detach() => _serialize(_detachNow);
 
   /// Waits for attachment/replacement and all admitted event delivery.
+  ///
+  /// No-op when detached. Throws [LevitMonitorException] if delivery errors
+  /// were recorded.
   static Future<void> flush() => _serialize(() async {
     await _middleware?.flush();
   });
+
+  /// Total events dropped by the monitor buffer and active transport (`0` when
+  /// detached).
   static int get droppedEvents => _middleware?.droppedEvents ?? 0;
+
+  /// Unmodifiable bounded history of captured [LevitEventEnvelope]s (empty when
+  /// detached or when attached with `historyCapacity: 0`).
   static List<LevitEventEnvelope> get history =>
       _middleware?.history ?? const [];
+
+  /// Immutable JSON-only snapshot of current scopes, dependencies, variables,
+  /// and task trees, or `null` when detached.
   static Map<String, dynamic>? get snapshot => _middleware?.snapshot;
 }
 
-/// Failures from awaited event delivery/cleanup, after all cleanup was attempted.
+/// Aggregate failures from awaited event delivery or cleanup, thrown after all
+/// cleanup has been attempted.
+///
+/// {@category Middleware & Monitoring}
 final class LevitMonitorException implements Exception {
+  /// Unmodifiable list of recorded asynchronous delivery or cleanup failures.
   final List<AsyncError> failures;
+
+  /// Creates a monitor exception from [failures].
   LevitMonitorException(Iterable<AsyncError> failures)
     : failures = List.unmodifiable(failures);
   @override

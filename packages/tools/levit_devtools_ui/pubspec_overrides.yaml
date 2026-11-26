@@ -1,9 +1,0 @@
-dependency_overrides:
-  levit_monitor:
-    path: ../../core/levit_monitor
-  levit_dart_core:
-    path: ../../core/levit_dart_core
-  levit_scope:
-    path: ../../core/levit_scope
-  levit_reactive:
-    path: ../../core/levit_reactive

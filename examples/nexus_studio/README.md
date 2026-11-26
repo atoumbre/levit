@@ -75,12 +75,10 @@ Regression coverage lives in `shared/test/command_history_test.dart` and
 `server/test/two_client_undo_test.dart`, which starts a real loopback WebSocket
 server and checks both clients and the authoritative document after undo/redo.
 
-## Local inspector (0.1.0)
+## Live MCP Inspection (0.1.0)
 
-Run `dart run bin/levit_devtools.dart` from `packages/tools/levit_devtools`, then
-open http://127.0.0.1:9200. The app and server appear as separate sessions. Debug
-attachments opt in to bounded history, worker statistics and update call stacks.
-Both support the compile-time `LEVIT_INSPECTOR_URL` define for an alternate relay.
-For example, run Flutter with
-`--dart-define=LEVIT_INSPECTOR_URL=ws://127.0.0.1:9201/ws` and Dart with
-`-DLEVIT_INSPECTOR_URL=ws://127.0.0.1:9201/ws`.
+Start the read-only `levit_mcp` server (`dart run levit_mcp --port 9200 --token dev-local-token`) from your MCP client, then launch the app and server with matching defines. The app and server appear as separate sessions in `list_sessions`. Debug attachments opt in to bounded history, worker statistics, and update call stacks.
+
+Both support the compile-time `LEVIT_MCP_URL` and `LEVIT_MCP_TOKEN` defines. For example, run Flutter with
+`--dart-define=LEVIT_MCP_URL=ws://127.0.0.1:9200/ws --dart-define=LEVIT_MCP_TOKEN=dev-local-token` and Dart with
+`-DLEVIT_MCP_URL=ws://127.0.0.1:9200/ws -DLEVIT_MCP_TOKEN=dev-local-token`.

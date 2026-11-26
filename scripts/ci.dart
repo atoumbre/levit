@@ -28,6 +28,10 @@ Future<void> main(List<String> args) async {
       ],
     ),
     _Phase(
+      name: 'dartdoc validation',
+      command: ['dart', 'run', 'scripts/check_docs.dart'],
+    ),
+    _Phase(
       name: 'dart tests',
       command: [
         'dart',

@@ -14,17 +14,19 @@ Future<void> main({
   WidgetsFlutterBinding.ensureInitialized();
   Levit.enableAutoLinking();
 
-  // Connect to LevitDevTools in debug mode
+  // Connect to levit_mcp in debug mode
   if (kDebugMode && enableDevTools) {
+    const token = String.fromEnvironment('LEVIT_MCP_TOKEN');
     final transport = LevitWebSocketTransport.connect(
       const String.fromEnvironment(
-        'LEVIT_INSPECTOR_URL',
+        'LEVIT_MCP_URL',
         defaultValue: 'ws://127.0.0.1:9200/ws',
       ),
       appId: 'nexus-studio',
+      token: token.isEmpty ? null : token,
       channelBuilder: devToolsChannelBuilder,
       onError: (e) => debugPrint(
-        '⚠️ DevTool Server not available. Running without monitoring.',
+        '⚠️ levit_mcp relay not available. Running without remote monitoring.',
       ),
     );
 

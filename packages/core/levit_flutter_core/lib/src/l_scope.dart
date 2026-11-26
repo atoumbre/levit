@@ -5,13 +5,14 @@ part of '../levit_flutter_core.dart';
 /// Use [LScope] to provide dependencies for a specific subtree.
 /// The scope is automatically closed when the widget is unmounted.
 ///
-/// // Example usage:
 /// ```dart
 /// LScope(
 ///   configure: (scope) => scope.put<MyController>(() => MyController()),
 ///   child: const MyPage(),
 /// )
 /// ```
+///
+/// {@category Flutter Widgets & Interop}
 class LScope extends StatefulWidget {
   /// Optional callback to register dependencies in this scope.
   final void Function(LevitScope scope)? configure;
@@ -28,8 +29,8 @@ class LScope extends StatefulWidget {
 
   /// Optional dependency keys for reactive re-initialization.
   ///
-  /// If provided, the scope will be recreated if the identity or value
-  /// of any element changes.
+  /// If provided, the scope is recreated whenever the list length or any
+  /// element value changes according to `!=`.
   final List<Object?>? args;
 
   /// Optional completion/retry handle; must remain stable while mounted.
@@ -144,10 +145,19 @@ class LScope extends StatefulWidget {
   /// Captures the nearest [LevitScope] from [context] and re-provides it to
   /// another subtree.
   ///
-  /// This is useful for dialogs, overlays, and other route subtrees that are
-  /// no longer descendants of the original [LScope] widget tree.
+  /// Useful for dialogs, bottom sheets, and other overlay routes that are no
+  /// longer descendants of the originating [LScope] widget tree. When using
+  /// `levit_flutter`, prefer `showLevitDialog` and `showLevitModalBottomSheet`.
   ///
-  /// If no local scope is found, [child] is returned unchanged.
+  /// Note: [capture] borrows the scope without extending its lifetime. If the
+  /// originating [LScope] unmounts while the overlay remains open, the captured
+  /// scope still disposes. If no local scope is found, [child] is returned
+  /// unchanged.
+  ///
+  /// ```dart
+  /// final captured = LScope.capture(context, child: const ConfirmDialog());
+  /// await showDialog<void>(context: context, builder: (_) => captured);
+  /// ```
   static Widget capture(BuildContext context, {required Widget child}) {
     final scope = _ScopeProvider.of(context);
     if (scope == null) return child;
@@ -157,7 +167,11 @@ class LScope extends StatefulWidget {
   @override
   State<LScope> createState() => _LScopeState();
 
-  /// The nearest [LevitScope] from the widget tree.
+  /// Returns the nearest [LevitScope] from the widget tree, or `null` if none
+  /// exists.
+  ///
+  /// When [listen] is `true`, registers a widget dependency so the caller
+  /// rebuilds if the ancestor scope instance changes.
   static LevitScope? of(BuildContext context, {bool listen = false}) =>
       _ScopeProvider.of(context, listen: listen);
 }

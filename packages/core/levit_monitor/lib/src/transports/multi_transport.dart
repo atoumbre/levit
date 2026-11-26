@@ -1,6 +1,23 @@
 part of '../monitor_library.dart';
 
-/// A transport that broadcasts events to multiple underlying transports.
+/// A transport that broadcasts each frozen event to multiple underlying
+/// [transports].
+///
+/// Calls `event.freeze()` once before fan-out, executes [send], [flush], and
+/// [close] sequentially across all transports on a best-effort basis (throwing
+/// an aggregated [LevitMonitorException] if any fail), sums [droppedEvents],
+/// and merges [onConnect] signals.
+///
+/// ```dart
+/// await LevitMonitor.attach(
+///   transport: LevitMultiTransport([
+///     LevitConsoleTransport(minLevel: LevitLogLevel.info),
+///     LevitWebSocketTransport.connect('ws://127.0.0.1:9200/ws'),
+///   ]),
+/// );
+/// ```
+///
+/// {@category Middleware & Monitoring}
 class LevitMultiTransport extends LevitTransport {
   /// The list of active transports.
   final List<LevitTransport> transports;

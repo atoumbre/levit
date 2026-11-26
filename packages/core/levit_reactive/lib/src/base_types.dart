@@ -5,13 +5,14 @@ part of 'reactive_library.dart';
 /// [LxVar] ("Levit Variable") is the primary primitive for mutable state.
 /// It notifies active observers whenever its value changes.
 ///
-/// // Example usage:
 /// ```dart
 /// final count = LxVar(0);
 ///
 /// // Update triggers notification
 /// count.value++;
 /// ```
+///
+/// {@category Reactive State}
 class LxVar<T> extends LxBase<T> with _LxMutable<T> {
   /// Creates a reactive variable with an [initial] value.
   LxVar(
@@ -49,6 +50,8 @@ class LxVar<T> extends LxBase<T> with _LxMutable<T> {
 ///
 /// Unlike [LxVar], it does not expose in-place mutation helpers or stream
 /// binding APIs.
+///
+/// {@category Reactive State}
 class LxState<T> extends LxBase<T> {
   /// Creates a state container with an [initial] value.
   LxState(
@@ -69,7 +72,6 @@ class LxState<T> extends LxBase<T> {
 
   /// Updates the state by applying a [reducer] function to the current value.
   ///
-  /// // Example usage:
   /// ```dart
   /// state.update((s) => s.copyWith(count: s.count + 1));
   /// ```
@@ -87,6 +89,8 @@ class LxState<T> extends LxBase<T> {
 /// A reactive boolean with specialized toggling methods.
 ///
 /// [LxBool] provides semantic helpers like [toggle], [setTrue], and [setFalse].
+///
+/// {@category Reactive State}
 class LxBool extends LxVar<bool> {
   /// Creates a reactive boolean. [initial] defaults to `false`.
   LxBool([super.initial = false, String? name, bool isSensitive = false])
@@ -108,9 +112,13 @@ class LxBool extends LxVar<bool> {
   bool get isFalse => !value;
 }
 
-/// A reactive integer with arithmetic extensions.
+/// A reactive integer with convenience arithmetic helpers.
 ///
-/// Unboxed for maximum performance compared to a generic number container.
+/// Extends [LxVar<int>] with mutating helpers such as [increment],
+/// [decrement], [add], [subtract], [multiply], [divide], [mod], [negate], and
+/// [clampValue].
+///
+/// {@category Reactive State}
 class LxInt extends LxVar<int> {
   /// Creates a reactive integer instance.
   LxInt(super.initial, {super.name, super.isSensitive});
@@ -148,9 +156,12 @@ class LxInt extends LxVar<int> {
   }
 }
 
-/// A reactive double with arithmetic extensions.
+/// A reactive double with convenience arithmetic helpers.
 ///
-/// Unboxed for maximum performance compared to a generic number container.
+/// Extends [LxVar<double>] with mutating helpers such as [add], [subtract],
+/// [multiply], [divide], [mod], [negate], and [clampValue].
+///
+/// {@category Reactive State}
 class LxDouble extends LxVar<double> {
   /// Creates a reactive double instance.
   LxDouble(super.initial, {super.name, super.isSensitive});
@@ -182,11 +193,12 @@ class LxDouble extends LxVar<double> {
   }
 }
 
-/// Extensions to create reactive variables from primitive values.
+/// Extensions to create reactive variables from any Dart value.
+///
+/// {@category Reactive State}
 extension LxExtension<T> on T {
   /// Creates an [LxVar] holding this value.
   ///
-  /// // Example usage:
   /// ```dart
   /// final name = 'Levit'.lx;
   /// ```
@@ -201,18 +213,24 @@ extension LxExtension<T> on T {
 }
 
 /// Specialized `.lx` extension for booleans.
+///
+/// {@category Reactive State}
 extension LxBoolExtension on bool {
   /// Creates an [LxBool] from this value.
   LxBool get lx => LxBool(this);
 }
 
 /// Specialized `.lx` extension for integers.
+///
+/// {@category Reactive State}
 extension LxIntExtension on int {
   /// Creates an [LxInt] from this value.
   LxInt get lx => LxInt(this);
 }
 
 /// Specialized extensions for [double].
+///
+/// {@category Reactive State}
 extension LxDoubleExtension on double {
   /// Creates an [LxDouble] from this value.
   LxDouble get lx => LxDouble(this);

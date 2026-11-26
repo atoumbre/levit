@@ -1,6 +1,8 @@
 part of '../levit_flutter_core.dart';
 
 /// Visibility state for the route bound to an [LRouteScope].
+///
+/// {@category Flutter Widgets & Interop}
 enum LRouteVisibility {
   /// No active route is currently bound to the scope.
   inactive,
@@ -141,13 +143,15 @@ class _RouteBindingState extends State<_RouteBinding> {
 
 /// A route-aware wrapper around [LScope].
 ///
-/// `LRouteScope` keeps the underlying dependency scope widget-tree-bound, but
+/// [LRouteScope] keeps the underlying dependency scope widget-tree-bound, but
 /// also binds that scope to the current [ModalRoute]. When the route identity
 /// changes, the local scope is recreated. Descendants can observe the current
 /// route visibility through [visibilityOf].
 ///
 /// This is useful when route lifetime, not just subtree lifetime, is the
 /// meaningful ownership boundary.
+///
+/// {@category Flutter Widgets & Interop}
 class LRouteScope extends StatelessWidget {
   /// Optional callback to register dependencies in this scope.
   final void Function(LevitScope scope)? configure;
@@ -157,8 +161,8 @@ class LRouteScope extends StatelessWidget {
 
   /// A descriptive name for the scope.
   ///
-  /// When omitted, uses [ModalRoute.settings.name] when available. Otherwise
-  /// Levit generates a unique framework fallback name.
+  /// When omitted, uses the bound route's [RouteSettings.name] when available.
+  /// Otherwise Levit generates a unique framework fallback name.
   final String? name;
 
   /// Optional dependency keys for reactive re-initialization.
@@ -254,21 +258,28 @@ class LRouteScope extends StatelessWidget {
     );
   }
 
-  /// The [ModalRoute] currently bound to the nearest [LRouteScope].
+  /// The [ModalRoute] currently bound to the nearest [LRouteScope] or
+  /// [LAsyncRouteScope], or `null` if no route scope ancestor exists.
+  ///
+  /// Set [listen] to `true` to rebuild when the bound route changes.
   static ModalRoute<dynamic>? routeOf(
     BuildContext context, {
     bool listen = false,
   }) => _RouteScopeProvider.of(context, listen: listen)?.route;
 
-  /// Reactive visibility for the nearest [LRouteScope].
+  /// Reactive visibility for the nearest [LRouteScope] or [LAsyncRouteScope],
+  /// or `null` if no route scope ancestor exists.
   ///
-  /// Observe this with [LBuilder] or [LWatch] when route coverage matters.
+  /// Observe this with [LBuilder] or [LWatch] when route visibility matters.
+  /// Set [listen] to `true` to rebuild if the route scope instance changes.
   static LxReactive<LRouteVisibility>? visibilityOf(
     BuildContext context, {
     bool listen = false,
   }) => _RouteScopeProvider.of(context, listen: listen)?.visibility;
 
-  /// Snapshot visibility for the nearest [LRouteScope].
+  /// Snapshot visibility for the nearest [LRouteScope] or [LAsyncRouteScope].
+  ///
+  /// Returns [LRouteVisibility.inactive] if no route scope ancestor exists.
   static LRouteVisibility visibilityValueOf(
     BuildContext context, {
     bool listen = false,
@@ -297,9 +308,11 @@ class LRouteScope extends StatelessWidget {
 
 /// An async route-aware wrapper around [LAsyncScope].
 ///
-/// `LAsyncRouteScope` keeps async dependency initialization widget-tree-bound,
+/// [LAsyncRouteScope] keeps async dependency initialization widget-tree-bound,
 /// but resets that local scope when the current [ModalRoute] identity changes.
 /// Descendants can observe the current route visibility through [visibilityOf].
+///
+/// {@category Flutter Widgets & Interop}
 class LAsyncRouteScope extends StatelessWidget {
   /// An async callback to register dependencies.
   final FutureOr<void> Function(LevitScope scope) configure;
@@ -309,14 +322,15 @@ class LAsyncRouteScope extends StatelessWidget {
 
   /// A descriptive name for the scope.
   ///
-  /// When omitted, uses [ModalRoute.settings.name] when available. Otherwise
-  /// Levit generates a unique framework fallback name.
+  /// When omitted, uses the bound route's [RouteSettings.name] when available.
+  /// Otherwise Levit generates a unique framework fallback name.
   final String? name;
 
-  /// Optional builder for the loading state.
+  /// Optional builder for the loading state. Defaults to `SizedBox.shrink()`.
   final Widget Function(BuildContext context)? loading;
 
-  /// Optional builder for the error state.
+  /// Optional builder for the error state. Defaults to a [Text] describing the
+  /// error.
   final Widget Function(BuildContext context, Object error)? error;
 
   /// Optional dependency keys for reactive re-initialization.
@@ -325,6 +339,7 @@ class LAsyncRouteScope extends StatelessWidget {
   /// when route identity changes.
   final List<Object?>? args;
 
+  /// Creates an asynchronously initialized route-bound dependency scope.
   const LAsyncRouteScope({
     super.key,
     required this.configure,

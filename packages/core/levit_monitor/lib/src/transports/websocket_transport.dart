@@ -1,19 +1,51 @@
 part of '../monitor_library.dart';
 
-/// Bounded WebSocket delivery to the local inspector. The relay acknowledges
-/// events by sequence number. Disconnection drops queued events with accounting;
-/// a reconnect snapshot restores state without claiming complete history.
+/// Bounded WebSocket delivery to the local inspector or telemetry relay.
+///
+/// When [requireAcknowledgement] is `true`, the relay acknowledges each event
+/// with `{"ack": <seq>}`. Disconnection or queue overflow drops events with
+/// accounting in [droppedEvents]; emitting on [onConnect] triggers a reconnect
+/// snapshot to restore state without claiming complete history.
+///
+/// Use [LevitWebSocketTransport.connect] for automatic reconnection with
+/// exponential backoff (`1s` up to `32s`), or the default constructor to wrap
+/// an externally managed `WebSocketChannel`.
+///
+/// ```dart
+/// final transport = LevitWebSocketTransport.connect(
+///   'ws://127.0.0.1:9200/ws',
+///   appId: 'my-app',
+/// );
+/// await LevitMonitor.attach(transport: transport);
+/// ```
+///
+/// {@category Middleware & Monitoring}
 class LevitWebSocketTransport extends LevitTransport {
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _subscription;
   final String? _url;
   final String? _appId;
+  final String? _token;
   final WebSocketChannel Function(Uri)? _channelBuilder;
   final void Function(LevitWebSocketTransport)? _onReady;
   final void Function(Object)? _onError;
+
+  /// Maximum number of buffered + in-flight events before evicting the oldest
+  /// queued event (must be >= 1; defaults to `256`).
   final int capacity;
+
+  /// Maximum time to wait for channel readiness or an `{"ack": <seq>}` reply
+  /// before disconnecting and dropping pending events (defaults to 5 seconds).
   final Duration acknowledgementTimeout;
+
+  /// Whether each outbound event waits for an explicit `{"ack": <seq>}` reply
+  /// before advancing the queue (defaults to `true`).
   final bool requireAcknowledgement;
+
+  /// Whether cleartext `ws://` connections to non-loopback hosts are allowed.
+  ///
+  /// Defaults to `false`: `ws://` is restricted to loopback hosts
+  /// (`localhost`, `127.0.0.1`, `::1`) unless explicitly opted in.
   final bool allowInsecureRemote;
   final _onConnectController = StreamController<void>.broadcast();
   final ListQueue<_SocketDelivery> _queue = ListQueue();
@@ -28,6 +60,11 @@ class LevitWebSocketTransport extends LevitTransport {
   int _retryAttempts = 0;
   int _dropped = 0;
 
+  /// Wraps an already-constructed `WebSocketChannel` without automatic
+  /// reconnection.
+  ///
+  /// Throws a [RangeError] if [capacity] < 1 or an [ArgumentError] if
+  /// [acknowledgementTimeout] is not positive.
   LevitWebSocketTransport(
     WebSocketChannel channel, {
     this.capacity = 256,
@@ -35,6 +72,7 @@ class LevitWebSocketTransport extends LevitTransport {
     this.requireAcknowledgement = true,
   }) : _url = null,
        _appId = null,
+       _token = null,
        _channelBuilder = null,
        _onReady = null,
        _onError = null,
@@ -45,6 +83,7 @@ class LevitWebSocketTransport extends LevitTransport {
   LevitWebSocketTransport._(
     this._url,
     this._appId,
+    this._token,
     this._channelBuilder,
     this._onReady,
     this._onError,
@@ -93,9 +132,22 @@ class LevitWebSocketTransport extends LevitTransport {
         normalized == '[::1]';
   }
 
+  /// Connects to [serverUrl] (`ws://` for loopback or `wss://` for remote
+  /// hosts) with automatic exponential-backoff reconnection (`1s` to `32s`).
+  ///
+  /// * [serverUrl]: Target WebSocket endpoint. Non-loopback `ws://` URLs throw
+  ///   an [ArgumentError] unless [allowInsecureRemote] is `true`.
+  /// * [appId]: Optional application identifier appended as a query parameter.
+  /// * [token]: Optional authentication token sent when connecting.
+  /// * [channelBuilder]: Optional factory for testing or custom channels.
+  /// * [onReady]: Optional callback invoked each time the socket becomes ready.
+  /// * [onError]: Optional callback invoked on socket errors.
+  /// * [capacity] / [acknowledgementTimeout] / [requireAcknowledgement] /
+  ///   [allowInsecureRemote]: Buffering, timeout, ack, and TLS controls.
   static LevitWebSocketTransport connect(
     String serverUrl, {
     String? appId,
+    String? token,
     WebSocketChannel Function(Uri)? channelBuilder,
     void Function(LevitWebSocketTransport)? onReady,
     void Function(Object)? onError,
@@ -106,6 +158,7 @@ class LevitWebSocketTransport extends LevitTransport {
   }) => LevitWebSocketTransport._(
     serverUrl,
     appId,
+    token,
     channelBuilder,
     onReady,
     onError,
@@ -127,6 +180,7 @@ class LevitWebSocketTransport extends LevitTransport {
         queryParameters: {
           ...uri.queryParameters,
           if (_appId != null) 'appId': _appId,
+          if (_token != null && _token.isNotEmpty) 'token': _token,
         },
       );
       _adopt(_channelBuilder?.call(uri) ?? WebSocketChannel.connect(uri));

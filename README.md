@@ -147,6 +147,8 @@ The proposition is not just conceptual. This repo includes:
 | Task/loop/time utilities on top of Dart core | [`levit_dart`](./packages/kits/levit_dart) | Adds controller utilities without Flutter widgets. |
 | Runtime telemetry and diagnostics | [`levit_monitor`](./packages/core/levit_monitor) | Add separately alongside any runtime package when you need structured events. |
 | Lifecycle and reactive analyzer rules | [`levit_lints`](./packages/tools/levit_lints) | Optional native analyzer plugin; no runtime dependency. |
+| Live runtime MCP server for AI agents | [`levit_mcp`](./packages/tools/levit_mcp) | Read-only stdio MCP server connecting over authenticated loopback WebSockets. |
+| Agent authoring & migration skill | [`skills/levit`](./skills/levit/SKILL.md) | Portable Agent Skill with 0.1.0 patterns and migration guidance. |
 
 ## Architecture Model
 

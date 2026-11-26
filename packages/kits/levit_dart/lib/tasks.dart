@@ -1,8 +1,21 @@
 /// Advanced task orchestration APIs for Levit.
 ///
-/// Exports the complete task engine, structured concurrency groups, isolate
-/// tasks, caching, middleware, tracking, and typed task results alongside the
-/// everyday task mixins and configuration types.
+/// Exports [LevitTaskEngine], structured concurrency via [LevitTaskGroup],
+/// isolate tasks ([LevitIsolateTask]), caching ([LevitTaskCacheProvider],
+/// [LevitTaskCachePolicy]), global instrumentation ([LevitTaskMiddleware],
+/// [LevitTaskTracker]), and exhaustive [LevitTaskResult] unions alongside the
+/// everyday task mixins ([LevitTasksMixin], [LevitReactiveTasksMixin]).
+///
+/// ```dart
+/// import 'package:levit_dart/levit_dart.dart';
+/// import 'package:levit_dart/tasks.dart';
+///
+/// final engine = LevitTaskEngine(maxConcurrent: 4);
+/// final outcome = await engine.submit((ctx) => fetchData()).outcome;
+/// await engine.dispose();
+/// ```
+///
+/// @docImport 'src/kit_library.dart';
 library;
 
 export 'src/kit_library.dart'

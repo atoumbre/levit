@@ -1,18 +1,30 @@
 part of '../kit_library.dart';
 
-/// A mixin for [LevitController] that manages selection state.
+/// A mixin for [LevitController] that manages reactive selection state.
 ///
-/// It supports both single and multi-selection modes via [allowMultiSelect].
+/// Supports both multi-selection and single-selection modes via
+/// [allowMultiSelect]. [selectedItems] is registered via [own] inside
+/// [onInit]; subclasses overriding [onInit] must call `super.onInit()`.
+///
+/// ```dart
+/// class InboxController extends LevitController with LevitSelectionMixin<String> {
+///   @override
+///   bool get allowMultiSelect => true;
+///
+///   void onRowTap(String messageId) => toggle(messageId);
+/// }
+/// ```
+///
+/// {@category Loops, Timers & Selection}
 mixin LevitSelectionMixin<T> on LevitController {
   /// The set of currently selected items.
   final selectedItems = LxSet<T>().named('selectedItems');
 
-  /// Whether specific items can be selected multiple times is controlled by the Set nature.
-  /// Whether multiple *different* items can be selected is controlled by [allowMultiSelect].
-
-  /// Whether multiple items can be selected at once.
+  /// Whether multiple distinct items can be selected at once.
   ///
-  /// Defaults to `true`. Override to `false` for single-selection (radio button style).
+  /// Defaults to `true`. Override to `false` for single-selection (radio-button
+  /// style). Because [selectedItems] is an [LxSet], duplicate entries of the
+  /// same item are always deduplicated.
   bool get allowMultiSelect => true;
 
   @override
@@ -47,7 +59,8 @@ mixin LevitSelectionMixin<T> on LevitController {
 
   /// Selects all [items].
   ///
-  /// If [allowMultiSelect] is false, this selects only the last item in the iterable.
+  /// If [allowMultiSelect] is `false`, selects only the last item in [items]
+  /// (and leaves the current selection unchanged when [items] is empty).
   void selectAll(Iterable<T> items) {
     if (!allowMultiSelect) {
       if (items.isNotEmpty) {
@@ -63,9 +76,15 @@ mixin LevitSelectionMixin<T> on LevitController {
     selectedItems.clear();
   }
 
-  /// Returns true if [item] is selected.
+  /// Returns `true` if [item] is selected.
+  ///
+  /// Reads [selectedItems], so calling this inside a reactive observer tracks
+  /// selection changes automatically.
   bool isSelected(T item) => selectedItems.contains(item);
 
-  /// Returns the number of selected items.
+  /// The number of currently selected items.
+  ///
+  /// Reads [selectedItems], so calling this inside a reactive observer tracks
+  /// selection changes automatically.
   int get selectionCount => selectedItems.length;
 }

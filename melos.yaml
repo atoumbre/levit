@@ -32,7 +32,6 @@ scripts:
       noDependsOn: flutter
       ignore:
         - levit_stress_tests
-        - dev_tool_server
 
   test:flutter:
     run: flutter test
@@ -45,11 +44,10 @@ scripts:
       ignore:
         - levit_stress_tests
         - benchmarks
-        - flutter_dev_tool
 
   test:browser:
     run: dart run scripts/check_browser_builds.dart
-    description: Compile browser runtime contracts, examples and bundled inspector
+    description: Compile browser runtime contracts and web examples
 
   test:lints:
     run: dart run scripts/check_lint_plugin.dart
@@ -89,13 +87,26 @@ scripts:
     exec:
       concurrency: 6
 
-  # 1. Generate docs for every package
+  # Validate DartDoc generation and link integrity across core, kit, and tool packages
+  doc:check:
+    run: dart run scripts/check_docs.dart
+    description: Validate DartDoc generation and links across core, kit, and tool packages
+
+  # Generate docs for core, kit, and tool packages
   doc:gen:
-    run: dart doc --output=../../../.temp-docs .
+    run: dart doc --validate-links --output=../../../.temp-docs/MELOS_PACKAGE_NAME .
     exec:
-      # Run this in every package that has a pubspec.yaml and isn't an example
       concurrency: 1
       failFast: true
     packageFilters:
       scope:
+        - levit_reactive
+        - levit_scope
+        - levit_dart_core
+        - levit_flutter_core
+        - levit_monitor
+        - levit_dart
+        - levit
         - levit_flutter
+        - levit_lints
+        - levit_mcp

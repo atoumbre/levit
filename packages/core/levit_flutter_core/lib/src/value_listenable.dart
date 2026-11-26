@@ -12,6 +12,8 @@ part of '../levit_flutter_core.dart';
 ///
 /// Implements [LevitDisposable], so a controller can `own(source.asValueListenable())`.
 /// Expose it as [ValueListenable] to consumers that only need observation.
+///
+/// {@category Flutter Widgets & Interop}
 final class LxValueListenable<T>
     implements ValueListenable<T>, LevitDisposable {
   LxReadable<T>? _source;
@@ -35,6 +37,8 @@ final class LxValueListenable<T>
 
   /// Subscribes to source notifications. Duplicate callbacks are registered
   /// separately, following Flutter's [ChangeNotifier] convention.
+  ///
+  /// Throws a [StateError] if called after [dispose].
   @override
   void addListener(VoidCallback listener) {
     final source = _activeSource;
@@ -103,8 +107,20 @@ final class _ValueListenableNotifier extends ChangeNotifier {
 }
 
 /// Borrowing interoperability with Flutter APIs that accept [ValueListenable].
+///
+/// {@category Flutter Widgets & Interop}
 extension LxReadableValueListenable<T> on LxReadable<T> {
-  /// Creates an independently disposable adapter. Retain it outside `build` and
-  /// dispose it at its owning controller or widget boundary.
+  /// Creates an independently disposable [LxValueListenable] adapter.
+  ///
+  /// Retain and own it outside `build` (for example via `own(...)` in a
+  /// controller) and dispose it at its owning boundary.
+  ///
+  /// ```dart
+  /// class CounterController extends LevitController {
+  ///   final count = 0.lx;
+  ///   late final ValueListenable<int> countListenable =
+  ///       own(count.asValueListenable());
+  /// }
+  /// ```
   LxValueListenable<T> asValueListenable() => LxValueListenable<T>(this);
 }

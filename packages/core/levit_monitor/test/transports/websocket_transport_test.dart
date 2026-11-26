@@ -183,7 +183,7 @@ void main() {
       expect(received, isFalse);
     });
 
-    test('connect static method creates instance with appId', () {
+    test('connect static method creates instance with appId and token', () {
       Uri? capturedUri;
       final builder = (Uri u) {
         capturedUri = u;
@@ -193,11 +193,13 @@ void main() {
       final t = LevitWebSocketTransport.connect(
         'ws://localhost',
         appId: '123',
+        token: 'secret-token',
         channelBuilder: builder,
       );
 
       expect(t, isA<LevitWebSocketTransport>());
       expect(capturedUri?.queryParameters['appId'], '123');
+      expect(capturedUri?.queryParameters['token'], 'secret-token');
     });
 
     test('handles message acknowledgment from server', () async {

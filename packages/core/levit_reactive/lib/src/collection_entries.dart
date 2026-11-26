@@ -409,12 +409,23 @@ abstract base class _BorrowedEntry<V> implements LxReadable<V?> {
 
   @override
   final int id = LxBase._nextId++;
+
+  /// Whether the underlying collection has been closed.
   bool get isClosed => _source.isDisposed;
+
+  /// Whether this key or index currently exists in the underlying collection.
+  ///
+  /// Tracks membership changes without notifying on in-place value updates,
+  /// distinguishing an absent entry from an entry storing `null`.
   bool get exists {
     _source._observe(_ReadKind.membership, _address);
     return _source._element(_address).exists;
   }
 
+  /// The current value at this entry's key or index, or `null` when absent.
+  ///
+  /// Tracks only this specific address in the collection. Throws a [StateError]
+  /// if [isClosed] is `true`.
   @override
   V? get value {
     if (isClosed) throw StateError('Collection is closed.');
@@ -429,6 +440,9 @@ abstract base class _BorrowedEntry<V> implements LxReadable<V?> {
   void removeListener(void Function() listener) =>
       _source._lookup(_ReadKind.element, _address)?.removeListener(listener);
 
+  /// A broadcast [Stream] emitting values for this entry as it changes.
+  ///
+  /// Closes immediately if [isClosed] is already `true`.
   @override
   Stream<V?> get stream => Stream.multi((output) {
     if (isClosed) {
@@ -446,12 +460,34 @@ abstract base class _BorrowedEntry<V> implements LxReadable<V?> {
   }, isBroadcast: true);
 }
 
-/// Borrowing observation of a map key, including removal and reinsertion.
+/// Borrowing reactive observation of a single [LxMap] key, including removal
+/// and reinsertion.
+///
+/// Entries borrow their backing [LxMap] and do not need to be closed.
+///
+/// ```dart
+/// final scores = <String, int>{'alice': 10}.lx;
+/// final alice = scores.entry('alice');
+/// final label = LxComputed(() => alice.exists ? '${alice.value}' : 'missing');
+/// ```
+///
+/// {@category Reactive State}
 final class LxMapEntry<V> extends _BorrowedEntry<V> {
   LxMapEntry._(super.source, super.address);
 }
 
-/// Borrowing observation of a list position, including temporary absence.
+/// Borrowing reactive observation of a single [LxList] index, including
+/// temporary absence when the list shrinks and grows again.
+///
+/// Entries borrow their backing [LxList] and do not need to be closed.
+///
+/// ```dart
+/// final items = <String>['first'].lx;
+/// final head = items.entry(0);
+/// final title = LxComputed(() => head.exists ? head.value! : 'empty');
+/// ```
+///
+/// {@category Reactive State}
 final class LxListEntry<T> extends _BorrowedEntry<T> {
   LxListEntry._(super.source, super.address);
 }

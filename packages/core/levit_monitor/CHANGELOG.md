@@ -5,7 +5,8 @@
 - Add reconnect snapshots, delivery acknowledgements and drop accounting.
 - Keep browser imports free of IO; move FileTransport to levit_monitor_io.dart.
 - Add scope progress, reactive metadata, optional write stacks and application task adapter.
-- Integrate the optional standalone levit_devtools local inspector.
+- Harden `LevitStateSnapshot` with eager `scope_progress` validation, atomic snapshot restore, `scope_dispose` variable pruning, and bounded `maxVariables`.
+- Add optional `token` query authentication parameter to `LevitWebSocketTransport.connect` for `levit_mcp`.
 
 ## 0.0.12
 

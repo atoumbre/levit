@@ -62,7 +62,5 @@ Future<void> main() async {
 - Clear boundaries: pure Dart only, no Flutter dependency.
 - Production default for shared domain and backend layers.
 
-See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md) before upgrading.
-
-Continue with [ownership-first onboarding](../../../docs/ONBOARDING.md) and
-[advanced helpers](../../../docs/ADVANCED.md). Requires Dart 3.12+.
+Continue with [ownership-first onboarding](https://github.com/softilab/levit/blob/main/docs/ONBOARDING.md) and
+[advanced helpers](https://github.com/softilab/levit/blob/main/docs/ADVANCED.md). Requires Dart 3.12+.

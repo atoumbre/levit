@@ -1,8 +1,11 @@
 /// Service Provider Interface (SPI) for cross-package integrations with `levit_dart_core`.
 ///
-/// Re-exports `levit_reactive/spi.dart` and `levit_scope/spi.dart` alongside
-/// core resource ownership and auto-linking hooks without cluttering the
+/// Re-exports `package:levit_reactive/spi.dart` and
+/// `package:levit_scope/spi.dart` alongside [LevitAutoLinkSpi],
+/// [LevitResourceOwner], and [LevitResourceOwnership] without cluttering the
 /// application-facing barrel.
+///
+/// @docImport 'src/dart_core_library.dart';
 library;
 
 export 'package:levit_reactive/spi.dart';

@@ -57,7 +57,12 @@ class _AsyncProducer<T> extends LxFuture<T> {
   }
 }
 
-/// Read-only observation of one retained asynchronous key.
+/// Read-only reactive observation of one retained key in a [LevitAsyncMap].
+///
+/// Implements [LxReadable] over [LxStatus<T>], so it can be read inside
+/// `LxComputed`, `LWatch`, `LBuilder`, or `LStatusBuilder`.
+///
+/// {@category Tasks & Concurrency}
 final class LevitAsyncMapEntry<T> implements LxReadable<LxStatus<T>> {
   final LxResource<LxStatus<T>, _AsyncProducer<T>> _resource;
   LevitAsyncMapEntry._(this._resource);
@@ -65,11 +70,24 @@ final class LevitAsyncMapEntry<T> implements LxReadable<LxStatus<T>> {
   Timer? _expiry;
   Future<void>? _refresh;
   Future<T>? _refreshValue;
+
+  /// Whether this entry currently has active listeners or observers.
   bool get isActive => _resource.isActive;
+
+  /// Whether this entry has been retired or its owning map is closing.
   bool get isClosed => _resource.isClosed;
+
+  /// Whether this entry is currently replacing its underlying producer.
   bool get isReplacing => _resource.isReplacing;
+
   @override
   int get id => _resource.id;
+
+  /// The current [LxStatus] for this key.
+  ///
+  /// Exposes replacement errors as [LxError.fromPrevious] and in-flight
+  /// replacements as [LxWaiting.fromPrevious] so UI can keep displaying the
+  /// previous value. Throws a [StateError] if [isClosed] is `true`.
   @override
   LxStatus<T> get value {
     if (isClosed) throw StateError('Entry is closed.');
@@ -90,6 +108,10 @@ final class LevitAsyncMapEntry<T> implements LxReadable<LxStatus<T>> {
   @override
   void removeListener(void Function() listener) =>
       _resource.removeListener(listener);
+
+  /// A broadcast [Stream] emitting status transitions for this key.
+  ///
+  /// Closes immediately if [isClosed] is already `true`.
   @override
   Stream<LxStatus<T>> get stream => Stream.multi((output) {
     if (isClosed) {
@@ -115,19 +137,59 @@ final class LevitAsyncMapEntry<T> implements LxReadable<LxStatus<T>> {
   }, isBroadcast: true);
 }
 
-/// Task-backed keyed data. An existing entry never revalidates simply because
-/// a widget reads it. [fetch] applies freshness and [refresh] joins pending work.
+/// Task-backed keyed asynchronous data cache with reactive per-key entries.
+///
+/// An existing entry never revalidates simply because a widget or observer
+/// reads it. Call [fetch] to reuse fresh results or load stale ones, and
+/// [refresh] to join pending work or force a reload.
+///
+/// Own [LevitAsyncMap] in a [LevitController] via `own(...)` or await [close]
+/// / [dispose] when done. To pass a custom `LevitTaskEngine` or
+/// `LevitTaskCachePolicy`, import `package:levit_dart/tasks.dart` (or
+/// `package:levit/tasks.dart` / `package:levit_flutter/tasks.dart`).
+///
+/// ```dart
+/// class UsersController extends LevitController {
+///   late final users = own(
+///     LevitAsyncMap<String, User>(
+///       (id, ctx) => api.fetchUser(id),
+///       staleTime: const Duration(minutes: 5),
+///       name: 'users',
+///     ),
+///   );
+///
+///   LxStatus<User> statusFor(String id) => users[id];
+///   Future<User> loadUser(String id) => users.fetch(id);
+/// }
+/// ```
+///
+/// {@category Tasks & Concurrency}
 final class LevitAsyncMap<K, T>
     implements LevitDisposable, LevitDrainable, LevitExecutionBoundary {
   final FutureOr<T> Function(K, LevitTaskContext) _load;
   final LevitTaskEngine _engine;
   final bool _ownsEngine;
   final DateTime Function() _now;
-  final Duration staleTime, gracePeriod;
+
+  /// Duration a successful entry remains fresh for [isFresh] and [fetch].
+  final Duration staleTime;
+
+  /// Delay before an unobserved entry is automatically retired.
+  final Duration gracePeriod;
+
+  /// Maximum number of unobserved entries retained before evicting the oldest.
   final int maxInactiveEntries;
+
+  /// Optional retry policy applied to each key's load execution.
   final LevitRetryPolicy? retryPolicy;
+
+  /// Optional per-key cache policy factory (see `tasks.dart`).
   final LevitTaskCachePolicy<T>? Function(K)? cachePolicy;
+
+  /// Optional diagnostic label prefix for generated entry resources.
   final String? name;
+
+  /// Optional formatter used with [name] to produce readable diagnostic labels.
   final String Function(K)? debugKey;
   final _entries = LxSpi.createOwned(
     () => LxMap<K, LevitAsyncMapEntry<T>>(null, null, true),
@@ -139,6 +201,23 @@ final class LevitAsyncMap<K, T>
   bool _closing = false, _disposed = false;
   Future<void>? _closingFuture;
 
+  /// Creates a task-backed keyed async map using the given loader function.
+  ///
+  /// * [engine]: Optional shared task engine (from `tasks.dart`). When omitted,
+  ///   this map creates and owns an internal engine (`maxConcurrent: 8`) that
+  ///   disposes alongside this map.
+  /// * [staleTime]: Freshness window for [fetch]. Defaults to 30 seconds.
+  /// * [gracePeriod]: Retention delay after an entry loses all listeners.
+  ///   Defaults to 30 seconds.
+  /// * [maxInactiveEntries]: Maximum cached unobserved entries (must be >= 1).
+  ///   Defaults to `128`.
+  /// * [retryPolicy]: Optional [LevitRetryPolicy] for failed loads.
+  /// * [cachePolicy]: Optional per-key `LevitTaskCachePolicy` factory.
+  /// * [name] / [debugKey]: Optional diagnostic naming hooks.
+  /// * [now]: Optional clock override for deterministic testing.
+  ///
+  /// Throws a [RangeError] if [maxInactiveEntries] < 1 or an [ArgumentError]
+  /// if [staleTime] or [gracePeriod] is negative.
   LevitAsyncMap(
     this._load, {
     LevitTaskEngine? engine,
@@ -159,12 +238,27 @@ final class LevitAsyncMap<K, T>
       throw ArgumentError('Durations must be nonnegative.');
   }
 
+  /// Whether disposal of this map has started.
   bool get isClosing => _closing;
+
+  /// Whether disposal of this map has completed.
   bool get isDisposed => _disposed;
+
+  /// The number of currently retained entries (active and inactive).
   int get length => _entries.length;
+
+  /// An unmodifiable snapshot of currently retained keys.
   Iterable<K> get keys => List<K>.unmodifiable(_entries.keys);
+
+  /// Whether [key] currently has a retained entry.
   bool containsKey(K key) => _entries.containsKey(key);
+
+  /// Returns the existing entry for [key] without tracking dependencies or
+  /// triggering a load, or `null` if absent.
   LevitAsyncMapEntry<T>? peek(K key) => Lx.untracked(() => _entries[key]);
+
+  /// Acquires [entry] for [key] (starting an initial load if absent) and reads
+  /// its reactive [LxStatus].
   LxStatus<T> operator [](K key) => entry(key).value;
 
   String? _label(K key) {
@@ -223,7 +317,10 @@ final class LevitAsyncMap<K, T>
     return item;
   }
 
-  /// Returns the stable observable for this retained lifetime.
+  /// Returns the stable [LevitAsyncMapEntry] for [key], creating it and
+  /// starting its initial load if not yet retained.
+  ///
+  /// Throws a [StateError] if this map is closing or disposed.
   LevitAsyncMapEntry<T> entry(K key) => _acquire(key);
 
   void _touch(K key, LevitAsyncMapEntry<T> item) {
@@ -243,6 +340,7 @@ final class LevitAsyncMap<K, T>
     }
   }
 
+  /// Whether [key] currently holds a successful result younger than [staleTime].
   bool isFresh(K key) {
     final item = peek(key);
     if (item == null ||
@@ -255,6 +353,11 @@ final class LevitAsyncMap<K, T>
     return stamp != null && _now().difference(stamp) < staleTime;
   }
 
+  /// Resolves the value for [key], reusing a fresh cached result or joining an
+  /// in-flight refresh when available, and otherwise reloading it.
+  ///
+  /// Throws a [StateError] if called from inside a loader of this map or when
+  /// this map is closing.
   Future<T> fetch(K key) async {
     assertCanDispose();
     final creating = peek(key) == null;
@@ -275,7 +378,12 @@ final class LevitAsyncMap<K, T>
     }
   }
 
-  /// Join pending work or replace the completed producer and await its result.
+  /// Joins any pending refresh for [key] or replaces the completed producer
+  /// and awaits its new result.
+  ///
+  /// Throws a [StateError] if called from inside a loader of this map or when
+  /// this map is closing, and throws [LxCancelledException] if closed while
+  /// refreshing.
   Future<void> refresh(K key) {
     assertCanDispose();
     final creating = peek(key) == null;
@@ -323,6 +431,10 @@ final class LevitAsyncMap<K, T>
     return done.future;
   }
 
+  /// Invalidates [key]: refreshes it immediately if actively observed, or
+  /// evicts it if inactive.
+  ///
+  /// Returns `false` if [key] is not currently retained.
   Future<bool> invalidate(K key) async {
     _open();
     final item = peek(key);
@@ -332,12 +444,17 @@ final class LevitAsyncMap<K, T>
     return true;
   }
 
+  /// Calls [invalidate] for every currently retained key.
   Future<void> invalidateAll() async {
     for (final key in keys) {
       await invalidate(key);
     }
   }
 
+  /// Retires and removes an unobserved entry for [key].
+  ///
+  /// Returns `false` if [key] is not present. Throws a [StateError] if the
+  /// entry currently has active observers (`isActive == true`).
   Future<bool> evict(K key) {
     assertCanDispose();
     _open();
@@ -373,6 +490,8 @@ final class LevitAsyncMap<K, T>
     return operation.then<void>((_) {});
   }
 
+  /// Throws a [StateError] if called from inside an active loader task owned by
+  /// this map.
   @override
   void assertCanDispose() {
     final running = _currentTaskZone?.execution;
@@ -382,6 +501,8 @@ final class LevitAsyncMap<K, T>
     }
   }
 
+  /// Stops admissions and cooperatively cancels all active entry producers (and
+  /// the internal task engine when owned by this map).
   @override
   void requestCancel() {
     if (_closing) return;
@@ -393,6 +514,8 @@ final class LevitAsyncMap<K, T>
     if (_ownsEngine) _engine.requestCancel();
   }
 
+  /// Waits for all active producers, refreshes, and background retirements to
+  /// finish. Throws [LevitDisposalException] if cleanup fails.
   @override
   Future<void> drain() async {
     assertCanDispose();
@@ -415,8 +538,14 @@ final class LevitAsyncMap<K, T>
     if (errors.isNotEmpty) throw LevitDisposalException.aggregate(errors);
   }
 
+  /// Alias for [close] implementing [LevitDisposable].
   @override
   Future<void> dispose() => close();
+
+  /// Cancels, drains, and retires every entry, closes the internal entry map,
+  /// and disposes the task engine if owned by this map.
+  ///
+  /// Idempotent; throws [LevitDisposalException] if any cleanup step fails.
   Future<void> close() {
     assertCanDispose();
     if (_closingFuture case final pending?) return pending;

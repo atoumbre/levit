@@ -122,8 +122,6 @@ Store builders run once. Return a reactive object for evolving state, or use `Lx
 
 Override `onBeforeClose` when work must finish before owned resources close. Closing is already set when this hook runs; new resources cannot be owned. Always await/delegate `super.onBeforeClose()`. The owner then performs awaited LIFO cleanup and aggregates failures.
 
-See the [0.1.0 migration guide](https://github.com/softilab/levit/blob/main/MIGRATION_0.1.0.md) before upgrading.
-
 ## 0.1.0 resource ownership
 
 An owner requests cancellation across its asynchronous work, drains that work,

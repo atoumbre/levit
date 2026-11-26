@@ -1,6 +1,8 @@
 part of 'reactive_library.dart';
 
 /// Cooperative cancellation and completion for a reactive producer.
+///
+/// {@category SPI}
 abstract interface class LxAsyncResource {
   /// Stops admission and requests cancellation without claiming completion.
   void requestCancel();
@@ -9,8 +11,11 @@ abstract interface class LxAsyncResource {
   Future<void> drain();
 }
 
-/// Cancellation requested for a reactive execution.
+/// Exception signalling that a reactive execution was cooperatively cancelled.
+///
+/// {@category Reactive State}
 final class LxCancelledException implements Exception {
+  /// Creates a reactive cancellation exception.
   const LxCancelledException();
 
   @override
@@ -18,7 +23,11 @@ final class LxCancelledException implements Exception {
 }
 
 /// Cleanup failures collected after every admitted operation has settled.
+///
+/// {@category Reactive State}
 final class LxCleanupException implements Exception {
+  /// Creates an aggregate cleanup exception, flattening nested
+  /// [LxCleanupException] instances and deduplicating identical errors.
   LxCleanupException(Iterable<AsyncError> failures)
     : failures = List<AsyncError>.unmodifiable(_flatten(failures));
 
@@ -37,13 +46,19 @@ final class LxCleanupException implements Exception {
     yield* expand(failures);
   }
 
+  /// Unmodifiable list of distinct cleanup failures in collection order.
   final List<AsyncError> failures;
 
   @override
   String toString() => 'LxCleanupException(${failures.length} failures)';
 }
 
-/// Context for one reactive execution. Cancellation does not stop a Future.
+/// Cooperative cancellation context for one reactive execution.
+///
+/// Cancellation does not abort a running [Future] automatically; callbacks
+/// check [isCancelled], call [throwIfCancelled], or await [cancelled].
+///
+/// {@category Reactive State}
 final class LxExecutionContext {
   LxExecutionContext._(this._owner) : _parent = current;
 
@@ -68,11 +83,13 @@ final class LxExecutionContext {
     return false;
   }
 
+  /// Whether cooperative cancellation has been requested for this execution.
   bool get isCancelled => _cancelled.isCompleted;
 
   /// Completes when cancellation is requested, not when work has finished.
   Future<void> get cancelled => _cancelled.future;
 
+  /// Throws [LxCancelledException] if [isCancelled] is `true`.
   void throwIfCancelled() {
     if (isCancelled) throw const LxCancelledException();
   }

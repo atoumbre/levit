@@ -1,13 +1,50 @@
 part of 'rules.dart';
 
-/// Requires async lifecycle delegation to be awaited or directly returned.
-/// This local check does not prove that every control-flow path delegates.
+/// Requires async `super.onInit`, `super.onBeforeClose`, and `super.onClose`
+/// calls to be awaited or directly returned (`await_levit_lifecycle`).
+///
+/// Applies to `Future`/`FutureOr`-returning `super` lifecycle calls resolved on
+/// `LevitController`, `LevitResourceOwner`, or `LevitResourceOwnership`.
+/// Wrapping the call in `unawaited(...)` is not accepted for lifecycle
+/// delegation because teardown ordering depends on completion.
+///
+/// **Bad:**
+/// ```dart
+/// class SyncController extends LevitController {
+///   @override
+///   Future<void> onBeforeClose() async {
+///     super.onBeforeClose();
+///     await flushQueue();
+///   }
+/// }
+/// ```
+///
+/// **Good:**
+/// ```dart
+/// class SyncController extends LevitController {
+///   @override
+///   Future<void> onBeforeClose() async {
+///     await super.onBeforeClose();
+///     await flushQueue();
+///   }
+/// }
+/// ```
+///
+/// This local check inspects each `super` invocation site; it does not prove
+/// that every control-flow branch delegates. Suppress with
+/// `// ignore: levit_lints/await_levit_lifecycle`.
+///
+/// {@category Lifecycle Rules}
 class AwaitLevitLifecycle extends AnalysisRule {
+  /// Diagnostic code reported when an async `super` lifecycle call is neither
+  /// awaited nor directly returned.
   static const code = LintCode(
     'await_levit_lifecycle',
     'Async Levit lifecycle delegation must complete before this override.',
     correctionMessage: 'Await or directly return the super lifecycle call.',
   );
+
+  /// Creates the `await_levit_lifecycle` analysis rule.
   AwaitLevitLifecycle()
     : super(
         name: code.lowerCaseName,
@@ -59,14 +96,52 @@ class _AwaitLifecycleVisitor extends SimpleAstVisitor<void> {
   }
 }
 
-/// Flags global lookup from resolved Flutter Widget/State implementations.
-/// The runtime widget tree cannot be inferred; use context lookup in all such code.
+/// Flags global `Levit.find*` lookups inside Flutter `Widget` and `State`
+/// subclasses (`avoid_global_levit_in_widgets`).
+///
+/// Resolves `Levit.find`, `Levit.findOrNull`, `Levit.findAsync`, and
+/// `Levit.findOrNullAsync` from Levit libraries (including aliased imports) and
+/// recommends resolving via `context.levit.find*` so dependencies respect the
+/// active `LScope` subtree.
+///
+/// **Bad:**
+/// ```dart
+/// class CounterView extends StatelessWidget {
+///   @override
+///   Widget build(BuildContext context) {
+///     final controller = Levit.find<CounterController>();
+///     return Text('${controller.count.value}');
+///   }
+/// }
+/// ```
+///
+/// **Good:**
+/// ```dart
+/// class CounterView extends StatelessWidget {
+///   @override
+///   Widget build(BuildContext context) {
+///     final controller = context.levit.find<CounterController>();
+///     return Text('${controller.count.value}');
+///   }
+/// }
+/// ```
+///
+/// Because static analysis cannot infer the runtime widget tree, this rule
+/// flags all global lookups in Flutter `Widget`/`State` classes and does not
+/// inspect arbitrary top-level helper functions. Suppress an intentional root
+/// lookup with `// ignore: levit_lints/avoid_global_levit_in_widgets`.
+///
+/// {@category Flutter Rules}
 class AvoidGlobalLevitInWidgets extends AnalysisRule {
+  /// Diagnostic code reported for global `Levit.find*` calls inside Flutter
+  /// `Widget` or `State` subclasses.
   static const code = LintCode(
     'avoid_global_levit_in_widgets',
     'Global Levit resolution bypasses the widget scope.',
     correctionMessage: 'Resolve with context.levit in widget code.',
   );
+
+  /// Creates the `avoid_global_levit_in_widgets` analysis rule.
   AvoidGlobalLevitInWidgets()
     : super(
         name: code.lowerCaseName,
@@ -111,15 +186,50 @@ class _GlobalLookupVisitor extends SimpleAstVisitor<void> {
   }
 }
 
-/// Detects a directly discarded Future from a known Levit lifecycle/worker API.
-/// Explicit unawaited calls, stored futures and returned futures are allowed.
+/// Detects directly discarded `Future`/`FutureOr` return values from known
+/// Levit disposal, scope, task, loop, and reactive cleanup APIs
+/// (`discarded_levit_future`).
+///
+/// Checks resolved calls on `Levit` (`delete`, `reset`, `runInScope`),
+/// `LevitScope`, `LevitScopeDisposable`, `LevitController`,
+/// `LevitScopeLifecycleController`, `LevitResourceOwnership`, `LxReactive`,
+/// `LxBase`, `LxWorker`, `LxResource`, `LevitAsyncMap`, `LevitLoopService`,
+/// `LevitLoopEngine`, `LevitTaskEngine`, and `LevitTaskGroup`.
+///
+/// `super.*` lifecycle invocations are intentionally excluded here and handled
+/// by [AwaitLevitLifecycle]. Awaiting, returning, storing, or explicitly
+/// wrapping the future in `unawaited(...)` satisfies this rule.
+///
+/// **Bad:**
+/// ```dart
+/// void shutdown(LevitScope scope, LxWorker worker) {
+///   worker.close();
+///   scope.dispose();
+/// }
+/// ```
+///
+/// **Good:**
+/// ```dart
+/// Future<void> shutdown(LevitScope scope, LxWorker worker) async {
+///   await worker.close();
+///   await scope.dispose();
+/// }
+/// ```
+///
+/// Suppress with `// ignore: levit_lints/discarded_levit_future`.
+///
+/// {@category Lifecycle Rules}
 class DiscardedLevitFuture extends AnalysisRule {
+  /// Diagnostic code reported when a `Future` from a tracked Levit lifecycle or
+  /// worker API is directly discarded.
   static const code = LintCode(
     'discarded_levit_future',
     'This Levit operation completes asynchronously and its future is discarded.',
     correctionMessage:
         'Await, return, retain, or explicitly handle the future.',
   );
+
+  /// Creates the `discarded_levit_future` analysis rule.
   DiscardedLevitFuture()
     : super(
         name: code.lowerCaseName,
@@ -164,7 +274,6 @@ class _DiscardedFutureVisitor extends SimpleAstVisitor<void> {
       'LxReactive': {'close'},
       'LxBase': {'close'},
       'LxWorker': {'close'},
-      'LxWorkerImpl': {'close'},
       'LevitLoopService': {'stop'},
       'LevitLoopEngine': {'stopService', 'stopAllServices', 'dispose'},
       'LevitTaskEngine': {'dispose'},

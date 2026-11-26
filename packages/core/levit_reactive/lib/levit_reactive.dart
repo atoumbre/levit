@@ -1,15 +1,35 @@
 /// Pure Dart reactive runtime for state propagation and derivation.
 ///
-/// This package provides Levit's low-level reactive engine.
-/// It is dependency-free and focuses on deterministic, fine-grained updates.
+/// This package provides Levit's dependency-free reactive engine focused on
+/// deterministic, fine-grained updates and explicit async lifecycle cleanup.
 ///
 /// ### Core abstractions
-/// * [LxReactive]: base interface for reactive sources.
-/// * [Lx]: static runtime gateway for creation, batching, and middleware.
-/// * [LxComputed]: derived state with automatic dependency tracking.
+/// * [LxReadable] / [LxReactive]: Read-only and owner-controlled reactive
+///   source interfaces.
+/// * [LxVar], [LxState], [LxBool], [LxInt], [LxDouble]: Mutable and controlled
+///   reactive state primitives (`.lx` extensions).
+/// * [LxList], [LxMap], [LxSet], [LxMapEntry], [LxListEntry]: Reactive
+///   collections with fine-grained entry observation.
+/// * [LxComputed] / [LxAsyncComputed]: Synchronous and asynchronous derived
+///   state with automatic dependency tracking and [LxAsyncConcurrency].
+/// * [LxFuture], [LxStream], [LxStatus], [LxResource]: Async reactive sources
+///   and replaceable owned producers.
+/// * [LxWorker]: Reactive side-effect observers with cooperative cancellation.
+/// * [Lx] & [LevitReactiveMiddleware]: Batching, untracked reads, and state
+///   middleware hooks.
 ///
-/// `levit_reactive` is the foundation used by higher Levit layers and can be
-/// used directly in any Dart runtime.
+/// ```dart
+/// final count = 0.lx;
+/// final doubled = LxComputed(() => count() * 2);
+/// count.value = 3; // doubled() == 6
+/// await doubled.close();
+/// await count.close();
+/// ```
+///
+/// Cross-package runtime integration hooks live in
+/// `package:levit_reactive/spi.dart`.
+///
+/// @docImport 'src/reactive_library.dart';
 library;
 
 export 'src/reactive_library.dart'
