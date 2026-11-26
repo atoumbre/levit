@@ -5,47 +5,56 @@ part of '../monitor_library.dart';
 /// {@category Middleware & Monitoring}
 enum LevitLogLevel {
   /// No output.
-  off(Level.off, 10000),
+  off(10000, 'OFF', '', ''),
 
   /// Fatal errors.
-  fatal(Level.fatal, 6000),
+  fatal(6000, 'FATAL', '👾', '\x1B[35m'),
 
   /// Error level.
-  error(Level.error, 5000),
+  error(5000, 'ERROR', '⛔', '\x1B[31m'),
 
   /// Warning level.
-  warning(Level.warning, 4000),
+  warning(4000, 'WARN', '⚠️', '\x1B[33m'),
 
   /// Info level (default for DI register, DI delete, and scope progress events).
-  info(Level.info, 3000),
+  info(3000, 'INFO', '💡', '\x1B[34m'),
 
   /// Debug level (default for batch, reactive init/dispose/graph/metadata,
   /// listener add/remove, DI resolve/create/init, scope create/dispose, and
   /// snapshot events).
-  debug(Level.debug, 2000),
+  debug(2000, 'DEBUG', '🐛', '\x1B[36m'),
 
   /// Trace level (default for state changes).
-  trace(Level.trace, 1000),
+  trace(1000, 'TRACE', '🔍', '\x1B[90m'),
 
   /// All output (for threshold configuration only; do not assign as an event
   /// log level).
-  all(Level.all, 0);
-
-  final Level _loggerLevel;
+  all(0, 'ALL', '', '');
 
   /// Numeric severity matching standard log ordering (`all < trace < ... < off`).
   final int value;
 
-  const LevitLogLevel(this._loggerLevel, this.value);
+  final String _badge;
+  final String _emoji;
+  final String _ansi;
+
+  const LevitLogLevel(this.value, this._badge, this._emoji, this._ansi);
 }
+
+/// Formats a single console log line for [LevitConsoleTransport].
+typedef LevitLogFormatter =
+    String Function(LevitLogLevel level, String message);
+
+/// Writes a formatted console log line produced by [LevitConsoleTransport].
+typedef LevitLogOutput = void Function(String line);
 
 /// Configuration for log level overrides per event type.
 ///
 /// Allows fine-grained control over the [LevitLogLevel] assigned to each
 /// monitor event type. Only loggable levels (`trace` through `fatal`) may be
 /// assigned — using [LevitLogLevel.off] or [LevitLogLevel.all] as an event
-/// level throws an [ArgumentError] in `package:logger`. To suppress specific
-/// event types completely, use [LevitMonitor.setFilter].
+/// level throws an [ArgumentError]. To suppress specific event types
+/// completely, use [LevitMonitor.setFilter].
 ///
 /// ```dart
 /// LevitConsoleTransport(
@@ -116,7 +125,7 @@ class LevitLogLevelConfig {
   final LevitLogLevel? reactiveError;
 }
 
-/// A transport that logs events to the console using `package:logger`.
+/// A transport that logs formatted events to the console.
 ///
 /// Provides structured logging with configurable log levels for each event
 /// type. When attached through [LevitMonitor], events are frozen into
@@ -173,57 +182,63 @@ class LevitConsoleTransport extends LevitTransport {
   /// Optional overrides for log levels per event type.
   final LevitLogLevelConfig? levelOverrides;
 
-  // The underlying logger instance.
-  final Logger _logger;
+  /// Whether ANSI color escape codes are included in default output.
+  final bool colors;
+
+  /// Whether level emojis are included in default output.
+  final bool includeEmojis;
+
+  final LevitLogFormatter? _formatter;
+  final LevitLogOutput _output;
+  bool _closed = false;
 
   /// Creates a new [LevitConsoleTransport].
   ///
   /// * [minLevel]: Minimum log level to output. Defaults to [LevitLogLevel.trace].
   /// * [levelOverrides]: Optional per-event-type log level overrides.
-  /// * [printer]: Optional custom `LogPrinter` from `package:logger`. Defaults
-  ///   to `PrettyPrinter`.
+  /// * [colors]: Whether to include ANSI colors in default formatting.
+  /// * [includeEmojis]: Whether to include level emojis in default formatting.
+  /// * [formatter]: Optional custom formatter receiving the resolved
+  ///   [LevitLogLevel] and formatted message body.
+  /// * [output]: Optional sink callback receiving each rendered line. Defaults
+  ///   to [print].
   LevitConsoleTransport({
     this.minLevel = LevitLogLevel.trace,
     this.levelOverrides,
-    LogPrinter? printer,
-  }) : _logger = Logger(
-         filter: ProductionFilter(),
-         level: minLevel._loggerLevel,
-         printer:
-             printer ??
-             PrettyPrinter(
-               methodCount: 0,
-               errorMethodCount: 0,
-               lineLength: 80,
-               colors: true,
-               printEmojis: true,
-               dateTimeFormat: DateTimeFormat.none,
-             ),
-       );
+    this.colors = true,
+    this.includeEmojis = true,
+    LevitLogFormatter? formatter,
+    LevitLogOutput? output,
+  }) : _formatter = formatter,
+       _output = output ?? print;
 
   @override
   void send(LevitMonitorEvent event) {
-    if (!_shouldLog(event)) return;
-
+    if (_closed) return;
     final level = _levelFor(event);
+    if (level.value < minLevel.value) return;
+    if (level == LevitLogLevel.off || level == LevitLogLevel.all) {
+      throw ArgumentError.value(
+        level,
+        'level',
+        'LevitLogLevel.${level.name} can only be used as a minLevel threshold.',
+      );
+    }
+
     final message = _formatMessage(event);
-
-    // ignore: unused_local_variable
-    final category = switch (event) {
-      LevitLogEvent _ => 'LOG',
-      LevitCustomMonitorEvent _ => 'CUSTOM',
-      LevitReactiveBatchEvent _ => 'STATE',
-      LevitDependencyEvent _ => 'DI',
-      LevitSnapshotEvent _ => 'SNAPSHOT',
-      _ => 'OTHER',
-    };
-
-    _logger.log(level._loggerLevel, message);
+    final line = _formatter != null
+        ? _formatter(level, message)
+        : _defaultFormat(level, message);
+    _output(line);
   }
 
-  bool _shouldLog(LevitMonitorEvent event) {
-    final eventLevel = _levelFor(event);
-    return eventLevel._loggerLevel.index >= minLevel._loggerLevel.index;
+  String _defaultFormat(LevitLogLevel level, String message) {
+    final prefix = includeEmojis
+        ? '${level._emoji} [${level._badge}]'
+        : '[${level._badge}]';
+    return colors
+        ? '${level._ansi}$prefix $message\x1B[0m'
+        : '$prefix $message';
   }
 
   LevitLogLevel _levelFor(LevitMonitorEvent event) {
@@ -346,6 +361,6 @@ class LevitConsoleTransport extends LevitTransport {
 
   @override
   Future<void> close() async {
-    _logger.close();
+    _closed = true;
   }
 }

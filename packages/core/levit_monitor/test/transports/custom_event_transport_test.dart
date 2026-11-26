@@ -3,72 +3,26 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:levit_monitor/levit_monitor_io.dart';
-import 'package:logger/logger.dart' as logger;
-import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:levit_monitor/spi.dart';
 
-final class _CapturePrinter extends logger.LogPrinter {
-  final List<String> messages = <String>[];
+final class _FakeConnection implements LevitWebSocketConnection {
+  final StreamController<Object?> incoming =
+      StreamController<Object?>.broadcast();
+  final StreamController<String> outgoing =
+      StreamController<String>.broadcast();
 
   @override
-  List<String> log(logger.LogEvent event) {
-    messages.add(event.message.toString());
-    return const <String>[];
-  }
-}
-
-final class _WebSocketSink implements WebSocketSink {
-  _WebSocketSink(this.controller);
-
-  final StreamController<dynamic> controller;
-
-  @override
-  void add(dynamic data) => controller.add(data);
-
-  @override
-  void addError(Object error, [StackTrace? stackTrace]) {
-    controller.addError(error, stackTrace);
-  }
-
-  @override
-  Future<void> addStream(Stream<dynamic> stream) =>
-      controller.addStream(stream);
-
-  @override
-  Future<void> close([int? closeCode, String? closeReason]) async {}
-
-  @override
-  Future<void> get done => Future<void>.value();
-}
-
-final class _WebSocketChannel extends StreamChannelMixin
-    implements WebSocketChannel {
-  final StreamController<dynamic> incoming =
-      StreamController<dynamic>.broadcast();
-  final StreamController<dynamic> outgoing =
-      StreamController<dynamic>.broadcast();
-
-  late final _WebSocketSink _sink = _WebSocketSink(outgoing);
-
-  @override
-  Stream<dynamic> get stream => incoming.stream;
-
-  @override
-  WebSocketSink get sink => _sink;
-
-  @override
-  String? get protocol => 'test';
+  Stream<Object?> get stream => incoming.stream;
 
   @override
   Future<void> get ready => Future<void>.value();
 
   @override
-  int? get closeCode => null;
+  void send(String data) => outgoing.add(data);
 
   @override
-  String? get closeReason => null;
+  Future<void> close([int? code, String? reason]) async {}
 }
 
 LevitCustomMonitorEvent _event({
@@ -87,10 +41,11 @@ LevitCustomMonitorEvent _event({
 
 void main() {
   test('console maps every custom level and formats errors', () {
-    final printer = _CapturePrinter();
+    final messages = <String>[];
     final transport = LevitConsoleTransport(
       minLevel: LevitLogLevel.all,
-      printer: printer,
+      formatter: (_, message) => message,
+      output: messages.add,
     );
 
     expect(
@@ -115,8 +70,8 @@ void main() {
       _event(level: LevitLogLevel.error, error: StateError('failed')),
     );
 
-    expect(printer.messages, contains(contains('CUSTOM levit.task:finished')));
-    expect(printer.messages.last, contains('Error: Bad state: failed'));
+    expect(messages, contains(contains('CUSTOM levit.task:finished')));
+    expect(messages.last, contains('Error: Bad state: failed'));
   });
 
   test('file transport categorizes custom events', () async {
@@ -135,21 +90,21 @@ void main() {
   });
 
   test('websocket transport categorizes custom events', () async {
-    final channel = _WebSocketChannel();
+    final connection = _FakeConnection();
     final transport = LevitWebSocketTransport(
-      channel,
+      connection,
       requireAcknowledgement: false,
     );
     addTearDown(() async {
       await transport.close();
-      await channel.incoming.close();
-      await channel.outgoing.close();
+      await connection.incoming.close();
+      await connection.outgoing.close();
     });
-    final sent = channel.outgoing.stream.first;
+    final sent = connection.outgoing.stream.first;
 
     transport.send(_event());
 
-    final payload = jsonDecode(await sent as String) as Map<String, dynamic>;
+    final payload = jsonDecode(await sent) as Map<String, dynamic>;
     expect(payload['category'], 'custom');
     expect(payload['type'], 'custom');
   });

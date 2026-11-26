@@ -3,18 +3,7 @@ import 'dart:async';
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:levit_monitor/spi.dart';
-import 'package:logger/logger.dart' as logger;
 import 'package:test/test.dart';
-
-class _CapturePrinter extends logger.LogPrinter {
-  final List<String> lines = [];
-
-  @override
-  List<String> log(logger.LogEvent event) {
-    lines.add(event.message.toString());
-    return const [];
-  }
-}
 
 class _BlockingSendTransport extends LevitTransport {
   final Completer<void> sendStarted = Completer<void>();
@@ -222,7 +211,7 @@ void main() {
     test(
       'handles raw init, dependency register/resolve, and error events',
       () async {
-        final printer = _CapturePrinter();
+        final lines = <String>[];
         final transport = LevitConsoleTransport(
           minLevel: LevitLogLevel.trace,
           levelOverrides: const LevitLogLevelConfig(
@@ -231,7 +220,8 @@ void main() {
             diResolve: LevitLogLevel.info,
             reactiveError: LevitLogLevel.fatal,
           ),
-          printer: printer,
+          formatter: (_, message) => message,
+          output: lines.add,
         );
         final reactive = 1.lx.named('count');
         final dep = LevitDependency<int>(instance: 1);
@@ -267,7 +257,7 @@ void main() {
           ),
         );
 
-        expect(printer.lines, hasLength(4));
+        expect(lines, hasLength(4));
         await transport.close();
         await reactive.close();
       },

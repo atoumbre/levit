@@ -55,7 +55,7 @@ void main() {
     await tester.runAsync(
       () => app.main(
         enableDevTools: true,
-        devToolsChannelBuilder: (_) => FakeWebSocketChannel(),
+        devToolsConnectionBuilder: (_) => _FakeMonitorConnection(),
         projectChannelBuilder: (_) => FakeWebSocketChannel(),
       ),
     );
@@ -474,4 +474,26 @@ class _FakeSink implements WebSocketSink {
 
   @override
   Future get done => _controller.done;
+}
+
+class _FakeMonitorConnection implements LevitWebSocketConnection {
+  final StreamController<Object?> _incoming =
+      StreamController<Object?>.broadcast();
+
+  @override
+  Stream<Object?> get stream => _incoming.stream;
+
+  @override
+  Future<void> get ready => Future<void>.value();
+
+  @override
+  void send(String data) {
+    final message = jsonDecode(data);
+    if (message is Map && message['seq'] is int) {
+      _incoming.add(jsonEncode({'ack': message['seq']}));
+    }
+  }
+
+  @override
+  Future<void> close([int? code, String? reason]) => _incoming.close();
 }

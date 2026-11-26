@@ -3,81 +3,49 @@ import 'dart:convert';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:levit_monitor/spi.dart';
 
-// Mock implementations
-class MockWebSocketSink implements WebSocketSink {
-  final StreamController<dynamic> controller;
-  MockWebSocketSink(this.controller);
+class MockWebSocketConnection implements LevitWebSocketConnection {
+  final StreamController<Object?> incoming =
+      StreamController<Object?>.broadcast();
+  final StreamController<String> outgoing =
+      StreamController<String>.broadcast();
   bool failClose = false;
   bool closed = false;
 
   @override
-  void add(dynamic data) => controller.add(data);
-
-  @override
-  void addError(Object error, [StackTrace? stackTrace]) =>
-      controller.addError(error, stackTrace);
-
-  @override
-  Future addStream(Stream<dynamic> stream) => controller.addStream(stream);
-
-  @override
-  Future close([int? closeCode, String? closeReason]) async {
-    closed = true;
-    if (failClose) throw StateError("socket close failed");
-  }
-
-  @override
-  Future get done => Future.value();
-}
-
-class MockWebSocketChannel extends StreamChannelMixin
-    implements WebSocketChannel {
-  final StreamController<dynamic> incoming =
-      StreamController<dynamic>.broadcast();
-  final StreamController<dynamic> outgoing =
-      StreamController<dynamic>.broadcast();
-  late final MockWebSocketSink _sink;
-  int? closeCode;
-  String? closeReason;
-
-  MockWebSocketChannel() {
-    _sink = MockWebSocketSink(outgoing);
-  }
-
-  @override
-  Stream get stream => incoming.stream;
-
-  @override
-  WebSocketSink get sink => _sink;
-
-  @override
-  String? get protocol => 'test';
+  Stream<Object?> get stream => incoming.stream;
 
   @override
   Future<void> get ready => Future.value();
+
+  @override
+  void send(String data) => outgoing.add(data);
+
+  @override
+  Future<void> close([int? code, String? reason]) async {
+    closed = true;
+    if (failClose) throw StateError('socket close failed');
+  }
 }
 
 void main() {
   group('LevitWebSocketTransport', () {
-    late MockWebSocketChannel mockChannel;
+    late MockWebSocketConnection mockConnection;
     late LevitWebSocketTransport transport;
 
     setUp(() {
-      mockChannel = MockWebSocketChannel();
+      mockConnection = MockWebSocketConnection();
       transport = LevitWebSocketTransport(
-        mockChannel,
+        mockConnection,
         requireAcknowledgement: false,
       );
     });
 
     tearDown(() {
-      mockChannel.incoming.close();
-      mockChannel.outgoing.close();
+      mockConnection.incoming.close();
+      mockConnection.outgoing.close();
     });
 
     test(
@@ -93,11 +61,11 @@ void main() {
           source: 'test',
         );
 
-        final future = mockChannel.outgoing.stream.first;
+        final future = mockConnection.outgoing.stream.first;
         transport.send(event);
         final sentJson = await future;
 
-        final data = jsonDecode(sentJson as String);
+        final data = jsonDecode(sentJson);
 
         expect(data['category'], 'di');
         expect(data['type'], 'di_register');
@@ -114,11 +82,11 @@ void main() {
           reactive: reactive,
         );
 
-        final future = mockChannel.outgoing.stream.first;
+        final future = mockConnection.outgoing.stream.first;
         transport.send(event);
         final sentJson = await future;
 
-        final data = jsonDecode(sentJson as String);
+        final data = jsonDecode(sentJson);
 
         expect(data['category'], 'state');
         expect(data['type'], 'reactive_init');
@@ -135,11 +103,11 @@ void main() {
           data: 'a web socket log',
         );
 
-        final future = mockChannel.outgoing.stream.first;
+        final future = mockConnection.outgoing.stream.first;
         transport.send(event);
         final sentJson = await future;
 
-        final data = jsonDecode(sentJson as String);
+        final data = jsonDecode(sentJson);
 
         expect(data['category'], 'log');
         expect(data['type'], 'log');
@@ -150,11 +118,11 @@ void main() {
     test(
       'disconnect captures asynchronous cleanup errors and awaits release',
       () async {
-        mockChannel._sink.failClose = true;
-        await mockChannel.ready;
-        await mockChannel.incoming.close();
+        mockConnection.failClose = true;
+        await mockConnection.ready;
+        await mockConnection.incoming.close();
         await Future<void>.delayed(Duration.zero);
-        expect(mockChannel._sink.closed, isTrue);
+        expect(mockConnection.closed, isTrue);
         await expectLater(
           transport.flush(),
           throwsA(isA<LevitMonitorException>()),
@@ -170,7 +138,7 @@ void main() {
       await transport.close();
 
       bool received = false;
-      final sub = mockChannel.outgoing.stream.listen((_) => received = true);
+      final sub = mockConnection.outgoing.stream.listen((_) => received = true);
 
       final reactive = 0.lx;
       transport.send(
@@ -185,16 +153,16 @@ void main() {
 
     test('connect static method creates instance with appId and token', () {
       Uri? capturedUri;
-      final builder = (Uri u) {
+      LevitWebSocketConnection builder(Uri u) {
         capturedUri = u;
-        return mockChannel;
-      };
+        return mockConnection;
+      }
 
       final t = LevitWebSocketTransport.connect(
         'ws://localhost',
         appId: '123',
         token: 'secret-token',
-        channelBuilder: builder,
+        connectionBuilder: builder,
       );
 
       expect(t, isA<LevitWebSocketTransport>());
@@ -206,15 +174,12 @@ void main() {
       final reactive = 0.lx;
       final event = LevitReactiveInitEvent(sessionId: 's1', reactive: reactive);
 
-      // Send event
       transport.send(event);
-
-      // Simulate server acknowledgment
-      mockChannel.incoming.add('ack');
+      mockConnection.incoming.add('ack');
 
       await Future.delayed(Duration(milliseconds: 50));
 
-      expect(true, true); // Acknowledgment was handled
+      expect(true, true);
     });
 
     test('handles stream errors gracefully', () async {
@@ -231,13 +196,11 @@ void main() {
       );
 
       transport.send(event);
-
-      // Simulate error
-      mockChannel.incoming.addError(Exception('Connection error'));
+      mockConnection.incoming.addError(Exception('Connection error'));
 
       await Future.delayed(Duration(milliseconds: 50));
 
-      expect(true, true); // Error was handled without crashing
+      expect(true, true);
     });
   });
 }

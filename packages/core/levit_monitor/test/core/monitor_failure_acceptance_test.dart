@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:levit/levit.dart';
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:logger/logger.dart' as logger;
 import 'package:test/test.dart';
 import 'package:levit_monitor/spi.dart';
 
@@ -33,15 +32,6 @@ class BadMetadata extends LxVar<int> {
   BadMetadata() : super(0);
   @override
   String? get name => throw StateError('metadata');
-}
-
-class Printer extends logger.LogPrinter {
-  final levels = <logger.Level>[];
-  @override
-  List<String> log(logger.LogEvent event) {
-    levels.add(event.level);
-    return [];
-  }
 }
 
 LevitEventEnvelope envelope(
@@ -160,45 +150,55 @@ void main() {
   test(
     'frozen events keep console severity and configured overrides',
     () async {
-      final printer = Printer();
-      final transport = LevitConsoleTransport(printer: printer);
-      final types = <String, logger.Level>{
-        'state_change': logger.Level.trace,
-        'batch': logger.Level.debug,
-        'reactive_init': logger.Level.debug,
-        'reactive_dispose': logger.Level.debug,
-        'graph_change': logger.Level.debug,
-        'di_register': logger.Level.info,
-        'di_resolve': logger.Level.debug,
-        'di_delete': logger.Level.info,
-        'di_instance_create': logger.Level.debug,
-        'di_instance_init': logger.Level.debug,
-        'listener_add': logger.Level.debug,
-        'listener_remove': logger.Level.debug,
-        'reactive_error': logger.Level.error,
-        'unknown': logger.Level.debug,
+      final levels = <LevitLogLevel>[];
+      final transport = LevitConsoleTransport(
+        formatter: (level, message) {
+          levels.add(level);
+          return message;
+        },
+        output: (_) {},
+      );
+      final types = <String, LevitLogLevel>{
+        'state_change': LevitLogLevel.trace,
+        'batch': LevitLogLevel.debug,
+        'reactive_init': LevitLogLevel.debug,
+        'reactive_dispose': LevitLogLevel.debug,
+        'graph_change': LevitLogLevel.debug,
+        'di_register': LevitLogLevel.info,
+        'di_resolve': LevitLogLevel.debug,
+        'di_delete': LevitLogLevel.info,
+        'di_instance_create': LevitLogLevel.debug,
+        'di_instance_init': LevitLogLevel.debug,
+        'listener_add': LevitLogLevel.debug,
+        'listener_remove': LevitLogLevel.debug,
+        'reactive_error': LevitLogLevel.error,
+        'unknown': LevitLogLevel.debug,
       };
       for (final entry in types.entries) {
         transport.send(LevitFrozenMonitorEvent(envelope(entry.key)));
-        expect(printer.levels.last, entry.value, reason: entry.key);
+        expect(levels.last, entry.value, reason: entry.key);
       }
       transport.send(
         LevitFrozenMonitorEvent(envelope('log', {'level': 'warning'})),
       );
-      expect(printer.levels.last, logger.Level.warning);
+      expect(levels.last, LevitLogLevel.warning);
       transport.send(
         LevitFrozenMonitorEvent(envelope('log', {'level': 'future-level'})),
       );
-      expect(printer.levels.last, logger.Level.info);
+      expect(levels.last, LevitLogLevel.info);
       await transport.close();
       final overridden = LevitConsoleTransport(
-        printer: printer,
+        formatter: (level, message) {
+          levels.add(level);
+          return message;
+        },
+        output: (_) {},
         levelOverrides: const LevitLogLevelConfig(
           stateChange: LevitLogLevel.error,
         ),
       );
       overridden.send(LevitFrozenMonitorEvent(envelope('state_change')));
-      expect(printer.levels.last, logger.Level.error);
+      expect(levels.last, LevitLogLevel.error);
       await overridden.close();
     },
   );

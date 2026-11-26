@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
 import 'package:test/test.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:levit_monitor/spi.dart';
 
 class _RecordingTransport extends LevitTransport {
@@ -15,51 +14,20 @@ class _RecordingTransport extends LevitTransport {
   }
 }
 
-class _FakeSink implements WebSocketSink {
-  final _done = Completer<void>();
-
-  @override
-  void add(dynamic data) {}
-
-  @override
-  void addError(Object error, [StackTrace? stackTrace]) {}
-
-  @override
-  Future<dynamic> addStream(Stream<dynamic> stream) async {}
-
-  @override
-  Future<dynamic> close([int? closeCode, String? closeReason]) async {
-    if (!_done.isCompleted) _done.complete();
-  }
-
-  @override
-  Future<dynamic> get done => _done.future;
-}
-
-class _FakeChannel implements WebSocketChannel {
-  final _incoming = StreamController<dynamic>.broadcast();
-  final _sink = _FakeSink();
+class _FakeConnection implements LevitWebSocketConnection {
+  final _incoming = StreamController<Object?>.broadcast();
 
   @override
   Future<void> get ready => Future<void>.value();
 
   @override
-  Stream<dynamic> get stream => _incoming.stream;
+  Stream<Object?> get stream => _incoming.stream;
 
   @override
-  WebSocketSink get sink => _sink;
+  void send(String data) {}
 
   @override
-  int? get closeCode => null;
-
-  @override
-  String? get closeReason => null;
-
-  @override
-  String? get protocol => null;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  Future<void> close([int? code, String? reason]) async {}
 }
 
 void main() {
@@ -197,27 +165,27 @@ void main() {
         expect(
           () => LevitWebSocketTransport.connect(
             'ws://remote.example.com:9200/ws',
-            channelBuilder: (_) => _FakeChannel(),
+            connectionBuilder: (_) => _FakeConnection(),
           ),
           throwsArgumentError,
         );
 
         final secure = LevitWebSocketTransport.connect(
           'wss://remote.example.com:9200/ws',
-          channelBuilder: (_) => _FakeChannel(),
+          connectionBuilder: (_) => _FakeConnection(),
         );
         await secure.close();
 
         final loopback = LevitWebSocketTransport.connect(
           'ws://127.0.0.1:9200/ws',
-          channelBuilder: (_) => _FakeChannel(),
+          connectionBuilder: (_) => _FakeConnection(),
         );
         await loopback.close();
 
         final optedIn = LevitWebSocketTransport.connect(
           'ws://remote.example.com:9200/ws',
           allowInsecureRemote: true,
-          channelBuilder: (_) => _FakeChannel(),
+          connectionBuilder: (_) => _FakeConnection(),
         );
         await optedIn.close();
       },

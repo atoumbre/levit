@@ -1,19 +1,7 @@
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:logger/logger.dart' as logger;
 import 'package:test/test.dart';
 import 'package:levit_monitor/spi.dart';
-
-class _CapturePrinter extends logger.LogPrinter {
-  final List<String> lines = <String>[];
-
-  @override
-  List<String> log(logger.LogEvent event) {
-    final line = '${event.message}';
-    lines.add(line);
-    return [line];
-  }
-}
 
 void main() {
   group('LevitConsoleTransport', () {
@@ -197,14 +185,15 @@ void main() {
 
       // We expect output to contain Error and Stack strings
       LevitMonitor.setObfuscator(null);
-      final printer = _CapturePrinter();
+      final lines = <String>[];
       final t = LevitConsoleTransport(
         minLevel: LevitLogLevel.all,
-        printer: printer,
+        formatter: (_, message) => message,
+        output: lines.add,
       );
       t.send(event);
 
-      final output = printer.lines.join('\n');
+      final output = lines.join('\n');
       expect(output, contains('LOG: an error occurred'));
       expect(output, contains('Error: Bad state: bad state'));
       expect(output, contains('Stack: \nstack frame 1'));
@@ -229,20 +218,26 @@ void main() {
     });
 
     test(
-      'LevitLogEvent level fallback is not needed as LevitLogLevel covers all',
-      () {
-        // package:logger Level is an enum. We map all possible values
-        // in _levelFor, but we need to cover the `orElse` branch
-        // of `LevitLogLevel.values.firstWhere`.
-        // Since we can't instantiate a fake enum value, we can just prove
-        // standard levels work and are covered. The `orElse` is a safety net
-        // that we can't reach naturally in tests since all Level values are mapped.
+      'supports plain formatting without colors or emojis and ignores sends after close',
+      () async {
+        final lines = <String>[];
+        final t = LevitConsoleTransport(
+          minLevel: LevitLogLevel.info,
+          colors: false,
+          includeEmojis: false,
+          output: lines.add,
+        );
         final event = LevitLogEvent(
           sessionId: 'test',
           level: LevitLogLevel.info,
-          data: 'a simple log',
+          data: 'plain message',
         );
-        expect(() => silentTransport.send(event), returnsNormally);
+        t.send(event);
+        expect(lines.single, '[INFO] LOG: plain message');
+
+        await t.close();
+        t.send(event);
+        expect(lines.length, 1);
       },
     );
 
@@ -253,10 +248,11 @@ void main() {
 
     test('obfuscates sensitive values in logged messages', () async {
       LevitMonitor.setObfuscator(null);
-      final printer = _CapturePrinter();
+      final lines = <String>[];
       final t = LevitConsoleTransport(
         minLevel: LevitLogLevel.all,
-        printer: printer,
+        formatter: (_, message) => message,
+        output: lines.add,
       );
 
       final reactive = 'sensitive-value'.lxVar(
@@ -278,7 +274,7 @@ void main() {
         ),
       );
 
-      final output = printer.lines.join('\n');
+      final output = lines.join('\n');
       expect(output, contains('***'));
       expect(output, isNot(contains('new-sensitive-value')));
 

@@ -9,7 +9,7 @@ repository, follow the project LLM guidance before improvising patterns.
 | :-- | :-- |
 | Routine edits, quick orientation | [`LLM-Short.txt`](./LLM-Short.txt) |
 | Scopes, stores, async DI, middleware, unfamiliar APIs | [`LLM.txt`](./LLM.txt) |
-| Architecture rationale and tradeoffs | [`WHY_LEVIT.md`](./WHY_LEVIT.md) |
+| Architecture rationale and tradeoffs | [`docs/WHY_LEVIT.md`](./docs/WHY_LEVIT.md) |
 | Runnable reference patterns | [`examples/`](./examples) |
 | Public API details | Inline DartDoc + package READMEs |
 
@@ -43,6 +43,7 @@ melos run format
 melos run analyze --no-select
 melos run test --no-select
 melos run test:flutter --no-select
+melos run doc:check
 melos run ci --no-select
 ```
 

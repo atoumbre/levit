@@ -240,7 +240,7 @@ class LevitMonitor {
   ///
   /// Detaches any previously attached monitor before installing the new one.
   /// By default, uses a [LevitConsoleTransport] that writes formatted events to
-  /// the console via `package:logger`.
+  /// the console.
   ///
   /// Monitoring does not enable auto-linking; call `Levit.enableAutoLinking()`
   /// explicitly during application startup.

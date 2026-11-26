@@ -1,51 +1,29 @@
 part of '../monitor_library.dart';
 
-/// Bounded WebSocket delivery to the local inspector or telemetry relay.
-///
-/// When [requireAcknowledgement] is `true`, the relay acknowledges each event
-/// with `{"ack": <seq>}`. Disconnection or queue overflow drops events with
-/// accounting in [droppedEvents]; emitting on [onConnect] triggers a reconnect
-/// snapshot to restore state without claiming complete history.
-///
-/// Use [LevitWebSocketTransport.connect] for automatic reconnection with
-/// exponential backoff (`1s` up to `32s`), or the default constructor to wrap
-/// an externally managed `WebSocketChannel`.
-///
-/// ```dart
-/// final transport = LevitWebSocketTransport.connect(
-///   'ws://127.0.0.1:9200/ws',
-///   appId: 'my-app',
-/// );
-/// await LevitMonitor.attach(transport: transport);
-/// ```
-///
-/// {@category Middleware & Monitoring}
+/// Bounded WebSocket delivery to a local MCP relay or inspector. The relay
+/// acknowledges events by sequence number. Disconnection drops queued events
+/// with accounting; a reconnect snapshot restores state without claiming
+/// complete history.
 class LevitWebSocketTransport extends LevitTransport {
-  WebSocketChannel? _channel;
-  StreamSubscription<dynamic>? _subscription;
+  LevitWebSocketConnection? _connection;
+  StreamSubscription<Object?>? _subscription;
   final String? _url;
   final String? _appId;
   final String? _token;
-  final WebSocketChannel Function(Uri)? _channelBuilder;
+  final LevitWebSocketConnection Function(Uri)? _connectionBuilder;
   final void Function(LevitWebSocketTransport)? _onReady;
   final void Function(Object)? _onError;
 
-  /// Maximum number of buffered + in-flight events before evicting the oldest
-  /// queued event (must be >= 1; defaults to `256`).
+  /// Maximum number of queued and in-flight events retained before dropping.
   final int capacity;
 
-  /// Maximum time to wait for channel readiness or an `{"ack": <seq>}` reply
-  /// before disconnecting and dropping pending events (defaults to 5 seconds).
+  /// Deadline for connection readiness and per-event relay acknowledgements.
   final Duration acknowledgementTimeout;
 
-  /// Whether each outbound event waits for an explicit `{"ack": <seq>}` reply
-  /// before advancing the queue (defaults to `true`).
+  /// Whether each event waits for a relay `{"ack": seq}` before pumping next.
   final bool requireAcknowledgement;
 
-  /// Whether cleartext `ws://` connections to non-loopback hosts are allowed.
-  ///
-  /// Defaults to `false`: `ws://` is restricted to loopback hosts
-  /// (`localhost`, `127.0.0.1`, `::1`) unless explicitly opted in.
+  /// Whether cleartext `ws://` connections to non-loopback hosts are permitted.
   final bool allowInsecureRemote;
   final _onConnectController = StreamController<void>.broadcast();
   final ListQueue<_SocketDelivery> _queue = ListQueue();
@@ -60,31 +38,29 @@ class LevitWebSocketTransport extends LevitTransport {
   int _retryAttempts = 0;
   int _dropped = 0;
 
-  /// Wraps an already-constructed `WebSocketChannel` without automatic
-  /// reconnection.
-  ///
-  /// Throws a [RangeError] if [capacity] < 1 or an [ArgumentError] if
-  /// [acknowledgementTimeout] is not positive.
+  /// Creates a [LevitWebSocketTransport] wrapping an existing
+  /// [LevitWebSocketConnection].
   LevitWebSocketTransport(
-    WebSocketChannel channel, {
+    LevitWebSocketConnection connection, {
     this.capacity = 256,
     this.acknowledgementTimeout = const Duration(seconds: 5),
     this.requireAcknowledgement = true,
   }) : _url = null,
        _appId = null,
        _token = null,
-       _channelBuilder = null,
+       _connectionBuilder = null,
        _onReady = null,
        _onError = null,
        allowInsecureRemote = false {
     _validate();
-    _adopt(channel);
+    _adopt(connection);
   }
+
   LevitWebSocketTransport._(
     this._url,
     this._appId,
     this._token,
-    this._channelBuilder,
+    this._connectionBuilder,
     this._onReady,
     this._onError,
     this.capacity,
@@ -95,6 +71,7 @@ class LevitWebSocketTransport extends LevitTransport {
     _validate();
     _connect();
   }
+
   void _validate() {
     if (capacity < 1) throw RangeError.value(capacity, 'capacity');
     if (acknowledgementTimeout <= Duration.zero) {
@@ -132,23 +109,13 @@ class LevitWebSocketTransport extends LevitTransport {
         normalized == '[::1]';
   }
 
-  /// Connects to [serverUrl] (`ws://` for loopback or `wss://` for remote
-  /// hosts) with automatic exponential-backoff reconnection (`1s` to `32s`).
-  ///
-  /// * [serverUrl]: Target WebSocket endpoint. Non-loopback `ws://` URLs throw
-  ///   an [ArgumentError] unless [allowInsecureRemote] is `true`.
-  /// * [appId]: Optional application identifier appended as a query parameter.
-  /// * [token]: Optional authentication token sent when connecting.
-  /// * [channelBuilder]: Optional factory for testing or custom channels.
-  /// * [onReady]: Optional callback invoked each time the socket becomes ready.
-  /// * [onError]: Optional callback invoked on socket errors.
-  /// * [capacity] / [acknowledgementTimeout] / [requireAcknowledgement] /
-  ///   [allowInsecureRemote]: Buffering, timeout, ack, and TLS controls.
+  /// Connects to [serverUrl] using the platform WebSocket implementation (or
+  /// [connectionBuilder] when supplied) with automatic exponential backoff.
   static LevitWebSocketTransport connect(
     String serverUrl, {
     String? appId,
     String? token,
-    WebSocketChannel Function(Uri)? channelBuilder,
+    LevitWebSocketConnection Function(Uri)? connectionBuilder,
     void Function(LevitWebSocketTransport)? onReady,
     void Function(Object)? onError,
     int capacity = 256,
@@ -159,7 +126,7 @@ class LevitWebSocketTransport extends LevitTransport {
     serverUrl,
     appId,
     token,
-    channelBuilder,
+    connectionBuilder,
     onReady,
     onError,
     capacity,
@@ -167,8 +134,10 @@ class LevitWebSocketTransport extends LevitTransport {
     requireAcknowledgement,
     allowInsecureRemote,
   );
+
   @override
   int get droppedEvents => _dropped;
+
   @override
   Stream<void> get onConnect => _onConnectController.stream;
 
@@ -183,18 +152,18 @@ class LevitWebSocketTransport extends LevitTransport {
           if (_token != null && _token.isNotEmpty) 'token': _token,
         },
       );
-      _adopt(_channelBuilder?.call(uri) ?? WebSocketChannel.connect(uri));
+      _adopt(_connectionBuilder?.call(uri) ?? connectWebSocket(uri));
     } catch (error) {
       _onError?.call(error);
       _scheduleReconnect();
     }
   }
 
-  void _adopt(WebSocketChannel channel) {
-    _channel = channel;
-    _subscription = channel.stream.listen(
+  void _adopt(LevitWebSocketConnection connection) {
+    _connection = connection;
+    _subscription = connection.stream.listen(
       (message) {
-        if (!identical(_channel, channel)) return;
+        if (!identical(_connection, connection)) return;
         if (message is String) {
           try {
             final data = jsonDecode(message);
@@ -206,20 +175,20 @@ class LevitWebSocketTransport extends LevitTransport {
           }
         }
       },
-      onDone: () => _disconnect(channel),
+      onDone: () => _disconnect(connection),
       onError: (Object error) {
         _onError?.call(error);
-        _disconnect(channel);
+        _disconnect(connection);
       },
       // _disconnect owns and awaits cancellation. Automatic stream cancellation
       // would send a failed cancellation Future to the zone before we can drain it.
       cancelOnError: false,
     );
-    channel.ready
+    connection.ready
         .timeout(acknowledgementTimeout)
         .then(
           (_) {
-            if (!identical(_channel, channel) || _closing) return;
+            if (!identical(_connection, connection) || _closing) return;
             _ready = true;
             _retryAttempts = 0;
             _onConnectController.add(null);
@@ -228,7 +197,7 @@ class LevitWebSocketTransport extends LevitTransport {
           },
           onError: (Object error, StackTrace stack) {
             _onError?.call(error);
-            _disconnect(channel);
+            _disconnect(connection);
           },
         );
   }
@@ -241,9 +210,9 @@ class LevitWebSocketTransport extends LevitTransport {
     _pump();
   }
 
-  void _disconnect(WebSocketChannel channel) {
-    if (!identical(_channel, channel)) return;
-    _channel = null;
+  void _disconnect(LevitWebSocketConnection connection) {
+    if (!identical(_connection, connection)) return;
+    _connection = null;
     _ready = false;
     _ackTimer?.cancel();
     final subscription = _subscription;
@@ -252,7 +221,7 @@ class LevitWebSocketTransport extends LevitTransport {
     cleanup = () async {
       for (final release in [
         () async => subscription?.cancel(),
-        () async => channel.sink.close(),
+        () async => connection.close(),
       ]) {
         try {
           await release();
@@ -294,7 +263,7 @@ class LevitWebSocketTransport extends LevitTransport {
   Future<void> send(LevitMonitorEvent event) {
     if (_closing) return Future.value();
     final frozen = event.freeze();
-    if (_channel == null) {
+    if (_connection == null) {
       _dropped++;
       return Future.value();
     }
@@ -314,19 +283,19 @@ class LevitWebSocketTransport extends LevitTransport {
     final delivery = _queue.removeFirst();
     _inFlight = delivery;
     try {
-      _channel!.sink.add(delivery.event.encode());
+      _connection!.send(delivery.event.encode());
       if (!requireAcknowledgement) {
         scheduleMicrotask(_acknowledge);
       } else {
         _ackTimer = Timer(acknowledgementTimeout, () {
-          final channel = _channel;
-          if (channel != null) _disconnect(channel);
+          final connection = _connection;
+          if (connection != null) _disconnect(connection);
         });
       }
     } catch (error) {
       _onError?.call(error);
-      final channel = _channel;
-      if (channel != null) _disconnect(channel);
+      final connection = _connection;
+      if (connection != null) _disconnect(connection);
     }
   }
 
@@ -352,7 +321,7 @@ class LevitWebSocketTransport extends LevitTransport {
     if (_closeFuture != null) return _closeFuture!;
     _closing = true;
     _reconnectTimer?.cancel();
-    // Pending connection setup has no delivered work. Closing its channel is
+    // Pending connection setup has no delivered work. Closing its connection is
     // awaited below; such queued events are counted as dropped.
     if (!_ready) _dropPending();
     return _closeFuture = () async {
@@ -362,15 +331,15 @@ class LevitWebSocketTransport extends LevitTransport {
       } catch (error, stack) {
         errors.add(AsyncError(error, stack));
       }
-      final channel = _channel;
-      _channel = null;
+      final connection = _connection;
+      _connection = null;
       try {
         await _subscription?.cancel();
       } catch (error, stack) {
         errors.add(AsyncError(error, stack));
       }
       try {
-        await channel?.sink.close();
+        await connection?.close();
       } catch (error, stack) {
         errors.add(AsyncError(error, stack));
       }

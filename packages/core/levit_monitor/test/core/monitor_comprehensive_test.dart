@@ -2,9 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:levit_monitor/levit_monitor_io.dart';
-import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:levit_monitor/spi.dart';
 
 class ThrowingTransport extends LevitTransport {
@@ -18,57 +16,23 @@ class ThrowingTransport extends LevitTransport {
   Stream<void> get onConnect => const Stream.empty();
 }
 
-class _MockWebSocketSink implements WebSocketSink {
-  final StreamController<dynamic> controller;
-
-  _MockWebSocketSink(this.controller);
-
-  @override
-  void add(dynamic data) => controller.add(data);
+class _MockWebSocketConnection implements LevitWebSocketConnection {
+  final StreamController<Object?> incoming =
+      StreamController<Object?>.broadcast();
+  final StreamController<String> outgoing =
+      StreamController<String>.broadcast();
 
   @override
-  void addError(Object error, [StackTrace? stackTrace]) =>
-      controller.addError(error, stackTrace);
-
-  @override
-  Future addStream(Stream<dynamic> stream) => controller.addStream(stream);
-
-  @override
-  Future close([int? closeCode, String? closeReason]) async {}
-
-  @override
-  Future get done => Future.value();
-}
-
-class _MockWebSocketChannel extends StreamChannelMixin
-    implements WebSocketChannel {
-  final StreamController<dynamic> incoming =
-      StreamController<dynamic>.broadcast();
-  final StreamController<dynamic> outgoing =
-      StreamController<dynamic>.broadcast();
-  late final _MockWebSocketSink _sink;
-
-  _MockWebSocketChannel() {
-    _sink = _MockWebSocketSink(outgoing);
-  }
-
-  @override
-  Stream get stream => incoming.stream;
-
-  @override
-  WebSocketSink get sink => _sink;
-
-  @override
-  String? get protocol => 'test';
-
-  @override
-  int? get closeCode => null;
-
-  @override
-  String? get closeReason => null;
+  Stream<Object?> get stream => incoming.stream;
 
   @override
   Future<void> get ready => Future.value();
+
+  @override
+  void send(String data) => outgoing.add(data);
+
+  @override
+  Future<void> close([int? code, String? reason]) async {}
 }
 
 void main() {
@@ -119,11 +83,11 @@ void main() {
     );
 
     test(
-      'LevitWebSocketTransport accepts a snapshot and closes its channel',
+      'LevitWebSocketTransport accepts a snapshot and closes its connection',
       () async {
         final transport = LevitWebSocketTransport.connect(
           'ws://localhost:1',
-          channelBuilder: (_) => _MockWebSocketChannel(),
+          connectionBuilder: (_) => _MockWebSocketConnection(),
         );
 
         final event = LevitSnapshotEvent(sessionId: 'test', state: {'a': 1});

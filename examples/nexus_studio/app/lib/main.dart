@@ -8,7 +8,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 Future<void> main({
   bool enableDevTools = kDebugMode,
-  WebSocketChannel Function(Uri uri)? devToolsChannelBuilder,
+  LevitWebSocketConnection Function(Uri uri)? devToolsConnectionBuilder,
   WebSocketChannel Function(Uri uri)? projectChannelBuilder,
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +24,7 @@ Future<void> main({
       ),
       appId: 'nexus-studio',
       token: token.isEmpty ? null : token,
-      channelBuilder: devToolsChannelBuilder,
+      connectionBuilder: devToolsConnectionBuilder,
       onError: (e) => debugPrint(
         '⚠️ levit_mcp relay not available. Running without remote monitoring.',
       ),

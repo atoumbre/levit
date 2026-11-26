@@ -2,103 +2,33 @@ import 'dart:async';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_monitor/levit_monitor.dart';
-import 'package:stream_channel/stream_channel.dart';
 import 'package:test/test.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:levit_monitor/spi.dart';
 
-class _MockSink implements WebSocketSink {
+class _MockConnection implements LevitWebSocketConnection {
   bool closed = false;
-  final List<dynamic> sent = [];
+  final List<String> sent = [];
+  final StreamController<Object?> _controller = StreamController<Object?>();
 
   @override
-  void add(dynamic data) {
-    if (closed) throw 'Sink closed';
-    sent.add(data);
-  }
-
-  @override
-  Future addStream(Stream stream) async {}
-
-  @override
-  Future close([int? closeCode, String? closeReason]) async {
-    closed = true;
-  }
-
-  @override
-  void addError(Object error, [StackTrace? stackTrace]) {}
-
-  @override
-  Future get done => Future.value();
-}
-
-class _MockChannel implements WebSocketChannel {
-  final _MockSink _sink = _MockSink();
-  final StreamController _controller = StreamController();
-
-  @override
-  WebSocketSink get sink => _sink;
-
-  @override
-  Stream get stream => _controller.stream;
+  Stream<Object?> get stream => _controller.stream;
 
   @override
   Future<void> get ready => Future.value();
 
   @override
-  String? get protocol => null;
-
-  @override
-  int? get closeCode => null;
-
-  @override
-  String? get closeReason => null;
-
-  @override
-  void pipe(StreamChannel<dynamic> other) {
-    throw UnimplementedError();
+  void send(String data) {
+    if (closed) throw 'Sink closed';
+    sent.add(data);
   }
 
   @override
-  StreamChannel<S> transform<S>(
-    StreamChannelTransformer<S, dynamic> transformer,
-  ) {
-    throw UnimplementedError();
-  }
-
-  @override
-  StreamChannel<dynamic> transformSink(dynamic transformer) {
-    throw UnimplementedError();
-  }
-
-  @override
-  StreamChannel<dynamic> transformStream(
-    StreamTransformer<dynamic, dynamic> transformer,
-  ) {
-    throw UnimplementedError();
-  }
-
-  @override
-  StreamChannel<dynamic> changeSink(
-    StreamSink<dynamic> Function(StreamSink<dynamic> sink) change,
-  ) {
-    throw UnimplementedError();
-  }
-
-  @override
-  StreamChannel<S> cast<S>() {
-    throw UnimplementedError();
-  }
-
-  @override
-  StreamChannel<dynamic> changeStream(
-    Stream<dynamic> Function(Stream<dynamic> stream) change,
-  ) {
-    throw UnimplementedError();
+  Future<void> close([int? code, String? reason]) async {
+    closed = true;
   }
 }
 
-class _MockChannelWithReadyError extends _MockChannel {
+class _MockConnectionWithReadyError extends _MockConnection {
   @override
   Future<void> get ready => Future.error('Intentional ready error');
 }
@@ -108,19 +38,19 @@ void main() {
     test(
       'Handles invalid URL connection failure by scheduling reconnect',
       () async {
-        int channelBuilderCalls = 0;
+        int builderCalls = 0;
 
         final transport = LevitWebSocketTransport.connect(
           'ws://invalid-url',
           allowInsecureRemote: true,
-          channelBuilder: (uri) {
-            channelBuilderCalls++;
+          connectionBuilder: (uri) {
+            builderCalls++;
             throw 'Connection failed';
           },
         );
 
         await Future.delayed(Duration(milliseconds: 1100));
-        expect(channelBuilderCalls, greaterThanOrEqualTo(2));
+        expect(builderCalls, greaterThanOrEqualTo(2));
         await transport.close();
       },
     );
@@ -129,7 +59,7 @@ void main() {
       int onReadyCalls = 0;
       final transport = LevitWebSocketTransport.connect(
         'ws://localhost',
-        channelBuilder: (uri) => _MockChannel(),
+        connectionBuilder: (uri) => _MockConnection(),
         onReady: (t) {
           onReadyCalls++;
         },
@@ -144,7 +74,7 @@ void main() {
       int onErrorCalls = 0;
       final transport = LevitWebSocketTransport.connect(
         'ws://localhost',
-        channelBuilder: (uri) => _MockChannelWithReadyError(),
+        connectionBuilder: (uri) => _MockConnectionWithReadyError(),
         onError: (e) {
           onErrorCalls++;
           expect(e, equals('Intentional ready error'));
@@ -157,20 +87,20 @@ void main() {
     });
 
     test('Handling disconnect during send triggers reconnect', () async {
-      final mockChannel = _MockChannel();
+      final mockConnection = _MockConnection();
       int connectCount = 0;
 
       final transport = LevitWebSocketTransport.connect(
         'ws://localhost',
-        channelBuilder: (uri) {
+        connectionBuilder: (uri) {
           connectCount++;
-          if (connectCount == 1) return mockChannel;
-          return _MockChannel();
+          if (connectCount == 1) return mockConnection;
+          return _MockConnection();
         },
       );
 
       await Future.delayed(Duration(milliseconds: 10));
-      mockChannel._sink.closed = true;
+      mockConnection.closed = true;
 
       final rx = 0.lx.named('test');
       transport.send(LevitReactiveInitEvent(sessionId: 's', reactive: rx));

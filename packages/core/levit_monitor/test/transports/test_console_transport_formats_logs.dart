@@ -1,22 +1,14 @@
 import 'package:levit_monitor/levit_monitor.dart' as lm;
-import 'package:logger/logger.dart' as logger;
 import 'package:test/test.dart';
-
-class _MockLogPrinter extends logger.LogPrinter {
-  final List<String> lines = [];
-
-  @override
-  List<String> log(logger.LogEvent event) {
-    lines.add(event.message.toString());
-    return [];
-  }
-}
 
 void main() {
   group('LevitConsoleTransport formats log events', () {
     test('formats minimal LevitLogEvent correctly', () {
-      final printer = _MockLogPrinter();
-      final transport = lm.LevitConsoleTransport(printer: printer);
+      final lines = <String>[];
+      final transport = lm.LevitConsoleTransport(
+        formatter: (_, message) => message,
+        output: lines.add,
+      );
 
       final event = lm.LevitLogEvent(
         sessionId: 'test-session',
@@ -25,12 +17,15 @@ void main() {
       );
 
       transport.send(event);
-      expect(printer.lines.last, 'LOG: A simple log message');
+      expect(lines.last, 'LOG: A simple log message');
     });
 
     test('formats LevitLogEvent with error and stackTrace', () {
-      final printer = _MockLogPrinter();
-      final transport = lm.LevitConsoleTransport(printer: printer);
+      final lines = <String>[];
+      final transport = lm.LevitConsoleTransport(
+        formatter: (_, message) => message,
+        output: lines.add,
+      );
 
       final event = lm.LevitLogEvent(
         sessionId: 'test-session',
@@ -41,7 +36,7 @@ void main() {
       );
 
       transport.send(event);
-      final output = printer.lines.last;
+      final output = lines.last;
       expect(output, contains('LOG: Failed operation'));
       expect(output, contains('Error: Timeout Exception'));
       expect(output, contains('Stack: \nframe_1\nframe_2'));

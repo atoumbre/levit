@@ -19,7 +19,7 @@
 /// );
 /// ```
 ///
-/// DevTools and custom inspector models live in `package:levit_monitor/spi.dart`.
+/// MCP and custom inspector models live in `package:levit_monitor/spi.dart`.
 ///
 /// @docImport 'src/monitor_library.dart';
 library;
@@ -30,8 +30,10 @@ export 'src/monitor_library.dart'
         LevitDependencyEvent,
         LevitEventEnvelope,
         LevitLogEvent,
+        LevitLogFormatter,
         LevitLogLevel,
         LevitLogLevelConfig,
+        LevitLogOutput,
         LevitMonitor,
         LevitMonitorEvent,
         LevitMonitorException,
@@ -39,4 +41,5 @@ export 'src/monitor_library.dart'
         LevitObfuscator,
         LevitReactiveEvent,
         LevitTransport,
+        LevitWebSocketConnection,
         LevitWebSocketTransport;

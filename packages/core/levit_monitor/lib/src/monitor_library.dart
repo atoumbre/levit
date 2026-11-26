@@ -12,12 +12,13 @@ import 'dart:math';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_dart_core/spi.dart';
-import 'package:logger/logger.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../levit_monitor_protocol.dart';
+import 'transports/websocket_connection.dart';
+import 'transports/websocket_connector.dart';
 
 export '../levit_monitor_protocol.dart';
+export 'transports/websocket_connection.dart';
 
 part 'core.dart';
 part 'event.dart';
