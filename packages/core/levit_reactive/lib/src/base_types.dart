@@ -12,8 +12,11 @@ part of 'reactive_library.dart';
 /// count.value++;
 /// ```
 ///
+/// Expose [asReadable] to publish an observation-only [LxReadable] view while
+/// keeping mutations private inside a controller.
+///
 /// {@category Reactive State}
-class LxVar<T> extends LxBase<T> with _LxMutable<T> {
+class LxVar<T> extends LxBase<T> implements LxAsyncResource {
   /// Creates a reactive variable with an [initial] value.
   LxVar(
     super.initial, {
@@ -32,6 +35,92 @@ class LxVar<T> extends LxBase<T> with _LxMutable<T> {
   @override
   T call() => value;
 
+  /// Applies an in-place [mutator] to the current value and notifies listeners
+  /// via [refresh].
+  void mutate(void Function(T value) mutator) {
+    mutator(_value);
+    refresh();
+  }
+
+  /// Replaces the current value with the result of [fn], reading the current
+  /// value without registering a reactive dependency.
+  void updateValue(T Function(T val) fn) => _setValueInternal(fn(_value));
+
+  Stream<T>? _boundStream;
+  StreamSubscription<T>? _boundSubscription;
+  final Set<Future<void>> _bindingCancellations = {};
+  final List<AsyncError> _bindingFailures = [];
+  bool _bindingClosing = false;
+  int _bindingGeneration = 0;
+
+  /// Owns one upstream subscription until [unbind] or [close]. Subscribers use
+  /// this value's stable stream, so replacing a binding preserves observation.
+  void bind(Stream<T> externalStream) {
+    if (isDisposed || _bindingClosing) {
+      throw StateError('Cannot bind a closing value.');
+    }
+    if (identical(_boundStream, externalStream)) return;
+    _cancelBinding();
+    _boundStream = externalStream;
+    final generation = _bindingGeneration;
+    _boundSubscription = externalStream.listen(
+      (event) {
+        if (generation == _bindingGeneration && !isDisposed) {
+          _setValueInternal(event);
+        }
+      },
+      onError: (Object error, StackTrace stack) {
+        if (generation != _bindingGeneration || isDisposed) return;
+        if (_controller?.hasListener ?? false) {
+          _controller!.addError(error, stack);
+        } else {
+          Zone.current.handleUncaughtError(error, stack);
+        }
+      },
+    );
+  }
+
+  void _cancelBinding() {
+    _bindingGeneration++;
+    _boundStream = null;
+    final subscription = _boundSubscription;
+    _boundSubscription = null;
+    if (subscription == null) return;
+    late final Future<void> cancelled;
+    cancelled = Future<void>.sync(subscription.cancel)
+        .catchError((Object error, StackTrace stack) {
+          _bindingFailures.add(AsyncError(error, stack));
+        })
+        .whenComplete(() => _bindingCancellations.remove(cancelled));
+    _bindingCancellations.add(cancelled);
+  }
+
+  /// Detaches immediately and waits for all replaced upstream subscriptions.
+  Future<void> unbind() {
+    _cancelBinding();
+    return drain();
+  }
+
+  @override
+  void requestCancel() {
+    _bindingClosing = true;
+    _cancelBinding();
+  }
+
+  @override
+  Future<void> drain() async {
+    while (_bindingCancellations.isNotEmpty) {
+      await Future.wait(_bindingCancellations.toList());
+    }
+    if (_bindingFailures.isNotEmpty) throw LxCleanupException(_bindingFailures);
+  }
+
+  @override
+  Future<void> _cleanupBinding() {
+    requestCancel();
+    return drain();
+  }
+
   /// Transforms the stream of changes using [transformer].
   ///
   /// Returns a new [LxStream] reflecting the transformed data.
@@ -40,55 +129,36 @@ class LxVar<T> extends LxBase<T> with _LxMutable<T> {
   }
 }
 
-/// A reactive state container for immutable data flow.
+/// A reactive boolean variable (`LxVar<bool>`).
 ///
-/// [LxState] is similar to [LxVar], but enforces explicit state transitions
-/// via [emit] or [update] instead of property setters.
-///
-/// It is ideal for managing complex state objects where you want to ensure
-/// controlled modification.
-///
-/// Unlike [LxVar], it does not expose in-place mutation helpers or stream
-/// binding APIs.
+/// Semantic helpers (`toggle`, `setTrue`, `setFalse`, `isTrue`, `isFalse`) are
+/// available on every [LxBool] via [LxBoolOperations].
 ///
 /// {@category Reactive State}
-class LxState<T> extends LxBase<T> {
-  /// Creates a state container with an [initial] value.
-  LxState(
-    super.initial, {
-    super.onListen,
-    super.onCancel,
-    super.name,
-    super.isSensitive,
-    super.equals,
-  });
+typedef LxBool = LxVar<bool>;
 
-  /// Emits a new [state].
-  ///
-  /// This triggers a notification to all listeners if the [state] is different
-  /// from the current value.
-  @protected
-  void emit(T state) => _setValueInternal(state);
-
-  /// Updates the state by applying a [reducer] function to the current value.
-  ///
-  /// ```dart
-  /// state.update((s) => s.copyWith(count: s.count + 1));
-  /// ```
-  void update(T Function(T state) reducer) {
-    _setValueInternal(reducer(value));
-  }
-}
-
-/// A reactive boolean with specialized toggling methods.
+/// A reactive integer variable (`LxVar<int>`).
 ///
-/// [LxBool] provides semantic helpers like [toggle], [setTrue], and [setFalse].
+/// Arithmetic helpers (`increment`, `decrement`, `add`, `subtract`,
+/// `multiply`, `divide`, `mod`, `negate`, `clampValue`) are available on every
+/// [LxInt] via [LxIntOperations].
 ///
 /// {@category Reactive State}
-class LxBool extends LxVar<bool> {
-  /// Creates a reactive boolean with an [initial] value.
-  LxBool(super.initial, {super.name, super.isSensitive});
+typedef LxInt = LxVar<int>;
 
+/// A reactive double variable (`LxVar<double>`).
+///
+/// Arithmetic helpers (`add`, `subtract`, `multiply`, `divide`, `mod`,
+/// `negate`, `clampValue`) are available on every [LxDouble] via
+/// [LxDoubleOperations].
+///
+/// {@category Reactive State}
+typedef LxDouble = LxVar<double>;
+
+/// Semantic boolean helpers for [LxBool] (`LxVar<bool>`).
+///
+/// {@category Reactive State}
+extension LxBoolOperations on LxVar<bool> {
   /// Toggles the current value.
   void toggle() => value = !value;
 
@@ -105,17 +175,10 @@ class LxBool extends LxVar<bool> {
   bool get isFalse => !value;
 }
 
-/// A reactive integer with convenience arithmetic helpers.
-///
-/// Extends [LxVar<int>] with mutating helpers such as [increment],
-/// [decrement], [add], [subtract], [multiply], [divide], [mod], [negate], and
-/// [clampValue].
+/// Arithmetic helpers for [LxInt] (`LxVar<int>`).
 ///
 /// {@category Reactive State}
-class LxInt extends LxVar<int> {
-  /// Creates a reactive integer instance.
-  LxInt(super.initial, {super.name, super.isSensitive});
-
+extension LxIntOperations on LxVar<int> {
   /// Increments the value by 1.
   void increment() => value = value + 1;
 
@@ -149,16 +212,10 @@ class LxInt extends LxVar<int> {
   }
 }
 
-/// A reactive double with convenience arithmetic helpers.
-///
-/// Extends [LxVar<double>] with mutating helpers such as [add], [subtract],
-/// [multiply], [divide], [mod], [negate], and [clampValue].
+/// Arithmetic helpers for [LxDouble] (`LxVar<double>`).
 ///
 /// {@category Reactive State}
-class LxDouble extends LxVar<double> {
-  /// Creates a reactive double instance.
-  LxDouble(super.initial, {super.name, super.isSensitive});
-
+extension LxDoubleOperations on LxVar<double> {
   /// Adds [other] to the current value.
   void add(num other) => value = value + other;
 
@@ -203,28 +260,4 @@ extension LxExtension<T> on T {
 
   /// Wraps this value in a nullable reactive [LxVar].
   LxVar<T?> get lxNullable => LxVar<T?>(this);
-}
-
-/// Specialized `.lx` extension for booleans.
-///
-/// {@category Reactive State}
-extension LxBoolExtension on bool {
-  /// Creates an [LxBool] from this value.
-  LxBool get lx => LxBool(this);
-}
-
-/// Specialized `.lx` extension for integers.
-///
-/// {@category Reactive State}
-extension LxIntExtension on int {
-  /// Creates an [LxInt] from this value.
-  LxInt get lx => LxInt(this);
-}
-
-/// Specialized extensions for [double].
-///
-/// {@category Reactive State}
-extension LxDoubleExtension on double {
-  /// Creates an [LxDouble] from this value.
-  LxDouble get lx => LxDouble(this);
 }

@@ -60,7 +60,7 @@ Dependency Injection
 - Delete and await an instantiated registration before replacing it
 
 Flutter scope widgets: LScope, LAsyncScope, LScope.put, LScopedView,
-LAsyncScopedView, LRouteScope, LAsyncRouteScope, LScope.capture,
+LRouteScope, LAsyncRouteScope, LScope.capture,
 showLevitDialog / showLevitModalBottomSheet (kit).
 Omitted name/scopeName values are auto-unique; set them only for stable labels.
 Do not manually create/dispose scopes in normal widget code.
@@ -108,7 +108,7 @@ Flutter Widgets
 - source.asValueListenable() — borrowing adapter; own outside build
 
 Kit extras (levit_flutter): showLevitDialog, showLevitModalBottomSheet,
-LKeepAlive, LevitAppLifecycleMixin, LevitLoopLifecycleMixin.
+LevitAppLifecycleMixin, LevitLoopLifecycleMixin.
 GoRouter: shell + nested LScopedView/LView; LRouteScope for route-tied ownership.
 
 

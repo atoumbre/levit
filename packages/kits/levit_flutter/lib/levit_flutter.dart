@@ -7,7 +7,6 @@
 /// ### Flutter kit additions
 /// * [showLevitDialog] / [showLevitModalBottomSheet]: Imperative overlays that
 ///   capture the nearest widget scope via [LScope.capture].
-/// * [LKeepAlive]: Preserves scrollable subtrees and their scoped controllers.
 /// * [LevitAppLifecycleMixin]: Bridges Flutter [AppLifecycleState] callbacks to
 ///   [LevitController].
 /// * [LevitLoopLifecycleMixin]: Automatically pauses and resumes
@@ -53,4 +52,3 @@ import 'package:levit_dart/levit_dart.dart'
 
 part 'src/mixins/app_lifecycle_mixin.dart';
 part 'src/mixins/lifecycle_loop_mixin.dart';
-part 'src/widgets/keep_alive.dart';

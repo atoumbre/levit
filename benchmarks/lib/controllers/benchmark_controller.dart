@@ -38,9 +38,9 @@ class AppBenchmarkController extends LevitController {
   void onInit() {
     super.onInit();
 
-    selectedFrameworks = LxSet(Framework.values.toSet());
-    selectedBenchmarks = LxSet(availableBenchmarks.toSet());
-    results = LxMap({});
+    selectedFrameworks = LxSet(initial: Framework.values.toSet());
+    selectedBenchmarks = LxSet(initial: availableBenchmarks.toSet());
+    results = LxMap();
     lastEnvironment = LxVar<BenchmarkEnvironment?>(null);
     isRunning = LxVar(false);
     currentStatus = LxVar('Ready');

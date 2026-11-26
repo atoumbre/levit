@@ -172,7 +172,7 @@ Prefer Levit widgets over manual scope handling:
 
 - LScope, LAsyncScope — subtree-owned lifetimes.
 - LScope.put — create a scope and eagerly register a root dependency.
-- LScopedView, LAsyncScopedView — create a child scope and consume a dependency.
+- LScopedView — create a child scope and consume a dependency (for async flows, compose LScope/LAsyncScope with LView/LAsyncView).
 - LRouteScope, LAsyncRouteScope — route identity as the ownership boundary.
 - LScope.capture — re-provide the nearest scope to dialogs and overlays.
   Prefer showLevitDialog / showLevitModalBottomSheet from levit_flutter for
@@ -392,7 +392,7 @@ Widget guide:
 - LStatusBuilder — LxStatus<T> waiting/error/success rendering (page UI kit).
 - LView — dependency already exists in the nearest scope.
 - LAsyncView — async dependency resolution with loading/error builders.
-- LScopedView / LAsyncScopedView — create a child scope and own the dependency
+- LScopedView — create a child scope and own a synchronous dependency (compose LScope/LAsyncScope with LView/LAsyncView for async)
   (subclass + onConfigureScope, or .put / .store DI sugar).
 - LScope / LAsyncScope — subtree-owned lifetimes.
 - LRouteScope / LAsyncRouteScope — route identity as the ownership boundary.
@@ -407,7 +407,6 @@ ValueListenable to observation-only consumers. Source ownership remains unchange
 levit_flutter kit additions (import levit_flutter):
 
 - showLevitDialog / showLevitModalBottomSheet — overlays with LScope.capture.
-- LKeepAlive — preserve expensive subtrees in scrollable lists.
 - Mount/unmount hooks: use a local StatefulWidget; see the levit_flutter example recipe.
 - LevitAppLifecycleMixin — react to app pause/resume/detach.
 - LevitLoopLifecycleMixin — pause/resume loop execution with app lifecycle.

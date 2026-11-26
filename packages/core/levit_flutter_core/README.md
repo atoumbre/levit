@@ -24,10 +24,9 @@ higher-level `levit_dart` utilities and overlay/lifecycle helpers bundled in
 | `LSelectorBuilder` | You want a small derived value local to one subtree without promoting it to controller state. | The derived value is shared across widgets or long-lived; move it into a controller/store computed. |
 | `LStatusBuilder` | You are rendering an `LxStatus<T>` with waiting, error, idle, and success branches. | You are not working with `LxStatus`; prefer `LBuilder` or `LWatch`. |
 | `LView` | The controller/service already exists in the nearest scope and you only need to render it. | The widget should create and own a child scope; prefer `LScopedView`. |
-| `LAsyncView` | The dependency resolves asynchronously from the current scope. | You also need to create a new scope boundary or async initialization; prefer `LAsyncScopedView` or `LAsyncScope`. |
-| `LScopedView` | One widget should create a child scope, register a dependency, and render it. | The scope already exists; prefer `LView`. |
-| `LAsyncScopedView` | One widget should create a child scope and resolve the dependency asynchronously. | You only need an async scope boundary without the view abstraction; prefer `LAsyncScope`. |
-| `LScope` / `LAsyncScope` | You need a scope boundary for a subtree independent of a specific controller/view widget. | A single controller-view pair is enough; prefer `LScopedView` or `LAsyncScopedView`. |
+| `LAsyncView` | The dependency resolves asynchronously from the current scope. | You also need to create a new scope boundary; compose `LScope` or `LAsyncScope` with `LView` / `LAsyncView`. |
+| `LScopedView` | One widget should create a child scope, register a dependency, and render it. | The scope already exists (`LView`) or needs async initialization (`LAsyncScope` + `LView` / `LAsyncView`). |
+| `LScope` / `LAsyncScope` | You need a sync or async scope boundary for a subtree (compose with `LView` / `LAsyncView` as needed). | A single synchronous controller-view pair is enough; prefer `LScopedView`. |
 | `LRouteScope` / `LAsyncRouteScope` | Route identity and route visibility are the ownership boundary. | The scope is only subtree-local; prefer `LScope` or `LAsyncScope`. |
 
 ## Getting Started

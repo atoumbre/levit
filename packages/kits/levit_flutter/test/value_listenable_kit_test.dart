@@ -14,7 +14,7 @@ void main() {
         find.byType(ValueListenableBuilder<Duration>),
       );
       final controller = context.levit.find<CountdownInteropController>();
-      final display = controller.display as LxValueListenable<Duration>;
+      final display = controller.display as LevitValueListenable<Duration>;
       expect(find.text('5.0 s'), findsOneWidget);
       await tester.tap(find.text('Pause'));
       await tester.pump();

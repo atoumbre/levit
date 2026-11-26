@@ -15,8 +15,9 @@
 /// * [LRouteScope] / [LAsyncRouteScope]: Bind a scope to the current
 ///   [ModalRoute] and expose [LRouteVisibility] as reactive state.
 /// * [LView] / [LAsyncView]: Consume dependencies from an existing scope.
-/// * [LScopedView] / [LAsyncScopedView]: Create a child scope and resolve a
-///   dependency in one widget.
+/// * [LScopedView]: Create a child scope and resolve a synchronous dependency
+///   in one widget (for async scopes or async lookups, compose [LScope] /
+///   [LAsyncScope] with [LView] / [LAsyncView]).
 /// * [LevitContext] (`context.levit`): Resolve or register dependencies from
 ///   the nearest widget scope.
 /// * [LWatch]: The primary proxy-tracked reactive rebuild boundary.
@@ -24,7 +25,7 @@
 /// * [LSelectorBuilder]: Build from a local derived value for a small subtree.
 /// * [LStatusBuilder]: Render waiting, error, and success states for
 ///   [LxStatus].
-/// * [LxValueListenable] (`asValueListenable()`): Borrowing [ValueListenable]
+/// * [LevitValueListenable] (`asValueListenable()`): Borrowing [ValueListenable]
 ///   adapter for Flutter APIs.
 library;
 
@@ -36,10 +37,9 @@ import 'package:flutter/widgets.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_dart_core/spi.dart';
 
+part 'src/scope_provider.dart';
 part 'src/scope.dart';
 part 'src/scope_lifecycle.dart';
-part 'src/l_scope.dart';
-part 'src/l_async_scope.dart';
 part 'src/levit_provider.dart';
 part 'src/route_scope.dart';
 part 'src/view.dart';

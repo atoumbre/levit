@@ -4,9 +4,12 @@ import 'package:levit_reactive/levit_reactive.dart';
 
 void main() {
   group('LxBool', () {
-    test('initial value defaults to false', () {
-      final flag = LxBool();
+    test('supports named metadata parameters and asReadable view', () {
+      final flag = LxBool(false, name: 'isReady', isSensitive: true);
       expect(flag.value, isFalse);
+      expect(flag.name, 'isReady');
+      expect(flag.isSensitive, isTrue);
+      expect(flag.asReadable, same(flag));
     });
 
     test('initial value can be set', () {
@@ -71,6 +74,20 @@ void main() {
 
       flag.toggle();
       expect(flag.value, isTrue);
+    });
+    test('LxBool alias shares operations and lifecycle hooks with LxVar', () {
+      var listened = false;
+      final LxVar<bool> flag = LxBool(false, onListen: () => listened = true);
+      final LxBool aliased = flag;
+      void listener() {}
+      aliased.addListener(listener);
+      expect(listened, isTrue);
+
+      aliased.toggle();
+      expect(flag.isTrue, isTrue);
+
+      aliased.removeListener(listener);
+      aliased.close();
     });
   });
 }

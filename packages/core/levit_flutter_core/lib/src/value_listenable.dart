@@ -14,7 +14,7 @@ part of '../levit_flutter_core.dart';
 /// Expose it as [ValueListenable] to consumers that only need observation.
 ///
 /// {@category Flutter Widgets & Interop}
-final class LxValueListenable<T>
+final class LevitValueListenable<T>
     implements ValueListenable<T>, LevitDisposable {
   LxReadable<T>? _source;
   final _notifier = _ValueListenableNotifier();
@@ -23,7 +23,7 @@ final class LxValueListenable<T>
   int _notificationDepth = 0;
 
   /// Creates a borrowing adapter. Construction does not subscribe to [source].
-  LxValueListenable(LxReadable<T> source) : _source = source;
+  LevitValueListenable(LxReadable<T> source) : _source = source;
 
   /// Whether this adapter has released its subscription.
   bool get isDisposed => _source == null;
@@ -110,7 +110,7 @@ final class _ValueListenableNotifier extends ChangeNotifier {
 ///
 /// {@category Flutter Widgets & Interop}
 extension LxReadableValueListenable<T> on LxReadable<T> {
-  /// Creates an independently disposable [LxValueListenable] adapter.
+  /// Creates an independently disposable [LevitValueListenable] adapter.
   ///
   /// Retain and own it outside `build` (for example via `own(...)` in a
   /// controller) and dispose it at its owning boundary.
@@ -122,5 +122,5 @@ extension LxReadableValueListenable<T> on LxReadable<T> {
   ///       own(count.asValueListenable());
   /// }
   /// ```
-  LxValueListenable<T> asValueListenable() => LxValueListenable<T>(this);
+  LevitValueListenable<T> asValueListenable() => LevitValueListenable<T>(this);
 }

@@ -8,8 +8,6 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 
-import 'package:meta/meta.dart';
-
 part 'async_lifecycle.dart';
 part 'async_status.dart';
 part 'async_types.dart';

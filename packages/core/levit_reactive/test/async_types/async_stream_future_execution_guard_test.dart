@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:levit_reactive/levit_reactive.dart';
+import 'package:levit_reactive/spi.dart';
 import 'package:test/test.dart';
 
 class _BatchOnlyMiddleware extends LevitReactiveMiddleware {
@@ -64,7 +65,7 @@ void main() {
       late LxWorker<int> workerB;
 
       workerB = LxWorker<int>(b, (_) {
-        sawOuterDuringInner = LxExecutionContext.isExecuting(workerA);
+        sawOuterDuringInner = LxSpi.isExecuting(workerA);
       });
       workerA = LxWorker<int>(a, (_) {
         escapedCallback = Zone.current.bindCallback(() {});
@@ -76,7 +77,7 @@ void main() {
 
       var executingAfterCompletion = true;
       escapedCallback = Zone.current.bindCallback(() {
-        executingAfterCompletion = LxExecutionContext.isExecuting(workerA);
+        executingAfterCompletion = LxSpi.isExecuting(workerA);
       });
       escapedCallback();
       expect(executingAfterCompletion, isFalse);

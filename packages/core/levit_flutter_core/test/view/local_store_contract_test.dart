@@ -25,17 +25,12 @@ void main() {
               }
 
               if (async) {
-                return scoped
-                    ? LAsyncScopedView.store(
-                        asyncStore,
-                        localOnly: localOnly,
-                        builder: builder,
-                      )
-                    : LAsyncView.store(
-                        asyncStore,
-                        localOnly: localOnly,
-                        builder: builder,
-                      );
+                final asyncView = LAsyncView.store(
+                  asyncStore,
+                  localOnly: localOnly,
+                  builder: builder,
+                );
+                return scoped ? LScope(child: asyncView) : asyncView;
               }
               return scoped
                   ? LScopedView.store(

@@ -945,7 +945,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   }
 
   /// Hook for subclasses to clean up binding resources during [close].
-  /// Overridden by `_LxMutable`.
+  /// Overridden by [LxVar] and precise collections.
   FutureOr<void> _cleanupBinding() {}
 
   Future<void>? _closeFuture;
@@ -1098,95 +1098,6 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   /// Whether the reactive object has been closed/disposed.
   @override
   bool get isDisposed => super.isDisposed;
-}
-
-/// Mutation and explicitly owned stream binding for writable reactive values.
-mixin _LxMutable<T> on LxBase<T> implements LxAsyncResource {
-  /// Applies an in-place [mutator] to the current value and notifies listeners
-  /// via [refresh].
-  void mutate(void Function(T value) mutator) {
-    mutator(_value);
-    refresh();
-  }
-
-  /// Replaces the current value with the result of [fn], reading the current
-  /// value without registering a reactive dependency.
-  void updateValue(T Function(T val) fn) => _setValueInternal(fn(_value));
-
-  Stream<T>? _boundStream;
-  StreamSubscription<T>? _boundSubscription;
-  final Set<Future<void>> _bindingCancellations = {};
-  final List<AsyncError> _bindingFailures = [];
-  bool _bindingClosing = false;
-  int _bindingGeneration = 0;
-
-  /// Owns one upstream subscription until [unbind] or [close]. Subscribers use
-  /// this value's stable stream, so replacing a binding preserves observation.
-  void bind(Stream<T> externalStream) {
-    if (isDisposed || _bindingClosing) {
-      throw StateError('Cannot bind a closing value.');
-    }
-    if (identical(_boundStream, externalStream)) return;
-    _cancelBinding();
-    _boundStream = externalStream;
-    final generation = _bindingGeneration;
-    _boundSubscription = externalStream.listen(
-      (event) {
-        if (generation == _bindingGeneration && !isDisposed) {
-          _setValueInternal(event);
-        }
-      },
-      onError: (Object error, StackTrace stack) {
-        if (generation != _bindingGeneration || isDisposed) return;
-        if (_controller?.hasListener ?? false) {
-          _controller!.addError(error, stack);
-        } else {
-          Zone.current.handleUncaughtError(error, stack);
-        }
-      },
-    );
-  }
-
-  void _cancelBinding() {
-    _bindingGeneration++;
-    _boundStream = null;
-    final subscription = _boundSubscription;
-    _boundSubscription = null;
-    if (subscription == null) return;
-    late final Future<void> cancelled;
-    cancelled = Future<void>.sync(subscription.cancel)
-        .catchError((Object error, StackTrace stack) {
-          _bindingFailures.add(AsyncError(error, stack));
-        })
-        .whenComplete(() => _bindingCancellations.remove(cancelled));
-    _bindingCancellations.add(cancelled);
-  }
-
-  /// Detaches immediately and waits for all replaced upstream subscriptions.
-  Future<void> unbind() {
-    _cancelBinding();
-    return drain();
-  }
-
-  @override
-  void requestCancel() {
-    _bindingClosing = true;
-    _cancelBinding();
-  }
-
-  @override
-  Future<void> drain() async {
-    while (_bindingCancellations.isNotEmpty) {
-      await Future.wait(_bindingCancellations.toList());
-    }
-    if (_bindingFailures.isNotEmpty) throw LxCleanupException(_bindingFailures);
-  }
-
-  @override
-  Future<void> _cleanupBinding() {
-    requestCancel();
-    return drain();
-  }
 }
 
 /// A standard context descriptor for reactive listeners.

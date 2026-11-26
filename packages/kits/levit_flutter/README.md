@@ -15,7 +15,7 @@ helpers behind one entry point while keeping `levit_monitor` opt-in.
 
 | Entry point | Provides |
 | :-- | :-- |
-| `package:levit_flutter/levit_flutter.dart` | Scopes (`LScope`, `LAsyncScope`, `LRouteScope`, `LevitScopeLifecycleController`), views & builders (`LWatch`, `LBuilder`, `LSelectorBuilder`, `LStatusBuilder`, `LView`, `LScopedView`), `asValueListenable()`, `showLevitDialog` / `showLevitModalBottomSheet`, `LKeepAlive`, `LevitAppLifecycleMixin`, `LevitLoopLifecycleMixin`, plus the full `levit_dart` runtime (`LevitController`, `LevitStore`, reactives, `LevitAsyncMap`, task/time/selection/loop mixins). |
+| `package:levit_flutter/levit_flutter.dart` | Scopes (`LScope`, `LAsyncScope`, `LRouteScope`, `LevitScopeLifecycleController`), views & builders (`LWatch`, `LBuilder`, `LSelectorBuilder`, `LStatusBuilder`, `LView`, `LScopedView`), `asValueListenable()`, `showLevitDialog` / `showLevitModalBottomSheet`, `LevitAppLifecycleMixin`, `LevitLoopLifecycleMixin`, plus the full `levit_dart` runtime (`LevitController`, `LevitStore`, reactives, `LevitAsyncMap`, task/time/selection/loop mixins). |
 | `package:levit_flutter/tasks.dart` | Advanced task orchestration types: `LevitTaskGroup`, `LevitRetryPolicy`, `LevitTaskMiddleware`, and `LevitTaskTracker`. |
 | `package:levit_flutter/levit_testing.dart` | `LevitTestScope` for isolated store overrides, async tracking, and awaited teardown in tests. |
 
@@ -68,9 +68,8 @@ void main() {
   so dialogs and bottom sheets automatically inherit the caller's `LScope`
   (via `LScope.capture`) and can resolve page-local dependencies with
   `context.levit.find`.
-- **Keep-alive & mount hooks:** Use `LKeepAlive` for deliberate offscreen
-  retention inside scroll views. For widget-lifetime mount/unmount callbacks,
-  use a local `StatefulWidget` as shown in the
+- **Mount hooks:** For widget-lifetime mount/unmount callbacks, use a local
+  `StatefulWidget` as shown in the
   [MountObserver example](https://github.com/softilab/levit/blob/main/packages/kits/levit_flutter/example/lib/mount_observer.dart).
 
 ## Stable Query Observations

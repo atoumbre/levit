@@ -26,7 +26,7 @@ void main() {
     ).writeAsString('name: levit_api_contract\nenvironment:\n  sdk: ^3.12.0\n');
     await File('${directory.path}/valid.dart').writeAsString('''
 import 'package:levit_dart_core/levit_dart_core.dart';
-void observe(LxReadable<int> value, LxState<int> state) {
+void observe(LxReadable<int> value, LxVar<int> state) {
   final int current = value.value;
   final LxReadable<int> borrowed = state.asReadable;
   borrowed.addListener(() { print(current); });
@@ -59,7 +59,7 @@ Future<void> setup(LevitScope scope) async {
       "ref.findStore('dynamic-key');",
     ];
     const header = '''import 'package:levit_dart_core/levit_dart_core.dart';
-void removed(LxReadable<int> readable, LxState<int> state,
+void removed(LxReadable<int> readable, LxVar<int> state,
     LevitController owner, LxAsyncComputed<int> computed, LevitRef ref) {
 ''';
     await File(

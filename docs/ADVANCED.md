@@ -394,13 +394,6 @@ ValueListenableBuilder<int>(
 The adapter subscribes only while Flutter widgets are listening, and disposing
 the adapter unsubscribes without closing `count`.
 
-### Keeping scroll-view children alive (`LKeepAlive`)
-
-**Use when:** A tab or `ListView` / `PageView` item should keep its scope and
-controller mounted while scrolled offscreen. Wrap the item in `LKeepAlive`—it
-still disposes when the scroll view itself unmounts, and does not pause
-background timers or tasks.
-
 ### Debouncing, throttling & countdowns (`LevitTimeMixin`)
 
 **Use when:** You want search-input debouncing, button throttling, or a

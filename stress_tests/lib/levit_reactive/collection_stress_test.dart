@@ -46,7 +46,7 @@ void main() {
 
     test('LxMap Bulk Insert - 1M entries', () {
       print('[Description] Tests mass insertion into LxMap.');
-      final map = LxMap<String, int>({});
+      final map = LxMap<String, int>();
       const count = 1000000;
 
       final sw = Stopwatch()..start();
@@ -70,7 +70,7 @@ void main() {
 
     test('LxMap Update Flood - 100k key updates', () {
       print('[Description] Tests rapidly updating existing map values.');
-      final map = LxMap<String, int>({});
+      final map = LxMap<String, int>();
       const keyCount = 100000;
 
       // Pre-populate

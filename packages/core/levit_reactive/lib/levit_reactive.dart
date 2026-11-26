@@ -6,8 +6,8 @@
 /// ### Core abstractions
 /// * [LxReadable] / [LxReactive]: Read-only and owner-controlled reactive
 ///   source interfaces.
-/// * [LxVar], [LxState], [LxBool], [LxInt], [LxDouble]: Mutable and controlled
-///   reactive state primitives (`.lx` extensions).
+/// * [LxVar], [LxBool], [LxInt], [LxDouble]: Mutable reactive state primitives
+///   (`.lx` extensions, with `.asReadable` for read-only exposure).
 /// * [LxList], [LxMap], [LxSet], [LxMapEntry], [LxListEntry]: Reactive
 ///   collections with fine-grained entry observation.
 /// * [LxComputed] / [LxAsyncComputed]: Synchronous and asynchronous derived

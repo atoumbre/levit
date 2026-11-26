@@ -11,8 +11,8 @@ class _ItemController extends LevitController {
   _ItemController(this.label);
 }
 
-class _CustomScopedAsyncView extends LAsyncScopedView<String> {
-  const _CustomScopedAsyncView({super.resolver});
+class _CustomAsyncView extends LAsyncView<String> {
+  const _CustomAsyncView({super.resolver});
 
   @override
   Widget buildLoading(BuildContext context) =>
@@ -110,13 +110,15 @@ void main() {
   );
 
   testWidgets(
-    'LAsyncScopedView delegates to subclass buildView, buildLoading, and buildError overrides',
+    'LAsyncView delegates to subclass buildView, buildLoading, and buildError overrides',
     (tester) async {
       final completer = Completer<String>();
       await tester.pumpWidget(
         Directionality(
           textDirection: TextDirection.ltr,
-          child: _CustomScopedAsyncView(resolver: (_) => completer.future),
+          child: LScope(
+            child: _CustomAsyncView(resolver: (_) => completer.future),
+          ),
         ),
       );
 

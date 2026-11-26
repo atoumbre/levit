@@ -11,7 +11,7 @@ Levit `0.1.0` is a coordinated breaking release (Dart 3.12+, Flutter 3.44+) with
 | `count(5)` to write | `count.value = 5` (`call()` is read-only) |
 | `.toBuilder` | Construct inside the registration builder |
 | `.levitPut` / `.levitLazyPut` / `.levitLazyPutAsync` | Explicit `scope.put(...)` or `Levit.put(...)` |
-| `LView.put` / `LAsyncView.put` | `LScopedView.put` / `LAsyncScopedView.put` |
+| `LView.put` / `LAsyncView.put` | `LScopedView.put` / `LScope` (or `LAsyncScope`) + `LAsyncView` |
 | `initialized` | `isInitialized` |
 | `computedValue` | `requireValue` |
 | `runGuardedAsync(cancelOnClose:)` | `runGuardedAsync(discardResultOnClose:)` |

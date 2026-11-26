@@ -227,7 +227,7 @@ mixin LevitTasksMixin on LevitController {
 /// must delegate to `super` (`super.onInit()` and `await super.onBeforeClose()`).
 ///
 /// To reference advanced task types such as `LevitTaskEngine`,
-/// `LevitTaskGroup`, or `LevitTaskMetadata` directly, import
+/// `LevitTaskGroup`, or `LevitTaskCachePolicy` directly, import
 /// `package:levit_dart/tasks.dart` (or `package:levit/tasks.dart` /
 /// `package:levit_flutter/tasks.dart`).
 ///
@@ -507,6 +507,115 @@ mixin LevitReactiveTasksMixin on LevitController {
     LevitTaskMetadata? metadata,
     String? debugName,
   }) {
+    return _runTrackedTask<T>(
+      id: id,
+      priority: priority,
+      weight: weight,
+      onError: onError,
+      metadata: metadata,
+      debugName: debugName,
+      submit:
+          ({
+            required taskId,
+            required taskMetadata,
+            required onEvent,
+            required onSuccess,
+            required onProgress,
+            required onFailure,
+            required onCancel,
+          }) => taskEngine.submit<T>(
+            task,
+            id: taskId,
+            priority: priority,
+            conflictPolicy: conflictPolicy,
+            retryPolicy: retryPolicy,
+            group: group,
+            deadline: deadline,
+            cachePolicy: cachePolicy,
+            metadata: taskMetadata,
+            onEvent: onEvent,
+            onSuccess: onSuccess,
+            onProgress: onProgress,
+            onError: onFailure,
+            onCancel: onCancel,
+          ),
+    );
+  }
+
+  /// Executes a top-level or static isolate [task] with [input] and tracks its
+  /// reactive state in [tasks].
+  ///
+  /// Both [input] and the return value [T] must be sendable across isolate
+  /// boundaries. See [runTask] for parameter and state-tracking semantics.
+  Future<T> runIsolateTask<I, T>(
+    LevitIsolateTask<I, T> task,
+    I input, {
+    String? id,
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitTaskConflictPolicy conflictPolicy = LevitTaskConflictPolicy.reject,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    double weight = 1.0,
+    void Function(Object error, StackTrace stackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) {
+    return _runTrackedTask<T>(
+      id: id,
+      priority: priority,
+      weight: weight,
+      onError: onError,
+      metadata: metadata,
+      debugName: debugName,
+      submit:
+          ({
+            required taskId,
+            required taskMetadata,
+            required onEvent,
+            required onSuccess,
+            required onProgress,
+            required onFailure,
+            required onCancel,
+          }) => taskEngine.submitIsolate<I, T>(
+            task,
+            input,
+            id: taskId,
+            priority: priority,
+            conflictPolicy: conflictPolicy,
+            retryPolicy: retryPolicy,
+            group: group,
+            deadline: deadline,
+            cachePolicy: cachePolicy,
+            metadata: taskMetadata,
+            onEvent: onEvent,
+            onSuccess: onSuccess,
+            onProgress: onProgress,
+            onError: onFailure,
+            onCancel: onCancel,
+          ),
+    );
+  }
+
+  Future<T> _runTrackedTask<T>({
+    required String? id,
+    required LevitTaskPriority priority,
+    required double weight,
+    required void Function(Object error, StackTrace stackTrace)? onError,
+    required LevitTaskMetadata? metadata,
+    required String? debugName,
+    required LevitTaskExecution<T> Function({
+      required String taskId,
+      required LevitTaskMetadata taskMetadata,
+      required void Function(LevitTaskEvent event) onEvent,
+      required void Function(T result) onSuccess,
+      required void Function(double progress) onProgress,
+      required void Function(Object error, StackTrace stackTrace) onFailure,
+      required void Function() onCancel,
+    })
+    submit,
+  }) {
     _ensureReactiveTaskState();
     if (!weight.isFinite || weight < 0) {
       throw RangeError.value(weight, 'weight');
@@ -520,18 +629,9 @@ mixin LevitReactiveTasksMixin on LevitController {
             : LevitTaskMetadata(debugName: debugName));
     LevitTaskEvent? latestEvent;
     String? executionId;
-    late final LevitTaskExecution<T> execution;
-
-    execution = taskEngine.submit<T>(
-      task,
-      id: taskId,
-      priority: priority,
-      conflictPolicy: conflictPolicy,
-      retryPolicy: retryPolicy,
-      group: group,
-      deadline: deadline,
-      cachePolicy: cachePolicy,
-      metadata: taskMetadata,
+    final execution = submit(
+      taskId: taskId,
+      taskMetadata: taskMetadata,
       onEvent: (event) {
         executionId ??= event.executionId;
         latestEvent = event;
@@ -551,7 +651,7 @@ mixin LevitReactiveTasksMixin on LevitController {
           return current.copyWith(progress: progress);
         });
       },
-      onError: (error, stackTrace) {
+      onFailure: (error, stackTrace) {
         final idForUpdate = executionId;
         if (idForUpdate != null) {
           _updateExecution(taskId, idForUpdate, (current) {
@@ -605,165 +705,6 @@ mixin LevitReactiveTasksMixin on LevitController {
       attempt: initialEvent?.attempt ?? 0,
       weight: weight,
       progress: 0,
-      started: initialPhase == LevitTaskPhase.running,
-      queuedAt: initialEvent?.queuedAt ?? DateTime.now(),
-      finishedAt: initialEvent?.finishedAt,
-      outcome: initialEvent?.outcome,
-    );
-    if (initialPhase == LevitTaskPhase.completed) {
-      _scheduleCleanup(taskId);
-    }
-    return execution.result;
-  }
-
-  /// Executes a top-level or static isolate [task] with [input] and tracks its
-  /// reactive state in [tasks].
-  ///
-  /// Both [input] and the return value [T] must be sendable across isolate
-  /// boundaries. See [runTask] for parameter and state-tracking semantics.
-  Future<T> runIsolateTask<I, T>(
-    LevitIsolateTask<I, T> task,
-    I input, {
-    String? id,
-    LevitTaskPriority priority = LevitTaskPriority.normal,
-    LevitTaskConflictPolicy conflictPolicy = LevitTaskConflictPolicy.reject,
-    LevitRetryPolicy? retryPolicy,
-    LevitTaskGroup? group,
-    DateTime? deadline,
-    double weight = 1.0,
-    void Function(Object error, StackTrace stackTrace)? onError,
-    LevitTaskCachePolicy<T>? cachePolicy,
-    LevitTaskMetadata? metadata,
-    String? debugName,
-  }) {
-    return _runTrackedIsolateTask<I, T>(
-      task,
-      input,
-      id: id,
-      priority: priority,
-      conflictPolicy: conflictPolicy,
-      retryPolicy: retryPolicy,
-      group: group,
-      deadline: deadline,
-      weight: weight,
-      onError: onError,
-      cachePolicy: cachePolicy,
-      metadata: metadata,
-      debugName: debugName,
-    );
-  }
-
-  Future<T> _runTrackedIsolateTask<I, T>(
-    LevitIsolateTask<I, T> task,
-    I input, {
-    String? id,
-    required LevitTaskPriority priority,
-    required LevitTaskConflictPolicy conflictPolicy,
-    required LevitRetryPolicy? retryPolicy,
-    required LevitTaskGroup? group,
-    required DateTime? deadline,
-    required double weight,
-    void Function(Object error, StackTrace stackTrace)? onError,
-    LevitTaskCachePolicy<T>? cachePolicy,
-    LevitTaskMetadata? metadata,
-    String? debugName,
-  }) {
-    _ensureReactiveTaskState();
-    if (!weight.isFinite || weight < 0) {
-      throw RangeError.value(weight, 'weight');
-    }
-
-    final taskId = id ?? LevitTaskEngine._generateTaskId();
-    final taskMetadata =
-        metadata ??
-        (debugName == null
-            ? LevitTaskMetadata.none
-            : LevitTaskMetadata(debugName: debugName));
-    LevitTaskEvent? latestEvent;
-    String? executionId;
-    late final LevitTaskExecution<T> execution;
-    execution = taskEngine.submitIsolate<I, T>(
-      task,
-      input,
-      id: taskId,
-      priority: priority,
-      conflictPolicy: conflictPolicy,
-      retryPolicy: retryPolicy,
-      group: group,
-      deadline: deadline,
-      cachePolicy: cachePolicy,
-      metadata: taskMetadata,
-      onEvent: (event) {
-        executionId ??= event.executionId;
-        latestEvent = event;
-        _applyTaskEvent(event);
-      },
-      onSuccess: (result) {
-        final idForUpdate = executionId;
-        if (idForUpdate == null) return;
-        _updateExecution(taskId, idForUpdate, (current) {
-          return current.copyWith(status: LxSuccess<T>(result), progress: 1);
-        });
-      },
-      onProgress: (progress) {
-        final idForUpdate = executionId;
-        if (idForUpdate == null) return;
-        _updateExecution(taskId, idForUpdate, (current) {
-          return current.copyWith(progress: progress);
-        });
-      },
-      onError: (error, stackTrace) {
-        final idForUpdate = executionId;
-        if (idForUpdate != null) {
-          _updateExecution(taskId, idForUpdate, (current) {
-            return current.copyWith(
-              status: LxError<dynamic>.fromPrevious(
-                error,
-                stackTrace,
-                current.status,
-              ),
-            );
-          });
-        }
-        (onError ?? this.onTaskError)?.call(error, stackTrace);
-      },
-      onCancel: () {
-        final idForUpdate = executionId;
-        if (idForUpdate == null) return;
-        _updateExecution(taskId, idForUpdate, (current) {
-          return current.copyWith(
-            status: LxIdle<dynamic>.fromPrevious(current.status),
-          );
-        });
-      },
-    );
-    executionId ??= execution.executionId;
-
-    if (execution.disposition == LevitTaskSubmissionDisposition.joined ||
-        execution.disposition == LevitTaskSubmissionDisposition.dropped) {
-      return execution.result;
-    }
-
-    _cleanupTimers.remove(taskId)?.cancel();
-    _pruneTaskHistoryFor(taskId);
-    final initialEvent = latestEvent;
-    final previousStatus = tasks[taskId]?.status ?? LxIdle<dynamic>();
-    final initialPhase = initialEvent?.phase ?? LevitTaskPhase.queued;
-    final initialStatus = initialPhase == LevitTaskPhase.completed
-        ? LxIdle<dynamic>.fromPrevious(previousStatus)
-        : LxWaiting<dynamic>.fromPrevious(previousStatus);
-    tasks[taskId] = LevitTaskDetails(
-      status: initialStatus,
-      executionId: execution.executionId,
-      ownerPath: initialEvent?.ownerPath ?? ownerPath,
-      groupId: initialEvent?.groupId,
-      parentGroupId: initialEvent?.parentGroupId,
-      deadline: initialEvent?.deadline,
-      cancellationReason: initialEvent?.cancellationReason,
-      phase: initialPhase,
-      metadata: taskMetadata,
-      priority: priority,
-      weight: weight,
       started: initialPhase == LevitTaskPhase.running,
       queuedAt: initialEvent?.queuedAt ?? DateTime.now(),
       finishedAt: initialEvent?.finishedAt,

@@ -63,5 +63,17 @@ void main() {
       final count = 1.lx;
       expect(() => count.divide(0), throwsA(isA<ArgumentError>()));
     });
+
+    test('LxInt and LxDouble aliases share operations with LxVar', () {
+      final LxVar<int> count = LxVar<int>(2, name: 'count');
+      final LxInt aliasedCount = count;
+      aliasedCount.increment();
+      expect(count.value, 3);
+
+      final LxVar<double> amount = LxVar<double>(4.0, name: 'amount');
+      final LxDouble aliasedAmount = amount;
+      aliasedAmount.divide(2);
+      expect(amount.value, 2.0);
+    });
   });
 }

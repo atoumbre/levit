@@ -15,7 +15,7 @@ void main() {
   test(
     'two positions have distinct redacted diagnostic names and deliveries',
     () async {
-      final list = LxList([1, 2], 'rows');
+      final list = LxList(initial: [1, 2], name: 'rows');
       final hook = _EntryNames();
       LevitReactiveMiddleware.add(hook);
       addTearDown(LevitReactiveMiddleware.clear);
@@ -275,7 +275,7 @@ void main() {
       equals: (a, b) => a.toLowerCase() == b.toLowerCase(),
       hashCode: (k) => k.toLowerCase().hashCode,
     );
-    final m = LxMap(backing);
+    final m = LxMap(initial: backing);
     final seen = <int?>[];
     final view = m.entry('X');
     final sub = view.stream.listen(seen.add);
@@ -398,7 +398,7 @@ void main() {
       list.removeRange(0, 1);
       list.fillRange(1, 3, 1);
       expect([calls, other], [3, 0]);
-      final fixed = LxList(List<int>.filled(3, 1));
+      final fixed = LxList(initial: List<int>.filled(3, 1));
       final view = fixed.entry(0);
       final events = <int?>[];
       final done = Completer<void>();

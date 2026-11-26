@@ -10,9 +10,6 @@ topics:
 environment:
   sdk: ^3.12.0
 
-dependencies:
-  meta: ^1.17.0
-
 dev_dependencies:
   test: ^1.29.0
   rxdart: ^0.28.0

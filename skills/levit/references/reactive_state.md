@@ -6,7 +6,7 @@
 - **Collections**: `LxList<T>` (`<T>[].lx`), `LxMap<K, V>` (`<K, V>{}.lx`), `LxSet<T>` (`<T>{}.lx`).
 - **Narrow observation**:
   - `map.entry(key)` / `list.entry(index)` borrow a single address without rebuilding on unrelated mutations (note: list entry tracks position, not item identity).
-  - `LxState.asReadable` exposes `LxReadable<T>` (observation-only without setters or disposal).
+  - `.asReadable` exposes `LxReadable<T>` (observation-only without setters or disposal) on any `LxBase<T>` reactive (`LxVar`, `LxList`, `LxMap`, `LxSet`, `LxComputed`, etc.).
 - **`LxComputed<T>`**: Synchronous derived state with automatic dependency tracking.
 - **`LxComputed.async<T>`**: Async derived state producing `LxStatus<T>`. Supports `LxAsyncConcurrency.exhaustLatest` (one running + one coalesced trailing run).
 - **`LxStream<T>`**: Reactive stream wrapper (`LxStream.defer` + `restartDeferred` + `completionPolicy: retain` preserves and rebinds completed or reconnectable sources).
@@ -53,4 +53,4 @@ LStatusBuilder<User>(
 - Check `status.hasLastValue` to distinguish "no prior data" from a successful `null`.
 - Construct custom transitions with `.fromPrevious` or `.retained`.
 - **Flutter `ValueListenable` interop**: `source.asValueListenable()` — retain/own the adapter outside `build`; disposing the adapter unsubscribes without closing `source`.
-- **Kit helpers (`levit_flutter`)**: `LKeepAlive`, `LevitAppLifecycleMixin`, `showLevitDialog`, `showLevitModalBottomSheet`.
+- **Kit helpers (`levit_flutter`)**: `LevitAppLifecycleMixin`, `LevitLoopLifecycleMixin`, `showLevitDialog`, `showLevitModalBottomSheet`.

@@ -1,8 +1,9 @@
 ## 0.1.0-beta.1
 
 - **Breaking:** Requires Dart 3.12+ and Flutter 3.44+.
+- **Breaking:** Removed `LKeepAlive`; hoist state into an ancestor `LScope` / `LevitStore` or use Flutter's `AutomaticKeepAliveClientMixin` directly when off-screen retention is needed.
 - Re-export the `0.1.0-beta.1` Flutter bindings and Dart kit APIs, including serialized scope replacement (`LevitScopeLifecycleController`), `LxReadable<T>` builders, complete `LxStatus` callbacks on `LStatusBuilder`, `LevitTaskGroup`, and `LevitAsyncMap`.
-- Export borrowing `LxValueListenable` / `asValueListenable()` interoperability and add a scoped countdown interop example (`example/lib/countdown_interop.dart`).
+- Export borrowing `LevitValueListenable` / `asValueListenable()` interoperability and add a scoped countdown interop example (`example/lib/countdown_interop.dart`).
 - Expose `package:levit_flutter/levit_testing.dart` (`LevitTestScope`) for isolated testing.
 - Updated internal package constraints to `^0.1.0-beta.1`.
 
