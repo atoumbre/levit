@@ -301,7 +301,13 @@ class LevitMonitorMiddleware
   }
 
   @override
-  LevitReactiveOnSet? get onSet => (next, reactive, change) {
+  late final LevitReactiveOnSet onSet = _onSet;
+
+  void Function(dynamic) _onSet(
+    void Function(dynamic) next,
+    LxReactive reactive,
+    LevitReactiveChange change,
+  ) {
     return (value) {
       final origin = includeStackTrace ? StackTrace.current : null;
       next(value);
@@ -314,10 +320,15 @@ class LevitMonitorMiddleware
         ),
       );
     };
-  };
+  }
 
   @override
-  LevitReactiveOnBatch? get onBatch => (next, change) {
+  late final LevitReactiveOnBatch onBatch = _onBatch;
+
+  dynamic Function() _onBatch(
+    dynamic Function() next,
+    LevitReactiveBatch change,
+  ) {
     return () {
       dynamic result;
       try {
@@ -332,44 +343,52 @@ class LevitMonitorMiddleware
       _logBatch(change);
       return result;
     };
-  };
+  }
 
   void _logBatch(LevitReactiveBatch change) {
     _addToBuffer(LevitReactiveBatchEvent(sessionId: sessionId, change: change));
   }
 
   @override
-  void Function(LxReactive reactive)? get onInit => (reactive) {
+  late final void Function(LxReactive reactive) onInit = _onInit;
+
+  void _onInit(LxReactive reactive) {
     _addToBuffer(
       LevitReactiveInitEvent(sessionId: sessionId, reactive: reactive),
     );
-  };
+  }
 
   @override
-  LevitReactiveOnDispose? get onDispose => (next, reactive) {
+  late final LevitReactiveOnDispose onDispose = _onDispose;
+
+  void Function() _onDispose(void Function() next, LxReactive reactive) {
     return () {
       next();
       _addToBuffer(
         LevitReactiveDisposeEvent(sessionId: sessionId, reactive: reactive),
       );
     };
-  };
+  }
 
   @override
-  void Function(LxReactive, List<LxReactive>)? get onGraphChange =>
-      (computed, dependencies) {
-        _addToBuffer(
-          LevitReactiveGraphChangeEvent(
-            sessionId: sessionId,
-            reactive: computed,
-            dependencies: dependencies,
-          ),
-        );
-      };
+  late final void Function(LxReactive, List<LxReactive>) onGraphChange =
+      _onGraphChange;
+
+  void _onGraphChange(LxReactive computed, List<LxReactive> dependencies) {
+    _addToBuffer(
+      LevitReactiveGraphChangeEvent(
+        sessionId: sessionId,
+        reactive: computed,
+        dependencies: dependencies,
+      ),
+    );
+  }
 
   @override
-  void Function(LxReactive reactive, LxListenerContext? context)?
-  get startedListening => (reactive, context) {
+  late final void Function(LxReactive reactive, LxListenerContext? context)
+  startedListening = _startedListening;
+
+  void _startedListening(LxReactive reactive, LxListenerContext? context) {
     _addToBuffer(
       LevitReactiveListenerAddedEvent(
         sessionId: sessionId,
@@ -377,11 +396,13 @@ class LevitMonitorMiddleware
         context: context,
       ),
     );
-  };
+  }
 
   @override
-  void Function(LxReactive reactive, LxListenerContext? context)?
-  get stoppedListening => (reactive, context) {
+  late final void Function(LxReactive reactive, LxListenerContext? context)
+  stoppedListening = _stoppedListening;
+
+  void _stoppedListening(LxReactive reactive, LxListenerContext? context) {
     _addToBuffer(
       LevitReactiveListenerRemovedEvent(
         sessionId: sessionId,
@@ -389,11 +410,13 @@ class LevitMonitorMiddleware
         context: context,
       ),
     );
-  };
+  }
 
   @override
-  void Function(Object error, StackTrace? stack, LxReactive? context)?
-  get onReactiveError => (error, stack, reactive) {
+  late final void Function(Object error, StackTrace? stack, LxReactive? context)
+  onReactiveError = _onReactiveError;
+
+  void _onReactiveError(Object error, StackTrace? stack, LxReactive? reactive) {
     _addToBuffer(
       LevitReactiveErrorEvent(
         sessionId: sessionId,
@@ -402,7 +425,7 @@ class LevitMonitorMiddleware
         stack: includeStackTrace ? stack : null,
       ),
     );
-  };
+  }
 
   // ---------------------------------------------------------------------------
   // Scope Observer Implementation

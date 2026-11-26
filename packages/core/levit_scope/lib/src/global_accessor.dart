@@ -4,8 +4,30 @@ part of 'scope_library.dart';
 ///
 /// {@category SPI}
 abstract final class LsSpi {
+  static final Object _zoneScopeKey = Object();
+  static bool _zoneKeyExposed = false;
+
   /// The [Zone] key used to identify the active [LevitScope].
-  static final Object zoneScopeKey = Object();
+  static Object get zoneScopeKey {
+    _zoneKeyExposed = true;
+    return _zoneScopeKey;
+  }
+
+  /// Synchronously binds [scope] as [Ls.currentScope] for the duration of [fn]
+  /// without allocating a new [Zone].
+  ///
+  /// Nested [LevitScopeImplicitScopeExtension.run] calls override this binding
+  /// and restore it when they exit. Intended for synchronous build frames
+  /// (such as Flutter `Widget.build`).
+  static R runSyncWithScope<R>(LevitScope scope, R Function() fn) {
+    final previous = Ls._syncScope;
+    Ls._syncScope = scope;
+    try {
+      return fn();
+    } finally {
+      Ls._syncScope = previous;
+    }
+  }
 }
 
 /// The low-level global entry point for accessing the [LevitScope] system.
@@ -26,14 +48,21 @@ abstract final class LsSpi {
 /// {@category Scopes & DI}
 class Ls {
   static final _root = LevitScope.root();
+  static LevitScope? _syncScope;
+  static int _activeZoneScopeDepth = 0;
 
   /// Returns the currently active [LevitScope].
   ///
-  /// If run within a [LevitScopeImplicitScopeExtension.run] zone, returns that
-  /// scope.
+  /// If run within a [LevitScopeImplicitScopeExtension.run] zone or a
+  /// synchronous scope bridge, returns that scope.
   /// Otherwise, returns the global root scope.
   static LevitScope get currentScope {
-    final implicit = Zone.current[LsSpi.zoneScopeKey];
+    final sync = _syncScope;
+    if (sync != null) return sync;
+    if (_activeZoneScopeDepth == 0 && !LsSpi._zoneKeyExposed) {
+      return _root;
+    }
+    final implicit = Zone.current[LsSpi._zoneScopeKey];
     if (implicit is LevitScope) return implicit;
     return _root;
   }
@@ -186,6 +215,66 @@ class Ls {
   }
 }
 
+R _scopeRunHandler<R>(
+  Zone self,
+  ZoneDelegate parent,
+  Zone zone,
+  R Function() f,
+) {
+  final previousSync = Ls._syncScope;
+  Ls._syncScope = null;
+  Ls._activeZoneScopeDepth++;
+  try {
+    return parent.run(zone, f);
+  } finally {
+    Ls._activeZoneScopeDepth--;
+    Ls._syncScope = previousSync;
+  }
+}
+
+R _scopeRunUnaryHandler<R, T>(
+  Zone self,
+  ZoneDelegate parent,
+  Zone zone,
+  R Function(T) f,
+  T arg,
+) {
+  final previousSync = Ls._syncScope;
+  Ls._syncScope = null;
+  Ls._activeZoneScopeDepth++;
+  try {
+    return parent.runUnary(zone, f, arg);
+  } finally {
+    Ls._activeZoneScopeDepth--;
+    Ls._syncScope = previousSync;
+  }
+}
+
+R _scopeRunBinaryHandler<R, T1, T2>(
+  Zone self,
+  ZoneDelegate parent,
+  Zone zone,
+  R Function(T1, T2) f,
+  T1 arg1,
+  T2 arg2,
+) {
+  final previousSync = Ls._syncScope;
+  Ls._syncScope = null;
+  Ls._activeZoneScopeDepth++;
+  try {
+    return parent.runBinary(zone, f, arg1, arg2);
+  } finally {
+    Ls._activeZoneScopeDepth--;
+    Ls._syncScope = previousSync;
+  }
+}
+
+final ZoneSpecification _staticScopeZoneSpec = ZoneSpecification(
+  run: _scopeRunHandler,
+  runUnary: _scopeRunUnaryHandler,
+  runBinary: _scopeRunBinaryHandler,
+);
+
 /// Extensions for executing code within a specific [LevitScope].
 ///
 /// {@category Scopes & DI}
@@ -198,6 +287,10 @@ extension LevitScopeImplicitScopeExtension on LevitScope {
   ///
   /// Returns the result of [callback].
   R run<R>(R Function() callback) {
-    return runZoned(callback, zoneValues: {LsSpi.zoneScopeKey: this});
+    return runZoned(
+      callback,
+      zoneValues: {LsSpi._zoneScopeKey: this},
+      zoneSpecification: _staticScopeZoneSpec,
+    );
   }
 }

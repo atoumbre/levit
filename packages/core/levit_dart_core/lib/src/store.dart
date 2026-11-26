@@ -153,16 +153,17 @@ class LevitStore<T> {
   T findIn(LevitScope scope, {Object? tag, bool localOnly = false}) {
     final instanceKey = tag != null ? _LevitStoreKey(this, tag) : _defaultKey;
 
-    var instance =
-        localOnly &&
-            !scope.isRegisteredLocally<_LevitStoreInstance>(tag: instanceKey)
-        ? null
-        : scope.findOrNull<_LevitStoreInstance>(tag: instanceKey);
-
-    if (instance == null) {
-      scope.put(() => _LevitStoreInstance(_builder), tag: instanceKey);
-      instance = scope.find<_LevitStoreInstance>(tag: instanceKey);
-    }
+    final instance =
+        (localOnly &&
+                !scope.isRegisteredLocally<_LevitStoreInstance>(
+                  tag: instanceKey,
+                )
+            ? null
+            : scope.findOrNull<_LevitStoreInstance>(tag: instanceKey)) ??
+        scope.put<_LevitStoreInstance>(
+          () => _LevitStoreInstance(_builder),
+          tag: instanceKey,
+        );
 
     return instance.value as T;
   }
@@ -335,8 +336,8 @@ class _LevitStoreInstance extends LevitController implements LevitRef {
   }
 
   @override
-  Future<S> findAsync<S>({Object? tag}) async {
-    return await scope.findAsync<S>(tag: tag);
+  Future<S> findAsync<S>({Object? tag}) {
+    return scope.findAsync<S>(tag: tag);
   }
 
   @override
@@ -471,16 +472,23 @@ extension LevitScopeStoreOverrides on LevitScope {
 final class _LevitStoreKey {
   static final int _variantSalt = math.Random.secure().nextInt(0x7fffffff);
 
-  const _LevitStoreKey(this.definition, this.variant);
+  _LevitStoreKey(this.definition, this.variant)
+    : _hashCode = Object.hash(identityHashCode(definition), variant);
+
   final Object definition;
   final Object? variant;
+  final int _hashCode;
+
   @override
   bool operator ==(Object other) =>
-      other is _LevitStoreKey &&
-      identical(definition, other.definition) &&
-      variant == other.variant;
+      identical(this, other) ||
+      (other is _LevitStoreKey &&
+          identical(definition, other.definition) &&
+          variant == other.variant);
+
   @override
-  int get hashCode => Object.hash(identityHashCode(definition), variant);
+  int get hashCode => _hashCode;
+
   @override
   String toString() {
     final variantLabel = variant == null

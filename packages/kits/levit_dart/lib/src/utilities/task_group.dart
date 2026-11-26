@@ -681,24 +681,45 @@ final class LevitTaskTreeSnapshot {
 
   /// Unmodifiable list of child group snapshots.
   final List<LevitTaskTreeSnapshot> children;
-  LevitTaskTreeSnapshot._(LevitTaskGroup group)
-    : id = group.id,
-      name = group.name,
-      parentId = group.parent?.id,
-      isClosing = group.isClosing,
-      isComplete = group.isComplete,
-      deadline = group.deadline,
-      cancellationReason = group.cancellationReason,
-      pendingCount = group._tasks
-          .where((task) => task.state == _TaskExecutionState.queued)
-          .length,
-      runningCount = group._tasks
-          .where((task) => task.state == _TaskExecutionState.running)
-          .length,
-      executionIds = List.unmodifiable(
-        group._tasks.map((task) => task.executionId),
-      ),
-      children = List.unmodifiable(
-        group._children.map(LevitTaskTreeSnapshot._),
-      );
+
+  const LevitTaskTreeSnapshot._values({
+    required this.id,
+    required this.name,
+    required this.parentId,
+    required this.isClosing,
+    required this.isComplete,
+    required this.deadline,
+    required this.cancellationReason,
+    required this.pendingCount,
+    required this.runningCount,
+    required this.executionIds,
+    required this.children,
+  });
+
+  factory LevitTaskTreeSnapshot._(LevitTaskGroup group) {
+    var pending = 0;
+    var running = 0;
+    final ids = <String>[];
+    for (final task in group._tasks) {
+      if (task.state == _TaskExecutionState.queued) {
+        pending++;
+      } else if (task.state == _TaskExecutionState.running) {
+        running++;
+      }
+      ids.add(task.executionId);
+    }
+    return LevitTaskTreeSnapshot._values(
+      id: group.id,
+      name: group.name,
+      parentId: group.parent?.id,
+      isClosing: group.isClosing,
+      isComplete: group.isComplete,
+      deadline: group.deadline,
+      cancellationReason: group.cancellationReason,
+      pendingCount: pending,
+      runningCount: running,
+      executionIds: List.unmodifiable(ids),
+      children: List.unmodifiable(group._children.map(LevitTaskTreeSnapshot._)),
+    );
+  }
 }

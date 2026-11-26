@@ -40,6 +40,11 @@ class LxList<E> extends LxVar<List<E>>
   @override
   int get _count => _value.length;
   @override
+  bool _existsAt(Object? index) => index is int && index >= 0 && index < _count;
+  @override
+  Object? _valueAt(Object? index) =>
+      index is int && index >= 0 && index < _count ? _value[index] : null;
+  @override
   _Element _element(Object? index) =>
       index is int && index >= 0 && index < _count
       ? (exists: true, value: _value[index])
@@ -96,7 +101,9 @@ class LxList<E> extends LxVar<List<E>>
 
   @override
   void add(E element) {
-    mutate((list) => list.add(element));
+    final index = _count;
+    _value.add(element);
+    _changed(address: index, single: true);
   }
 
   @override
@@ -161,8 +168,9 @@ class LxList<E> extends LxVar<List<E>>
 
   @override
   E removeLast() {
+    final index = _count - 1;
     final result = _value.removeLast();
-    _changed();
+    _changed(address: index, single: true);
     return result;
   }
 
@@ -452,6 +460,10 @@ class LxMap<K, V> extends LxVar<Map<K, V>>
   @override
   int get _count => _value.length;
   Iterable<Object?> get _orderedKeys => _value.keys;
+  @override
+  bool _existsAt(Object? key) => _value.containsKey(key);
+  @override
+  Object? _valueAt(Object? key) => _value[key];
   @override
   _Element _element(Object? key) =>
       (exists: _value.containsKey(key), value: _value[key]);

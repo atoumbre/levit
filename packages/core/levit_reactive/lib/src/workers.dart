@@ -179,7 +179,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat>
     final clock = monitoring ? (Stopwatch()..start()) : null;
     void finish({Object? error, bool asynchronous = false}) {
       context._complete();
-      _executionContexts.remove(context);
+      _executionContexts?.remove(context);
       if (monitoring && !isDisposed && !_workCancelled) {
         final duration = clock!.elapsed;
         _setValueInternal(
@@ -190,7 +190,7 @@ class LxWorker<T> extends LxBase<LxWorkerStat>
             lastRun: DateTime.now(),
             error: error,
             isAsync: asynchronous,
-            isProcessing: _executionContexts.isNotEmpty,
+            isProcessing: _executionContexts?.isNotEmpty ?? false,
           ),
         );
       }

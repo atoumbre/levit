@@ -129,15 +129,17 @@ class LScope extends StatefulWidget {
     );
   }
 
-  /// Executes [builder] within the [Zone] of the nearest [LScope].
+  /// Executes [builder] with the nearest [LScope] bound synchronously as
+  /// [Ls.currentScope].
   ///
-  /// This bridges the gap between Widget-tree scoping ([InheritedWidget]) and
-  /// static scoping ([Zone]), allowing [Levit.find] to work correctly.
+  /// This bridges Widget-tree scoping ([InheritedWidget]) and static scoping
+  /// without allocating a new [Zone], allowing [Levit.find] to resolve from
+  /// the nearest [LScope] during synchronous widget builds.
   static R runBridged<R>(BuildContext context, R Function() builder) {
     final scope = _ScopeProvider.of(context);
-    // Bridge widget-tree scope into Zone scope for `Levit.find` consistency.
-    if (scope != null && scope != Ls.currentScope) {
-      return scope.run(builder);
+    // Bridge widget-tree scope synchronously for `Levit.find` consistency.
+    if (scope != null && !identical(scope, Ls.currentScope)) {
+      return LsSpi.runSyncWithScope(scope, builder);
     }
     return builder();
   }
@@ -180,6 +182,9 @@ class _LScopeState extends State<LScope> {
   late final LevitScopeLifecycleController _lifecycle;
   LevitScope? _parent;
   bool _configured = false;
+  LevitScope? _renderedScope;
+  Object? _renderedError;
+  bool _hasRendered = false;
 
   @override
   void initState() {
@@ -189,7 +194,12 @@ class _LScopeState extends State<LScope> {
   }
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted || !_hasRendered) return;
+    if (identical(_lifecycle.scope, _renderedScope) &&
+        identical(_lifecycle.error, _renderedError)) {
+      return;
+    }
+    setState(() {});
   }
 
   @override
@@ -237,12 +247,15 @@ class _LScopeState extends State<LScope> {
 
   @override
   Widget build(BuildContext context) {
+    _hasRendered = true;
     final error = _lifecycle.error;
+    final scope = _lifecycle.scope;
+    _renderedError = error;
+    _renderedScope = scope;
     if (error != null) {
       return widget.error?.call(context, error) ??
           Text('Scope error: $error', textDirection: TextDirection.ltr);
     }
-    final scope = _lifecycle.scope;
     if (scope != null) return _ScopeProvider(scope: scope, child: widget.child);
     return widget.loading?.call(context) ?? const SizedBox.shrink();
   }
@@ -313,6 +326,9 @@ class _LAsyncScopeState extends State<LAsyncScope> {
   late final LevitScopeLifecycleController _lifecycle;
   LevitScope? _parent;
   bool _configured = false;
+  LevitScope? _renderedScope;
+  Object? _renderedError;
+  bool _hasRendered = false;
 
   @override
   void initState() {
@@ -322,7 +338,12 @@ class _LAsyncScopeState extends State<LAsyncScope> {
   }
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted || !_hasRendered) return;
+    if (identical(_lifecycle.scope, _renderedScope) &&
+        identical(_lifecycle.error, _renderedError)) {
+      return;
+    }
+    setState(() {});
   }
 
   @override
@@ -370,12 +391,15 @@ class _LAsyncScopeState extends State<LAsyncScope> {
 
   @override
   Widget build(BuildContext context) {
+    _hasRendered = true;
     final error = _lifecycle.error;
+    final scope = _lifecycle.scope;
+    _renderedError = error;
+    _renderedScope = scope;
     if (error != null) {
       return widget.error?.call(context, error) ??
           Text('Scope error: $error', textDirection: TextDirection.ltr);
     }
-    final scope = _lifecycle.scope;
     if (scope != null) return _ScopeProvider(scope: scope, child: widget.child);
     return widget.loading?.call(context) ?? const SizedBox.shrink();
   }

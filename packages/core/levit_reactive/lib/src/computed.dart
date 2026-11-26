@@ -29,7 +29,6 @@ enum LxAsyncConcurrency {
 /// {@category Reactive State}
 class LxComputed<T> extends _ComputedBase<T> {
   final T Function() _compute;
-  final bool Function(T previous, T current)? _equals;
   bool _isDirty = true;
   bool _isComputing = false;
   bool _hasComputeError = false;
@@ -59,8 +58,7 @@ class LxComputed<T> extends _ComputedBase<T> {
     bool staticDeps = false,
     bool eager = false,
     String? name,
-  }) : _equals = equals,
-       _staticDeps = staticDeps,
+  }) : _staticDeps = staticDeps,
        _eager = eager,
        super(_computeInitial(name, _compute), name: name, equals: equals) {
     _isDirty = true;
@@ -312,10 +310,7 @@ class LxComputed<T> extends _ComputedBase<T> {
       final notify = !_notifiedDirty;
       _notifiedDirty = false;
 
-      // Skip reactive update when value comparator reports no change.
-      if (_equals == null || !_equals(_value, resultValue)) {
-        _setValueInternal(resultValue, notifyListeners: notify);
-      }
+      _setValueInternal(resultValue, notifyListeners: notify);
       return;
     }
 
@@ -345,9 +340,7 @@ class LxComputed<T> extends _ComputedBase<T> {
       final notify = !_notifiedDirty;
       _notifiedDirty = false;
 
-      if (_equals == null || !_equals(_value, resultValue)) {
-        _setValueInternal(resultValue, notifyListeners: notify);
-      }
+      _setValueInternal(resultValue, notifyListeners: notify);
 
       // A value listener can deactivate or close this computed synchronously.
       if (_isClosed || !_isActive) return;
@@ -532,7 +525,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
         _setValueInternal(LxWaiting<T>.fromPrevious(previous));
       } catch (_) {
         context._complete();
-        _executionContexts.remove(context);
+        _executionContexts?.remove(context);
         _finishExecution();
         rethrow;
       }
@@ -541,7 +534,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
           !_isActive ||
           myExecutionId != _executionId) {
         context._complete();
-        _executionContexts.remove(context);
+        _executionContexts?.remove(context);
         _finishExecution();
         return;
       }
@@ -576,9 +569,12 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
 
       try {
         future = runZoned(
-          () => context._run(_compute),
-          zoneValues: {_LevitReactiveCore.asyncComputedTrackerZoneKey: tracker},
-          zoneSpecification: _asyncZoneSpec(),
+          _compute,
+          zoneValues: {
+            _LevitReactiveCore.asyncComputedTrackerZoneKey: tracker,
+            LxExecutionContext._zoneKey: context,
+          },
+          zoneSpecification: _staticAsyncZoneSpec,
         );
       } catch (e, st) {
         syncError = e;
@@ -602,7 +598,7 @@ class LxAsyncComputed<T> extends _ComputedBase<LxStatus<T>>
         );
       }
       context._complete();
-      _executionContexts.remove(context);
+      _executionContexts?.remove(context);
       _finishExecution();
       return;
     }
@@ -931,10 +927,10 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
   // ---------------------------------------------------------------------------
 
   @override
-  Future<void> close() {
+  FutureOr<void> _closeSyncOrAsync() {
     _isClosed = true;
     _cleanupSubscriptions();
-    return super.close();
+    return super._closeSyncOrAsync();
   }
 
   LxStream<R> transform<R>(Stream<R> Function(Stream<Val> stream) transformer) {
@@ -946,13 +942,13 @@ abstract class _ComputedBase<Val> extends LxBase<Val> {
 class _DependencyTracker implements LevitReactiveObserver {
   // Small graphs use list storage; larger graphs switch to set semantics.
   final List<LevitReactiveNotifier> _listDeps = [];
-  final Set<LevitReactiveNotifier> _setDeps = {};
+  final Set<LevitReactiveNotifier> _setDeps = Set.identity();
   bool _useSet = false;
   List<LevitReactiveNotifier>? _expected;
   int _matched = 0;
 
   final Set<LxReactive> reactives =
-      {}; // Graph reporting for middleware/monitoring.
+      Set.identity(); // Graph reporting for middleware/monitoring.
   bool trackReactives = false;
 
   bool hasCollectionReads = false;
@@ -1001,6 +997,9 @@ class _DependencyTracker implements LevitReactiveObserver {
         _matched++;
         return;
       }
+      for (var i = 0; i < _matched; i++) {
+        if (identical(expected[i], dep)) return;
+      }
       _captureMatchedPrefix();
     }
     if (_useSet) {
@@ -1033,7 +1032,7 @@ class _AsyncLiveTracker implements LevitReactiveObserver {
   final LxAsyncComputed _computed;
   final int _executionId;
   final Set<LxReactive> reactives =
-      {}; // Graph reporting for middleware/monitoring.
+      Set.identity(); // Graph reporting for middleware/monitoring.
   final bool trackReactives;
 
   _AsyncLiveTracker(
@@ -1101,34 +1100,13 @@ R _asyncRunBinaryHandler<R, T1, T2>(
   }
 }
 
-void _asyncScheduleMicrotaskHandler(
-  Zone self,
-  ZoneDelegate parent,
-  Zone zone,
-  void Function() f,
-) {
-  parent.scheduleMicrotask(zone, () {
-    _LevitReactiveCore._enterAsyncScope();
-    try {
-      f();
-    } finally {
-      _LevitReactiveCore._exitAsyncScope();
-    }
-  });
-}
-
 /// Static pre-allocated ZoneSpecification for async tracking.
 /// Avoids closure allocation on every async computed run.
 final ZoneSpecification _staticAsyncZoneSpec = ZoneSpecification(
   run: _asyncRunHandler,
   runUnary: _asyncRunUnaryHandler,
   runBinary: _asyncRunBinaryHandler,
-  scheduleMicrotask: _asyncScheduleMicrotaskHandler,
 );
-
-/// Returns the static async zone specification.
-/// Kept as a function for API compatibility.
-ZoneSpecification _asyncZoneSpec() => _staticAsyncZoneSpec;
 
 /// Extension to create an [LxComputed] from a synchronous function.
 ///

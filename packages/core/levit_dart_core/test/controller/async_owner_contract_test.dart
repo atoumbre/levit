@@ -42,6 +42,34 @@ void main() {
   );
 
   test(
+    'direct controller close drains pending async initialization capture',
+    () async {
+      Levit.enableAutoLinking();
+      final scope = LevitScope.root();
+      final initialize = Completer<void>();
+      final work = Completer<int>();
+      final owner = scope.put(
+        () => _InitializingOwner(initialize.future, work.future),
+      );
+      var closed = false;
+      final closing = Future<void>.sync(
+        owner.onClose,
+      ).then((_) => closed = true);
+      await Future<void>.delayed(Duration.zero);
+      expect(closed, isFalse);
+      initialize.complete();
+      await Future<void>.delayed(Duration.zero);
+      expect(owner.state, isNotNull);
+      expect(closed, isFalse);
+      work.complete(7);
+      await closing;
+      expect(owner.state!.isDisposed, isTrue);
+      await scope.dispose();
+      Levit.disableAutoLinking();
+    },
+  );
+
+  test(
     'owner drains work before releasing state regardless of ownership order',
     () async {
       final owner = _Owner();

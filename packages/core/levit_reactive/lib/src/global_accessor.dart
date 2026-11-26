@@ -14,12 +14,12 @@ class Lx {
   /// Reads reactive state without subscribing an enclosing consumer.
   static R untracked<R>(R Function() read) {
     final previous = _LevitReactiveCore.proxy;
-    if (previous == null && _LevitReactiveCore._asyncZoneDepth == 0) {
+    if (previous == null && _LevitReactiveCore._asyncTrackerDepth == 0) {
       return read();
     }
     _LevitReactiveCore.proxy = null;
     try {
-      if (_LevitReactiveCore._asyncZoneDepth != 0) {
+      if (_LevitReactiveCore._asyncTrackerDepth != 0) {
         return runZoned(
           read,
           zoneValues: {_LevitReactiveCore.asyncComputedTrackerZoneKey: null},
@@ -149,6 +149,9 @@ abstract final class LxSpi {
     }
   }
 
+  /// Whether a synchronous [createOwned] construction frame is currently active.
+  static bool get isConstructingOwned => _construction != null;
+
   /// Framework hook for automatic ownership capture during [createOwned].
   static bool deferAutoLink(LxReactive reactive, void Function() capture) {
     final frame = _construction;
@@ -221,6 +224,18 @@ abstract final class LxSpi {
   static void setGraphDepth(LevitReactiveNotifier notifier, int value) {
     notifier._graphDepth = value;
   }
+
+  /// Closes [reactive] synchronously when no stream, binding, or dispose
+  /// middleware requires asynchronous teardown; otherwise returns its [Future].
+  static FutureOr<void> closeSyncOrAsync(LxReactive reactive) {
+    if (reactive is LxBase && reactive is! _LxAsyncLifecycle) {
+      return reactive._closeSyncOrAsync();
+    }
+    return reactive.close();
+  }
+
+  /// Whether [variable] has no pending binding cancellations or failures.
+  static bool isDrainedSync(LxVar<dynamic> variable) => variable._isDrainedSync;
 
   /// Whether [resource] is currently executing in the active reactive context.
   static bool isExecuting(Object resource) {

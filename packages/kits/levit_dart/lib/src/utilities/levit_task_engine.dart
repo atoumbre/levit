@@ -553,7 +553,10 @@ class LevitTaskEngine
       group.coalescedTail = execution;
     }
     if (pendingCount == 1) _priorityCursor = 0;
-    _queueFor(execution.config.priority).add(execution);
+    if (group.outstanding.length == 1) {
+      execution.inPriorityQueue = true;
+      _queueFor(execution.config.priority).add(execution);
+    }
     _emitTaskEvent(
       _eventFor(
         execution,
@@ -562,7 +565,6 @@ class LevitTaskEngine
       ),
     );
     _armDeadline(execution);
-    _notifyTaskTree();
     _processQueue();
 
     final disposition =
@@ -604,6 +606,7 @@ class LevitTaskEngine
     LevitTaskPriority nextPriority,
   ) {
     if (execution.config.priority == nextPriority) return;
+    if (!execution.inPriorityQueue) return;
     _queueFor(execution.config.priority).remove(execution);
     _queueFor(nextPriority).add(execution);
   }
@@ -630,9 +633,10 @@ class LevitTaskEngine
     for (var offset = 0; offset < _priorityCycle.length; offset++) {
       final queue = _queueFor(_priorityCycle[_priorityCursor]);
       _priorityCursor = (_priorityCursor + 1) % _priorityCycle.length;
-      for (final execution in queue) {
-        if (_isEligible(execution)) {
-          queue.remove(execution);
+      while (queue.isNotEmpty) {
+        final execution = queue.removeFirst();
+        execution.inPriorityQueue = false;
+        if (execution.state == _TaskExecutionState.queued) {
           return execution;
         }
       }
@@ -655,14 +659,6 @@ class LevitTaskEngine
         ),
       );
     });
-  }
-
-  bool _isEligible(_TaskExecution execution) {
-    if (execution.state != _TaskExecutionState.queued) return false;
-    final group = _groups[execution.schedulingKey];
-    return group != null &&
-        group.outstanding.isNotEmpty &&
-        identical(group.outstanding.first, execution);
   }
 
   void _start(_TaskExecution execution) {
@@ -1049,14 +1045,27 @@ class LevitTaskEngine
     _activeExecutions.remove(execution);
     _executions.remove(execution.executionId);
     final group = _groups[execution.schedulingKey];
-    group?.outstanding.remove(execution);
-    if (identical(group?.coalescedTail, execution)) {
-      group!.coalescedTail = null;
+    if (group != null) {
+      if (group.outstanding.isNotEmpty &&
+          identical(group.outstanding.first, execution)) {
+        group.outstanding.removeFirst();
+      } else {
+        group.outstanding.remove(execution);
+      }
+      if (identical(group.coalescedTail, execution)) {
+        group.coalescedTail = null;
+      }
+      if (group.outstanding.isEmpty) {
+        _groups.remove(execution.schedulingKey);
+      } else {
+        final nextHead = group.outstanding.first;
+        if (nextHead.state == _TaskExecutionState.queued &&
+            !nextHead.inPriorityQueue) {
+          nextHead.inPriorityQueue = true;
+          _queueFor(nextHead.config.priority).add(nextHead);
+        }
+      }
     }
-    if (group != null && group.outstanding.isEmpty) {
-      _groups.remove(execution.schedulingKey);
-    }
-    _notifyTaskTree();
     _schedulePump();
   }
 
@@ -1187,10 +1196,10 @@ class LevitTaskEngine
             )
           : reason,
     );
-    _notifyTaskTree();
     if (execution.state == _TaskExecutionState.queued) {
-      _queueFor(execution.config.priority).remove(execution);
       _completeCancelled(execution, queuedReason);
+    } else {
+      _notifyTaskTree();
     }
   }
 

@@ -45,12 +45,14 @@ void main() {
       'LxSpi.deferAutoLink forwards nested non-returned captures to outermost createOwned',
       () async {
         final standalone = 0.lx;
+        expect(LxSpi.isConstructingOwned, isFalse);
         expect(LxSpi.deferAutoLink(standalone, () {}), isFalse);
 
         final captured = <LxReactive>[];
         late LxVar<int> nestedSide;
         late LxVar<int> innerReturned;
         final outerReturned = LxSpi.createOwned(() {
+          expect(LxSpi.isConstructingOwned, isTrue);
           innerReturned = LxSpi.createOwned(() {
             nestedSide = 1.lx;
             expect(
@@ -69,7 +71,15 @@ void main() {
 
         expect(captured, equals([nestedSide]));
 
+        expect(LxSpi.isDrainedSync(standalone), isTrue);
+        expect(LxSpi.closeSyncOrAsync(standalone), isNull);
         await standalone.close();
+
+        final asyncReactive = LxFuture<int>(Future<int>.value(9));
+        final asyncClose = LxSpi.closeSyncOrAsync(asyncReactive);
+        expect(asyncClose, isA<Future<void>>());
+        await asyncClose;
+
         await nestedSide.close();
         await innerReturned.close();
         await outerReturned.close();

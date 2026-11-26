@@ -38,7 +38,9 @@ mixin LevitSelectionMixin<T> on LevitController {
   /// If [allowMultiSelect] is false, this clears any previous selection first.
   void select(T item) {
     if (!allowMultiSelect) {
-      selectedItems.clear();
+      if (selectedItems.length == 1 && selectedItems.contains(item)) return;
+      selectedItems.assignOne(item);
+      return;
     }
     selectedItems.add(item);
   }

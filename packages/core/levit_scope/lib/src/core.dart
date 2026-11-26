@@ -330,16 +330,6 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   /// Ultra-fast instance cache for tag-less singletons.
   final Map<Type, dynamic> _instanceCache = {};
 
-  /// Cache for resolved keys to speed up parent scope lookups.
-  Map<_LevitScopeKey, LevitScope>? _resolutionCacheStorage;
-  Map<_LevitScopeKey, LevitScope> get _resolutionCache =>
-      _resolutionCacheStorage ??= {};
-
-  /// Fast-path cache for tag-less parent scope lookups.
-  Map<Type, LevitScope>? _typeResolutionCacheStorage;
-  Map<Type, LevitScope> get _typeResolutionCache =>
-      _typeResolutionCacheStorage ??= {};
-
   /// Non-owning local aliases (alias key -> canonical local key).
   Map<_LevitScopeKey, _LevitScopeKey>? _aliasStorage;
   Map<_LevitScopeKey, _LevitScopeKey> get _aliases => _aliasStorage ?? const {};
@@ -347,7 +337,9 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   /// Reverse alias index used to invalidate aliases with their canonical key.
   Map<_LevitScopeKey, Set<_LevitScopeKey>>? _aliasesByCanonical;
 
-  final Map<_LevitScopeKey, LevitDependency> _retiring = {};
+  Map<_LevitScopeKey, LevitDependency>? _retiringStorage;
+
+  static const Object _notFound = Object();
 
   Future<void>? _disposeFuture;
   Completer<void>? _disposedCompleter;
@@ -404,13 +396,13 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     _ensureUsable();
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
-    if (_retiring.containsKey(key) ||
-        (_registry[key]?.isFactory == true &&
-            _registry[key]!._hasFactoryWork)) {
+    final existing = _registry[key];
+    if ((_retiringStorage?.containsKey(key) ?? false) ||
+        (existing != null && existing.isFactory && existing._hasFactoryWork)) {
       throw StateError('Await delete<$S> before replacing "$keyString".');
     }
 
-    if (_registry.containsKey(key) || _aliases.containsKey(key)) {
+    if (existing != null || (_aliasStorage?.containsKey(key) ?? false)) {
       throw StateError(
         'LevitScope($name): "$keyString" is already registered. '
         'Await delete<$S>(tag: ${tag == null ? 'null' : "'$tag'"}, force: true) '
@@ -425,9 +417,9 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
 
     if (_isClosing ||
         _isDisposed ||
-        _retiring.containsKey(key) ||
+        (_retiringStorage?.containsKey(key) ?? false) ||
         _registry.containsKey(key) ||
-        _aliases.containsKey(key)) {
+        (_aliasStorage?.containsKey(key) ?? false)) {
       if (created != null) {
         final cleanup = _disposeInstance(created);
         if (cleanup is Future<void>) {
@@ -477,7 +469,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
     final existing = _registry[key];
-    if (_retiring.containsKey(key) ||
+    if ((_retiringStorage?.containsKey(key) ?? false) ||
         (existing != null &&
             (existing._hasFactoryWork ||
                 existing._initializationFailures.isNotEmpty)) ||
@@ -486,14 +478,12 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
       throw StateError('Await delete<$S> before replacing "$keyString".');
     }
 
-    if (_aliases.containsKey(key)) {
+    if (_aliasStorage?.containsKey(key) ?? false) {
       throw StateError(
         'LevitScope($name): "$keyString" is already registered as an alias.',
       );
     }
-    if (!isFactory &&
-        _registry.containsKey(key) &&
-        _registry[key]!.isInstantiated) {
+    if (!isFactory && existing != null && existing.isInstantiated) {
       return;
     }
 
@@ -536,7 +526,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     final key = _getKey<S>(tag);
     final keyString = key.debugString;
     final existing = _registry[key];
-    if (_retiring.containsKey(key) ||
+    if ((_retiringStorage?.containsKey(key) ?? false) ||
         (existing != null &&
             (existing._hasFactoryWork ||
                 existing._initializationFailures.isNotEmpty)) ||
@@ -545,14 +535,12 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
       throw StateError('Await delete<$S> before replacing "$keyString".');
     }
 
-    if (_aliases.containsKey(key)) {
+    if (_aliasStorage?.containsKey(key) ?? false) {
       throw StateError(
         'LevitScope($name): "$keyString" is already registered as an alias.',
       );
     }
-    if (!isFactory &&
-        _registry.containsKey(key) &&
-        _registry[key]!.isInstantiated) {
+    if (!isFactory && existing != null && existing.isInstantiated) {
       return () => findAsync<S>(tag: tag);
     }
 
@@ -630,130 +618,120 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     String source, {
     Object? tag,
   }) {
-    if (_registry.containsKey(key)) {
-      if (info.isLazy || info.isFactory) {}
-    }
-
     _registry[key] = info;
 
     // Tag-less bindings are mirrored in type registries for O(1) lookups.
     if (tag == null) {
       _typeRegistry[S] = info;
-      _typeResolutionCacheStorage?.remove(S);
-      _instanceCache.remove(S);
+      final instance = info.instance;
+      if (instance != null && !info.isFactory) {
+        _instanceCache[S] = instance;
+      } else {
+        _instanceCache.remove(S);
+      }
     }
 
-    _resolutionCacheStorage?.remove(key);
-
     _notifyRegister(keyString, info, source);
+  }
+
+  @pragma('vm:prefer-inline')
+  Object? _lookupSync<S>(Object? tag) {
+    if (tag == null) {
+      LevitScope? scope = this;
+      while (scope != null) {
+        scope._ensureUsable();
+        final cached = scope._instanceCache[S];
+        if (cached != null) return cached;
+
+        final info = scope._typeRegistry[S];
+        if (info != null) {
+          final instance = info.instance;
+          if (instance != null && !info.isFactory) {
+            scope._instanceCache[S] = instance;
+            return instance;
+          }
+          final result = scope._findLocal<S>(
+            info as LevitDependency<S>,
+            _LevitScopeKey.of<S>().debugString,
+            null,
+          );
+          if (!info.isFactory && info.instance != null) {
+            scope._instanceCache[S] = info.instance;
+          }
+          return result;
+        }
+
+        final aliases = scope._aliasStorage;
+        if (aliases != null && aliases.isNotEmpty) {
+          final aliasKey = _LevitScopeKey.of<S>();
+          final canonicalKey = aliases[aliasKey];
+          if (canonicalKey != null) {
+            final result = scope._findAliasLocal<S>(
+              aliasKey: aliasKey,
+              canonicalKey: canonicalKey,
+            );
+            scope._instanceCache[S] = result;
+            return result;
+          }
+        }
+
+        scope = scope._parentScope;
+      }
+      return _notFound;
+    }
+
+    // Tagged lookups use composite key registries and defer debugString until needed.
+    final key = _getKey<S>(tag);
+    LevitScope? scope = this;
+    while (scope != null) {
+      scope._ensureUsable();
+      final info = scope._registry[key];
+      if (info != null) {
+        final instance = info.instance;
+        if (instance != null && !info.isFactory) {
+          return instance;
+        }
+        return scope._findLocal<S>(
+          info as LevitDependency<S>,
+          key.debugString,
+          tag,
+        );
+      }
+
+      final aliases = scope._aliasStorage;
+      if (aliases != null && aliases.isNotEmpty) {
+        final canonicalKey = aliases[key];
+        if (canonicalKey != null) {
+          return scope._findAliasLocal<S>(
+            aliasKey: key,
+            canonicalKey: canonicalKey,
+          );
+        }
+      }
+
+      scope = scope._parentScope;
+    }
+    return _notFound;
   }
 
   /// Finds and returns a registered instance of type [S].
   ///
   /// This method performs a hierarchical lookup:
   /// 1.  **Local Check**: Checks the current scope.
-  /// 2.  **Parent Check**: Recursively checks parent scopes.
+  /// 2.  **Parent Check**: Walks ancestor scopes iteratively.
   ///
   /// If the dependency is found but not yet instantiated (lazy), it will be created.
   ///
   /// Throws an [Exception] if [S] is not registered in this scope or any ancestor.
   S find<S>({Object? tag}) {
-    _ensureUsable();
-    // Tag-less singleton lookups use a direct instance cache.
-    if (tag == null) {
-      final cached = _instanceCache[S];
-      if (cached != null) {
-        return cached as S;
-      }
-
-      // Type registry is the primary lookup path for untagged dependencies.
-      final info = _typeRegistry[S];
-      if (info != null) {
-        // Reuse existing singleton and seed instance cache.
-        final instance = info.instance;
-        if (instance != null && !info.isFactory) {
-          _instanceCache[S] = instance;
-          return instance as S;
-        }
-        // Lazy registrations instantiate on first resolve.
-        final result = _findLocal<S>(
-          info as LevitDependency<S>,
-          _LevitScopeKey.of<S>().debugString,
-          null,
-        );
-        // Factories must never be cached.
-        if (!info.isFactory && info.instance != null) {
-          _instanceCache[S] = info.instance;
-        }
-        return result;
-      }
-
-      final aliasKey = _LevitScopeKey.of<S>();
-      final canonicalKey = _aliases[aliasKey];
-      if (canonicalKey != null) {
-        final result = _findAliasLocal<S>(
-          aliasKey: aliasKey,
-          canonicalKey: canonicalKey,
-        );
-        _instanceCache[S] = result;
-        return result;
-      }
-
-      // Parent resolution cache avoids repeated ancestor traversal.
-      final cachedScope = _typeResolutionCache[S];
-      if (cachedScope != null) {
-        if (_isAncestorScope(cachedScope) && cachedScope.isRegistered<S>()) {
-          return cachedScope.find<S>();
-        }
-        _typeResolutionCacheStorage?.remove(S);
-      }
-
-      // Parent fallback preserves scope hierarchy resolution.
-      if (_parentScope != null) {
-        final instance = _parentScope.find<S>();
-        _typeResolutionCache[S] = _parentScope;
-        return instance;
-      }
-
-      throw Exception(
-        'LevitScope($name): Type "$S" is not registered.\n'
-        'Not found in scope or any parent.',
-      );
-    }
-
-    // Tagged lookups use composite key registries.
-    final key = _getKey<S>(tag);
-    final keyString = key.debugString;
-
-    final info = _registry[key];
-    if (info != null) {
-      return _findLocal<S>(info as LevitDependency<S>, keyString, tag);
-    }
-
-    final canonicalKey = _aliases[key];
-    if (canonicalKey != null) {
-      return _findAliasLocal<S>(aliasKey: key, canonicalKey: canonicalKey);
-    }
-
-    // Reuse cached ancestor that previously resolved this key.
-    final cachedScope = _readCachedScope(key);
-    if (cachedScope != null) {
-      if (cachedScope.isRegistered<S>(tag: tag)) {
-        return cachedScope.find<S>(tag: tag);
-      }
-      _resolutionCacheStorage?.remove(key);
-    }
-
-    // Fallback to parent scope chain.
-    if (_parentScope != null) {
-      final instance = _parentScope.find<S>(tag: tag);
-      _cacheScope(key, _parentScope);
-      return instance;
-    }
-
+    final result = _lookupSync<S>(tag);
+    if (!identical(result, _notFound)) return result as S;
     throw Exception(
-      'LevitScope($name): Type "$S" with tag "$tag" is not registered.\n'
-      'Not found in scope or any parent.',
+      tag == null
+          ? 'LevitScope($name): Type "$S" is not registered.\n'
+                'Not found in scope or any parent.'
+          : 'LevitScope($name): Type "$S" with tag "$tag" is not registered.\n'
+                'Not found in scope or any parent.',
     );
   }
 
@@ -762,18 +740,42 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   /// Mirrors the behavior of [find] but returns `null` instead of throwing an exception
   /// if the dependency is missing.
   S? findOrNull<S>({Object? tag}) {
-    _ensureUsable();
+    final result = _lookupSync<S>(tag);
+    return identical(result, _notFound) ? null : result as S?;
+  }
+
+  Future<Object?> _lookupAsync<S>(Object? tag) async {
     final key = _getKey<S>(tag);
-    if (_registry.containsKey(key) || _aliases.containsKey(key)) {
-      return find<S>(tag: tag);
+    LevitScope? scope = this;
+    while (scope != null) {
+      scope._ensureUsable();
+      final info = scope._registry[key];
+      if (info != null) {
+        if (info.isInstantiated && !info.isFactory) {
+          return info.instance;
+        }
+        return scope._findLocalAsync<S>(
+          info as LevitDependency<S>,
+          key,
+          key.debugString,
+          tag,
+        );
+      }
+
+      final aliases = scope._aliasStorage;
+      if (aliases != null && aliases.isNotEmpty) {
+        final canonicalKey = aliases[key];
+        if (canonicalKey != null) {
+          return scope._findAliasLocalAsync<S>(
+            aliasKey: key,
+            canonicalKey: canonicalKey,
+          );
+        }
+      }
+
+      scope = scope._parentScope;
     }
-    final result = _parentScope?.findOrNull<S>(tag: tag);
-    if (result == null) {
-      _resolutionCacheStorage?.remove(key);
-    } else {
-      _cacheScope(key, _parentScope!);
-    }
-    return result;
+    return _notFound;
   }
 
   /// Finds and returns an asynchronously registered instance of type [S].
@@ -782,40 +784,8 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   ///
   /// Throws an [Exception] if [S] is not registered.
   Future<S> findAsync<S>({Object? tag}) async {
-    _ensureUsable();
-    final key = _getKey<S>(tag);
-    final keyString = key.debugString;
-
-    // Async lookup follows the same local/cache/parent search order.
-    final info = _registry[key];
-    if (info != null) {
-      return _findLocalAsync<S>(
-        info as LevitDependency<S>,
-        key,
-        keyString,
-        tag,
-      );
-    }
-
-    final canonicalKey = _aliases[key];
-    if (canonicalKey != null) {
-      return _findAliasLocalAsync<S>(aliasKey: key, canonicalKey: canonicalKey);
-    }
-
-    final cachedScope = _readCachedScope(key);
-    if (cachedScope != null) {
-      if (cachedScope.isRegistered<S>(tag: tag)) {
-        return await cachedScope.findAsync<S>(tag: tag);
-      }
-      _resolutionCacheStorage?.remove(key);
-    }
-
-    if (_parentScope != null) {
-      final instance = await _parentScope.findAsync<S>(tag: tag);
-      _cacheScope(key, _parentScope);
-      return instance;
-    }
-
+    final result = await _lookupAsync<S>(tag);
+    if (!identical(result, _notFound)) return result as S;
     throw Exception(
       'LevitScope($name): Type "$S"${tag != null ? ' with tag "$tag"' : ''} is not registered.\n'
       'Not found in scope or any parent.',
@@ -824,55 +794,8 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
 
   /// Asynchronously finds an instance of type [S], or returns `null` if not found.
   Future<S?> findOrNullAsync<S>({Object? tag}) async {
-    _ensureUsable();
-    final key = _getKey<S>(tag);
-    if (_registry.containsKey(key) || _aliases.containsKey(key)) {
-      return await findAsync<S>(tag: tag);
-    }
-    final result = await _parentScope?.findOrNullAsync<S>(tag: tag);
-    if (result == null) {
-      _resolutionCacheStorage?.remove(key);
-    } else {
-      _cacheScope(key, _parentScope!);
-    }
-    return result;
-  }
-
-  LevitScope? _readCachedScope(_LevitScopeKey key) {
-    final cachedScope = _resolutionCacheStorage?[key];
-    if (cachedScope == null) return null;
-
-    // Tagged lookup caches are only valid when they point to an ancestor.
-    if (!_isAncestorScope(cachedScope)) {
-      _resolutionCacheStorage?.remove(key);
-      return null;
-    }
-
-    return cachedScope;
-  }
-
-  bool _isAncestorScope(LevitScope candidate) {
-    LevitScope? current = _parentScope;
-    while (current != null) {
-      if (identical(current, candidate)) {
-        return true;
-      }
-      current = current._parentScope;
-    }
-    return false;
-  }
-
-  void _cacheScope(_LevitScopeKey key, LevitScope scope) {
-    if (_resolutionCache.containsKey(key)) {
-      _resolutionCache[key] = scope;
-    } else {
-      // Bound cache growth for high-cardinality tag usage.
-      if (_resolutionCache.length > 500) {
-        // Full purge is safe; it only affects lookup speed until cache warms.
-        _resolutionCache.clear();
-      }
-      _resolutionCache[key] = scope;
-    }
+    final result = await _lookupAsync<S>(tag);
+    return identical(result, _notFound) ? null : result as S?;
   }
 
   // In-flight async singleton initializations keyed by dependency key.
@@ -887,7 +810,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     while (true) {
       final pending = <Future<void>>[
         ..._pendingInitializations,
-        for (final info in {..._registry.values, ..._retiring.values})
+        for (final info in {..._registry.values, ...?_retiringStorage?.values})
           ...info._pendingFactories,
       ];
       if (pending.isEmpty) return;
@@ -925,7 +848,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
       ),
       pendingInitializations: _pendingInitializations.length,
       registrations: [
-        for (final entry in {..._registry, ..._retiring}.entries)
+        for (final entry in {..._registry, ...?_retiringStorage}.entries)
           LevitRegistrationDescription(
             key: keyId(entry.key),
             type: entry.key.type.toString(),
@@ -1221,14 +1144,23 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
 
   /// Returns `true` if type [S] is registered in this scope (parent scopes are ignored).
   bool isRegisteredLocally<S>({Object? tag}) {
+    if (tag == null) {
+      if (_typeRegistry.containsKey(S)) return true;
+      final aliases = _aliasStorage;
+      return aliases != null && aliases.containsKey(_LevitScopeKey.of<S>());
+    }
     final key = _getKey<S>(tag);
-    return _registry.containsKey(key) || _aliases.containsKey(key);
+    return _registry.containsKey(key) ||
+        (_aliasStorage?.containsKey(key) ?? false);
   }
 
   /// Returns `true` if type [S] is registered in this scope or any ancestor.
   bool isRegistered<S>({Object? tag}) {
-    if (isRegisteredLocally<S>(tag: tag)) return true;
-    if (_parentScope != null) return _parentScope.isRegistered<S>(tag: tag);
+    LevitScope? scope = this;
+    while (scope != null) {
+      if (scope.isRegisteredLocally<S>(tag: tag)) return true;
+      scope = scope._parentScope;
+    }
     return false;
   }
 
@@ -1237,15 +1169,18 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   /// This checks if the lazy builder has executed or if the instance was put directly.
   bool isInstantiated<S>({Object? tag}) {
     final key = _getKey<S>(tag);
-    final local = _registry[key];
-    if (local != null) {
-      return local.isInstantiated;
+    LevitScope? scope = this;
+    while (scope != null) {
+      final local = scope._registry[key];
+      if (local != null) {
+        return local.isInstantiated;
+      }
+      final canonicalKey = scope._aliasStorage?[key];
+      if (canonicalKey != null) {
+        return scope._registry[canonicalKey]?.isInstantiated ?? false;
+      }
+      scope = scope._parentScope;
     }
-    final canonicalKey = _aliases[key];
-    if (canonicalKey != null) {
-      return _registry[canonicalKey]?.isInstantiated ?? false;
-    }
-    if (_parentScope != null) return _parentScope.isInstantiated<S>(tag: tag);
     return false;
   }
 
@@ -1378,9 +1313,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     if (force) {
       // Force reset also drops all lookup caches.
       _typeRegistry.clear();
-      _typeResolutionCacheStorage?.clear();
       _instanceCache.clear();
-      _resolutionCacheStorage?.clear();
     }
 
     await _disposeRegistrations(
@@ -1438,8 +1371,9 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     }
     // Registrations leave lookup before their work drains. Their execution
     // boundaries must still reject a task awaiting its own closing scope.
-    if (_retiring.isNotEmpty) {
-      for (final info in _retiring.values) {
+    final retiring = _retiringStorage;
+    if (retiring != null && retiring.isNotEmpty) {
+      for (final info in retiring.values) {
         _assertResourcesCanDispose(info);
       }
     }
@@ -1621,13 +1555,13 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     _aliasesByCanonical?.clear();
     _pendingInit?.clear();
     _typeRegistry.clear();
-    _typeResolutionCacheStorage?.clear();
     _instanceCache.clear();
-    _resolutionCacheStorage?.clear();
 
-    // Removing each canonical binding above moves it into _retiring. That
-    // ordered registry already contains earlier releases and every entry here.
-    final registrations = _retiring.values.toList(growable: false);
+    // Removing each canonical binding above moves it into _retiringStorage.
+    // That ordered registry already contains earlier releases and every entry here.
+    final registrations =
+        _retiringStorage?.values.toList(growable: false) ??
+        const <LevitDependency>[];
     // No cancellation/drain phase is needed when there is no owned work. Check
     // after middleware callbacks: they may have adopted initialization cleanup.
     if (_pendingInitializations.isEmpty &&
@@ -1701,7 +1635,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   void _finishRegistration(LevitDependency info) {
     info._factoryStorage?.clear();
     info._removalComplete?.complete();
-    _retiring.remove(info._retiringKey);
+    _retiringStorage?.remove(info._retiringKey);
     _notifyScopeProgress();
   }
 
@@ -1810,7 +1744,7 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
     if (removed != null) {
       removed._removed = true;
       removed._retiringKey = key;
-      _retiring[key] = removed;
+      (_retiringStorage ??= {})[key] = removed;
     }
     _pendingInit?.remove(key);
     _invalidateLookupCaches(key);
@@ -1837,10 +1771,8 @@ class LevitScope implements LevitDisposable, LevitExecutionBoundary {
   }
 
   void _invalidateLookupCaches(_LevitScopeKey key) {
-    _resolutionCacheStorage?.remove(key);
     if (key.tag == null) {
       _typeRegistry.remove(key.type);
-      _typeResolutionCacheStorage?.remove(key.type);
       _instanceCache.remove(key.type);
     }
   }

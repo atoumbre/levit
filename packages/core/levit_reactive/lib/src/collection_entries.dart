@@ -6,7 +6,7 @@ typedef _Element = ({bool exists, Object? value});
 
 bool get _capturingCollection =>
     _LevitReactiveCore.proxy != null ||
-    (_LevitReactiveCore._asyncZoneDepth > 0 &&
+    (_LevitReactiveCore._asyncTrackerDepth > 0 &&
         Zone.current[_LevitReactiveCore.asyncComputedTrackerZoneKey]
             is LevitReactiveObserver);
 
@@ -60,23 +60,28 @@ class _CollectionIterable<E> extends Iterable<E> {
 }
 
 mixin _PreciseCollection<C, V> on LxVar<C> {
-  Map<_ReadKind, Map<Object?, _EntryChannel>>? _channels;
+  Map<Object?, _EntryChannel>? _elementChannels;
+  Map<Object?, _EntryChannel>? _membershipChannels;
+  _EntryChannel? _lengthChannel;
+  _EntryChannel? _emptyChannel;
+  _EntryChannel? _keysChannel;
   _EntryChannel? _soleChannel;
+  int _channelCount = 0;
   // Immutable across a notification. Subscription changes invalidate the cache.
   List<_EntryChannel>? _channelSnapshot;
+  List<_EntryChannel>? _pendingRetireChecks;
   Set<Future<void>>? _retirements;
   List<AsyncError>? _retirementErrors;
 
-  bool get _hasChannels => _soleChannel != null || _channels != null;
+  bool get _hasChannels => _channelCount > 0;
 
   // Keep physical addresses distinct across backing-map replacements. The
   // equality index accelerates a single write to an ordinary Dart map.
-  late final _equalAddresses = <_ReadKind, Map<Object?, List<_EntryChannel>>>{};
+  Map<Object?, List<_EntryChannel>>? _equalElementAddresses;
+  Map<Object?, List<_EntryChannel>>? _equalMembershipAddresses;
 
   /// Number of live observation channels, for diagnostics and leak tests.
-  int get observedChannelCount => _soleChannel != null
-      ? 1
-      : (_channels?.values.fold<int>(0, (n, group) => n + group.length) ?? 0);
+  int get observedChannelCount => _channelCount;
 
   bool _forceRefresh = false;
   bool Function(Object?)? _written;
@@ -85,11 +90,13 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
   (int, int)? _listRange;
   bool get _standardAddresses;
   _Element _element(Object? address);
+  bool _existsAt(Object? address);
+  Object? _valueAt(Object? address);
   int get _count;
 
   Object? _sample(_ReadKind kind, Object? address) => switch (kind) {
     _ReadKind.element => _element(address),
-    _ReadKind.membership => _element(address).exists,
+    _ReadKind.membership => _existsAt(address),
     _ReadKind.length => _count,
     _ReadKind.empty => _count == 0,
     _ReadKind.keys => (this as LxMap)._orderedKeys.toList(growable: false),
@@ -102,7 +109,13 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
           ? sole
           : null;
     }
-    return _channels?[kind]?[address];
+    return switch (kind) {
+      _ReadKind.element => _elementChannels?[address],
+      _ReadKind.membership => _membershipChannels?[address],
+      _ReadKind.length => _lengthChannel,
+      _ReadKind.empty => _emptyChannel,
+      _ReadKind.keys => _keysChannel,
+    };
   }
 
   _EntryChannel _channel(_ReadKind kind, Object? address) =>
@@ -118,28 +131,68 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
       _soleChannel = channel;
     } else {
       if (_soleChannel case final sole?) {
-        _channels = {};
-        _index(sole);
         _soleChannel = null;
+        _index(sole);
       }
       _index(channel);
     }
+    _channelCount++;
     // Captures reconcile after the read. A discarded capture needs no
     // permanent slot, even if it read a missing address.
-    scheduleMicrotask(channel.retireIfUnused);
+    _scheduleRetireCheck(channel);
     return channel;
   }
 
-  bool _needsEqualityIndex(_EntryChannel c) =>
-      this is LxMap &&
-      _standardAddresses &&
-      (c.kind == _ReadKind.element || c.kind == _ReadKind.membership);
+  void _scheduleRetireCheck(_EntryChannel channel) {
+    final pending = _pendingRetireChecks;
+    if (pending != null) {
+      pending.add(channel);
+      return;
+    }
+    _pendingRetireChecks = <_EntryChannel>[channel];
+    scheduleMicrotask(_flushRetireChecks);
+  }
+
+  void _flushRetireChecks() {
+    final pending = _pendingRetireChecks;
+    _pendingRetireChecks = null;
+    if (pending == null) return;
+    for (var i = 0; i < pending.length; i++) {
+      pending[i].retireIfUnused();
+    }
+  }
 
   void _index(_EntryChannel c) {
     _channelSnapshot = null;
-    (_channels![c.kind] ??= Map.identity())[c.address] = c;
-    if (_needsEqualityIndex(c)) {
-      ((_equalAddresses[c.kind] ??= {})[c.address] ??= []).add(c);
+    switch (c.kind) {
+      case _ReadKind.element:
+        (_elementChannels ??= Map.identity())[c.address] = c;
+        if (this is LxMap && _standardAddresses) {
+          ((_equalElementAddresses ??= {})[c.address] ??= []).add(c);
+        }
+      case _ReadKind.membership:
+        (_membershipChannels ??= Map.identity())[c.address] = c;
+        if (this is LxMap && _standardAddresses) {
+          ((_equalMembershipAddresses ??= {})[c.address] ??= []).add(c);
+        }
+      case _ReadKind.length:
+        _lengthChannel = c;
+      case _ReadKind.empty:
+        _emptyChannel = c;
+      case _ReadKind.keys:
+        _keysChannel = c;
+    }
+  }
+
+  void _removeEqualAddress(
+    Map<Object?, List<_EntryChannel>>? buckets,
+    _EntryChannel c,
+  ) {
+    if (buckets == null) return;
+    final bucket = buckets[c.address];
+    if (bucket != null) {
+      bucket.remove(c);
+      if (bucket.isEmpty) buckets.remove(c.address);
     }
   }
 
@@ -147,19 +200,44 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
     _channelSnapshot = null;
     if (identical(_soleChannel, c)) {
       _soleChannel = null;
+      _channelCount--;
       return;
     }
-    final slots = _channels?[c.kind];
-    if (slots == null) return;
-    slots.remove(c.address);
-    final buckets = this is LxMap ? _equalAddresses[c.kind] : null;
-    if (buckets != null) {
-      final bucket = buckets[c.address];
-      bucket?.remove(c);
-      if (bucket != null && bucket.isEmpty) buckets.remove(c.address);
+    var removed = false;
+    switch (c.kind) {
+      case _ReadKind.element:
+        final map = _elementChannels;
+        if (map != null && identical(map[c.address], c)) {
+          map.remove(c.address);
+          removed = true;
+          if (map.isEmpty) _elementChannels = null;
+          _removeEqualAddress(_equalElementAddresses, c);
+        }
+      case _ReadKind.membership:
+        final map = _membershipChannels;
+        if (map != null && identical(map[c.address], c)) {
+          map.remove(c.address);
+          removed = true;
+          if (map.isEmpty) _membershipChannels = null;
+          _removeEqualAddress(_equalMembershipAddresses, c);
+        }
+      case _ReadKind.length:
+        if (identical(_lengthChannel, c)) {
+          _lengthChannel = null;
+          removed = true;
+        }
+      case _ReadKind.empty:
+        if (identical(_emptyChannel, c)) {
+          _emptyChannel = null;
+          removed = true;
+        }
+      case _ReadKind.keys:
+        if (identical(_keysChannel, c)) {
+          _keysChannel = null;
+          removed = true;
+        }
     }
-    if (slots.isEmpty) _channels!.remove(c.kind);
-    if (_channels!.isEmpty) _channels = null;
+    if (removed) _channelCount--;
   }
 
   void _retire(_EntryChannel channel) {
@@ -217,7 +295,10 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
       super.refresh();
       return;
     }
-    final previous = (_singleWrite, _oneAddress, _written, _listRange);
+    final prevSingle = _singleWrite;
+    final prevAddress = _oneAddress;
+    final prevWritten = _written;
+    final prevRange = _listRange;
     _singleWrite = single;
     _oneAddress = address;
     _written = written;
@@ -225,10 +306,10 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
     try {
       super.refresh();
     } finally {
-      _singleWrite = previous.$1;
-      _oneAddress = previous.$2;
-      _written = previous.$3;
-      _listRange = previous.$4;
+      _singleWrite = prevSingle;
+      _oneAddress = prevAddress;
+      _written = prevWritten;
+      _listRange = prevRange;
     }
   }
 
@@ -243,14 +324,184 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
     }
   }
 
+  void _publishChannel(
+    _EntryChannel channel, {
+    required bool single,
+    required Object? address,
+    required bool Function(Object?)? written,
+    required bool force,
+    required (int, int)? range,
+  }) {
+    final kind = channel.kind;
+    final key = channel.address;
+    if (range != null &&
+        !force &&
+        (kind == _ReadKind.element || kind == _ReadKind.membership)) {
+      final index = key as int;
+      if (index < range.$1 || index >= range.$2) return;
+      if (kind == _ReadKind.element) {
+        channel.publish(_element(index));
+        return;
+      }
+    }
+    if (single &&
+        kind == _ReadKind.keys &&
+        !force &&
+        (channel._value as List).length == _count) {
+      return;
+    }
+    final next = _sample(kind, key);
+    final previous = channel._value;
+    final same = kind == _ReadKind.keys
+        ? _sameOrder(previous as List, next as List)
+        : kind == _ReadKind.element
+        ? (previous as _Element).exists == (next as _Element).exists &&
+              identical(previous.value, next.value)
+        : previous == next;
+    if (!same ||
+        force ||
+        (kind == _ReadKind.element &&
+            (single &&
+                    (_standardAddresses
+                        ? address == key
+                        : identical(address, key)) ||
+                (written?.call(key) ?? false)))) {
+      channel.publish(next);
+    }
+  }
+
+  List<_EntryChannel> _buildChannelSnapshot() {
+    final list = <_EntryChannel>[];
+    if (_elementChannels case final map?) list.addAll(map.values);
+    if (_membershipChannels case final map?) list.addAll(map.values);
+    if (_lengthChannel case final ch?) list.add(ch);
+    if (_emptyChannel case final ch?) list.add(ch);
+    if (_keysChannel case final ch?) list.add(ch);
+    return list;
+  }
+
+  void _publishAllChannels({
+    required _EntryChannel? sole,
+    required bool single,
+    required Object? address,
+    required bool Function(Object?)? written,
+    required bool force,
+    required (int, int)? range,
+  }) {
+    if (sole != null) {
+      _publishChannel(
+        sole,
+        single: single,
+        address: address,
+        written: written,
+        force: force,
+        range: range,
+      );
+    } else if (!single || !_standardAddresses) {
+      final snapshot = _channelSnapshot ??= _buildChannelSnapshot();
+      for (var i = 0; i < snapshot.length; i++) {
+        _publishChannel(
+          snapshot[i],
+          single: single,
+          address: address,
+          written: written,
+          force: force,
+          range: range,
+        );
+      }
+    } else {
+      if (this is LxMap) {
+        final elMatches = _equalElementAddresses?[address];
+        if (elMatches != null) {
+          for (var i = 0; i < elMatches.length; i++) {
+            _publishChannel(
+              elMatches[i],
+              single: single,
+              address: address,
+              written: written,
+              force: force,
+              range: range,
+            );
+          }
+        }
+        final memMatches = _equalMembershipAddresses?[address];
+        if (memMatches != null) {
+          for (var i = 0; i < memMatches.length; i++) {
+            _publishChannel(
+              memMatches[i],
+              single: single,
+              address: address,
+              written: written,
+              force: force,
+              range: range,
+            );
+          }
+        }
+      } else {
+        final elTarget = _elementChannels?[address];
+        if (elTarget != null) {
+          _publishChannel(
+            elTarget,
+            single: single,
+            address: address,
+            written: written,
+            force: force,
+            range: range,
+          );
+        }
+        final memTarget = _membershipChannels?[address];
+        if (memTarget != null) {
+          _publishChannel(
+            memTarget,
+            single: single,
+            address: address,
+            written: written,
+            force: force,
+            range: range,
+          );
+        }
+      }
+      if (_lengthChannel case final ch?) {
+        _publishChannel(
+          ch,
+          single: single,
+          address: address,
+          written: written,
+          force: force,
+          range: range,
+        );
+      }
+      if (_emptyChannel case final ch?) {
+        _publishChannel(
+          ch,
+          single: single,
+          address: address,
+          written: written,
+          force: force,
+          range: range,
+        );
+      }
+      if (_keysChannel case final ch?) {
+        _publishChannel(
+          ch,
+          single: single,
+          address: address,
+          written: written,
+          force: force,
+          range: range,
+        );
+      }
+    }
+    super._publishMutation();
+  }
+
   @override
   void _publishMutation() {
-    final channels = _channels;
-    final sole = _soleChannel;
-    if (channels == null && sole == null) {
+    if (!_hasChannels) {
       super._publishMutation();
       return;
     }
+    final sole = _soleChannel;
     final single = _singleWrite;
     final address = _oneAddress;
     final written = _written;
@@ -262,77 +513,37 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
     _written = null;
     _forceRefresh = false;
     try {
-      Lx.batch(() {
-        void publish(_ReadKind kind, Object? key, _EntryChannel channel) {
-          if (range != null &&
-              !force &&
-              (kind == _ReadKind.element || kind == _ReadKind.membership)) {
-            final index = key as int;
-            if (index < range.$1 || index >= range.$2) return;
-            if (kind == _ReadKind.element) {
-              channel.publish(_element(index));
-              return;
-            }
-          }
-          if (single &&
-              kind == _ReadKind.keys &&
-              !force &&
-              (channel._value as List).length == _count) {
-            return;
-          }
-          final next = _sample(kind, key);
-          final previous = channel._value;
-          final same = kind == _ReadKind.keys
-              ? _sameOrder(previous as List, next as List)
-              : kind == _ReadKind.element
-              ? (previous as _Element).exists == (next as _Element).exists &&
-                    identical(previous.value, next.value)
-              : previous == next;
-          if (!same ||
-              force ||
-              (kind == _ReadKind.element &&
-                  (single &&
-                          (_standardAddresses
-                              ? address == key
-                              : identical(address, key)) ||
-                      (written?.call(key) ?? false)))) {
-            channel.publish(next);
+      if (!LevitReactiveMiddleware._hasBatchMiddlewares) {
+        _LevitReactiveCore._batchDepth++;
+        _LevitReactiveCore._updateFastNotify();
+        try {
+          _publishAllChannels(
+            sole: sole,
+            single: single,
+            address: address,
+            written: written,
+            force: force,
+            range: range,
+          );
+        } finally {
+          _LevitReactiveCore._batchDepth--;
+          _LevitReactiveCore._updateFastNotify();
+          if (_LevitReactiveCore._batchDepth == 0) {
+            _LevitReactiveCore._flushGlobalBatch();
           }
         }
-
-        if (sole != null) {
-          publish(sole.kind, sole.address, sole);
-        } else if (!single || !_standardAddresses) {
-          final snapshot = _channelSnapshot ??= [
-            for (final group in channels!.values) ...group.values,
-          ];
-          for (final channel in snapshot) {
-            publish(channel.kind, channel.address, channel);
-          }
-        } else {
-          for (final group in channels!.entries.toList()) {
-            final kind = group.key;
-            if (kind == _ReadKind.element || kind == _ReadKind.membership) {
-              if (this is LxMap) {
-                final matches = _equalAddresses[kind]?[address];
-                if (matches != null) {
-                  for (final target in matches) {
-                    publish(kind, address, target);
-                  }
-                }
-              } else {
-                final target = group.value[address];
-                if (target != null) publish(kind, address, target);
-              }
-            } else {
-              for (final item in group.value.entries.toList()) {
-                publish(kind, item.key, item.value);
-              }
-            }
-          }
-        }
-        super._publishMutation();
-      });
+      } else {
+        Lx.batch(() {
+          _publishAllChannels(
+            sole: sole,
+            single: single,
+            address: address,
+            written: written,
+            force: force,
+            range: range,
+          );
+        });
+      }
     } finally {
       _singleWrite = single;
       _written = written;
@@ -378,18 +589,34 @@ mixin _PreciseCollection<C, V> on LxVar<C> {
 
   @override
   Future<void> _cleanupBinding() async {
-    final slots = _channels;
     final sole = _soleChannel;
+    final elements = _elementChannels;
+    final memberships = _membershipChannels;
+    final lengthCh = _lengthChannel;
+    final emptyCh = _emptyChannel;
+    final keysCh = _keysChannel;
     _soleChannel = null;
-    _channels = null;
+    _elementChannels = null;
+    _membershipChannels = null;
+    _lengthChannel = null;
+    _emptyChannel = null;
+    _keysChannel = null;
+    _channelCount = 0;
     _channelSnapshot = null;
-    if (slots != null) _equalAddresses.clear();
-    final pending = [
-      super._cleanupBinding(),
+    _pendingRetireChecks = null;
+    _equalElementAddresses = null;
+    _equalMembershipAddresses = null;
+    final bindingCleanup = super._cleanupBinding();
+    final pending = <Future<void>>[
+      if (bindingCleanup is Future<void>) bindingCleanup,
       if (sole != null) sole.close(),
-      if (slots != null)
-        for (final group in slots.values)
-          for (final channel in group.values) channel.close(),
+      if (elements != null)
+        for (final channel in elements.values) channel.close(),
+      if (memberships != null)
+        for (final channel in memberships.values) channel.close(),
+      if (lengthCh != null) lengthCh.close(),
+      if (emptyCh != null) emptyCh.close(),
+      if (keysCh != null) keysCh.close(),
     ];
     await Future.wait([
       ...?_retirements,
@@ -419,7 +646,7 @@ abstract base class _BorrowedEntry<V> implements LxReadable<V?> {
   /// distinguishing an absent entry from an entry storing `null`.
   bool get exists {
     _source._observe(_ReadKind.membership, _address);
-    return _source._element(_address).exists;
+    return _source._existsAt(_address);
   }
 
   /// The current value at this entry's key or index, or `null` when absent.
@@ -430,7 +657,7 @@ abstract base class _BorrowedEntry<V> implements LxReadable<V?> {
   V? get value {
     if (isClosed) throw StateError('Collection is closed.');
     _source._observe(_ReadKind.element, _address);
-    return _source._element(_address).value as V?;
+    return _source._valueAt(_address) as V?;
   }
 
   @override

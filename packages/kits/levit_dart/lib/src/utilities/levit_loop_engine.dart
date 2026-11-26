@@ -78,10 +78,8 @@ class LevitLoopEngine
     Duration? delay,
     bool permanent = false,
   }) {
-    final service = _LoopService(
-      () => runZoned(body, zoneValues: {_executionZone: this}),
-      delay: delay,
-    );
+    final zone = Zone.current.fork(zoneValues: {_executionZone: this});
+    final service = _LoopService(() => zone.run(body), delay: delay);
     registerService(id, service, permanent: permanent);
     service.start();
   }

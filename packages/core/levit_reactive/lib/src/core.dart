@@ -29,7 +29,7 @@ class _LevitReactiveCore {
     _proxy = value;
     _lastReportedObserver = null;
     _lastReportedReactive = null;
-    _updateFastPath();
+    _updateFastRead();
   }
 
   // Reuse the backing slots across batches. Drop references as they are
@@ -56,7 +56,8 @@ class _LevitReactiveCore {
   static int _batchDepth = 0;
 
   /// Whether a batch operation is in progress.
-  static bool get isBatching => _batchDepth > 0 || _currentBatch != null;
+  static bool get isBatching =>
+      _batchDepth > 0 || (_asyncBatchDepth > 0 && _currentBatch != null);
 
   static _BatchContext? get _currentBatch {
     var context = Zone.current[_batchZoneKey] as _BatchContext?;
@@ -90,21 +91,22 @@ class _LevitReactiveCore {
     }
   }
 
-  static bool _fastPath = true;
+  static bool _fastRead = true;
+  static bool _fastNotify = true;
 
-  static void _updateFastPath() {
-    _fastPath =
-        _proxy == null &&
-        _asyncZoneDepth == 0 &&
-        _batchDepth == 0 &&
-        !_isPropagating;
+  static void _updateFastRead() {
+    _fastRead = _proxy == null && _asyncTrackerDepth == 0;
+  }
+
+  static void _updateFastNotify() {
+    _fastNotify = _asyncBatchDepth == 0 && _batchDepth == 0 && !_isPropagating;
   }
 
   static void _flushGlobalBatch() {
     if (_batchCount == 0) return;
 
     _batchDepth++;
-    _updateFastPath();
+    _updateFastNotify();
     try {
       // Process shallower graph nodes first, including nodes appended during
       // flush, so derived values stay glitch-free without duplicate emissions.
@@ -150,7 +152,7 @@ class _LevitReactiveCore {
         _batchedNotifiers = List.filled(16, null);
       }
       _batchDepth--;
-      _updateFastPath();
+      _updateFastNotify();
     }
   }
 
@@ -160,16 +162,27 @@ class _LevitReactiveCore {
   /// Internal zone key for async batching.
   static final Object _batchZoneKey = Object();
 
-  static int _asyncZoneDepth = 0;
+  static int _asyncTrackerDepth = 0;
+  static int _asyncBatchDepth = 0;
 
   static void _enterAsyncScope() {
-    _asyncZoneDepth++;
-    _updateFastPath();
+    _asyncTrackerDepth++;
+    _updateFastRead();
   }
 
   static void _exitAsyncScope() {
-    _asyncZoneDepth--;
-    _updateFastPath();
+    _asyncTrackerDepth--;
+    _updateFastRead();
+  }
+
+  static void _enterAsyncBatch() {
+    _asyncBatchDepth++;
+    _updateFastNotify();
+  }
+
+  static void _exitAsyncBatch() {
+    _asyncBatchDepth--;
+    _updateFastNotify();
   }
 
   /// Context data for the current listener registration operation.
@@ -194,12 +207,12 @@ class _LevitReactiveCore {
   static R batch<R>(R Function() callback) {
     if (!LevitReactiveMiddleware._hasBatchMiddlewares) {
       _batchDepth++;
-      _updateFastPath();
+      _updateFastNotify();
       try {
         return callback();
       } finally {
         _batchDepth--;
-        _updateFastPath();
+        _updateFastNotify();
         if (_batchDepth == 0) {
           _flushGlobalBatch();
         }
@@ -212,13 +225,13 @@ class _LevitReactiveCore {
 
     dynamic coreExecution() {
       _batchDepth++;
-      _updateFastPath();
+      _updateFastNotify();
       try {
         return runZoned(callback, zoneValues: {_batchZoneKey: context});
       } finally {
         context.open = false;
         _batchDepth--;
-        _updateFastPath();
+        _updateFastNotify();
         if (_batchDepth == 0) {
           _flushGlobalBatch();
         }
@@ -239,12 +252,12 @@ class _LevitReactiveCore {
     final context = _BatchContext(_currentBatch, isAsync: true);
     final change = LevitReactiveBatch(context.entries, isAsync: true);
     Future<R> execute() async {
-      _enterAsyncScope();
+      _enterAsyncBatch();
       try {
         return await runZoned(callback, zoneValues: {_batchZoneKey: context});
       } finally {
         context.open = false;
-        _exitAsyncScope();
+        _exitAsyncBatch();
         try {
           final parent = _currentAsyncBatch;
           if (parent != null) {
@@ -252,7 +265,7 @@ class _LevitReactiveCore {
           } else {
             // Enter the ordinary ordered synchronous flush once for the full set.
             _batchDepth++;
-            _updateFastPath();
+            _updateFastNotify();
             try {
               for (final notifier in context.notifiers) {
                 if (!notifier._disposed) {
@@ -261,7 +274,7 @@ class _LevitReactiveCore {
               }
             } finally {
               _batchDepth--;
-              _updateFastPath();
+              _updateFastNotify();
               if (_batchDepth == 0) _flushGlobalBatch();
             }
           }
@@ -479,13 +492,15 @@ class LevitReactiveNotifier {
       return;
     }
 
-    if (_setListeners != null) {
-      if (_setListeners!.remove(listener)) {
+    final listeners = _setListeners;
+    if (listeners != null) {
+      if (listeners.remove(listener)) {
         _setGeneration++;
       }
-      if (_setListeners!.isEmpty) {
+      if (listeners.length == 1) {
+        _singleListener = listeners.first;
         _setListeners = null;
-        _notifySnapshot = null; // Hard clear when empty
+        _notifySnapshot = null;
       }
     }
   }
@@ -495,28 +510,31 @@ class LevitReactiveNotifier {
     if (_disposed) return;
     _version++;
 
-    // Direct-call fast path for the most common single-listener case.
-    if (_singleListener != null &&
-        _setListeners == null &&
-        _LevitReactiveCore._fastPath) {
-      if (LevitReactiveMiddleware._hasErrorMiddlewares) {
-        try {
-          _singleListener!();
-        } catch (e, s) {
-          _LevitReactiveMiddlewareChain.applyOnReactiveError(
-            e,
-            s,
-            this is LxReactive ? this as LxReactive : null,
-          );
-        }
+    // Direct-call fast path for zero-listener and single-listener cases.
+    if (_LevitReactiveCore._fastNotify) {
+      final listener = _singleListener;
+      if (listener == null) {
+        if (_setListeners == null) return;
       } else {
-        _singleListener!();
+        if (LevitReactiveMiddleware._hasErrorMiddlewares) {
+          try {
+            listener();
+          } catch (e, s) {
+            _LevitReactiveMiddlewareChain.applyOnReactiveError(
+              e,
+              s,
+              this is LxReactive ? this as LxReactive : null,
+            );
+          }
+        } else {
+          listener();
+        }
+        return;
       }
-      return;
     }
 
     // Async batch context defers notifications until async boundary exits.
-    if (_LevitReactiveCore._asyncZoneDepth > 0) {
+    if (_LevitReactiveCore._asyncBatchDepth > 0) {
       final asyncBatch = _LevitReactiveCore._currentAsyncBatch;
       if (asyncBatch != null) {
         asyncBatch.notifiers.add(this);
@@ -541,7 +559,7 @@ class LevitReactiveNotifier {
 
     // Start iterative propagation cycle.
     _LevitReactiveCore._isPropagating = true;
-    _LevitReactiveCore._updateFastPath();
+    _LevitReactiveCore._updateFastNotify();
     try {
       _notifyListeners();
 
@@ -578,7 +596,7 @@ class LevitReactiveNotifier {
       }
     } finally {
       _LevitReactiveCore._isPropagating = false;
-      _LevitReactiveCore._updateFastPath();
+      _LevitReactiveCore._updateFastNotify();
       if (_LevitReactiveCore._propagationQueue.isNotEmpty) {
         // Reset pending flags if propagation exits early.
         for (final n in _LevitReactiveCore._propagationQueue) {
@@ -655,6 +673,7 @@ class LevitReactiveNotifier {
     _disposed = true;
     _singleListener = null;
     _setListeners = null;
+    _notifySnapshot = null;
   }
 
   /// Whether the notifier is disposed.
@@ -780,7 +799,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
 
   @override
   T get value {
-    if (_LevitReactiveCore._fastPath) return _value;
+    if (_LevitReactiveCore._fastRead) return _value;
 
     final proxy = _LevitReactiveCore.proxy;
     if (proxy != null) {
@@ -794,7 +813,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
         return resolved.value;
       }
       _reportRead(proxy, resolvedReactive: resolved);
-    } else if (_LevitReactiveCore._asyncZoneDepth > 0) {
+    } else if (_LevitReactiveCore._asyncTrackerDepth > 0) {
       final zoneTracker =
           Zone.current[_LevitReactiveCore.asyncComputedTrackerZoneKey];
       if (zoneTracker is LevitReactiveObserver) {
@@ -820,7 +839,7 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   @pragma('vm:prefer-inline')
   void _notifyListenersOnly() {
     if (_LevitReactiveCore._batchDepth > 0 &&
-        _LevitReactiveCore._asyncZoneDepth == 0) {
+        _LevitReactiveCore._asyncBatchDepth == 0) {
       if (!isDisposed) _LevitReactiveCore._enqueueBatched(this);
       return;
     }
@@ -950,12 +969,46 @@ abstract class LxBase<T> extends LevitReactiveNotifier
 
   Future<void>? _closeFuture;
 
+  /// Closes synchronously when possible, returning `null` if finished or a
+  /// [Future] when asynchronous cleanup is required.
+  FutureOr<void> _closeSyncOrAsync() {
+    if (_closeFuture != null) return _closeFuture!;
+    if (_controller == null &&
+        onCancel == null &&
+        (LevitReactiveMiddleware.bypassMiddleware ||
+            !LevitReactiveMiddleware._hasDisposeMiddlewares)) {
+      super.dispose();
+      final binding = _cleanupBinding();
+      if (binding is! Future) {
+        _checkActive();
+        _closeFuture = Future<void>.value();
+        return null;
+      }
+      final completion = Completer<void>();
+      _closeFuture = completion.future;
+      _checkActive();
+      binding.then<void>(
+        (_) => completion.complete(),
+        onError: (Object e, StackTrace s) {
+          completion.completeError(LxCleanupException([AsyncError(e, s)]), s);
+        },
+      );
+      return _closeFuture!;
+    }
+    return _closeFull();
+  }
+
   /// Stops observation immediately, then drains binding and stream cleanup.
   /// Middleware failures cannot skip cleanup; all failures are reported together
   /// after every cleanup attempt finishes.
   @override
   Future<void> close() {
-    if (_closeFuture != null) return _closeFuture!;
+    final result = _closeSyncOrAsync();
+    if (result is Future<void>) return result;
+    return _closeFuture!;
+  }
+
+  Future<void> _closeFull() {
     final completion = Completer<void>();
     _closeFuture = completion.future;
     List<Future<void>>? pending;

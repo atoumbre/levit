@@ -75,12 +75,63 @@ sealed class LevitMonitorEvent {
     }
     try {
       if (value is Map || value is Iterable) {
-        return _redactNested(value).toString();
+        final buffer = StringBuffer();
+        _writeRedactedString(buffer, value);
+        return buffer.toString();
       }
       return value.toString();
     } catch (_) {
       return '<unprintable>';
     }
+  }
+
+  static void _writeRedactedString(
+    StringBuffer out,
+    dynamic value, {
+    int depth = 0,
+  }) {
+    if (value == null) {
+      out.write('null');
+      return;
+    }
+    if (value is LxReactive && value.isSensitive) {
+      out.write(LevitMonitor.obfuscate(value));
+      return;
+    }
+    if (depth >= 16) {
+      out.write(value);
+      return;
+    }
+    if (value is Map) {
+      out.write('{');
+      var first = true;
+      for (final entry in value.entries) {
+        if (!first) out.write(', ');
+        first = false;
+        final key = entry.key;
+        if (key is LxReactive && key.isSensitive) {
+          out.write(LevitMonitor.obfuscate(key));
+        } else {
+          out.write(key);
+        }
+        out.write(': ');
+        _writeRedactedString(out, entry.value, depth: depth + 1);
+      }
+      out.write('}');
+      return;
+    }
+    if (value is Iterable) {
+      out.write('[');
+      var first = true;
+      for (final item in value) {
+        if (!first) out.write(', ');
+        first = false;
+        _writeRedactedString(out, item, depth: depth + 1);
+      }
+      out.write(']');
+      return;
+    }
+    out.write(value);
   }
 
   static dynamic _redactNested(dynamic value, {int depth = 0}) {
@@ -145,15 +196,13 @@ class LevitReactiveInitEvent extends LevitReactiveEvent {
   /// Creates a reactive initialization event.
   LevitReactiveInitEvent({required super.sessionId, required super.reactive});
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'reactive_init',
-    'valueType': reactive.value?.runtimeType.toString() ?? 'dynamic',
-    'initialValue': LevitMonitorEvent._stringify(
+  Map<String, dynamic> toJson() => super.toJson()
+    ..['type'] = 'reactive_init'
+    ..['valueType'] = reactive.value?.runtimeType.toString() ?? 'dynamic'
+    ..['initialValue'] = LevitMonitorEvent._stringify(
       reactive.value,
       isSensitive: reactive.isSensitive,
-    ),
-  };
+    );
 }
 
 /// Event triggered when a reactive object's lifecycle ends.
@@ -166,10 +215,8 @@ class LevitReactiveDisposeEvent extends LevitReactiveEvent {
     required super.reactive,
   });
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'reactive_dispose',
-  };
+  Map<String, dynamic> toJson() =>
+      super.toJson()..['type'] = 'reactive_dispose';
 }
 
 /// Event triggered by a single state mutation.
@@ -263,12 +310,11 @@ class LevitReactiveBatchEvent extends LevitMonitorEvent {
   LevitReactiveBatchEvent({required super.sessionId, required this.change});
 
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'batch',
-    'batchId': change.batchId,
-    'count': change.length,
-    'entries': change.entries
+  Map<String, dynamic> toJson() => super.toJson()
+    ..['type'] = 'batch'
+    ..['batchId'] = change.batchId
+    ..['count'] = change.length
+    ..['entries'] = change.entries
         .map(
           (e) => {
             'reactiveId': e.$1.id.toString(),
@@ -285,8 +331,7 @@ class LevitReactiveBatchEvent extends LevitMonitorEvent {
             'valueType': e.$2.valueType.toString(),
           },
         )
-        .toList(),
-  };
+        .toList();
 }
 
 /// Event triggered when a computed value's dependency graph is updated.
@@ -304,13 +349,11 @@ class LevitReactiveGraphChangeEvent extends LevitReactiveEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'graph_change',
-    'dependencies': dependencies
+  Map<String, dynamic> toJson() => super.toJson()
+    ..['type'] = 'graph_change'
+    ..['dependencies'] = dependencies
         .map((d) => {'id': d.id.toString(), 'name': d.name})
-        .toList(),
-  };
+        .toList();
 }
 
 /// Event triggered when a new listener subscribes to a reactive object.
@@ -328,13 +371,11 @@ class LevitReactiveListenerAddedEvent extends LevitReactiveEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'listener_add',
-    'context': reactive.isSensitive
+  Map<String, dynamic> toJson() => super.toJson()
+    ..['type'] = 'listener_add'
+    ..['context'] = reactive.isSensitive
         ? (context == null ? null : LevitMonitor.obfuscate(context!.toJson()))
-        : context?.toJson(),
-  };
+        : context?.toJson();
 }
 
 /// Event triggered when a listener unsubscribes from a reactive object.
@@ -352,13 +393,11 @@ class LevitReactiveListenerRemovedEvent extends LevitReactiveEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'listener_remove',
-    'context': reactive.isSensitive
+  Map<String, dynamic> toJson() => super.toJson()
+    ..['type'] = 'listener_remove'
+    ..['context'] = reactive.isSensitive
         ? (context == null ? null : LevitMonitor.obfuscate(context!.toJson()))
-        : context?.toJson(),
-  };
+        : context?.toJson();
 }
 
 /// Event triggered when an unhandled exception is reported during reactive
@@ -384,21 +423,19 @@ class LevitReactiveErrorEvent extends LevitMonitorEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'reactive_error',
-    'reactiveId': reactive?.id.toString(),
-    'name': reactive?.name,
-    'isSensitive': reactive?.isSensitive ?? false,
-    'error': LevitMonitorEvent._stringify(
+  Map<String, dynamic> toJson() => super.toJson()
+    ..['type'] = 'reactive_error'
+    ..['reactiveId'] = reactive?.id.toString()
+    ..['name'] = reactive?.name
+    ..['isSensitive'] = reactive?.isSensitive ?? false
+    ..['error'] = LevitMonitorEvent._stringify(
       error,
       isSensitive: reactive?.isSensitive ?? false,
-    ),
-    'stack': LevitMonitorEvent._stringify(
+    )
+    ..['stack'] = LevitMonitorEvent._stringify(
       stack,
       isSensitive: reactive?.isSensitive ?? false,
-    ),
-  };
+    );
 }
 
 // ============================================================================
@@ -654,22 +691,28 @@ class LevitLogEvent extends LevitMonitorEvent {
   });
 
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'log',
-    'level': level.name,
-    'isSensitive': sensitive,
-    'data': sensitive
-        ? (data == null ? null : LevitMonitor.obfuscate(data))
-        : _serializeData(data),
-    if (error != null)
-      'error': LevitMonitorEvent._stringify(error, isSensitive: sensitive),
-    if (stackTrace != null)
-      'stackTrace': LevitMonitorEvent._stringify(
+  Map<String, dynamic> toJson() {
+    final payload = super.toJson()
+      ..['type'] = 'log'
+      ..['level'] = level.name
+      ..['isSensitive'] = sensitive
+      ..['data'] = sensitive
+          ? (data == null ? null : LevitMonitor.obfuscate(data))
+          : _serializeData(data);
+    if (error != null) {
+      payload['error'] = LevitMonitorEvent._stringify(
+        error,
+        isSensitive: sensitive,
+      );
+    }
+    if (stackTrace != null) {
+      payload['stackTrace'] = LevitMonitorEvent._stringify(
         stackTrace,
         isSensitive: sensitive,
-      ),
-  };
+      );
+    }
+    return payload;
+  }
 
   static dynamic _serializeData(Object? data) {
     if (data == null) return null;
@@ -862,11 +905,9 @@ class LevitSnapshotEvent extends LevitMonitorEvent {
   LevitSnapshotEvent({required super.sessionId, required this.state});
 
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'snapshot',
-    'state': state,
-  };
+  Map<String, dynamic> toJson() => super.toJson()
+    ..['type'] = 'snapshot'
+    ..['state'] = state;
 }
 
 /// The only event form retained by monitor queues and passed to transports.
@@ -906,8 +947,6 @@ final class LevitReactiveMetadataEvent extends LevitReactiveEvent {
     required super.reactive,
   });
   @override
-  Map<String, dynamic> toJson() => {
-    ...super.toJson(),
-    'type': 'reactive_metadata',
-  };
+  Map<String, dynamic> toJson() =>
+      super.toJson()..['type'] = 'reactive_metadata';
 }

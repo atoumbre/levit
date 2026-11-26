@@ -33,9 +33,7 @@ class _LBuilderElement<T> extends ComponentElement
   @override
   void mount(Element? parent, Object? newSlot) {
     super.mount(parent, newSlot);
-    runWithContext(() {
-      (widget as LBuilder<T>).x.addListener(onNotify);
-    });
+    _attachListener((widget as LBuilder<T>).x);
   }
 
   @override
@@ -43,13 +41,9 @@ class _LBuilderElement<T> extends ComponentElement
     final oldWidget = widget as LBuilder<T>;
     super.update(newWidget);
     if (newWidget.x != oldWidget.x) {
-      runWithContext(() {
-        oldWidget.x.removeListener(onNotify);
-        newWidget.x.addListener(onNotify);
-      });
+      _swapListener(oldWidget.x, newWidget.x);
     }
-    markNeedsBuild(); // Force rebuild
-    rebuild();
+    rebuild(force: true);
   }
 
   @override
@@ -62,9 +56,7 @@ class _LBuilderElement<T> extends ComponentElement
 
   @override
   void unmount() {
-    runWithContext(() {
-      (widget as LBuilder<T>).x.removeListener(onNotify);
-    });
+    _detachListener((widget as LBuilder<T>).x);
     super.unmount();
   }
 }
@@ -74,7 +66,8 @@ class _LBuilderElement<T> extends ComponentElement
 ///
 /// Useful for observing a derived value that is only needed for this specific
 /// widget subtree. The computed value is automatically disposed when the
-/// widget is unmounted (or recreated if [valueBuilder] changes identity).
+/// widget is unmounted and refreshed in place if [valueBuilder] changes
+/// identity.
 ///
 /// ```dart
 /// LSelectorBuilder(
@@ -102,23 +95,21 @@ class _LSelectBuilderElement<T> extends ComponentElement
     with _LReactiveElementMixin<LSelectorBuilder<T>> {
   _LSelectBuilderElement(super.widget);
 
-  late LxComputed<T> _computed;
+  late final LxComputed<T> _computed = LxComputed<T>(
+    () => (widget as LSelectorBuilder<T>).valueBuilder(),
+    eager: true,
+  );
+  bool _isUpdating = false;
+
+  @override
+  void onNotify() {
+    if (!_isUpdating && mounted) markNeedsBuild();
+  }
 
   @override
   void mount(Element? parent, Object? newSlot) {
-    _initComputed();
+    _attachListener(_computed);
     super.mount(parent, newSlot);
-  }
-
-  void _initComputed() {
-    _computed = LxComputed((widget as LSelectorBuilder<T>).valueBuilder);
-    _listen();
-  }
-
-  void _listen() {
-    runWithContext(() {
-      _computed.addListener(onNotify);
-    });
   }
 
   @override
@@ -127,14 +118,15 @@ class _LSelectBuilderElement<T> extends ComponentElement
     super.update(newWidget);
 
     if (newWidget.valueBuilder != oldWidget.valueBuilder) {
-      runWithContext(() {
-        _computed.removeListener(onNotify);
-      });
-      _computed.dispose();
-      _initComputed();
+      _isUpdating = true;
+      try {
+        _computed.refresh();
+      } finally {
+        _isUpdating = false;
+      }
     }
 
-    markNeedsBuild();
+    rebuild(force: true);
   }
 
   @override
@@ -147,9 +139,7 @@ class _LSelectBuilderElement<T> extends ComponentElement
 
   @override
   void unmount() {
-    runWithContext(() {
-      _computed.removeListener(onNotify);
-    });
+    _detachListener(_computed);
     _computed.dispose();
     super.unmount();
   }
@@ -210,9 +200,7 @@ class _LStatusBuilderElement<T> extends ComponentElement
   @override
   void mount(Element? parent, Object? newSlot) {
     super.mount(parent, newSlot);
-    runWithContext(() {
-      (widget as LStatusBuilder<T>).x.addListener(onNotify);
-    });
+    _attachListener((widget as LStatusBuilder<T>).x);
   }
 
   @override
@@ -220,13 +208,9 @@ class _LStatusBuilderElement<T> extends ComponentElement
     final oldWidget = widget as LStatusBuilder<T>;
     super.update(newWidget);
     if (newWidget.x != oldWidget.x) {
-      runWithContext(() {
-        oldWidget.x.removeListener(onNotify);
-        newWidget.x.addListener(onNotify);
-      });
+      _swapListener(oldWidget.x, newWidget.x);
     }
-    markNeedsBuild();
-    rebuild();
+    rebuild(force: true);
   }
 
   @override
@@ -250,25 +234,51 @@ class _LStatusBuilderElement<T> extends ComponentElement
 
   @override
   void unmount() {
-    runWithContext(() {
-      (widget as LStatusBuilder<T>).x.removeListener(onNotify);
-    });
+    _detachListener((widget as LStatusBuilder<T>).x);
     super.unmount();
   }
 }
 
 mixin _LReactiveElementMixin<W extends Widget> on ComponentElement {
   LxListenerContext? _cachedContext;
+  late final VoidCallback _onNotifyCallback = onNotify;
 
   void onNotify() {
     if (mounted) markNeedsBuild();
   }
 
-  void runWithContext(void Function() fn) {
+  void _attachListener(LxReadable<dynamic> reactive) {
     if (LxSpi.hasListenerMiddlewares) {
-      LxSpi.runWithContext(_buildContext(), fn);
+      LxSpi.runWithContext(_buildContext(), () {
+        reactive.addListener(_onNotifyCallback);
+      });
     } else {
-      fn();
+      reactive.addListener(_onNotifyCallback);
+    }
+  }
+
+  void _detachListener(LxReadable<dynamic> reactive) {
+    if (LxSpi.hasListenerMiddlewares) {
+      LxSpi.runWithContext(_buildContext(), () {
+        reactive.removeListener(_onNotifyCallback);
+      });
+    } else {
+      reactive.removeListener(_onNotifyCallback);
+    }
+  }
+
+  void _swapListener(
+    LxReadable<dynamic> oldReactive,
+    LxReadable<dynamic> newReactive,
+  ) {
+    if (LxSpi.hasListenerMiddlewares) {
+      LxSpi.runWithContext(_buildContext(), () {
+        oldReactive.removeListener(_onNotifyCallback);
+        newReactive.addListener(_onNotifyCallback);
+      });
+    } else {
+      oldReactive.removeListener(_onNotifyCallback);
+      newReactive.addListener(_onNotifyCallback);
     }
   }
 

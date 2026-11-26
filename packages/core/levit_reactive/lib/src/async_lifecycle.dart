@@ -65,7 +65,8 @@ final class LxExecutionContext {
   static final Object _zoneKey = Object();
   final Object _owner;
   final LxExecutionContext? _parent;
-  final Completer<void> _cancelled = Completer<void>();
+  Completer<void>? _cancelled;
+  bool _isCancelled = false;
   bool _completed = false;
 
   /// The context of the current worker/computed callback, if any.
@@ -84,18 +85,24 @@ final class LxExecutionContext {
   }
 
   /// Whether cooperative cancellation has been requested for this execution.
-  bool get isCancelled => _cancelled.isCompleted;
+  bool get isCancelled => _isCancelled;
 
   /// Completes when cancellation is requested, not when work has finished.
-  Future<void> get cancelled => _cancelled.future;
+  Future<void> get cancelled {
+    final completer = _cancelled ??= Completer<void>();
+    if (_isCancelled && !completer.isCompleted) completer.complete();
+    return completer.future;
+  }
 
   /// Throws [LxCancelledException] if [isCancelled] is `true`.
   void throwIfCancelled() {
-    if (isCancelled) throw const LxCancelledException();
+    if (_isCancelled) throw const LxCancelledException();
   }
 
   void _cancel() {
-    if (!_cancelled.isCompleted) _cancelled.complete();
+    if (_isCancelled) return;
+    _isCancelled = true;
+    _cancelled?.complete();
   }
 
   void _complete() {
@@ -108,48 +115,53 @@ final class LxExecutionContext {
 
 /// Tracks completion separately from cancellation; shared by async sources.
 mixin _LxAsyncLifecycle<T> on LxBase<T> implements LxAsyncResource {
-  final Set<Future<void>> _pendingWork = {};
-  final Set<LxExecutionContext> _executionContexts = {};
-  final List<AsyncError> _cleanupFailures = [];
+  Set<Future<void>>? _pendingWork;
+  Set<LxExecutionContext>? _executionContexts;
+  List<AsyncError>? _cleanupFailures;
   bool _workCancelled = false;
   Future<void>? _asyncCloseFuture;
 
   LxExecutionContext _newExecution({bool cancelPrevious = false}) {
-    if (cancelPrevious) {
-      for (final context in _executionContexts) {
+    final contexts = _executionContexts;
+    if (cancelPrevious && contexts != null) {
+      for (final context in contexts) {
         context._cancel();
       }
     }
     final context = LxExecutionContext._(this);
     if (_workCancelled) context._cancel();
-    _executionContexts.add(context);
+    (_executionContexts ??= {}).add(context);
     return context;
   }
 
   void _trackWork(Future<void> future, [LxExecutionContext? context]) {
+    final pending = _pendingWork ??= {};
     late final Future<void> tracked;
     tracked = future
         .then<void>(
           (_) {},
           onError: (Object error, StackTrace stack) {
-            _cleanupFailures.add(AsyncError(error, stack));
+            (_cleanupFailures ??= []).add(AsyncError(error, stack));
           },
         )
         .whenComplete(() {
-          _pendingWork.remove(tracked);
+          pending.remove(tracked);
           if (context != null) {
             context._complete();
-            _executionContexts.remove(context);
+            _executionContexts?.remove(context);
           }
         });
-    _pendingWork.add(tracked);
+    pending.add(tracked);
   }
 
   @override
   void requestCancel() {
     _workCancelled = true;
-    for (final context in _executionContexts) {
-      context._cancel();
+    final contexts = _executionContexts;
+    if (contexts != null) {
+      for (final context in contexts) {
+        context._cancel();
+      }
     }
   }
 
@@ -160,11 +172,15 @@ mixin _LxAsyncLifecycle<T> on LxBase<T> implements LxAsyncResource {
         'An execution cannot await disposal of its own producer.',
       );
     }
-    while (_pendingWork.isNotEmpty) {
-      await Future.wait(_pendingWork.toList());
+    final pending = _pendingWork;
+    if (pending != null) {
+      while (pending.isNotEmpty) {
+        await Future.wait(pending.toList());
+      }
     }
-    if (_cleanupFailures.isNotEmpty) {
-      throw LxCleanupException(_cleanupFailures);
+    final failures = _cleanupFailures;
+    if (failures != null && failures.isNotEmpty) {
+      throw LxCleanupException(failures);
     }
   }
 

@@ -120,7 +120,6 @@ final class _AsyncMapResource<T>
   bool get isReplacing => _state.value.replacing;
   LxStatus<T>? get lastValue => _state.value.data;
   Object? get refreshError => _state.value.failure?.error;
-  StackTrace? get refreshStackTrace => _state.value.failure?.stackTrace;
 
   void _ensureOpen() {
     if (_closing) throw StateError('Resource is closing.');
@@ -175,6 +174,17 @@ final class _AsyncMapResource<T>
       rethrow;
     }
     return _state.value.read();
+  }
+
+  LxStatus<T> readStatus() {
+    final frame = _state.value;
+    final prior = frame.data ?? LxIdle<T>();
+    final issue = frame.failure;
+    if (issue != null) {
+      return LxError<T>.fromPrevious(issue.error, issue.stackTrace, prior);
+    }
+    if (frame.replacing) return LxWaiting<T>.fromPrevious(prior);
+    return frame.read();
   }
 
   _AsyncProducer<T> get producer {
@@ -342,7 +352,6 @@ final class LevitAsyncMapEntry<T> implements LxReadable<LxStatus<T>> {
   final _AsyncMapResource<T> _resource;
   LevitAsyncMapEntry._(this._resource);
   int _operations = 0;
-  Timer? _expiry;
   Future<void>? _refresh;
   Future<T>? _refreshValue;
 
@@ -366,16 +375,7 @@ final class LevitAsyncMapEntry<T> implements LxReadable<LxStatus<T>> {
   @override
   LxStatus<T> get value {
     if (isClosed) throw StateError('Entry is closed.');
-    final prior = _resource.lastValue ?? LxIdle<T>();
-    if (_resource.refreshError case final failure?) {
-      return LxError<T>.fromPrevious(
-        failure,
-        _resource.refreshStackTrace,
-        prior,
-      );
-    }
-    if (isReplacing) return LxWaiting<T>.fromPrevious(prior);
-    return _resource.value;
+    return _resource.readStatus();
   }
 
   @override
@@ -469,9 +469,12 @@ final class LevitAsyncMap<K, T>
   final _entries = LxSpi.createOwned(
     () => LxMap<K, LevitAsyncMapEntry<T>>(isSensitive: true),
   );
-  final _inactive = LinkedHashMap<K, LevitAsyncMapEntry<T>>();
+  final _inactive =
+      LinkedHashMap<K, ({LevitAsyncMapEntry<T> entry, DateTime expiresAt})>();
+  Timer? _graceTimer;
+  K? _graceTimerKey;
   final _retiring = <Future<void>>{};
-  final _producers = Set<_AsyncProducer<T>>.identity();
+  final _producerExecutionIds = <String>{};
   final _failures = <LevitDisposalFailure>[];
   bool _closing = false, _disposed = false;
   Future<void>? _closingFuture;
@@ -549,44 +552,51 @@ final class LevitAsyncMap<K, T>
     if (_closing) throw StateError('Async map is closing.');
   }
 
+  void _releaseProducer(_AsyncProducer<T> producer) {
+    _producerExecutionIds.remove(producer.execution.executionId);
+  }
+
   LevitAsyncMapEntry<T> _acquire(K key, {bool pin = false}) {
     _open();
     var item = peek(key);
-    if (item == null) {
-      late final _AsyncMapResource<T> resource;
-      resource = _AsyncMapResource(
-        () {
-          final job = _engine.submit(
-            (ctx) => _load(key, ctx),
-            group: _engine.rootGroup,
-            retryPolicy: retryPolicy,
-            cachePolicy: cachePolicy?.call(key),
-          );
-          final producer = _AsyncProducer<T>._(
-            job,
-            _producers.remove,
-            _now,
-            resource.lastValue,
-          );
-          _producers.add(producer);
-          return producer;
-        },
-        name: _label(key),
-        ownerId: _entries.ownerId,
-        onActivityChanged: (_) {
-          if (item != null) _touch(key, item);
-        },
-      );
-      item = LevitAsyncMapEntry._(resource);
+    if (item != null) {
       if (pin) item._operations++;
-      _entries[key] = item;
-      try {
-        Lx.untracked(() => resource.value);
-      } catch (_) {
-        /* The entry exposes initial construction failure as LxError. */
+      if (!item.isActive || _inactive.containsKey(key)) {
+        _touch(key, item);
       }
-    } else if (pin) {
-      item._operations++;
+      return item;
+    }
+    late final _AsyncMapResource<T> resource;
+    resource = _AsyncMapResource(
+      () {
+        final job = _engine.submit(
+          (ctx) => _load(key, ctx),
+          group: _engine.rootGroup,
+          retryPolicy: retryPolicy,
+          cachePolicy: cachePolicy?.call(key),
+        );
+        final producer = _AsyncProducer<T>._(
+          job,
+          _releaseProducer,
+          _now,
+          resource.lastValue,
+        );
+        _producerExecutionIds.add(job.executionId);
+        return producer;
+      },
+      name: _label(key),
+      ownerId: _entries.ownerId,
+      onActivityChanged: (_) {
+        if (item != null) _touch(key, item);
+      },
+    );
+    item = LevitAsyncMapEntry._(resource);
+    if (pin) item._operations++;
+    _entries[key] = item;
+    try {
+      Lx.untracked(() => resource.value);
+    } catch (_) {
+      /* The entry exposes initial construction failure as LxError. */
     }
     _touch(key, item);
     return item;
@@ -598,30 +608,68 @@ final class LevitAsyncMap<K, T>
   /// Throws a [StateError] if this map is closing or disposed.
   LevitAsyncMapEntry<T> entry(K key) => _acquire(key);
 
+  void _removeInactive(K key) {
+    final removed = _inactive.remove(key);
+    if (removed != null && _graceTimer != null && _graceTimerKey == key) {
+      _graceTimer!.cancel();
+      _graceTimer = null;
+      _graceTimerKey = null;
+      _armGraceTimer();
+    }
+  }
+
+  void _armGraceTimer() {
+    if (_closing || _graceTimer != null || _inactive.isEmpty) return;
+    final head = _inactive.entries.first;
+    final remaining = head.value.expiresAt.difference(DateTime.now());
+    _graceTimerKey = head.key;
+    _graceTimer = Timer(
+      remaining.isNegative ? Duration.zero : remaining,
+      _onGraceTick,
+    );
+  }
+
+  void _onGraceTick() {
+    _graceTimer = null;
+    _graceTimerKey = null;
+    if (_closing || _inactive.isEmpty) return;
+    final now = DateTime.now();
+    // Always retire at least the armed head; also drain any already-due peers.
+    final head = _inactive.entries.first;
+    _retire(head.key, head.value.entry).ignore();
+    while (_inactive.isNotEmpty &&
+        !_inactive.entries.first.value.expiresAt.isAfter(now)) {
+      final due = _inactive.entries.first;
+      _retire(due.key, due.value.entry).ignore();
+    }
+    _armGraceTimer();
+  }
+
   void _touch(K key, LevitAsyncMapEntry<T> item) {
     if (_closing || !identical(peek(key), item)) return;
-    item._expiry?.cancel();
-    item._expiry = null;
-    _inactive.remove(key);
+    _removeInactive(key);
     if (!item.isActive && item._operations == 0) {
-      _inactive[key] = item;
-      item._expiry = Timer(gracePeriod, () {
-        if (identical(_inactive[key], item)) _retire(key, item).ignore();
-      });
+      _inactive[key] = (
+        entry: item,
+        expiresAt: DateTime.now().add(gracePeriod),
+      );
+      _armGraceTimer();
     }
     while (_inactive.length > maxInactiveEntries) {
       final oldest = _inactive.entries.first;
-      _retire(oldest.key, oldest.value).ignore();
+      _retire(oldest.key, oldest.value.entry).ignore();
     }
   }
 
   /// Whether [key] currently holds a successful result younger than [staleTime].
   bool isFresh(K key) {
     final item = peek(key);
-    if (item == null ||
-        item.isClosed ||
-        item.isReplacing ||
-        item.value is! LxSuccess<T>) {
+    if (item == null || item.isClosed) return false;
+    final frame = item._resource._state.value;
+    if (frame.replacing ||
+        frame.failure != null ||
+        !frame.hasData ||
+        frame.data is! LxSuccess<T>) {
       return false;
     }
     final stamp = item._resource.producer.succeededAt;
@@ -740,8 +788,7 @@ final class LevitAsyncMap<K, T>
   }
 
   Future<void> _retire(K key, LevitAsyncMapEntry<T> item) {
-    item._expiry?.cancel();
-    _inactive.remove(key);
+    _removeInactive(key);
     final closing = item._resource.close();
     final pending = item._refresh;
     final operation = Future.wait([
@@ -771,7 +818,7 @@ final class LevitAsyncMap<K, T>
   void assertCanDispose() {
     final running = _currentTaskZone?.execution;
     if (running != null &&
-        _producers.any((p) => p.execution.executionId == running.executionId)) {
+        _producerExecutionIds.contains(running.executionId)) {
       throw StateError('An async-map task cannot await its own cleanup.');
     }
   }
@@ -782,8 +829,10 @@ final class LevitAsyncMap<K, T>
   void requestCancel() {
     if (_closing) return;
     _closing = true;
+    _graceTimer?.cancel();
+    _graceTimer = null;
+    _graceTimerKey = null;
     for (final item in Lx.untracked(() => _entries.value.values.toList())) {
-      item._expiry?.cancel();
       item._resource.requestCancel();
     }
     if (_ownsEngine) _engine.requestCancel();

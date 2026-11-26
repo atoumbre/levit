@@ -199,12 +199,12 @@ class Levit {
   /// Asynchronously finds an instance of type [S].
   ///
   /// Use for dependencies registered via [lazyPutAsync].
-  static Future<S> findAsync<S>({Object? tag}) async {
+  static Future<S> findAsync<S>({Object? tag}) {
     return Ls.findAsync<S>(tag: tag);
   }
 
   /// Asynchronously finds an instance of type [S], or returns `null`.
-  static Future<S?> findOrNullAsync<S>({Object? tag}) async {
+  static Future<S?> findOrNullAsync<S>({Object? tag}) {
     return Ls.findOrNullAsync<S>(tag: tag);
   }
 
@@ -387,20 +387,20 @@ class Levit {
       item is FutureOr<void> Function();
 
   /// Runs a supported typed cleanup operation. Other resources need an adapter.
-  static Future<void> _levitDisposeItem(Object? item) async {
-    if (item == null) return;
-    if (item is LxReactive) return item.close();
+  static FutureOr<void> _levitDisposeItem(Object? item) {
+    if (item == null) return null;
+    if (item is LxReactive) return LxSpi.closeSyncOrAsync(item);
     if (item is LevitScopeDisposable) return item.onClose();
     if (item is LevitDisposable) return item.dispose();
     if (item is StreamSubscription) return item.cancel();
     if (item is Timer) {
       item.cancel();
-      return;
+      return null;
     }
     if (item is StreamSink) return item.close().then<void>((_) {});
     if (item is Sink) {
       item.close();
-      return;
+      return null;
     }
     // own() validates supported resources before admission. After the resource
     // adapters above, the only remaining supported type is a cleanup callback.

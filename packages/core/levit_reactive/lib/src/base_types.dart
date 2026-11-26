@@ -48,8 +48,8 @@ class LxVar<T> extends LxBase<T> implements LxAsyncResource {
 
   Stream<T>? _boundStream;
   StreamSubscription<T>? _boundSubscription;
-  final Set<Future<void>> _bindingCancellations = {};
-  final List<AsyncError> _bindingFailures = [];
+  Set<Future<void>>? _bindingCancellations;
+  List<AsyncError>? _bindingFailures;
   bool _bindingClosing = false;
   int _bindingGeneration = 0;
 
@@ -86,13 +86,14 @@ class LxVar<T> extends LxBase<T> implements LxAsyncResource {
     final subscription = _boundSubscription;
     _boundSubscription = null;
     if (subscription == null) return;
+    final cancellations = _bindingCancellations ??= {};
     late final Future<void> cancelled;
     cancelled = Future<void>.sync(subscription.cancel)
         .catchError((Object error, StackTrace stack) {
-          _bindingFailures.add(AsyncError(error, stack));
+          (_bindingFailures ??= []).add(AsyncError(error, stack));
         })
-        .whenComplete(() => _bindingCancellations.remove(cancelled));
-    _bindingCancellations.add(cancelled);
+        .whenComplete(() => cancellations.remove(cancelled));
+    cancellations.add(cancelled);
   }
 
   /// Detaches immediately and waits for all replaced upstream subscriptions.
@@ -107,17 +108,38 @@ class LxVar<T> extends LxBase<T> implements LxAsyncResource {
     _cancelBinding();
   }
 
-  @override
-  Future<void> drain() async {
-    while (_bindingCancellations.isNotEmpty) {
-      await Future.wait(_bindingCancellations.toList());
-    }
-    if (_bindingFailures.isNotEmpty) throw LxCleanupException(_bindingFailures);
+  bool get _isDrainedSync {
+    final cancellations = _bindingCancellations;
+    final failures = _bindingFailures;
+    return (cancellations == null || cancellations.isEmpty) &&
+        (failures == null || failures.isEmpty);
   }
 
   @override
-  Future<void> _cleanupBinding() {
+  Future<void> drain() {
+    if (_isDrainedSync) return Future<void>.value();
+    return _drainAsync();
+  }
+
+  Future<void> _drainAsync() async {
+    final cancellations = _bindingCancellations;
+    if (cancellations != null) {
+      while (cancellations.isNotEmpty) {
+        await Future.wait(cancellations.toList());
+      }
+    }
+    final failures = _bindingFailures;
+    if (failures != null && failures.isNotEmpty) {
+      throw LxCleanupException(failures);
+    }
+  }
+
+  @override
+  FutureOr<void> _cleanupBinding() {
     requestCancel();
+    if (_bindingCancellations == null && _bindingFailures == null) {
+      return null;
+    }
     return drain();
   }
 

@@ -381,10 +381,12 @@ abstract class _LevitReactiveMiddlewareChain {
     if (!LevitReactiveMiddleware._hasSetMiddlewares) return next;
 
     void Function(dynamic) current = (dynamic v) => next(v as T);
+    final middlewares = LevitReactiveMiddleware._middlewares;
 
-    for (final mw in LevitReactiveMiddleware._middlewares.reversed) {
-      if (mw.onSet != null) {
-        current = mw.onSet!(
+    for (var i = middlewares.length - 1; i >= 0; i--) {
+      final hook = middlewares[i].onSet;
+      if (hook != null) {
+        current = hook(
           current,
           reactive,
           change as LevitReactiveChange<dynamic>,
@@ -402,9 +404,11 @@ abstract class _LevitReactiveMiddlewareChain {
   ) {
     if (!LevitReactiveMiddleware._hasBatchMiddlewares) return next;
     var current = next;
-    for (final mw in LevitReactiveMiddleware._middlewares.reversed) {
-      if (mw.onBatch != null) {
-        current = mw.onBatch!(current, change);
+    final middlewares = LevitReactiveMiddleware._middlewares;
+    for (var i = middlewares.length - 1; i >= 0; i--) {
+      final hook = middlewares[i].onBatch;
+      if (hook != null) {
+        current = hook(current, change);
       }
     }
     return current;
@@ -417,9 +421,11 @@ abstract class _LevitReactiveMiddlewareChain {
   ) {
     if (!LevitReactiveMiddleware._hasDisposeMiddlewares) return next;
     var current = next;
-    for (final mw in LevitReactiveMiddleware._middlewares.reversed) {
-      if (mw.onDispose != null) {
-        current = mw.onDispose!(current, reactive);
+    final middlewares = LevitReactiveMiddleware._middlewares;
+    for (var i = middlewares.length - 1; i >= 0; i--) {
+      final hook = middlewares[i].onDispose;
+      if (hook != null) {
+        current = hook(current, reactive);
       }
     }
     return current;
@@ -428,8 +434,9 @@ abstract class _LevitReactiveMiddlewareChain {
   /// Notifies middlewares of a reactive object initialization.
   static void applyOnInit(LxReactive reactive) {
     if (!LevitReactiveMiddleware._hasInitMiddlewares) return;
-    for (final mw in LevitReactiveMiddleware._middlewares) {
-      mw.onInit?.call(reactive);
+    final middlewares = LevitReactiveMiddleware._middlewares;
+    for (var i = 0; i < middlewares.length; i++) {
+      middlewares[i].onInit?.call(reactive);
     }
   }
 
@@ -439,8 +446,9 @@ abstract class _LevitReactiveMiddlewareChain {
     List<LxReactive> dependencies,
   ) {
     if (!LevitReactiveMiddleware._hasGraphChangeMiddlewares) return;
-    for (final mw in LevitReactiveMiddleware._middlewares) {
-      mw.onGraphChange?.call(computed, dependencies);
+    final middlewares = LevitReactiveMiddleware._middlewares;
+    for (var i = 0; i < middlewares.length; i++) {
+      middlewares[i].onGraphChange?.call(computed, dependencies);
     }
   }
 
@@ -452,8 +460,9 @@ abstract class _LevitReactiveMiddlewareChain {
     if (!LevitReactiveMiddleware._hasListenerMiddlewares) {
       return;
     }
-    for (final mw in LevitReactiveMiddleware._middlewares) {
-      mw.startedListening?.call(reactive, context);
+    final middlewares = LevitReactiveMiddleware._middlewares;
+    for (var i = 0; i < middlewares.length; i++) {
+      middlewares[i].startedListening?.call(reactive, context);
     }
   }
 
@@ -463,8 +472,9 @@ abstract class _LevitReactiveMiddlewareChain {
     LxListenerContext? context,
   ) {
     if (!LevitReactiveMiddleware._hasListenerMiddlewares) return;
-    for (final mw in LevitReactiveMiddleware._middlewares) {
-      mw.stoppedListening?.call(reactive, context);
+    final middlewares = LevitReactiveMiddleware._middlewares;
+    for (var i = 0; i < middlewares.length; i++) {
+      middlewares[i].stoppedListening?.call(reactive, context);
     }
   }
 
@@ -475,8 +485,9 @@ abstract class _LevitReactiveMiddlewareChain {
     LxReactive? context,
   ) {
     if (!LevitReactiveMiddleware._hasErrorMiddlewares) return;
-    for (final mw in LevitReactiveMiddleware._middlewares) {
-      mw.onReactiveError?.call(error, stack, context);
+    final middlewares = LevitReactiveMiddleware._middlewares;
+    for (var i = 0; i < middlewares.length; i++) {
+      middlewares[i].onReactiveError?.call(error, stack, context);
     }
   }
 }

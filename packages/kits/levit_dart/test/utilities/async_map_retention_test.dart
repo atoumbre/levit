@@ -118,4 +118,41 @@ void main() {
       await map.close();
     },
   );
+
+  test(
+    'shared grace timer retires multiple due inactive entries and entry reports isReplacing during refresh',
+    () async {
+      var calls = 0;
+      final map = LevitAsyncMap<int, int>((key, _) async {
+        if (key == 10) {
+          calls++;
+          return calls * 10;
+        }
+        return key;
+      }, gracePeriod: Duration.zero);
+
+      final inactiveA = map.entry(1);
+      final inactiveB = map.entry(2);
+      await Future<void>.delayed(Duration.zero);
+      expect(inactiveA.isClosed, isTrue);
+      expect(inactiveB.isClosed, isTrue);
+
+      final replacingEntry = map.entry(10);
+      var sawReplacing = false;
+      void listener() {
+        if (replacingEntry.isReplacing) sawReplacing = true;
+      }
+
+      replacingEntry.addListener(listener);
+      expect(await map.fetch(10), 10);
+
+      await map.refresh(10);
+      expect(sawReplacing, isTrue);
+      expect(replacingEntry.isReplacing, isFalse);
+      expect(replacingEntry.value.lastValue, 20);
+
+      replacingEntry.removeListener(listener);
+      await map.close();
+    },
+  );
 }

@@ -278,8 +278,11 @@ class LevitStateSnapshot {
     }
     if (data['name'] != null) model.name = data['name'] as String;
     if (data.containsKey('ownerId')) {
-      model.ownerId = data['ownerId'] as String?;
-      model.parseOwnerId();
+      final nextOwnerId = data['ownerId'] as String?;
+      if (nextOwnerId != model.ownerId) {
+        model.ownerId = nextOwnerId;
+        model.parseOwnerId();
+      }
     }
     model.isSensitive = data['isSensitive'] as bool? ?? model.isSensitive;
     if (type == 'reactive_metadata' && model.isSensitive) {
@@ -575,16 +578,15 @@ class LevitReactiveModel {
 
   /// Parses [ownerId] into [scopeId] and [ownerKey] when possible.
   void parseOwnerId() {
-    if (ownerId == null) return;
-    if (ownerId!.contains(':')) {
-      final parts = ownerId!.split(':');
+    final current = ownerId;
+    if (current == null) return;
+    final sep = current.indexOf(':');
+    if (sep >= 0) {
       // Owner path format is "<scopeId>:<registrationKey>".
-      if (parts.length >= 2) {
-        scopeId = int.tryParse(parts[0]);
-        ownerKey = parts.sublist(1).join(':');
-      }
+      scopeId = int.tryParse(current.substring(0, sep));
+      ownerKey = current.substring(sep + 1);
     } else {
-      ownerKey = ownerId;
+      ownerKey = current;
     }
   }
 

@@ -1,12 +1,13 @@
-import 'dart:mirrors';
+import 'dart:async';
 
 import 'package:levit_scope/levit_scope.dart';
+import 'package:levit_scope/spi.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('Resolution cache fallback', () {
+  group('Ancestor resolution and implicit scope zones', () {
     test(
-      'find(type) clears stale parent cache when cached parent throws',
+      'find(type) throws after parent deletes previously resolved dependency',
       () async {
         final root = LevitScope.root('root_type_stale');
         root.put<String>(() => 'root');
@@ -19,17 +20,8 @@ void main() {
       },
     );
 
-    test('find(tag) falls back when cached scope throws', () {
-      final root = LevitScope.root('root');
-      root.put<String>(() => 'root', tag: 't');
-      final child = root.createScope('child');
-      final unrelated = LevitScope.root('unrelated');
-      _setResolutionCache(child, _scopeKey(child, String, tag: 't'), unrelated);
-      expect(child.find<String>(tag: 't'), 'root');
-    });
-
     test(
-      'find(tag) clears stale parent cache when cached parent throws',
+      'find(tag) throws after parent deletes previously resolved dependency',
       () async {
         final root = LevitScope.root('root_tag_stale');
         root.put<String>(() => 'root', tag: 't');
@@ -42,53 +34,23 @@ void main() {
       },
     );
 
-    test('findOrNull(tag) falls back when cached scope recurses', () {
-      final root = LevitScope.root('root_or_null');
-      root.put<String>(() => 'root', tag: 't');
-      final child = root.createScope('child_or_null');
-      _setResolutionCache(child, _scopeKey(child, String, tag: 't'), child);
-      expect(child.findOrNull<String>(tag: 't'), 'root');
-    });
-
-    test('findOrNull(tag) returns cached parent result', () {
-      final root = LevitScope.root('root_or_null_cached');
-      root.put<String>(() => 'root', tag: 't');
-      final child = root.createScope('child_or_null_cached');
-      final key = _scopeKey(child, String, tag: 't');
-
-      expect(child.findOrNull<String>(tag: 't'), 'root');
-      expect(_resolutionCache(child).containsKey(key), isTrue);
-      expect(child.findOrNull<String>(tag: 't'), 'root');
-    });
-
     test(
-      'findOrNull(tag) evicts cached parent when value disappears',
+      'findOrNull(tag) returns parent value and returns null after parent deletion',
       () async {
         final root = LevitScope.root('root_or_null_stale');
         root.put<String>(() => 'root', tag: 't');
         final child = root.createScope('child_or_null_stale');
-        final key = _scopeKey(child, String, tag: 't');
 
         expect(child.findOrNull<String>(tag: 't'), 'root');
-        expect(_resolutionCache(child).containsKey(key), isTrue);
 
         await root.delete<String>(tag: 't');
 
         expect(child.findOrNull<String>(tag: 't'), isNull);
-        expect(_resolutionCache(child).containsKey(key), isFalse);
       },
     );
 
-    test('findAsync(tag) falls back when cached scope recurses', () async {
-      final root = LevitScope.root('root_async');
-      root.put<String>(() => 'root', tag: 't');
-      final child = root.createScope('child_async');
-      _setResolutionCache(child, _scopeKey(child, String, tag: 't'), child);
-      expect(await child.findAsync<String>(tag: 't'), 'root');
-    });
-
     test(
-      'findAsync(tag) propagates cached ancestor construction failure',
+      'findAsync(tag) propagates ancestor construction failure after replacement',
       () async {
         final root = LevitScope.root('root_async_stale');
         root.put<String>(() => 'root', tag: 't');
@@ -106,18 +68,7 @@ void main() {
     );
 
     test(
-      'findOrNullAsync(tag) falls back when cached scope recurses',
-      () async {
-        final root = LevitScope.root('root_or_null_async');
-        root.put<String>(() => 'root', tag: 't');
-        final child = root.createScope('child_or_null_async');
-        _setResolutionCache(child, _scopeKey(child, String, tag: 't'), child);
-        expect(await child.findOrNullAsync<String>(tag: 't'), 'root');
-      },
-    );
-
-    test(
-      'findOrNullAsync(tag) clears stale parent cache when cached parent throws',
+      'findOrNullAsync(tag) propagates ancestor failure after replacement',
       () async {
         final root = LevitScope.root('root_or_null_async_stale');
         root.put<String>(() => 'root', tag: 't');
@@ -136,24 +87,83 @@ void main() {
         );
       },
     );
+
+    test(
+      'Ls.currentScope resolves across run, runUnary, runBinary, and microtasks',
+      () async {
+        final scope = Ls.createScope('zone_handlers');
+        try {
+          final seen = <LevitScope>[];
+          final microtaskDone = Completer<LevitScope>();
+          scope.run(() {
+            seen.add(Ls.currentScope);
+            seen.add(Zone.current.runUnary((int _) => Ls.currentScope, 1));
+            seen.add(
+              Zone.current.runBinary((int _, int __) => Ls.currentScope, 1, 2),
+            );
+            scheduleMicrotask(() => microtaskDone.complete(Ls.currentScope));
+          });
+
+          expect(seen, everyElement(same(scope)));
+          expect(await microtaskDone.future, same(scope));
+        } finally {
+          await scope.dispose();
+        }
+      },
+    );
+
+    test(
+      'Ls.currentScope resolves when LsSpi.zoneScopeKey is bound directly',
+      () async {
+        final scope = Ls.createScope('direct_zone_key');
+        try {
+          final resolved = runZoned(
+            () => Ls.currentScope,
+            zoneValues: {LsSpi.zoneScopeKey: scope},
+          );
+          expect(resolved, same(scope));
+          expect(Ls.currentScope, isNot(same(scope)));
+        } finally {
+          await scope.dispose();
+        }
+      },
+    );
+
+    test(
+      'LsSpi.runSyncWithScope nests cleanly with scope.run in both directions',
+      () async {
+        final scopeA = Ls.createScope('sync_scope_a');
+        final scopeB = Ls.createScope('sync_scope_b');
+        try {
+          LsSpi.runSyncWithScope(scopeA, () {
+            expect(Ls.currentScope, same(scopeA));
+            scopeB.run(() {
+              expect(Ls.currentScope, same(scopeB));
+              LsSpi.runSyncWithScope(scopeA, () {
+                expect(Ls.currentScope, same(scopeA));
+              });
+              expect(Ls.currentScope, same(scopeB));
+            });
+            expect(Ls.currentScope, same(scopeA));
+          });
+        } finally {
+          await scopeB.dispose();
+          await scopeA.dispose();
+        }
+      },
+    );
+
+    test(
+      'find resolves and caches an already-initialized lazyPutAsync singleton',
+      () async {
+        final scope = LevitScope.root('async_then_sync');
+        scope.lazyPutAsync<String>(() async => 'ready');
+
+        expect(await scope.findAsync<String>(), 'ready');
+        expect(scope.find<String>(), 'ready');
+        expect(scope.find<String>(), 'ready');
+        await scope.dispose();
+      },
+    );
   });
-}
-
-Object _scopeKey(LevitScope scope, Type type, {Object? tag}) {
-  final lib = reflect(scope).type.owner as LibraryMirror;
-  final keyClass =
-      lib.declarations[MirrorSystem.getSymbol('_LevitScopeKey', lib)]
-          as ClassMirror;
-  return keyClass.newInstance(Symbol.empty, [type, tag]).reflectee as Object;
-}
-
-void _setResolutionCache(LevitScope scope, Object key, LevitScope cached) {
-  _resolutionCache(scope)[key] = cached;
-}
-
-Map<Object, LevitScope> _resolutionCache(LevitScope scope) {
-  final mirror = reflect(scope);
-  final lib = mirror.type.owner as LibraryMirror;
-  final symbol = MirrorSystem.getSymbol('_resolutionCache', lib);
-  return mirror.getField(symbol).reflectee as Map<Object, LevitScope>;
 }

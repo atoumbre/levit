@@ -76,14 +76,12 @@ class _RouteBindingState extends State<_RouteBinding> {
     final animation = route?.animation;
     if (animation != null) {
       _routeAnimation = animation;
-      animation.addListener(_syncVisibility);
       animation.addStatusListener(_onAnimationStatusChanged);
     }
 
     final secondary = route?.secondaryAnimation;
     if (secondary != null && !identical(secondary, animation)) {
       _secondaryAnimation = secondary;
-      secondary.addListener(_syncVisibility);
       secondary.addStatusListener(_onAnimationStatusChanged);
     }
   }
@@ -91,14 +89,12 @@ class _RouteBindingState extends State<_RouteBinding> {
   void _unsubscribeFromRoute() {
     final animation = _routeAnimation;
     if (animation != null) {
-      animation.removeListener(_syncVisibility);
       animation.removeStatusListener(_onAnimationStatusChanged);
       _routeAnimation = null;
     }
 
     final secondary = _secondaryAnimation;
     if (secondary != null) {
-      secondary.removeListener(_syncVisibility);
       secondary.removeStatusListener(_onAnimationStatusChanged);
       _secondaryAnimation = null;
     }

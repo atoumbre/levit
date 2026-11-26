@@ -445,9 +445,14 @@ mixin LevitReactiveTasksMixin on LevitController {
     tasks[taskId] = update(current);
   }
 
-  void _applyTaskEvent(LevitTaskEvent event) {
+  void _applyTaskEvent(
+    LevitTaskEvent event, {
+    LxStatus<dynamic> Function(LxStatus<dynamic> previous)? statusOverride,
+    double? progressOverride,
+  }) {
     _updateExecution(event.taskId, event.executionId, (current) {
       return current.copyWith(
+        status: statusOverride?.call(current.status),
         ownerPath: event.ownerPath,
         groupId: event.groupId,
         parentGroupId: event.parentGroupId,
@@ -458,7 +463,7 @@ mixin LevitReactiveTasksMixin on LevitController {
         priority: event.priority,
         attempt: event.attempt,
         outcome: event.outcome,
-        progress: event.progress,
+        progress: progressOverride ?? event.progress,
         started: event.startedAt != null,
         queuedAt: event.queuedAt,
         startedAt: event.startedAt,
@@ -520,7 +525,6 @@ mixin LevitReactiveTasksMixin on LevitController {
             required taskMetadata,
             required onEvent,
             required onSuccess,
-            required onProgress,
             required onFailure,
             required onCancel,
           }) => taskEngine.submit<T>(
@@ -535,7 +539,6 @@ mixin LevitReactiveTasksMixin on LevitController {
             metadata: taskMetadata,
             onEvent: onEvent,
             onSuccess: onSuccess,
-            onProgress: onProgress,
             onError: onFailure,
             onCancel: onCancel,
           ),
@@ -575,7 +578,6 @@ mixin LevitReactiveTasksMixin on LevitController {
             required taskMetadata,
             required onEvent,
             required onSuccess,
-            required onProgress,
             required onFailure,
             required onCancel,
           }) => taskEngine.submitIsolate<I, T>(
@@ -591,7 +593,6 @@ mixin LevitReactiveTasksMixin on LevitController {
             metadata: taskMetadata,
             onEvent: onEvent,
             onSuccess: onSuccess,
-            onProgress: onProgress,
             onError: onFailure,
             onCancel: onCancel,
           ),
@@ -610,7 +611,6 @@ mixin LevitReactiveTasksMixin on LevitController {
       required LevitTaskMetadata taskMetadata,
       required void Function(LevitTaskEvent event) onEvent,
       required void Function(T result) onSuccess,
-      required void Function(double progress) onProgress,
       required void Function(Object error, StackTrace stackTrace) onFailure,
       required void Function() onCancel,
     })
@@ -629,51 +629,51 @@ mixin LevitReactiveTasksMixin on LevitController {
             : LevitTaskMetadata(debugName: debugName));
     LevitTaskEvent? latestEvent;
     String? executionId;
+    LxStatus<dynamic> Function(LxStatus<dynamic> previous)? pendingStatus;
+    double? pendingProgress;
     final execution = submit(
       taskId: taskId,
       taskMetadata: taskMetadata,
       onEvent: (event) {
         executionId ??= event.executionId;
         latestEvent = event;
-        _applyTaskEvent(event);
+        final statusUpdate = pendingStatus;
+        final progressUpdate = pendingProgress;
+        pendingStatus = null;
+        pendingProgress = null;
+        _applyTaskEvent(
+          event,
+          statusOverride: statusUpdate,
+          progressOverride: progressUpdate,
+        );
       },
       onSuccess: (result) {
-        final idForUpdate = executionId;
-        if (idForUpdate == null) return;
-        _updateExecution(taskId, idForUpdate, (current) {
-          return current.copyWith(status: LxSuccess<T>(result), progress: 1);
-        });
-      },
-      onProgress: (progress) {
-        final idForUpdate = executionId;
-        if (idForUpdate == null) return;
-        _updateExecution(taskId, idForUpdate, (current) {
-          return current.copyWith(progress: progress);
-        });
+        pendingStatus = (_) => LxSuccess<T>(result);
+        pendingProgress = 1;
       },
       onFailure: (error, stackTrace) {
-        final idForUpdate = executionId;
-        if (idForUpdate != null) {
-          _updateExecution(taskId, idForUpdate, (current) {
-            return current.copyWith(
-              status: LxError<dynamic>.fromPrevious(
-                error,
-                stackTrace,
-                current.status,
-              ),
-            );
-          });
+        final handler = onError ?? this.onTaskError;
+        if (handler != null) {
+          final idForUpdate = executionId;
+          if (idForUpdate != null) {
+            _updateExecution(taskId, idForUpdate, (current) {
+              return current.copyWith(
+                status: LxError<dynamic>.fromPrevious(
+                  error,
+                  stackTrace,
+                  current.status,
+                ),
+              );
+            });
+          }
+          handler(error, stackTrace);
+        } else {
+          pendingStatus = (prev) =>
+              LxError<dynamic>.fromPrevious(error, stackTrace, prev);
         }
-        (onError ?? this.onTaskError)?.call(error, stackTrace);
       },
       onCancel: () {
-        final idForUpdate = executionId;
-        if (idForUpdate == null) return;
-        _updateExecution(taskId, idForUpdate, (current) {
-          return current.copyWith(
-            status: LxIdle<dynamic>.fromPrevious(current.status),
-          );
-        });
+        pendingStatus = LxIdle<dynamic>.fromPrevious;
       },
     );
     executionId ??= execution.executionId;
@@ -748,8 +748,11 @@ mixin LevitReactiveTasksMixin on LevitController {
     }
     final current = tasks[id];
     if (current == null) return;
-    tasks[id] = current.copyWith(progress: value);
     taskEngine.updateProgress(id, value);
+    final updated = tasks[id];
+    if (updated != null && updated.progress != value) {
+      tasks[id] = updated.copyWith(progress: value);
+    }
   }
 
   /// Clears tracked state and cancels outstanding executions for [id].

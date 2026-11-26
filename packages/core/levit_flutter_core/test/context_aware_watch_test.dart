@@ -81,4 +81,72 @@ void main() {
     );
     expect(find.text('100'), findsOneWidget);
   });
+
+  testWidgets(
+    'LWatch notifies listener middleware when dropping a dynamic dependency',
+    (tester) async {
+      final showSecond = true.lx.named('showSecond');
+      final first = 1.lx.named('first');
+      final second = 2.lx.named('second');
+      final stopped = <String?>[];
+
+      Lx.clearMiddlewares();
+      Lx.addMiddleware(_RecordingListenerMiddleware(onStop: stopped.add));
+
+      await tester.pumpWidget(
+        LWatch(() {
+          final total = showSecond.value
+              ? first.value + second.value
+              : first.value;
+          return Text('$total', textDirection: TextDirection.ltr);
+        }, debugLabel: 'DynamicWatch'),
+      );
+      expect(find.text('3'), findsOneWidget);
+
+      showSecond.value = false;
+      await tester.pump();
+      expect(find.text('1'), findsOneWidget);
+      expect(stopped, contains('second'));
+    },
+  );
+
+  testWidgets(
+    'LSelectorBuilder skips rebuilds when selected value stays equal',
+    (tester) async {
+      final count = 1.lx;
+      var builds = 0;
+
+      await tester.pumpWidget(
+        LSelectorBuilder<bool>(() => count.value.isEven, (isEven) {
+          builds++;
+          return Text('$isEven', textDirection: TextDirection.ltr);
+        }),
+      );
+      expect(find.text('false'), findsOneWidget);
+      expect(builds, 1);
+
+      count.value = 3; // Still odd -> equal derived value
+      await tester.pump();
+      expect(builds, 1);
+
+      count.value = 4; // Now even -> rebuilds once
+      await tester.pump();
+      expect(find.text('true'), findsOneWidget);
+      expect(builds, 2);
+    },
+  );
+}
+
+class _RecordingListenerMiddleware extends LevitReactiveMiddleware {
+  _RecordingListenerMiddleware({required this.onStop});
+  final void Function(String? name) onStop;
+
+  @override
+  void Function(LxReactive reactive, LxListenerContext? context)?
+  get startedListening => (rx, ctx) {};
+
+  @override
+  void Function(LxReactive reactive, LxListenerContext? context)?
+  get stoppedListening =>
+      (rx, ctx) => onStop(rx.name);
 }

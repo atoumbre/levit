@@ -43,25 +43,63 @@ class _LWatchElement extends ComponentElement
     if (oldWidget.debugLabel != newWidget.debugLabel) {
       _cachedContext = null;
     }
-    markNeedsBuild(); // Force rebuild on update
-    rebuild();
+    rebuild(force: true);
   }
 
-  // Single-dependency fast path avoids set allocations and diffing.
+  // Single-dependency fast path avoids list/set allocations and diffing.
   LevitReactiveNotifier? _singleNotifier;
   bool _usingSinglePath = false;
+  bool _expectingSingle = false;
+  bool _singleMatched = false;
 
-  // Multi-dependency path keeps a stable subscription set.
+  // Multi-dependency path keeps a stable subscription set and last read order.
   Set<LevitReactiveNotifier>? _notifiers;
+  List<LevitReactiveNotifier>? _orderedNotifiers;
   Map<(Type, String, String), LxReactive?>? _logicalReactiveIndex;
+  bool _expectingOrdered = false;
+  int _matchedCount = 0;
 
-  // Builder capture uses list semantics; duplicates are deduped later.
+  // Reusable capture storage used only when dependencies change.
   List<LevitReactiveNotifier>? _newNotifiers;
-  final Set<LevitReactiveNotifier> _scratchNotifiers = {};
+  Set<LevitReactiveNotifier>? _scratchNotifiers;
   LxListenerContext? _cachedContext;
+  late final VoidCallback _triggerRebuildCallback = _triggerRebuild;
 
   @override
   void addNotifier(LevitReactiveNotifier notifier) {
+    if (_expectingSingle) {
+      if (identical(_singleNotifier, notifier)) {
+        _singleMatched = true;
+        return;
+      }
+      _expectingSingle = false;
+      final captured = _newNotifiers ??= [];
+      if (_singleMatched) {
+        captured.add(_singleNotifier!);
+      }
+      captured.add(notifier);
+      return;
+    }
+
+    if (_expectingOrdered) {
+      final expected = _orderedNotifiers!;
+      if (_matchedCount < expected.length &&
+          identical(expected[_matchedCount], notifier)) {
+        _matchedCount++;
+        return;
+      }
+      for (var i = 0; i < _matchedCount; i++) {
+        if (identical(expected[i], notifier)) return;
+      }
+      _expectingOrdered = false;
+      final captured = _newNotifiers ??= [];
+      for (var i = 0; i < _matchedCount; i++) {
+        captured.add(expected[i]);
+      }
+      captured.add(notifier);
+      return;
+    }
+
     (_newNotifiers ??= []).add(notifier);
   }
 
@@ -75,18 +113,23 @@ class _LWatchElement extends ComponentElement
     // Stabilize reads when a getter recreates wrapper reactives every build
     // but they still represent the same logical source.
     final single = _singleNotifier;
-    if (_usingSinglePath &&
-        single != null &&
-        !single.isDisposed &&
-        single is LxReactive) {
-      final stable = single as LxReactive;
-      if (_isSameLogicalReactive(stable, reactive)) {
-        return stable;
+    if (_usingSinglePath && single != null) {
+      if (identical(single, reactive)) return reactive;
+      if (!single.isDisposed && single is LxReactive) {
+        final stable = single as LxReactive;
+        if (_isSameLogicalReactive(stable, reactive)) {
+          return stable;
+        }
       }
+      return reactive;
     }
 
     final nots = _notifiers;
     if (nots == null || nots.isEmpty) return reactive;
+    if (reactive case final LevitReactiveNotifier notifier
+        when nots.contains(notifier)) {
+      return reactive;
+    }
 
     final key = _logicalKeyOf(reactive);
     if (key == null) return reactive;
@@ -158,7 +201,7 @@ class _LWatchElement extends ComponentElement
 
   void _cleanupAll() {
     if (_usingSinglePath) {
-      _singleNotifier?.removeListener(_triggerRebuild);
+      _singleNotifier?.removeListener(_triggerRebuildCallback);
       _singleNotifier = null;
       _usingSinglePath = false;
     }
@@ -166,16 +209,37 @@ class _LWatchElement extends ComponentElement
     final nots = _notifiers;
     if (nots != null && nots.isNotEmpty) {
       for (final n in nots) {
-        n.removeListener(_triggerRebuild);
+        n.removeListener(_triggerRebuildCallback);
       }
       nots.clear();
     }
+    _orderedNotifiers = null;
     _logicalReactiveIndex = null;
   }
 
   void _triggerRebuild() {
     if (mounted) {
       markNeedsBuild();
+    }
+  }
+
+  void _addNotifierListener(LevitReactiveNotifier notifier) {
+    if (LxSpi.hasListenerMiddlewares) {
+      LxSpi.runWithContext(_buildContext(), () {
+        notifier.addListener(_triggerRebuildCallback);
+      });
+    } else {
+      notifier.addListener(_triggerRebuildCallback);
+    }
+  }
+
+  void _removeNotifierListener(LevitReactiveNotifier notifier) {
+    if (LxSpi.hasListenerMiddlewares) {
+      LxSpi.runWithContext(_buildContext(), () {
+        notifier.removeListener(_triggerRebuildCallback);
+      });
+    } else {
+      notifier.removeListener(_triggerRebuildCallback);
     }
   }
 
@@ -188,7 +252,11 @@ class _LWatchElement extends ComponentElement
       }());
     }
 
-    _newNotifiers = null;
+    _newNotifiers?.clear();
+    _expectingSingle = _usingSinglePath;
+    _singleMatched = false;
+    _expectingOrdered = !_usingSinglePath && _orderedNotifiers != null;
+    _matchedCount = 0;
 
     final previousProxy = LxSpi.proxy;
     if (identical(previousProxy, this)) {
@@ -199,9 +267,23 @@ class _LWatchElement extends ComponentElement
 
     final Widget result;
     try {
-      result = LScope.runBridged(this, () => (widget as LWatch).builder());
+      result = LScope.runBridged(this, (widget as LWatch).builder);
     } finally {
       LxSpi.proxy = previousProxy;
+    }
+
+    if (_expectingSingle && _singleMatched) {
+      return result;
+    }
+    if (_expectingOrdered) {
+      final expected = _orderedNotifiers!;
+      if (_matchedCount == expected.length) {
+        return result;
+      }
+      final captured = _newNotifiers ??= [];
+      for (var i = 0; i < _matchedCount; i++) {
+        captured.add(expected[i]);
+      }
     }
 
     _updateSubscriptions(_newNotifiers);
@@ -210,70 +292,64 @@ class _LWatchElement extends ComponentElement
   }
 
   void _updateSubscriptions(List<LevitReactiveNotifier>? nextNotifiers) {
-    // Single dependency can be swapped with constant-time checks.
-    if (nextNotifiers != null && nextNotifiers.length == 1) {
-      final notifier = nextNotifiers[0];
-      if (_usingSinglePath && identical(_singleNotifier, notifier)) {
-        return; // No subscription changes.
+    // No dependencies means the watch should hold no subscriptions.
+    if (nextNotifiers == null || nextNotifiers.isEmpty) {
+      if (_usingSinglePath || (_notifiers?.isNotEmpty ?? false)) {
+        _runCleanupAll();
       }
-
-      _cleanupAll();
-      _singleNotifier = notifier;
-      _usingSinglePath = true;
-      _runWithContext(() {
-        notifier.addListener(_triggerRebuild);
-      });
       return;
     }
 
-    // No dependencies means the watch should hold no subscriptions.
-    if (nextNotifiers == null) {
-      if (_usingSinglePath || (_notifiers?.isNotEmpty ?? false)) {
-        _runWithContext(_cleanupAll);
-      }
+    // Single dependency can be swapped with constant-time checks.
+    if (nextNotifiers.length == 1) {
+      final notifier = nextNotifiers[0];
+      _cleanupAll();
+      _singleNotifier = notifier;
+      _usingSinglePath = true;
+      _addNotifierListener(notifier);
       return;
     }
 
     // Multi-dependency reconciliation path.
     if (_usingSinglePath) {
-      _singleNotifier?.removeListener(_triggerRebuild);
+      _singleNotifier?.removeListener(_triggerRebuildCallback);
       _singleNotifier = null;
       _usingSinglePath = false;
     }
 
     // Scratch set enables dedupe without allocating a new set each build.
-    final targetNots = _notifiers ??= {};
-    _scratchNotifiers.clear();
+    final targetNots = _notifiers ??= Set<LevitReactiveNotifier>.identity();
+    final scratch = _scratchNotifiers ??= Set<LevitReactiveNotifier>.identity();
+    scratch.clear();
+    final ordered = <LevitReactiveNotifier>[];
 
     // Subscribe new dependencies and keep existing ones.
     for (final n in nextNotifiers) {
-      if (!_scratchNotifiers.add(n)) continue;
+      if (!scratch.add(n)) continue;
+      ordered.add(n);
       if (targetNots.add(n)) {
-        _runWithContext(() {
-          n.addListener(_triggerRebuild);
-        });
+        _addNotifierListener(n);
       }
     }
 
     // Unsubscribe dependencies no longer observed by the builder.
-    if (targetNots.isNotEmpty) {
+    if (targetNots.length != scratch.length) {
       targetNots.removeWhere((notifier) {
-        if (_scratchNotifiers.contains(notifier)) return false;
-        _runWithContext(() {
-          notifier.removeListener(_triggerRebuild);
-        });
+        if (scratch.contains(notifier)) return false;
+        _removeNotifierListener(notifier);
         return true;
       });
     }
 
+    _orderedNotifiers = ordered;
     _rebuildLogicalReactiveIndex(targetNots);
   }
 
-  void _runWithContext(void Function() fn) {
+  void _runCleanupAll() {
     if (LxSpi.hasListenerMiddlewares) {
-      LxSpi.runWithContext(_buildContext(), fn);
+      LxSpi.runWithContext(_buildContext(), _cleanupAll);
     } else {
-      fn();
+      _cleanupAll();
     }
   }
 
@@ -291,7 +367,7 @@ class _LWatchElement extends ComponentElement
 
   @override
   void unmount() {
-    _runWithContext(_cleanupAll);
+    _runCleanupAll();
     super.unmount();
   }
 }

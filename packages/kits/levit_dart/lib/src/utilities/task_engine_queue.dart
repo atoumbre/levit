@@ -60,6 +60,7 @@ class _TaskExecution {
   int attempt = 0;
   double progress = 0;
   bool detachedByRestart = false;
+  bool inPriorityQueue = false;
   LevitTaskSkipReason? cancellationReason;
   LevitDisposalFailure? cleanupFailure;
 
@@ -75,7 +76,7 @@ class _TaskExecution {
 
 class _TaskGroup {
   final Object key;
-  final List<_TaskExecution> outstanding = [];
+  final ListQueue<_TaskExecution> outstanding = ListQueue<_TaskExecution>();
   _TaskExecution? coalescedTail;
 
   _TaskGroup(this.key);
