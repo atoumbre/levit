@@ -83,10 +83,8 @@ final class _AsyncMapResource<T>
   final String? name;
   final LxVar<_AsyncMapFrame<T>> _state;
   _AsyncProducer<T>? _current;
-  _AsyncProducer<T>? _retiring;
   void Function()? _listener;
   bool _started = false;
-  bool _building = false;
   bool _closing = false;
   Future<void>? _replacement;
   Future<void>? _cleanup;
@@ -136,40 +134,24 @@ final class _AsyncMapResource<T>
   }
 
   void _attach() {
-    _AsyncProducer<T>? created;
-    _building = true;
     try {
       final next = Lx.untracked(() => LxSpi.createOwned(_create));
-      created = next;
       next.name ??= name;
       next.ownerId ??= _state.ownerId;
       _current = next;
       void publish() {
         if (_closing || !identical(_current, next)) return;
-        try {
-          final data = Lx.untracked(() => next.value);
-          _state.value = _AsyncMapFrame(data, true);
-        } catch (error, stack) {
-          _publishFailure(error, stack);
-        }
+        final data = Lx.untracked(() => next.value);
+        _state.value = _AsyncMapFrame(data, true);
       }
 
       _listener = publish;
       next.addListener(publish);
       final initial = Lx.untracked(() => next.value);
-      _building = false;
       _state.value = _AsyncMapFrame(initial, true);
     } catch (error, stack) {
-      if (created != null) {
-        _detach();
-        final retiring = _release(created);
-        _cleanup = retiring;
-        retiring.ignore();
-      }
       _publishFailure(error, stack);
       rethrow;
-    } finally {
-      _building = false;
     }
   }
 
@@ -197,12 +179,7 @@ final class _AsyncMapResource<T>
 
   _AsyncProducer<T> get producer {
     _start();
-    final frame = _state.value;
-    final current = _current;
-    if (frame.replacing || current == null) {
-      throw StateError('Producer is unavailable.');
-    }
-    return current;
+    return _current!;
   }
 
   @override
@@ -220,35 +197,7 @@ final class _AsyncMapResource<T>
       _state.removeListener(listener);
 
   @override
-  Stream<LxStatus<T>> get stream => Stream.multi((output) {
-    if (_closing) {
-      output.closeSync();
-      return;
-    }
-    try {
-      _start();
-    } catch (error, stack) {
-      output.addErrorSync(error, stack);
-    }
-    final subscription = _state.stream
-        .map((frame) => frame.read())
-        .listen(
-          output.addSync,
-          onError: output.addErrorSync,
-          onDone: output.closeSync,
-        );
-    output.onCancel = subscription.cancel;
-  }, isBroadcast: true);
-
-  void _assertCanClose() {
-    if (_building ||
-        (_current != null && LxSpi.isExecuting(_current!)) ||
-        (_retiring != null && LxSpi.isExecuting(_retiring!))) {
-      throw StateError(
-        'A producer cannot await its own replacement or cleanup.',
-      );
-    }
-  }
+  Stream<LxStatus<T>> get stream => _state.stream.map((frame) => frame.read());
 
   _AsyncProducer<T>? _detach() {
     final previous = _current;
@@ -256,11 +205,7 @@ final class _AsyncMapResource<T>
     _current = null;
     _listener = null;
     if (previous != null && listener != null) {
-      try {
-        previous.removeListener(listener);
-      } catch (error, stack) {
-        _failures.add(AsyncError(error, stack));
-      }
+      previous.removeListener(listener);
     }
     return previous;
   }
@@ -269,30 +214,18 @@ final class _AsyncMapResource<T>
     _AsyncProducer<T> previous, {
     bool cancel = true,
   }) async {
-    _retiring = previous;
     final errors = <AsyncError>[];
+    if (cancel) previous.requestCancel();
     try {
-      if (cancel) {
-        try {
-          previous.requestCancel();
-        } catch (e, s) {
-          errors.add(AsyncError(e, s));
-        }
-      }
-      try {
-        await previous.close();
-      } catch (e, s) {
-        errors.add(AsyncError(e, s));
-      }
-    } finally {
-      _retiring = null;
+      await previous.close();
+    } catch (e, s) {
+      errors.add(AsyncError(e, s));
     }
     if (errors.isNotEmpty) throw LxCleanupException(errors);
   }
 
   Future<void> refresh() {
     _ensureOpen();
-    _assertCanClose();
     if (_replacement case final pending?) return pending;
     final c = Completer<void>();
     _replacement = c.future;
@@ -303,7 +236,6 @@ final class _AsyncMapResource<T>
     unawaited(() async {
       try {
         if (old != null) {
-          _retiring = old;
           final barrier = Completer<void>();
           _cleanup = barrier.future;
           barrier.future.ignore();
@@ -329,21 +261,8 @@ final class _AsyncMapResource<T>
         if (_closing) throw const LxCancelledException();
         c.complete();
       } catch (e, s) {
-        Object failure = e;
-        if (_cleanup case final failedAttachment?) {
-          try {
-            await failedAttachment;
-          } catch (other, stack) {
-            failure = LxCleanupException([
-              AsyncError(e, s),
-              AsyncError(other, stack),
-            ]);
-          } finally {
-            _cleanup = null;
-          }
-        }
-        _publishFailure(failure, s);
-        c.completeError(failure, s);
+        _publishFailure(e, s);
+        c.completeError(e, s);
       } finally {
         _replacement = null;
       }
@@ -355,26 +274,18 @@ final class _AsyncMapResource<T>
   void requestCancel() {
     if (_closing) return;
     _closing = true;
-    final current = _current;
-    if (current != null) {
-      try {
-        current.requestCancel();
-      } catch (e, s) {
-        _failures.add(AsyncError(e, s));
-      }
-    }
+    _current?.requestCancel();
   }
 
   @override
   Future<void> drain() async {
-    _assertCanClose();
     final errors = <AsyncError>[];
     for (final operation in [_replacement, _cleanup]) {
       if (operation != null) {
         try {
           await operation;
         } on LxCancelledException {
-          if (!_closing) rethrow;
+          // Cancellation is expected once the resource is closing.
         } catch (e, s) {
           errors.add(AsyncError(e, s));
         }
@@ -382,17 +293,12 @@ final class _AsyncMapResource<T>
     }
     final current = _current;
     if (current != null) {
-      try {
-        await current.drain();
-      } catch (e, s) {
-        errors.add(AsyncError(e, s));
-      }
+      await current.drain();
     }
     if (errors.isNotEmpty) throw LxCleanupException(errors);
   }
 
   Future<void> close() {
-    _assertCanClose();
     if (_closingFuture case final pending?) return pending;
     final c = Completer<void>();
     _closingFuture = c.future;
