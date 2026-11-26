@@ -38,11 +38,11 @@ Levit takes a different position:
 
 That is why the ecosystem is layered the way it is:
 
-- [`levit_scope`](./packages/core/levit_scope) defines ownership and deterministic disposal
-- [`levit_reactive`](./packages/core/levit_reactive) defines change propagation and dependency tracking
-- [`levit_dart_core`](./packages/core/levit_dart_core) composes both into controllers, stores, and the `Levit` facade
-- [`levit_flutter_core`](./packages/core/levit_flutter_core) maps that model onto Flutter widget lifecycles
-- [`levit_monitor`](./packages/core/levit_monitor) adds runtime diagnostics when needed, without forcing them into the default runtime
+- [`levit_scope`](../packages/core/levit_scope) defines ownership and deterministic disposal
+- [`levit_reactive`](../packages/core/levit_reactive) defines change propagation and dependency tracking
+- [`levit_dart_core`](../packages/core/levit_dart_core) composes both into controllers, stores, and the `Levit` facade
+- [`levit_flutter_core`](../packages/core/levit_flutter_core) maps that model onto Flutter widget lifecycles
+- [`levit_monitor`](../packages/core/levit_monitor) adds runtime diagnostics when needed, without forcing them into the default runtime
 
 ## The Promise
 
@@ -77,6 +77,13 @@ Flutter developers will reasonably compare this with Riverpod, Bloc, or Provider
 Those tools are often centered on modeling and delivering application state inside Flutter.
 Levit is aimed at a broader problem: making ownership, teardown, reactive propagation, and Flutter bindings part of one runtime model that still works outside the widget tree.
 
+Consider a concrete scenario: a user pops a route while a multi-step upload is in flight and the route's controller owns a stream subscription, a countdown timer, and an API client. In Levit, closing that route scope automatically:
+
+1. Stops new work and notification admission immediately.
+2. Signals cooperative cancellation across the controller's task groups and waits for their `finally` blocks to drain.
+3. Releases the owned subscription, timer, and API client in reverse ownership order (`LIFO`).
+4. Attempts every cleanup step and aggregates any teardown failures into a single typed exception instead of swallowing them.
+
 That is the core value proposition:
 
 > Levit gives Dart and Flutter teams deterministic ownership and reactive precision when lifecycle bugs and unclear boundaries are becoming expensive.
@@ -88,12 +95,14 @@ That is the core value proposition:
 Levit is strongest when object lifetime should be obvious from structure.
 
 A child scope can override parent dependencies without mutating parent state.
-When the child scope goes away, its registrations go away with it.
-That reduces bugs where state outlives the feature, route, or subtree that created it.
+When the child scope goes away, its registrations—and any owned child scopes, controllers, and factory results—drain tracked async work and dispose together.
+In Flutter, scope replacement is serialized across generations, coalescing rapid argument changes and exposing cleanup failure/retry through `LevitScopeLifecycleController`.
+That eliminates bugs where state or background work silently outlives the feature, route, or subtree that created it.
 
 ### 2. Fine-grained reactive updates
 
 The reactive model tracks what was actually read, then recomputes or rebuilds only where needed.
+Read-only consumers observe `LxReadable<T>` without receiving mutation or close capabilities; collections borrow per-key/per-position entries, and `LxResource` preserves observers across producer replacement.
 
 In Flutter, that shows up through widgets such as:
 
@@ -118,9 +127,10 @@ That matters when the UI should not be the only place where lifecycle discipline
 
 ### 4. Operational visibility
 
-With [`levit_monitor`](./packages/core/levit_monitor), observability becomes part of the architecture instead of an afterthought.
+With [`levit_monitor`](../packages/core/levit_monitor), observability becomes part of the architecture instead of an afterthought.
 
-You can attach diagnostics, redact sensitive values, and export runtime events without changing the ownership model underneath.
+You can attach diagnostics, redact sensitive values at construction, inspect immutable scope snapshots (`scope.describe()`), and export bounded runtime events without changing the ownership model underneath.
+That same structured, redacted telemetry model also powers live read-only inspection for AI agents via [`levit_mcp`](../packages/tools/levit_mcp), while [`levit_lints`](../packages/tools/levit_lints) catches lifecycle and ownership mistakes statically.
 
 ## Where Levit Fits Best
 
@@ -160,10 +170,10 @@ That trade can be worth it in larger systems and unnecessary in smaller ones.
 
 The pitch is backed by concrete material in this repo:
 
-- Benchmark methodology: [`benchmarks/README.md`](./benchmarks/README.md)
-- Comparative results: [`reports/benchmark_report.md`](./reports/benchmark_report.md)
-- Stress results for reactive, DI, and Flutter bindings: [`reports/stress_test_report.md`](./reports/stress_test_report.md)
-- Worked examples: [`examples/`](./examples), [`packages/kits/levit_flutter/example/README.md`](./packages/kits/levit_flutter/example/README.md)
+- Benchmark methodology: [`benchmarks/README.md`](../benchmarks/README.md)
+- Comparative results: [`reports/benchmark_report.md`](../reports/benchmark_report.md)
+- Stress results for reactive, DI, and Flutter bindings: [`reports/stress_test_report.md`](../reports/stress_test_report.md)
+- Worked examples: [`examples/`](../examples), [`packages/kits/levit_flutter/example/README.md`](../packages/kits/levit_flutter/example/README.md)
 
 These are not a substitute for trying the framework in your own workload, but they do show that the claims are meant to be testable.
 
@@ -192,59 +202,29 @@ return LScopedView<CounterController>.put(
 
 If you are evaluating Levit, start with the entry point that matches the job you are trying to do:
 
-- Building a pure Dart application, service, CLI, or shared domain package: start with [`levit`](./packages/kits/levit).
-- Building a Flutter application: start with [`levit_flutter`](./packages/kits/levit_flutter).
-- Composing your own runtime surface on top of the core ownership model: start with [`levit_dart_core`](./packages/core/levit_dart_core).
-- Using the Flutter bindings directly without the higher-level Flutter kit: start with [`levit_flutter_core`](./packages/core/levit_flutter_core).
-- Adding telemetry, event export, or runtime diagnostics: add [`levit_monitor`](./packages/core/levit_monitor) separately.
+- Building a pure Dart application, service, CLI, or shared domain package: start with [`levit`](../packages/kits/levit).
+- Building a Flutter application: start with [`levit_flutter`](../packages/kits/levit_flutter).
+- Composing your own runtime surface on top of the core ownership model: start with [`levit_dart_core`](../packages/core/levit_dart_core).
+- Using the Flutter bindings directly without the higher-level Flutter kit: start with [`levit_flutter_core`](../packages/core/levit_flutter_core).
+- Adding telemetry, event export, or runtime diagnostics: add [`levit_monitor`](../packages/core/levit_monitor) separately.
 
 From there:
 
-- Use the root [`README.md`](./README.md) for ecosystem structure and quick onboarding.
-- Use package READMEs for package boundaries and package-specific guidance.
-- Use DartDoc for the public API contract.
+- Use the root [`README.md`](../README.md) for ecosystem structure and quick onboarding.
+- Follow [ONBOARDING.md](ONBOARDING.md) for a step-by-step first feature, and [ADVANCED.md](ADVANCED.md) for structured tasks, queries, and interop.
+- Use package READMEs and inline DartDoc for individual API contracts.
+
+## Runtime and Ecosystem Boundary
+
+The main repository owns scopes, cleanup, reactive state, structured work, runtime
+diagnostics, and first-party Flutter bindings. It stays independent of storage
+backends and persistence policy: persistence interfaces, codecs, storage
+implementations, and persistent task caches are intentionally kept outside the
+core runtime dependencies.
 
 ## The Short Version
 
-Levit is valuable when your application needs lifecycle rigor, clear ownership, and reactive precision more than it needs the smallest possible conceptual surface.
-
-If your team keeps asking:
-
-- What owns this?
-- When does it go away?
-- What caused this update?
-- Can the same model survive outside the widget tree?
-
-then Levit has a clear reason to exist.
-
-## Runtime and ecosystem boundary
-
-The main repository owns scopes, cleanup, reactive state, structured work, runtime
-diagnostics and first-party Flutter bindings. It stays independent of storage
-backends and persistence policy. Native Flutter observation adapters belong with
-the bindings; corrections to existing time utilities belong with those utilities.
-
-Persistence interfaces, codecs, migrations, storage implementations, persistent
-task caches and codec-based restoration belong in an independently released
-ecosystem repository. Those integrations consume public Levit APIs and test
-initialization, subscription ownership and awaited cleanup against supported
-runtime versions. The runtime must not depend on ecosystem packages. See the
-[ecosystem roadmap](docs/ecosystem_roadmap.md).
-
-## 0.1.0 lifetime and observation contracts
-
-Owners request cancellation and drain tracked work before releasing dependencies.
-All cleanup is attempted, then awaited failures aggregate. Closing stops admission
-and publication immediately; a deadline is not proof that work has stopped.
-Flutter replacement serializes generations and exposes cleanup failure/retry.
-
-Stores use definition identity plus variant, and receiving scopes own overrides.
-Observation uses `LxReadable`; collections borrow entries, and an owned LxResource preserves observers when its producer is replaced.
-Controller task roots supervise unrelated workflows while child workflows cancel
-siblings on failure. Only leaf tasks occupy scheduling slots. These boundaries
-make ownership inspectable without coupling the core to a storage or network stack.
-
-The optional local inspector shows redacted, bounded state and task metadata.
-Snapshots after reconnection restore current state without inventing missing
-history. The lint plugin adds focused local checks, not general cancellation proofs.
-See [onboarding](docs/ONBOARDING.md) and [migration](docs/MIGRATION_0.1.0.md).
+Choose Levit when deterministic ownership, awaited teardown, and traceable
+reactive updates matter more to your codebase than the smallest possible
+conceptual surface—and when you want those exact same rules in both Flutter UI
+and pure Dart.

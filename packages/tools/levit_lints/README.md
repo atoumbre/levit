@@ -1,17 +1,17 @@
 # levit_lints
 
-Native Dart analyzer rules for Levit lifecycle and reactive-state usage. This
-publishable package has no Levit runtime dependency. Requires Dart 3.12+.
+Native Dart analyzer rules for Levit lifecycle, reactive-state, and widget
+scoping usage. Currently an unpublished workspace tool (`publish_to: none`) with
+no Levit runtime dependency. Requires Dart 3.12+.
 
 ## Enable
 
-To use the beta, add this in the **root**
-`analysis_options.yaml` of your package/workspace:
+Add this in the **root** `analysis_options.yaml` of your package/workspace:
 
 ```yaml
 plugins:
   levit_lints:
-    version: ^0.1.0-beta.1
+    path: /absolute/path/to/levit/packages/tools/levit_lints
     diagnostics:
       await_levit_lifecycle: true
       avoid_global_levit_in_widgets: true
@@ -22,11 +22,10 @@ plugins:
       avoid_preconstructed_levit_put: true
 ```
 
-For the unpublished checkout, replace `version` with
-`path: /absolute/path/to/levit/packages/tools/levit_lints`. No runtime dependency
-or `custom_lint` runner is needed. Restart the analysis server after changing
-plugin configuration; run `dart analyze --fatal-infos` or `flutter analyze` in CI.
-This uses the [supported native analyzer plugin configuration](https://dart.dev/tools/analyzer-plugins).
+No runtime dependency or `custom_lint` runner is needed. Restart the analysis
+server after changing plugin configuration; run `dart analyze --fatal-infos` or
+`flutter analyze` in CI. This uses the
+[supported native analyzer plugin configuration](https://dart.dev/tools/analyzer-plugins).
 
 ## Rules and limits
 

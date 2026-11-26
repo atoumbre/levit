@@ -7,47 +7,28 @@
 
 ## Purpose & Scope
 
-`levit_flutter_core` owns the Flutter binding layer for Levit.
+`levit_flutter_core` owns the Flutter binding layer for Levit, bridging Flutter
+`InheritedWidget` tree lifecycles with Levit `Zone`-based scopes. It also
+re-exports `levit_dart_core` for convenience.
 
-Use this package directly when you want Flutter bindings without the higher-level `levit_flutter` kit.
-
-This package is responsible for:
-
-- `LScope` / `LAsyncScope` / `LRouteScope` / `LAsyncRouteScope`: scope boundaries for subtree, async, and route-owned lifetimes.
-- `LWatch`: reactive rebuild boundaries based on accessed values.
-- `LView`, `LAsyncView`, `LScopedView`: controller/view orchestration widgets.
-- Builder widgets (`LBuilder`, selector/status builders) for focused reactive rendering.
-
-This package also re-exports `levit_dart_core` for convenience, so `Levit`, `LevitController`, stores, and reactive primitives remain available from one import.
-
-This package does not include:
-
-- Higher-level convenience widgets and runtime helpers provided by `levit_flutter`.
-- New Dart runtime semantics beyond what `levit_dart_core` already defines.
-
-## Conceptual Overview
-
-`levit_flutter_core` bridges two scope models:
-
-- Flutter tree scope via `InheritedWidget`.
-- Levit execution scope via `Zone`-based current scope.
-
-The package ensures widget lifecycle events and DI lifecycle events stay synchronized, so registrations created for a subtree are disposed when that subtree unmounts.
+Use this package directly when you want Flutter bindings without the
+higher-level `levit_dart` utilities and overlay/lifecycle helpers bundled in
+[`levit_flutter`](https://pub.dev/packages/levit_flutter).
 
 ## Choosing the Right Widget
 
 | API | Use when | Prefer another API when |
 | :-- | :-- | :-- |
 | `LWatch` | A small subtree should rebuild for whichever reactive values it reads during build. | The dependency is already explicit and singular; prefer `LBuilder`. |
-| `LBuilder` | You already know the exact `LxReactive` to observe. | The subtree depends on several reactive reads discovered during build; prefer `LWatch`. |
+| `LBuilder` | You already know the exact `LxReadable` / `LxReactive` to observe. | The subtree depends on several reactive reads discovered during build; prefer `LWatch`. |
 | `LSelectorBuilder` | You want a small derived value local to one subtree without promoting it to controller state. | The derived value is shared across widgets or long-lived; move it into a controller/store computed. |
-| `LStatusBuilder` | You are rendering an `LxStatus<T>` with waiting, error, and success branches. | You are not working with `LxStatus`; prefer `LBuilder` or `LWatch`. |
+| `LStatusBuilder` | You are rendering an `LxStatus<T>` with waiting, error, idle, and success branches. | You are not working with `LxStatus`; prefer `LBuilder` or `LWatch`. |
 | `LView` | The controller/service already exists in the nearest scope and you only need to render it. | The widget should create and own a child scope; prefer `LScopedView`. |
-| `LAsyncView` | The dependency resolves asynchronously from the current scope. | You also need to create a new scope boundary or async scope initialization; prefer `LAsyncScopedView` or `LAsyncScope`. |
+| `LAsyncView` | The dependency resolves asynchronously from the current scope. | You also need to create a new scope boundary or async initialization; prefer `LAsyncScopedView` or `LAsyncScope`. |
 | `LScopedView` | One widget should create a child scope, register a dependency, and render it. | The scope already exists; prefer `LView`. |
 | `LAsyncScopedView` | One widget should create a child scope and resolve the dependency asynchronously. | You only need an async scope boundary without the view abstraction; prefer `LAsyncScope`. |
-| `LScope` / `LAsyncScope` | You need a scope boundary for a subtree, independent of a specific controller/view widget. | A single controller-view pair is enough; prefer `LScopedView` or `LAsyncScopedView`. |
-| `LRouteScope` / `LAsyncRouteScope` | Route identity and route coverage are the ownership boundary, and you want current/covered route visibility exposed reactively. | The scope is only subtree-local and does not care about route semantics; prefer `LScope` or `LAsyncScope`. |
+| `LScope` / `LAsyncScope` | You need a scope boundary for a subtree independent of a specific controller/view widget. | A single controller-view pair is enough; prefer `LScopedView` or `LAsyncScopedView`. |
+| `LRouteScope` / `LAsyncRouteScope` | Route identity and route visibility are the ownership boundary. | The scope is only subtree-local; prefer `LScope` or `LAsyncScope`. |
 
 ## Getting Started
 
@@ -91,11 +72,11 @@ void main() {
 }
 ```
 
-## Route-aware Scoping
+## Route-Aware Scoping & Overlay Capture
 
-Use `LRouteScope` when a screen route is the meaningful lifetime boundary.
-Use `LAsyncRouteScope` when the same route-owned boundary also needs async initialization.
-Both wrap the existing scope primitives, reset the local scope when the bound route changes, and expose a reactive `LRouteVisibility` signal to descendants.
+Use `LRouteScope` / `LAsyncRouteScope` when a route is the lifetime boundary;
+both reset the local scope when the bound route changes and expose a reactive
+`LRouteVisibility` signal via `LRouteScope.visibilityOf(context)`:
 
 ```dart
 Navigator(
@@ -120,9 +101,11 @@ Navigator(
 );
 ```
 
-## Capturing Scope for Dialogs and Overlays
-
-Use `LScope.capture(...)` when a dialog or overlay should keep access to a page-local scope even though it is rendered under a different route subtree.
+For dialogs and overlays rendered under a separate route subtree, wrap their
+content with `LScope.capture(context, child: ...)` so `context.levit.find` still
+resolves page-local dependencies (when using the `levit_flutter` kit,
+`showLevitDialog` and `showLevitModalBottomSheet` wrap with `LScope.capture`
+automatically):
 
 ```dart
 showDialog(
@@ -134,99 +117,50 @@ showDialog(
 );
 ```
 
-Prefer the kit helpers from `package:levit_flutter/levit_flutter.dart`, which
-capture by default for imperative overlays:
+## Serialized Scope Replacement & View Updates
+
+Pass a stable `LevitScopeLifecycleController` to `LScope` or `LAsyncScope` to
+observe transitions (`settled`, `error`), retry failed setups (`retry()`), and
+await terminal cleanup (`close()`):
 
 ```dart
-showLevitDialog(
-  context: context,
-  builder: (dialogContext) => Dialog(
-    child: Text(dialogContext.levit.find<PageController>().title()),
+LAsyncScope(
+  lifecycle: lifecycle,
+  args: [sessionId],
+  configure: (scope) async {
+    scope.put(() => SessionConnection(sessionId));
+  },
+  loading: (_) => const Center(child: CircularProgressIndicator()),
+  error: (_, error) => TextButton(
+    onPressed: lifecycle.retry,
+    child: Text('Retry ($error)'),
   ),
-);
-
-showLevitModalBottomSheet(
-  context: context,
-  builder: (sheetContext) => Text(
-    sheetContext.levit.find<PageController>().title(),
-  ),
+  child: const SessionBody(),
 );
 ```
 
-Routed sheets (for example a `ModalBottomSheetPage`) should still wrap their
-content with `LScope.capture` when they need page-local dependencies.
+- **Serialized & coalesced:** Rapid argument changes coalesce to the latest
+  configuration while the previous generation finishes cleanup; an obsolete
+  initializer cannot close a newer scope.
+- **View resolution:** Consuming `LView` / `LAsyncView` resolve on mount, scope
+  change, or explicit `args` change—a new resolver closure alone does not
+  refetch. Pass `localOnly: true` to `.store` constructors or use
+  `context.levit.findStore` / `findAsyncStore` for typed stores.
+- **Unmount & self-disposal:** Widget `dispose()` starts cleanup synchronously
+  and reports failures via `FlutterError.reportError` (and through awaited
+  `lifecycle.close()`). Scope factories run inside `scope.runInitialization` and
+  throw `StateError` if they attempt to await their own scope's disposal.
 
-## Design Principles
+## Status Builders & ValueListenable Interoperability
 
-- Tree-owned lifecycles: widget mount/unmount controls scope setup/disposal.
-- Fine-grained rebuilds: widgets rebuild only for values read during build.
-- Explicit composition: sync and async scope/view variants remain explicit.
-- Focused ownership: package owns Flutter bindings and re-exports the Dart core layer for convenience.
-
-## View updates and local stores
-
-Consuming views resolve initially, when their bound scope changes, or when explicit `args` change. A new resolver closure alone does not refetch. Scoped views continue recreating their scope when ownership arguments change. Pass `localOnly: true` to `.store` constructors to isolate a store from ancestor instances. Register shared dependencies explicitly in their owning scope; use `LScopedView.put` or `LAsyncScopedView.put` for view-owned dependencies.
-
-## 0.1.0 scope replacement
-
-Scope replacement is serialized. While the previous generation initializes or
-closes, `LScope` and `LAsyncScope` render their `loading` builder. Rapid changes
-coalesce to the latest arguments. Errors render through `error`; an obsolete
-initializer cannot close a newer scope.
-
-Pass a stable `LevitScopeLifecycleController` as `lifecycle` to observe
-`settled`, inspect `error`, retry a failed transition with `retry()`, and await
-terminal cleanup with `close()`. Widget `dispose()` initiates this operation
-synchronously; it cannot await it. Unmount cleanup failures are reported via
-`FlutterError.reportError` and remain available from awaited `close()`.
-
-
-### Typed stores and observation in 0.1.0
-
-Store identity is the definition object plus its optional variant tag. Diagnostic
-names and result types do not identify stores. Install `store.overrideWith(builder)`
-using `scope.applyOverrides([...])` before local resolution. The receiving scope
-owns override resources; unoverridden lookups inherit an ancestor unless
-`localOnly: true` is supplied. `LevitRef` and `context.levit` offer `findStore`,
-`findStore` and `findAsyncStore` with the same typed contract.
-
-Optional DI lookups return null only for missing registrations. Builder and type
-errors propagate. `scope.describe()` returns immutable ancestry, registration,
-initialization and ownership metadata without dependency values or raw tags.
-Builders and selectors accept `LxReadable<T>`; `LxState.asReadable` exposes this
-observation-only interface.
-
-Tests can import `package:levit/levit_testing.dart` or
-`package:levit_flutter/levit_testing.dart`. Create `LevitTestScope(overrides: [...])`,
-run code through its isolated scope, track asynchronous work and await `settle()`.
-Register and await `close()` in teardown to report cleanup failures.
-
-## Stable query observations in 0.1.0
-
-`LBuilder`, `LSelectorBuilder` and `LStatusBuilder` observe `LxReadable<T>`.
-Pass an async-map entry directly so mounted widgets stay connected across refresh.
-`LStatusBuilder.onWaiting`, `onError` and `onIdle` receive their complete status:
-
-```dart
-LStatusBuilder<List<Item>>(
-  controller.queries.entry(search),
-  onWaiting: (status) => status.hasLastValue
-      ? ItemList(status.lastValue!) : const CircularProgressIndicator(),
-  onError: (status) => Text('Refresh failed: ${status.error}'),
-  onSuccess: (items) => ItemList(items),
-);
-```
-
-Check `hasLastValue` rather than `lastValue != null` for nullable results. Keep
-query/mutation ownership in the controller; widgets observe handles and invoke
-controller actions. The async catalog example demonstrates searchable pagination,
-retained results and optimistic favorite edits with rollback.
-
-## Borrowing ValueListenable interoperability (0.1.0)
-
-Use `source.asValueListenable()` when a Flutter API needs a `ValueListenable<T>`.
-It accepts any `LxReadable<T>`, including observation-only state and stable async-map
-entries. Keep the adapter outside `build` and give it a controller or widget owner:
+- **`LxReadable<T>` builders:** `LBuilder`, `LSelectorBuilder`, and
+  `LStatusBuilder` accept any `LxReadable<T>`. `LStatusBuilder.onWaiting`,
+  `onError`, and `onIdle` receive the full `LxStatus<T>` (check
+  `status.hasLastValue` rather than `lastValue != null` for nullable data).
+- **`ValueListenable` adapter:** Use `source.asValueListenable()` when a Flutter
+  API requires a `ValueListenable<T>`. Create and own the adapter outside
+  `build`—it subscribes lazily on first listener, unsubscribes when the last
+  listener leaves, and `dispose()` detaches without closing the source:
 
 ```dart
 class CounterController extends LevitController {
@@ -240,25 +174,8 @@ ValueListenableBuilder<int>(
 );
 ```
 
-`LxValueListenable<T>` borrows the source. Creating it does not subscribe; the first
-listener subscribes and removing the last listener unsubscribes. Reads return the
-current source value, including null, and source refreshes are forwarded even when
-the same mutable object is retained. Duplicate listeners follow Flutter conventions.
+## Design Principles
 
-`adapter.dispose()` is idempotent, stops notifications and releases only the
-subscription. It never closes or mutates the source. Reads/new listeners after
-adapter disposal throw `StateError`; removing listeners remains safe during widget
-teardown. Keep the source alive under its existing owner. Expose the adapter as
-`ValueListenable<T>` to observation-only consumers.
-
-For native Levit widgets, keep using `LWatch` or `LBuilder`. This adapter provides
-interoperability with Flutter's existing APIs and adds no persistence dependency.
-
-Reentrant scope replacement is serialized too: initialization is admitted before
-calling the factory, so a replacement requested inside it still drains that
-initializer. A close requested by a lifecycle listener completes only after the
-resulting cleanup pump finishes. Await `close()` to observe cleanup failures.
-
-Widget factories run through `scope.runInitialization`. They cannot await their
-own scope, parent owner, or lifecycle controller's terminal cleanup; those calls
-fail with `StateError`. Initiate cancellation there and await cleanup externally.
+- **Tree-owned lifecycles:** widget mount/unmount drives scope setup and disposal.
+- **Fine-grained rebuilds:** widgets rebuild only for values read during build.
+- **Explicit composition:** sync and async scope/view variants remain distinct.

@@ -44,12 +44,6 @@ import 'package:levit_flutter/levit_flutter.dart';
 class CounterController extends LevitController {
   final count = 0.lx;
 
-  @override
-  void onInit() {
-    super.onInit();
-    own(count);
-  }
-
   void increment() => count.value++;
 }
 
@@ -79,12 +73,12 @@ The scoped view creates and owns the controller. The controller owns its state;
 `count.value` read. `LWatch` observes reads inside its callback and rebuilds that
 region when they change.
 
-Call `Levit.enableAutoLinking()` before `runApp` to capture reactive construction
-during owner initialization. Explicit `own(count)` is also valid and makes this
-controller usable without auto-linking in pure Dart. Own workers and resources
-created later explicitly. For a Flutter object such as `TextEditingController`,
-use `own(TextEditingController(), dispose: (value) => value.dispose())` inside
-the owning controller.
+Calling `Levit.enableAutoLinking()` before `runApp` automatically links reactive
+fields created during owner construction to that controller's lifecycle. In pure
+Dart without auto-linking—or for non-reactive resources and workers created
+later—register them explicitly with `own(...)`. For a Flutter object such as
+`TextEditingController`, pass an explicit disposer:
+`late final input = own(TextEditingController(), dispose: (c) => c.dispose());`.
 
 For a small view, leave `autoWatch: true` and read reactive values directly in
 its builder. Use `autoWatch: false` with focused `LWatch` regions for larger
@@ -117,10 +111,43 @@ For finer state boundaries, use:
 - `LevitAsyncMap` for task-backed loading by key. Give widgets `queries.entry(key)`
   and await `queries.refresh(key)` for the load result.
 
-Use `LStatusBuilder` for waiting, success and error states. A successful `null`
-is valid data; `status.hasLastValue` distinguishes it from absent data. The
-[async catalog](../examples/async_catalog) demonstrates pagination, retained data
-during refresh, optimistic updates and rollback.
+Use `LStatusBuilder` for waiting, success, and error states. A successful `null`
+is valid data; `status.hasLastValue` distinguishes it from absent data:
+
+```dart
+class CatalogController extends LevitController with LevitTasksMixin {
+  CatalogController(this.repository);
+  final CatalogRepository repository;
+
+  late final queries = own(
+    LevitAsyncMap<String, List<Item>>(
+      (query, task) => repository.search(query, cancelled: task.cancelled),
+      engine: taskEngine,
+    ),
+  );
+}
+
+class CatalogResults extends StatelessWidget {
+  const CatalogResults({super.key, required this.query});
+  final String query;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.levit.find<CatalogController>();
+    return LStatusBuilder<List<Item>>(
+      controller.queries.entry(query),
+      onWaiting: (status) => status.hasLastValue
+          ? ItemList(items: status.lastValue!)
+          : const CircularProgressIndicator(),
+      onError: (status) => Text('Failed: ${status.error}'),
+      onSuccess: (items) => ItemList(items: items),
+    );
+  }
+}
+```
+
+The [async catalog](../examples/async_catalog) demonstrates pagination, retained
+data during refresh, optimistic updates, and rollback.
 
 ## 4. Keep async work inside its lifetime
 
@@ -191,29 +218,46 @@ Use `harness.track(operation)` for asynchronous work the harness must observe,
 and await `harness.settle()` when the assertion requires its completion. Flutter
 tests can import `package:levit_flutter/levit_testing.dart`.
 
-Widget unmount starts cleanup synchronously. To await its result, keep a stable
-`LevitScopeLifecycleController` on `LScope`/`LAsyncScope`, unmount, and await
-`lifecycle.close()`. Advance the test's fake clock when cleanup intentionally
-uses timers. `closed` signals completion; `close()` also surfaces cleanup errors.
-The [session replacement tests](../examples/scope_playground/test/session_replacement_test.dart)
-exercise loading, rapid changes, retry and store overrides.
+Widget unmount starts cleanup synchronously. To await its result and surface
+cleanup errors in widget tests, pass a stable `LevitScopeLifecycleController` to
+`LScope`/`LAsyncScope`, unmount, and await `lifecycle.close()`:
+
+```dart
+testWidgets('unmount awaits scope cleanup', (tester) async {
+  final lifecycle = LevitScopeLifecycleController();
+  await tester.pumpWidget(
+    MaterialApp(
+      home: LScope(
+        lifecycle: lifecycle,
+        configure: (scope) => scope.put(() => SessionController()),
+        child: const SessionView(),
+      ),
+    ),
+  );
+
+  await tester.pumpWidget(const SizedBox());
+  await lifecycle.close();
+});
+```
+
+Advance the test's fake clock when cleanup intentionally uses timers. `closed`
+signals completion; `close()` also propagates cleanup errors. The
+[session replacement tests](../examples/scope_playground/test/session_replacement_test.dart)
+exercise loading, rapid changes, retry, and store overrides.
 
 ## Continue from a working feature
 
 Use [advanced helpers](ADVANCED.md) when a feature needs explicit scheduling,
-interoperability or additional resource composition. The
-[migration guide](MIGRATION_0.1.0.md) covers API changes; package READMEs and
-inline DartDoc describe individual contracts.
+interoperability, or additional resource composition. See
+[Why Levit](WHY_LEVIT.md) for architecture tradeoffs, and package READMEs plus
+inline DartDoc for individual API contracts.
 
 [levit_monitor](../packages/core/levit_monitor) adds optional runtime diagnostics.
-For tooling, the repository provides:
+For workspace tooling (currently private to this repository), see:
 
 - [levit_lints](../packages/tools/levit_lints) — native Dart analyzer rules for lifecycle and reactive safety.
 - [levit_mcp](../packages/tools/levit_mcp) — read-only MCP server for live runtime inspection by AI agents (`dart run levit_mcp`).
-- [skills/levit](../skills/levit/SKILL.md) — portable Agent Skill encoding Levit 0.1.0 idioms and migration guidance.
+- [skills/levit](../skills/levit/SKILL.md) — portable Agent Skill encoding Levit idioms and best practices.
 
 See [diagnostic boundaries](ADVANCED.md#diagnostics-and-ecosystem-boundaries) before
 attaching telemetry.
-
-Storage, schema migrations and persistence integrations are planned separately
-on the [ecosystem roadmap](ecosystem_roadmap.md).

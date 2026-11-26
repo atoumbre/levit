@@ -1,11 +1,13 @@
 ## 0.1.0-beta.1
 
+- **Breaking:** Requires Dart 3.12+.
+- **Breaking:** Reactive `close()` now returns `Future<void>`, drains admitted work and subscriptions, and aggregates cleanup failures in `LxCleanupException`.
+- **Breaking:** Replace `LxFamily` with borrowing map/list entries (`entry(...)`) and lazy, exclusively owned `LxResource` whose `refresh()` drains cleanup and validates replacement before completing.
+- Add `LxWorker.withContext` for cooperative cancellation (`isCancelled`, `cancelled`, `throwIfCancelled`).
+- Add `LxReadable<T>` observation-only interface and `LxState.asReadable`.
+- Add `LxStatus.hasLastValue`, `.fromPrevious(...)`, and `.retained(...)` constructors to preserve nullable retained values cleanly.
 - Reconnect static computed dependencies, including asynchronous reads, when observation resumes.
-
-- Replace families with borrowing map/list entries and the lazy, exclusively owned `LxResource`. Refresh waits for cleanup and validates the replacement before completing.
-
-- Coordinate the breaking ownership, refresh and tooling release. Requires Dart
-  3.12+ and Flutter 3.44+ where applicable; see MIGRATION_0.1.0.md in the repository.
+- Default `Lx.enableWatchMonitoring` off and add optional `LevitReactiveMetadataObserver` for name, owner, and sensitivity changes.
 
 ## 0.0.12
 

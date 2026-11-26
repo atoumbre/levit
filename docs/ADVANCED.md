@@ -1,7 +1,7 @@
 # Advanced Levit patterns
 
 Start with [scopes, owners, state and widgets](ONBOARDING.md). These patterns use
-the same 0.1.0 ownership rules and the normal `levit` or `levit_flutter` kit.
+the same ownership rules and the normal `levit` or `levit_flutter` kit.
 Choose them for a concrete feature need; keep application policy in controllers
 and stores.
 
@@ -57,7 +57,7 @@ catch up. App suspension does not automatically pause it. Control the countdown
 through these methods rather than assigning `remaining.value`.
 
 A standalone `LevitCountdown` starts idle. Register it with an owner or await its
-`dispose()` yourself. See [countdown semantics](../packages/kits/levit_dart/README.md#advanced-elapsed-time-countdowns-010)
+`dispose()` yourself. See [countdown semantics](../packages/kits/levit_dart/README.md#elapsed-time-countdowns)
 for timing and callback details.
 
 ## Computed dependencies and batching
@@ -151,6 +151,28 @@ A guarded action can also succeed with null, and its errors still propagate.
 Use task outcomes when callers need to distinguish successful nullable data
 from cancellation or supersession.
 
+For keyed async loading, own a `LevitAsyncMap` and pass `entry(key)` directly to
+`LStatusBuilder`:
+
+```dart
+late final products = own(
+  LevitAsyncMap<String, List<Product>>(
+    (query, task) => repository.search(query, cancelled: task.cancelled),
+    engine: taskEngine,
+  ),
+);
+
+// In Flutter:
+LStatusBuilder<List<Product>>(
+  controller.products.entry(query),
+  onWaiting: (status) => status.hasLastValue
+      ? ProductList(status.lastValue!)
+      : const CircularProgressIndicator(),
+  onError: (status) => Text('Refresh failed: ${status.error}'),
+  onSuccess: ProductList.new,
+);
+```
+
 `LxStreamCompletionPolicy.close` is the default. Choose `retain` when source
 completion should preserve the wrapper's last state and allow an explicit later
 restart. A retained wrapper still needs an owner. Use `status.hasLastValue` when
@@ -161,13 +183,42 @@ Both task mixins expose a supervisor root. Workflow groups default to
 leaf tasks consume worker slots. Controller mixins default to 8 slots, while
 the engine defaults to 256 pending submissions. Set `maxPending: null` only
 when intentionally allowing an unbounded queue. Choose a conflict policy for
-repeated logical IDs within a group.
+repeated logical IDs within a group:
+
+```dart
+import 'package:levit/levit.dart';
+import 'package:levit/tasks.dart';
+
+Future<void> syncDocuments(
+  LevitTaskGroup taskGroup,
+  List<Document> documents,
+) async {
+  final retry = LevitRetryPolicy(
+    maxRetries: 3,
+    initialDelay: const Duration(milliseconds: 200),
+    shouldRetry: (error, _) => error is TransientNetworkException,
+  );
+
+  await taskGroup.runGroup((uploads) async {
+    final futures = documents
+        .map(
+          (doc) => uploads.schedule(
+            (task) => repository.upload(doc, cancelled: task.cancelled),
+            id: doc.id,
+            retryPolicy: retry,
+          ),
+        )
+        .toList();
+    await Future.wait(futures);
+  }, name: 'document-sync');
+}
+```
 
 Deadlines include queue time and inherit the earliest limit. Cancellation is
 cooperative; connect it to the underlying IO and finish cleanup in `finally`.
 `LevitRetryPolicy` requires an error classifier and caps its backoff. Successful
 null values, failures, cancellation, dropping and supersession have distinct
-outcomes. See [structured workflows](../packages/kits/levit_dart/README.md#structured-workflows-in-010)
+outcomes. See [structured workflows](../packages/kits/levit_dart/README.md#structured-workflows)
 and the [save/upload example](../examples/task_board/lib/save_upload.dart).
 
 For isolate work, use `submitIsolate`, `scheduleIsolate` or `runIsolateTask` with
@@ -211,9 +262,26 @@ For replacing a Flutter scope, keep one `LevitScopeLifecycleController` stable
 while its scope widget is mounted. Replacement requests serialize and coalesce
 to the latest configuration. Use `settled` plus `error` to inspect a transition,
 `retry()` after a failure, and awaited `close()` to observe terminal cleanup
-errors. An obsolete initializer cannot close a newer scope. The
-[session example](../examples/scope_playground/lib/session_replacement.dart)
-demonstrates the loading and retry UI.
+errors. An obsolete initializer cannot close a newer scope:
+
+```dart
+LAsyncScope(
+  lifecycle: lifecycle,
+  args: [sessionId],
+  configure: (scope) async {
+    scope.put(() => SessionConnection(sessionId));
+  },
+  loading: (_) => const Center(child: CircularProgressIndicator()),
+  error: (_, error) => TextButton(
+    onPressed: lifecycle.retry,
+    child: Text('Retry ($error)'),
+  ),
+  child: const SessionBody(),
+);
+```
+
+The [session example](../examples/scope_playground/lib/session_replacement.dart)
+demonstrates the full loading, coalescing, and retry UI.
 
 ## Diagnostics and ecosystem boundaries
 
@@ -228,11 +296,11 @@ requires the separate `levit_monitor_io.dart` entrypoint and an IO platform.
 
 History and worker statistics are opt-in. Mark sensitive values at construction,
 before their first event; custom attributes and names should not contain secrets.
-Reconnect snapshots recover current state, while gaps or dropped events still
-mean incomplete history. Task events reach the inspector through an explicit
+Reconnect snapshots recover current state, while dropped events still mean
+incomplete history. Task events reach monitoring through an explicit
 [application adapter](../packages/core/levit_monitor/example/task_adapter.dart).
 
-The lint plugin and inspector are currently private workspace tools; use the
-checkout instructions in [onboarding](ONBOARDING.md#continue-from-a-working-feature).
-Persistent storage, codecs, migrations, restoration and persistent task-result
-caches belong to the independent [ecosystem roadmap](ecosystem_roadmap.md).
+The lint plugin (`levit_lints`) and MCP server (`levit_mcp`) are currently
+unpublished workspace tools; see [onboarding](ONBOARDING.md#continue-from-a-working-feature).
+Persistent storage, codecs, storage adapters, and persistent task-result caches
+remain intentionally outside the core runtime dependencies.

@@ -1,7 +1,9 @@
 ## 0.1.0-beta.1
 
-- Coordinate the breaking ownership, refresh and tooling release. Requires Dart
-  3.12+ and Flutter 3.44+ where applicable; see MIGRATION_0.1.0.md in the repository.
+- **Breaking:** Requires Dart 3.12+.
+- Re-export the `0.1.0-beta.1` ownership, async disposal, `LxResource`, `LxReadable`, structured task group, `LevitAsyncMap`, and monotonic countdown APIs from `levit_dart`, `levit_dart_core`, `levit_scope`, and `levit_reactive`.
+- Expose `package:levit/levit_testing.dart` (`LevitTestScope`) for isolated testing.
+- Updated internal package constraints to `^0.1.0-beta.1`.
 
 ## 0.0.12
 

@@ -1,12 +1,15 @@
 ## 0.1.0-beta.1
 
-- Await attachment/replacement, flush and detach; aggregate delivery/cleanup failures.
-- Freeze redacted envelopes before bounded queues/history; default history and worker statistics off.
-- Add reconnect snapshots, delivery acknowledgements and drop accounting.
-- Keep browser imports free of IO; move FileTransport to levit_monitor_io.dart.
-- Add scope progress, reactive metadata, optional write stacks and application task adapter.
+- **Breaking:** Requires Dart 3.12+.
+- **Breaking:** Await `attach`, `flush`, `detach`, `updateTransport`, and transport `close`; aggregate delivery and cleanup failures in `LevitMonitorException`.
+- **Breaking:** Keep browser imports free of `dart:io`; move `LevitFileTransport` to `package:levit_monitor/levit_monitor_io.dart`.
+- Freeze redacted envelopes before bounded queues/history; default history (`historyCapacity: 0`) and worker statistics off.
+- Add reconnect snapshots (`historyComplete: false`), delivery acknowledgements, and drop accounting (`droppedEvents`).
+- Add `scope_progress` wire events, reactive metadata observation, optional write stack traces, and an application task-bridge example.
+- Remove `package:logger` and `package:web_socket_channel` runtime dependencies (built-in console formatter + `dart:io` / `dart:js_interop` `LevitWebSocketConnection`), making `levit_monitor` free of third-party runtime dependencies.
 - Harden `LevitStateSnapshot` with eager `scope_progress` validation, atomic snapshot restore, `scope_dispose` variable pruning, and bounded `maxVariables`.
-- Add optional `token` query authentication parameter to `LevitWebSocketTransport.connect` for `levit_mcp`.
+- Add optional `token` authentication parameter to `LevitWebSocketTransport.connect`.
+- Updated internal package constraints to `^0.1.0-beta.1`.
 
 ## 0.0.12
 

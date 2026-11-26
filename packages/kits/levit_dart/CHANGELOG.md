@@ -1,18 +1,18 @@
 ## 0.1.0-beta.1
 
-- Add `LevitAsyncMap` for observed keyed loads, freshness-aware fetches, and bounded retention. A pending fetch or refresh protects its entry from automatic eviction.
-
-- Measure countdowns from monotonic elapsed time, preserve partial pauses, finish at the exact remaining deadline, and await all countdown cleanup.
+- **Breaking:** Requires Dart 3.12+.
+- Add structured task workflows with `LevitTaskGroup` (`taskGroup.runGroup`), inherited absolute deadlines, `LevitRetryPolicy`, `taskEngine.taskTree`, and a default `maxPending` cap of `256`.
+- Add `LevitAsyncMap` for observed keyed loads, freshness-aware fetches, and bounded inactive eviction with observer/in-flight pinning.
+- Measure `LevitCountdown` / `LevitTimeMixin.startCountdown` from monotonic elapsed time, preserve partial pauses, finish at the exact deadline, and await countdown cleanup.
+- Await graceful completion of active iterations and isolate shutdown in `LevitLoopEngine.stopService`, `stopAllServices`, and `dispose`.
+- Updated internal package constraints to `^0.1.0-beta.1`.
 
 ## 0.0.12
 
 - Preserve countdown and loop resources while tasks drain, regardless of mixin order.
-
 - **Breaking:** task engine disposal awaits execution runners and cleanup after cancellation.
 - Task mixins drain during `onBeforeClose`, keeping owned resources alive until work finishes.
 - Updated internal runtime constraints to `^0.0.12`.
-
-# Changelog
 
 ## 0.0.11
 

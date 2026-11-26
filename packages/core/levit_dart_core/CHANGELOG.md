@@ -1,9 +1,12 @@
 ## 0.1.0-beta.1
 
-- Keep reactives created by nested dependency builders and initializers with their own registration during disposal and failed construction.
-
-- Coordinate the breaking ownership, refresh and tooling release. Requires Dart
-  3.12+ and Flutter 3.44+ where applicable; see MIGRATION_0.1.0.md in the repository.
+- **Breaking:** Requires Dart 3.12+.
+- **Breaking:** Remove reflective disposal method-name guessing from `own(...)`; pass explicit `dispose:` callbacks for third-party resources while keeping typed adapters for built-in reactives, subscriptions, timers, sinks, and Levit disposables.
+- **Breaking:** Captured async controller and store initializers throw `StateError` if they attempt to dispose their own owner or containing scope.
+- Keep reactives created by nested dependency builders and initializers attached to their own registration during disposal and failed construction.
+- Support asynchronous callbacks in `LevitRef.onDispose`, typed `LevitRef.findStore` / `findAsyncStore`, and `store.overrideWith(...)`.
+- Add `package:levit_dart_core/levit_testing.dart` with `LevitTestScope` for isolated override testing, tracked async work, `settle()`, and awaited teardown.
+- Updated internal package constraints to `^0.1.0-beta.1`.
 
 ## 0.0.12
 

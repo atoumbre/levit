@@ -3,7 +3,8 @@
 [![Platforms](https://img.shields.io/badge/platforms-dart-blue)](https://pub.dev/packages/levit_mcp)
 [![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 
-Read-only Model Context Protocol (MCP) server for live Levit runtime inspection.
+Read-only Model Context Protocol (MCP) server for live Levit runtime inspection
+(currently an unpublished workspace tool in `packages/tools/levit_mcp`).
 
 `levit_mcp` accepts authenticated loopback WebSocket telemetry from running Dart
 and Flutter applications instrumented with `levit_monitor` and exposes structured
@@ -34,16 +35,23 @@ Cursor, Gemini CLI, etc.).
   "mcpServers": {
     "levit": {
       "command": "dart",
-      "args": ["run", "levit_mcp", "--port", "9200", "--token", "dev-local-token"]
+      "args": [
+        "run",
+        "/absolute/path/to/levit/packages/tools/levit_mcp/bin/levit_mcp.dart",
+        "--port",
+        "9200",
+        "--token",
+        "dev-local-token"
+      ]
     }
   }
 }
 ```
 
-Or activate globally:
+Or activate from your local checkout:
 
 ```bash
-dart pub global activate levit_mcp
+dart pub global activate --source path /absolute/path/to/levit/packages/tools/levit_mcp
 levit_mcp --port 9200 --token dev-local-token
 ```
 

@@ -7,21 +7,20 @@
 
 ## Purpose & Scope
 
-`levit` is the recommended single import for pure Dart applications.
+`levit` is the recommended single import for pure Dart applications (CLI tools,
+servers, background workers, and shared domain packages).
 
-This kit re-exports:
+It re-exports the complete Dart-side Levit stack without redefining runtime
+semantics. Add `levit_monitor` separately when you need runtime telemetry; the
+kit keeps observability opt-in.
 
-- `levit_dart` utility layer.
-- `levit_dart_core` composition APIs.
-- `levit_scope` and `levit_reactive` foundations (through transitive exports).
+## What's Included
 
-Use this package when you want the complete Dart-side Levit stack without Flutter bindings.
-Add `levit_monitor` separately when you need runtime telemetry; the kit keeps observability opt-in.
-
-## Conceptual Overview
-
-`levit` is intentionally thin.
-It does not define new runtime semantics; it packages the Dart stack behind one import for simpler adoption.
+| Entry point | Provides |
+| :-- | :-- |
+| `package:levit/levit.dart` | `Levit` facade, hierarchical `LevitScope`, `LevitController`, `LevitStore` / `LevitAsyncStore`, reactive values (`LxVar`, `LxComputed`, `LxWorker`, `LxResource`, collections), `LevitAsyncMap`, and controller mixins (`LevitTasksMixin`, `LevitReactiveTasksMixin`, `LevitTimeMixin`, `LevitSelectionMixin`, `LevitLoopMixin`). |
+| `package:levit/tasks.dart` | Advanced task orchestration types: `LevitTaskGroup`, `LevitRetryPolicy`, `LevitTaskMiddleware`, `LevitTaskTracker`, and task cache/engine APIs. |
+| `package:levit/levit_testing.dart` | `LevitTestScope` for isolated store overrides, explicit async tracking (`track` / `settle`), and awaited teardown. |
 
 ## Getting Started
 
@@ -35,11 +34,14 @@ import 'package:levit/levit.dart';
 
 class CounterController extends LevitController {
   final count = 0.lx;
+
   @override
   void onInit() {
     super.onInit();
+    // Explicit ownership when Levit.enableAutoLinking() is not enabled.
     own(count);
   }
+
   void increment() => count.value++;
 }
 
@@ -58,9 +60,9 @@ Future<void> main() async {
 
 ## Design Principles
 
-- Zero-surprise aggregation: one import, unchanged underlying APIs.
-- Clear boundaries: pure Dart only, no Flutter dependency.
-- Production default for shared domain and backend layers.
+- **Zero-surprise aggregation:** one import, unchanged underlying APIs.
+- **Pure Dart boundary:** no Flutter dependency.
+- **Production default:** built for shared domain logic, CLIs, and backend services.
 
 Continue with [ownership-first onboarding](https://github.com/softilab/levit/blob/main/docs/ONBOARDING.md) and
 [advanced helpers](https://github.com/softilab/levit/blob/main/docs/ADVANCED.md). Requires Dart 3.12+.

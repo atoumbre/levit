@@ -7,24 +7,17 @@
 
 ## Purpose & Scope
 
-`levit_flutter` is the recommended single import for Flutter applications using Levit.
+`levit_flutter` is the recommended single import for Flutter applications using
+Levit. It composes `levit_flutter_core`, `levit_dart`, and Flutter-specific
+helpers behind one entry point while keeping `levit_monitor` opt-in.
 
-This kit composes:
+## What's Included
 
-- `levit_flutter_core` widget bindings.
-- `levit_dart` controller utility layer.
-- Flutter-specific mixins/widgets in this package.
-
-This package is responsible for ergonomic adoption, not replacing core behavior.
-Add `levit_monitor` separately when you need runtime telemetry; this kit keeps observability opt-in.
-
-## Conceptual Overview
-
-`levit_flutter` keeps runtime semantics in core packages and adds practical Flutter integrations:
-
-- Lifecycle-aware controller mixins that react to app lifecycle.
-- Native observation adapters, overlay scope bridging and optional keep-alive.
-- Unified import surface for common Flutter usage.
+| Entry point | Provides |
+| :-- | :-- |
+| `package:levit_flutter/levit_flutter.dart` | Scopes (`LScope`, `LAsyncScope`, `LRouteScope`, `LevitScopeLifecycleController`), views & builders (`LWatch`, `LBuilder`, `LSelectorBuilder`, `LStatusBuilder`, `LView`, `LScopedView`), `asValueListenable()`, `showLevitDialog` / `showLevitModalBottomSheet`, `LKeepAlive`, `LevitAppLifecycleMixin`, `LevitLoopLifecycleMixin`, plus the full `levit_dart` runtime (`LevitController`, `LevitStore`, reactives, `LevitAsyncMap`, task/time/selection/loop mixins). |
+| `package:levit_flutter/tasks.dart` | Advanced task orchestration types: `LevitTaskGroup`, `LevitRetryPolicy`, `LevitTaskMiddleware`, and `LevitTaskTracker`. |
+| `package:levit_flutter/levit_testing.dart` | `LevitTestScope` for isolated store overrides, async tracking, and awaited teardown in tests. |
 
 ## Getting Started
 
@@ -62,64 +55,49 @@ class CounterPage extends StatelessWidget {
     );
   }
 }
-```
 
-Enable ownership capture before mounting the app:
-
-```dart
 void main() {
   Levit.enableAutoLinking();
   runApp(const MaterialApp(home: CounterPage()));
 }
 ```
 
-## Overlays
+## Overlays & Subtree Lifecycle
 
-Use `showLevitDialog` / `showLevitModalBottomSheet` when an imperative overlay
-must resolve page- or app-local dependencies with `context.levit.find`
-(they wrap content with `LScope.capture`).
+- **Imperative overlays:** Use `showLevitDialog` and `showLevitModalBottomSheet`
+  so dialogs and bottom sheets automatically inherit the caller's `LScope`
+  (via `LScope.capture`) and can resolve page-local dependencies with
+  `context.levit.find`.
+- **Keep-alive & mount hooks:** Use `LKeepAlive` for deliberate offscreen
+  retention inside scroll views. For widget-lifetime mount/unmount callbacks,
+  use a local `StatefulWidget` as shown in the
+  [MountObserver example](https://github.com/softilab/levit/blob/main/packages/kits/levit_flutter/example/lib/mount_observer.dart).
 
-## Design Principles
+## Stable Query Observations
 
-- Widget-tree ownership for scopes and controller lifecycles.
-- Fine-grained rebuild behavior inherited from reactive core bindings.
-- Composition-first kit design with explicit package boundaries.
-
-### Local mount hooks
-
-Use a local `StatefulWidget` when a subtree needs mount/unmount callbacks.
-The [MountObserver example](https://github.com/softilab/levit/blob/main/packages/kits/levit_flutter/example/lib/mount_observer.dart) demonstrates
-`initState` and `dispose`. It reports widget lifetime, not viewport visibility.
-Own asynchronous cleanup in a scope and await its lifecycle controller's `closed`
-signal from tests or the surrounding feature boundary. `LKeepAlive` remains
-available for deliberate offscreen retention.
-
-## Stable query observations in 0.1.0
-
-`LBuilder`, `LSelectorBuilder` and `LStatusBuilder` observe `LxReadable<T>`.
-Pass an async-map entry directly so mounted widgets stay connected across refresh.
-`LStatusBuilder.onWaiting`, `onError` and `onIdle` receive their complete status:
+`LBuilder`, `LSelectorBuilder`, and `LStatusBuilder` observe `LxReadable<T>`.
+Pass a `LevitAsyncMap` entry directly so mounted widgets stay connected across
+refreshes, and check `status.hasLastValue` (rather than `lastValue != null`)
+when `T` is nullable:
 
 ```dart
 LStatusBuilder<List<Item>>(
   controller.queries.entry(search),
   onWaiting: (status) => status.hasLastValue
-      ? ItemList(status.lastValue!) : const CircularProgressIndicator(),
+      ? ItemList(status.lastValue!)
+      : const CircularProgressIndicator(),
   onError: (status) => Text('Refresh failed: ${status.error}'),
   onSuccess: (items) => ItemList(items),
 );
 ```
 
-Check `hasLastValue` rather than `lastValue != null` for nullable results. Keep
-query/mutation ownership in the controller; widgets observe handles and invoke
-controller actions. The async catalog example demonstrates searchable pagination,
-retained results and optimistic favorite edits with rollback.
+See the [async catalog example](https://github.com/softilab/levit/tree/main/examples/async_catalog)
+for searchable pagination, retained results, and optimistic updates with rollback.
 
-## Borrowing ValueListenable interoperability (0.1.0)
+## Borrowing ValueListenable Interoperability
 
-Use `source.asValueListenable()` when a Flutter API needs a `ValueListenable<T>`.
-It accepts any `LxReadable<T>`, including observation-only state and stable async-map
-entries. Keep the adapter outside `build` and give it a controller or widget owner:
+Use `source.asValueListenable()` when a Flutter API expects a `ValueListenable<T>`.
+Create and own the adapter outside `build`:
 
 ```dart
 class CounterController extends LevitController {
@@ -133,24 +111,21 @@ ValueListenableBuilder<int>(
 );
 ```
 
-`LxValueListenable<T>` borrows the source. Creating it does not subscribe; the first
-listener subscribes and removing the last listener unsubscribes. Reads return the
-current source value, including null, and source refreshes are forwarded even when
-the same mutable object is retained. Duplicate listeners follow Flutter conventions.
+- **Lazy borrowing:** Subscribes on the first listener and unsubscribes when the
+  last listener is removed; never closes or mutates the source.
+- **Idempotent disposal:** `adapter.dispose()` detaches listeners cleanly; reads
+  or new listeners after disposal throw `StateError`, while listener removal
+  remains safe during widget teardown.
+- **Scoped interop example:** Run `flutter run -t lib/countdown_interop.dart`
+  from `example/` for a feature-owned countdown rendered through
+  `ValueListenableBuilder`.
 
-`adapter.dispose()` is idempotent, stops notifications and releases only the
-subscription. It never closes or mutates the source. Reads/new listeners after
-adapter disposal throw `StateError`; removing listeners remains safe during widget
-teardown. Keep the source alive under its existing owner. Expose the adapter as
-`ValueListenable<T>` to observation-only consumers.
+## Design Principles
 
-For native Levit widgets, keep using `LWatch` or `LBuilder`. This adapter provides
-interoperability with Flutter's existing APIs and adds no persistence dependency.
+- **Widget-tree ownership:** scopes and controller lifecycles align with mount/unmount.
+- **Fine-grained rebuilds:** reactive reads drive focused subtree updates.
+- **Thin kit composition:** runtime semantics stay in core packages with explicit boundaries.
 
-Run `flutter run -t lib/countdown_interop.dart` from `example/` for a feature-owned
-countdown displayed through ValueListenableBuilder with pause, resume and restart.
-
-Start with [scopes → owners → state → widgets](https://github.com/softilab/levit/blob/main/docs/ONBOARDING.md).
-Selection/time, numeric helpers, keep-alive, static dependencies and async batching
-are covered in [advanced documentation](https://github.com/softilab/levit/blob/main/docs/ADVANCED.md).
+Start with [scopes → owners → state → widgets](https://github.com/softilab/levit/blob/main/docs/ONBOARDING.md)
+and [advanced documentation](https://github.com/softilab/levit/blob/main/docs/ADVANCED.md).
 Requires Dart 3.12+ and Flutter 3.44+.

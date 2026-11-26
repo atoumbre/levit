@@ -24,7 +24,7 @@ Repo Map
 packages/core/       levit_scope, levit_reactive, levit_dart_core,
                      levit_flutter_core, levit_monitor
 packages/kits/       levit, levit_dart, levit_flutter
-packages/tools/      levit_lints
+packages/tools/      levit_lints, levit_mcp (unpublished workspace tools)
 examples/            runnable reference apps
 ```
 
@@ -55,13 +55,22 @@ levit_dart_core → levit_scope + levit_reactive
 Imports:
 
 - Flutter app code: package:levit_flutter/levit_flutter.dart
+  (+ package:levit_flutter/tasks.dart for LevitTaskGroup, LevitRetryPolicy,
+  LevitTaskMiddleware, and task cache/engine types;
+  + package:levit_flutter/levit_testing.dart for LevitTestScope)
 - Pure Dart app, CLI, server, or shared domain: package:levit/levit.dart
+  (+ package:levit/tasks.dart for advanced task orchestration;
+  + package:levit/levit_testing.dart for LevitTestScope)
+- Kits hide low-level Lx and Ls facades; use Levit (Levit.currentScope,
+  Levit.untracked, Levit.batch, Levit.batchAsync, Levit.isBatching, Levit.put/find).
+- Cross-package runtime hooks live in package:<pkg>/spi.dart.
 - Dart utility layer only (tasks, loops, mixins): package:levit_dart/levit_dart.dart
 - Flutter bindings only: package:levit_flutter_core/levit_flutter_core.dart
 - Dart composition APIs only: package:levit_dart_core/levit_dart_core.dart
 - Reactive primitives only: package:levit_reactive/levit_reactive.dart
 - DI/scope only: package:levit_scope/levit_scope.dart
-- Runtime telemetry: add levit_monitor separately
+- Runtime telemetry: add levit_monitor separately (browser-safe default;
+  package:levit_monitor/levit_monitor_io.dart for LevitFileTransport)
 
 Do not add levit_monitor unless diagnostics, event export, redaction, or
 shadow-state debugging is required.
@@ -113,15 +122,23 @@ Registration and resolution:
   contents after awaited cleanup.
 
 Use tag to disambiguate multiple registrations of the same type.
+Always register via builders (no preconstructed instance/future registration).
+Child scopes created via createScope are owned by their parent by default
+(ownedByParent: true) and close before parent dependencies.
 Use permanent: true for dependencies that should survive a *non-forced*
 reset. Scope dispose() always reset(force: true), so permanents do not leak
 across disposed widget scopes or widget tests that dispose the tree. Prefer
 permanent on root / long-lived scopes; on short-lived page scopes it does not
 extend lifetime past widget unmount.
 Use isFactory: true on lazyPut when each resolution should create a new instance.
+Factories are not implicitly permanent; the registering scope owns disposable
+factory results (including async results arriving during removal), and
+await scope.releaseFactoryInstance(instance) releases one early.
 Do not replace an instantiated synchronous registration in place. Await
-Levit.delete first. Scope cleanup is LIFO and best-effort; multiple cleanup
-failures are reported together as LevitDisposalException.
+Levit.delete first. Optional lookups (findOrNull / findOrNullAsync) return null
+only for missing registrations; builder and type errors propagate. Scope cleanup
+is LIFO and best-effort; multiple cleanup failures are reported together as
+LevitDisposalException. Self-disposal from inside initialization throws StateError.
 
 Register global or app-wide services in the app/root scope. Register feature,
 route, or screen dependencies in the scope that owns that lifetime.
@@ -130,7 +147,11 @@ LevitStore and LevitAsyncStore
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use stores for portable, reusable state definitions (a "recipe" passed by
-reference, instantiated per scope):
+reference, instantiated per scope). Store identity is the definition object plus
+its optional variant tag. Lookups inherit an ancestor instance by default; pass
+localOnly: true to create/reuse local state. Install overrides before first local
+resolution with scope.applyOverrides([store.overrideWith(...)]); the receiving
+scope owns override resources:
 
 ```dart
 final counterStore = LevitStore<LxVar<int>>((ref) {
@@ -267,7 +288,12 @@ Close long-lived reactive objects, computed values, and workers when they are
 not owned by a controller, store, or scope that handles cleanup.
 
 Use Levit.batch or Levit.batchAsync (preferred in app code) when multiple
-mutations should propagate as one update.
+mutations should propagate as one update. batchAsync is context-local
+notification batching, not value isolation or transaction rollback.
+
+Reactive close() returns Future<void>, drains admitted work/subscriptions, and
+aggregates failures in LxCleanupException. Expose LxReadable<T> (via
+state.asReadable) to observation-only consumers.
 
 
 Controllers
@@ -277,21 +303,22 @@ Use LevitController for feature or screen logic.
 
 ```dart
 class CounterController extends LevitController {
+  // Auto-linked when Levit.enableAutoLinking() is called at bootstrap:
   final count = 0.lx.named('count');
 
-  // Field-level own works for non-reactive resources:
-  late final addController = own(TextEditingController(), dispose: (value) => value.dispose());
+  // Explicit own(...) with a typed disposer for third-party / non-reactive resources
+  // (no reflective method-name guessing):
+  late final addController = own(
+    TextEditingController(),
+    dispose: (value) => value.dispose(),
+  );
 
   void increment() => count.value++;
-
-  @override
-  void onInit() {
-    super.onInit();
-    // Explicit when auto-linking is off or for reactives created in onInit:
-    own(count);
-  }
 }
 ```
+
+In pure Dart without auto-linking—or for reactives, workers, timers, and
+subscriptions created in onInit or later—wrap them in own(...).
 
 Prefer controllers when logic owns resources, subscriptions, workers, async
 tasks, or multiple reactive values.
@@ -343,13 +370,20 @@ Overlays: use LScope.capture for dialogs/sheets that must context.levit.find
 app or page deps. Prefer showLevitDialog / showLevitModalBottomSheet from
 levit_flutter (capture by default).
 
-Widget-test harness with explicit scopes and awaited teardown:
+Scope replacement & testing:
 
-- Mount MaterialApp with LScope(configure: ..., child: ...)
-- Capture the scope from configure into a test holder
-- Prefer unique / omitted scope names (0.0.9 auto-uniques unnamed scopes)
-- After the surface is cleared, await scope disposal. Prefer an isolated test
-  scope over global Levit.reset().
+- Consuming LView / LAsyncView have no .put constructor and resolve on mount,
+  scope change, or explicit args change (new resolver closures alone do not
+  refetch).
+- Scope replacement on LScope / LAsyncScope is serialized and coalesces rapid
+  argument changes. Pass a stable LevitScopeLifecycleController as lifecycle to
+  inspect settled/error, call retry(), and await terminal cleanup with close().
+- For unit and widget tests, import package:levit/levit_testing.dart or
+  package:levit_flutter/levit_testing.dart and use LevitTestScope(overrides: [...])
+  with addTearDown(harness.close), harness.track(...), and await harness.settle().
+- In widget tests with LScope/LAsyncScope, attach a LevitScopeLifecycleController,
+  unmount the widget, and await lifecycle.close() to surface cleanup errors.
+  Prefer isolated test scopes over global Levit.reset().
 
 Widget guide:
 
@@ -423,15 +457,32 @@ Task Utilities
 --------------
 
 Use levit_dart utilities when controller-owned work needs scheduling, retries,
-cancellation, caching, progress, or reactive busy state.
+cancellation, caching, progress, or reactive busy state. Import
+package:levit/tasks.dart or package:levit_flutter/tasks.dart for LevitTaskGroup,
+LevitRetryPolicy, LevitTaskMiddleware, and task cache/engine types.
 
 Task mixins:
 
 - LevitTasksMixin — scheduling, retries, caching, cancellation without
-  UI-facing reactive task state (taskEngine.schedule(...)).
+  UI-facing reactive task state (taskEngine.schedule(...), taskGroup.runGroup(...)).
 - LevitReactiveTasksMixin — reactive task details, busy state, and progress
   observable by UI or runtime code (runTask(...), tasks, isBusy, totalProgress,
   category/blocking selectors).
+
+Structured workflows and disposal:
+
+- Both task mixins expose a supervisor-root taskGroup and drain in onBeforeClose
+  before other owned resources close. await taskEngine.dispose() cancels and
+  waits for all active runners and their finally blocks.
+- Start coordinated workflows with taskGroup.runGroup((group) async { ... });
+  child workflow groups default to cancelOnError and inherit the earliest
+  absolute deadline. Coordinate in group bodies; only leaf tasks occupy worker
+  slots (default 8 slots, maxPending: 256).
+- Configure retries with LevitRetryPolicy(shouldRetry: ..., maxRetries: ...,
+  initialDelay: ..., maxDelay: ...); cancellation and deadline errors are never
+  retried. Observe live group structure via taskEngine.taskTree.
+- Use LevitAsyncMap<K, T> for keyed task-backed queries; pass map.entry(key) to
+  LStatusBuilder and await fetch(key) / refresh(key).
 
 Task callbacks receive LevitTaskContext for progress and cooperative
 cancellation. Reuse stable logical IDs and choose a conflict policy:
@@ -445,9 +496,9 @@ cancellation. Reuse stable logical IDs and choose a conflict policy:
   latest work.
 
 Use scheduleIsolate / submitIsolate / runIsolateTask for top-level/static
-isolate entrypoints. LevitTaskMiddleware emits dependency-neutral structured
-events. Explicitly attach LevitTaskTracker under a long-lived owner when one
-root blocking/busy view is needed.
+isolate entrypoints (pass group: to bridge group cancellation). LevitTaskMiddleware
+emits dependency-neutral structured events. Explicitly attach LevitTaskTracker
+under a long-lived owner when one root blocking/busy view is needed.
 
 Other levit_dart mixins:
 
@@ -456,7 +507,8 @@ Other levit_dart mixins:
   paused time, start resets, and stop resets without finishing. Await standalone
   countdown disposal or use own; the mixin drains countdown cleanup automatically.
 - LevitSelectionMixin<T> — single/multi selection state.
-- LevitLoopMixin — managed periodic/continuous workloads.
+- LevitLoopMixin — managed periodic/continuous workloads; await stopService,
+  stopAllServices, and LevitLoopEngine.dispose so active iterations drain.
 
 
 Middleware
@@ -492,12 +544,18 @@ imports both packages.
 Use one stable token per concern. Re-registering with the same token replaces
 behavior in place.
 
-Optional analyzer rules
------------------------
+Optional Workspace Tooling
+--------------------------
 
-Enable levit_lints (Dart 3.12+) for discarded/unowned lifecycle resources,
-preconstructed Levit.put closures, lifecycle overrides missing super calls,
-and mutable or snapshot of plain LxStatus owner fields.
+These tools currently live privately in packages/tools/ (publish_to: none):
+
+- levit_lints (Dart 3.12+): native analyzer plugin checking
+  await_levit_lifecycle, avoid_global_levit_in_widgets, discarded_levit_future,
+  must_call_super_levit_lifecycle, unowned_levit_resource,
+  avoid_plain_lx_status_fields, and avoid_preconstructed_levit_put. Configure
+  via path: in root analysis_options.yaml.
+- levit_mcp: read-only stdio MCP server accepting authenticated loopback
+  LevitWebSocketTransport telemetry from running Dart/Flutter apps.
 
 
 Anti-Patterns
@@ -530,6 +588,7 @@ melos run format
 melos run analyze --no-select
 melos run test --no-select
 melos run test:flutter --no-select
+melos run doc:check
 melos run ci --no-select
 ```
 
@@ -545,29 +604,14 @@ When changing public APIs, update inline DartDoc and the relevant package
 README.
 
 
-0.1.0 contracts
-----------------
-- Reactive call() only reads. Use .value for writes.
-- Register using builders; consuming LView/LAsyncView have no .put constructor.
-- Factories own disposable results in the registering scope, including async
-  results arriving during removal. Always await deletion before replacement.
-- batchAsync is context-local notification batching, not value isolation.
-- Store lookups inherit by default; localOnly: true creates/reuses local state.
-- View resolver identity never refetches by itself; use args or scope changes.
-- Task engine disposal waits for runners. Task mixins drain in onBeforeClose
-  before owned resources close; delegate super in lifecycle overrides.
-- Monitoring does not enable auto-linking. Bootstrap explicitly.
-- levit_lints 0.1.0 is publishable; use native root plugins configuration.
-  Before publication, use the checkout path. See its README for rule limits.
+Runtime Boundary & Further Reading
+----------------------------------
 
-Runtime and ecosystem boundary
-------------------------------
-Keep persistence interfaces, codecs, migrations and storage integrations in the
-independent ecosystem repository. Persistent task caches and codec-based Flutter
-restoration belong there too. These are no longer main 0.1.0 release requirements.
-Ecosystem packages depend on public Levit APIs; runtime packages never depend on
-ecosystem packages. Track work in docs/ecosystem_roadmap.md.
+The core runtime stays independent of storage backends. Persistence interfaces,
+codecs, storage adapters, and persistent task caches are intentionally kept
+outside runtime dependencies.
 
-Onboarding: docs/ONBOARDING.md (scopes → owners → state → widgets).
-Advanced selection/time, numeric helpers, LKeepAlive, staticDeps and batchAsync:
-docs/ADVANCED.md. All runtime/tool packages target 0.1.0; Dart 3.12+, Flutter 3.44+.
+- Onboarding: docs/ONBOARDING.md (scopes → owners → state → widgets)
+- Advanced patterns: docs/ADVANCED.md
+- Rationale & tradeoffs: docs/WHY_LEVIT.md
+- SDK requirements: Dart 3.12+, Flutter 3.44+.

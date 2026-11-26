@@ -1,7 +1,12 @@
 ## 0.1.0-beta.1
 
-- Coordinate the breaking ownership, refresh and tooling release. Requires Dart
-  3.12+ and Flutter 3.44+ where applicable; see MIGRATION_0.1.0.md in the repository.
+- **Breaking:** Requires Dart 3.12+.
+- **Breaking:** Child scopes created via `createScope` are owned by their parent by default (`ownedByParent: true`) and dispose before parent dependencies.
+- **Breaking:** Factory registrations are no longer implicitly permanent; pass `permanent: true` when needed and await `releaseFactoryInstance(instance)` for early release.
+- **Breaking:** `delete`, `reset`, and `releaseFactoryInstance` reject self-disposal with `StateError` instead of deadlocking.
+- Add `scope.runInitialization` to admit external setup work, drain it on closure, and guard against self-disposal.
+- Add `scope.applyOverrides([...])` for scoped override installation and ensure `findOrNull` / `findOrNullAsync` return `null` only for missing registrations while propagating builder/type errors.
+- Add `scope.describe()` immutable inspection snapshots and `LevitScopeProgressObserver` middleware hook for pending initialization and cleanup progress.
 
 ## 0.0.12
 

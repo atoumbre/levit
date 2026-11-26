@@ -14,7 +14,7 @@ It gives Dart and Flutter applications one runtime model for dependency scope, c
 - What caused this recomputation or rebuild?
 - Can the same architecture work in Flutter and pure Dart code?
 
-If you want the full architectural rationale, tradeoffs, and fit guidance, start with [`WHY_LEVIT.md`](./WHY_LEVIT.md).
+If you want the full architectural rationale, tradeoffs, and fit guidance, start with [`docs/WHY_LEVIT.md`](./docs/WHY_LEVIT.md).
 
 ## Why Teams Choose Levit
 
@@ -140,15 +140,17 @@ The proposition is not just conceptual. This repo includes:
 
 | Goal | Package | Notes |
 | :-- | :-- | :-- |
-| Flutter application | [`levit_flutter`](./packages/kits/levit_flutter) | Recommended single import for app code. |
-| Pure Dart application | [`levit`](./packages/kits/levit) | Recommended single import for CLI, server, and shared domain code. |
-| Flutter bindings without the higher-level Flutter kit | [`levit_flutter_core`](./packages/core/levit_flutter_core) | Owns Flutter widgets and scope bridging; re-exports `levit_dart_core` for convenience. |
-| Core composition APIs only | [`levit_dart_core`](./packages/core/levit_dart_core) | Owns `Levit`, controllers, stores, and the Dart-side lifecycle contract. |
-| Task/loop/time utilities on top of Dart core | [`levit_dart`](./packages/kits/levit_dart) | Adds controller utilities without Flutter widgets. |
-| Runtime telemetry and diagnostics | [`levit_monitor`](./packages/core/levit_monitor) | Add separately alongside any runtime package when you need structured events. |
-| Lifecycle and reactive analyzer rules | [`levit_lints`](./packages/tools/levit_lints) | Optional native analyzer plugin; no runtime dependency. |
-| Live runtime MCP server for AI agents | [`levit_mcp`](./packages/tools/levit_mcp) | Read-only stdio MCP server connecting over authenticated loopback WebSockets. |
-| Agent authoring & migration skill | [`skills/levit`](./skills/levit/SKILL.md) | Portable Agent Skill with 0.1.0 patterns and migration guidance. |
+| Flutter application | [`levit_flutter`](./packages/kits/levit_flutter) | Recommended single import for Flutter apps (includes `tasks.dart` and `levit_testing.dart`). |
+| Pure Dart application | [`levit`](./packages/kits/levit) | Recommended single import for CLI, server, and shared domain code (includes `tasks.dart` and `levit_testing.dart`). |
+| Flutter bindings without the higher-level Flutter kit | [`levit_flutter_core`](./packages/core/levit_flutter_core) | Owns `LScope`, `LWatch`, `LView`, builders, and `ValueListenable` interop; re-exports `levit_dart_core`. |
+| Core composition APIs only | [`levit_dart_core`](./packages/core/levit_dart_core) | Owns `Levit`, `LevitController`, `LevitStore`, and resource ownership contracts. |
+| Task, query, loop, and timer utilities on Dart core | [`levit_dart`](./packages/kits/levit_dart) | Adds `LevitTaskGroup`, `LevitAsyncMap`, countdowns, loops, and controller mixins without Flutter. |
+| Reactive primitives only | [`levit_reactive`](./packages/core/levit_reactive) | Owns `LxVar`, `LxComputed`, `LxWorker`, `LxResource`, and batch propagation. |
+| Scoped DI & lifecycle only | [`levit_scope`](./packages/core/levit_scope) | Owns hierarchical `LevitScope`, aliases, factories, and deterministic LIFO disposal. |
+| Runtime telemetry and diagnostics | [`levit_monitor`](./packages/core/levit_monitor) | Opt-in; add separately when you need redaction, snapshots, or event export. |
+| Lifecycle & reactive analyzer rules *(workspace tool)* | [`levit_lints`](./packages/tools/levit_lints) | Native Dart analyzer plugin; no runtime dependency. |
+| Live runtime MCP server *(workspace tool)* | [`levit_mcp`](./packages/tools/levit_mcp) | Read-only stdio MCP server over authenticated loopback WebSockets. |
+| Agent authoring skill | [`skills/levit`](./skills/levit/SKILL.md) | Portable Agent Skill with Levit patterns and best practices. |
 
 ## Architecture Model
 
@@ -176,6 +178,7 @@ flowchart LR
 
   subgraph Tooling
     T1["levit_lints (opt-in)"]
+    T2["levit_mcp (opt-in)"]
   end
 
   K1 --> U1
@@ -188,42 +191,23 @@ flowchart LR
   C3 -.observes.-> F1
   C3 -.observes.-> F2
   T1 -.-> C1
+  T2 -.inspects.-> C3
 ```
 
 `levit_monitor` is intentionally separate from `levit` and `levit_flutter`; add it only when you need runtime telemetry.
 
-## Ecosystem Overview
+## Testing Ownership & Cleanup
 
-### Recommended entry points (kits)
+Both kits expose `levit_testing.dart` (`package:levit/levit_testing.dart` and `package:levit_flutter/levit_testing.dart`) with `LevitTestScope` for isolated store overrides, explicit async tracking (`track` / `settle`), and awaited teardown that surfaces cleanup errors:
 
-These aggregate exports without redefining runtime semantics.
+```dart
+final harness = LevitTestScope(
+  overrides: [counterStore.overrideWith((ref) => ref.own(10.lx))],
+);
+addTearDown(harness.close);
+```
 
-| Package | Use when |
-| :-- | :-- |
-| [`levit_flutter`](./packages/kits/levit_flutter) | Building Flutter applications |
-| [`levit`](./packages/kits/levit) | Building pure Dart applications |
-
-### Focused utility package
-
-| Package | Responsibility |
-| :-- | :-- |
-| [`levit_dart`](./packages/kits/levit_dart) | Task orchestration, loop helpers, and focused controller utility mixins. Builds on top of `levit_dart_core`. |
-
-### Core packages
-
-| Package | Responsibility |
-| :-- | :-- |
-| [`levit_reactive`](./packages/core/levit_reactive) | Reactive primitives, computed values, workers, batching. Owns change propagation and dependency tracking. |
-| [`levit_scope`](./packages/core/levit_scope) | Hierarchical dependency injection and deterministic lifecycles. |
-| [`levit_dart_core`](./packages/core/levit_dart_core) | Composition layer (`Levit`, `LevitController`, `LevitStore`). Owns controller ownership semantics. |
-| [`levit_flutter_core`](./packages/core/levit_flutter_core) | Flutter bindings (`LScope`, `LWatch`, `LView`, builders); re-exports `levit_dart_core` for convenience. |
-| [`levit_monitor`](./packages/core/levit_monitor) | Opt-in monitoring, redaction, shadow state, and transport pipeline. Not bundled by default. |
-
-### Tooling
-
-| Package | Responsibility |
-| :-- | :-- |
-| [`levit_lints`](./packages/tools/levit_lints) | Native analyzer diagnostics for lifecycle delegation, resource ownership, safe registration, and reactive status fields. |
+See [docs/ONBOARDING.md](docs/ONBOARDING.md#5-test-ownership-and-cleanup) for both pure Dart and Flutter widget teardown tests.
 
 ## Middleware Lifecycle
 
@@ -245,10 +229,10 @@ Reference docs:
 - Package READMEs document package scope, architecture role, and onboarding.
 - This root README documents ecosystem-level architecture and adoption guidance.
 
-The runtime stays independent of storage backends. Persistence codecs, migrations,
-storage adapters and persistent task caches are tracked in the independently released
-[ecosystem roadmap](docs/ecosystem_roadmap.md). Native Flutter interoperability
-and existing runtime correctness remain in this repository.
+The runtime stays independent of storage backends; persistence codecs,
+storage adapters, and persistent task caches are intentionally kept outside
+runtime dependencies. Native Flutter interoperability and runtime correctness
+remain in this repository.
 
 ## For AI assistants
 
@@ -275,5 +259,3 @@ melos test
 ```
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for workflow details.
-
-Upgrading to 0.1.0? Read the [cumulative migration guide](docs/MIGRATION_0.1.0.md) for lifecycle and API changes.
