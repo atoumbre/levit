@@ -118,8 +118,10 @@ abstract class LevitController extends LevitScopeDisposable
   ///
   /// Built-in adapters handle [LxReactive], [LevitScopeDisposable],
   /// [LevitDisposable], [StreamSubscription], [Timer], [Sink], and
-  /// `FutureOr<void> Function()` cleanup callbacks. For other types, supply an
-  /// explicit [dispose] callback.
+  /// `FutureOr<void> Function()` cleanup callbacks. Platform integrations (such
+  /// as `levit_flutter_core` for Flutter's `ChangeNotifier`) may register
+  /// additional adapters. For other types, supply an explicit [dispose]
+  /// callback.
   T own<T>(T resource, {FutureOr<void> Function(T resource)? dispose}) {
     if (_resourceClosing || _resourceDisposed) {
       throw StateError(
@@ -145,6 +147,54 @@ abstract class LevitController extends LevitScopeDisposable
     }
     return resource;
   }
+
+  /// Creates a synchronous [LxComputed] and registers it with [own].
+  ///
+  /// Enables concise derived fields without an [onInit] override:
+  /// ```dart
+  /// late final fullName = computed(() => '${firstName()} ${lastName()}');
+  /// ```
+  LxComputed<T> computed<T>(
+    T Function() compute, {
+    bool Function(T previous, T current)? equals,
+    bool staticDeps = false,
+    bool eager = false,
+    String? name,
+  }) => own(
+    LxComputed<T>(
+      compute,
+      equals: equals,
+      staticDeps: staticDeps,
+      eager: eager,
+      name: name,
+    ),
+  );
+
+  /// Creates an asynchronous [LxAsyncComputed] and registers it with [own].
+  ///
+  /// Enables concise async derived fields without an [onInit] override:
+  /// ```dart
+  /// late final results = asyncComputed(() => api.search(query()));
+  /// ```
+  LxAsyncComputed<T> asyncComputed<T>(
+    Future<T> Function() compute, {
+    bool Function(T previous, T current)? equals,
+    bool showWaiting = false,
+    bool staticDeps = false,
+    T? initial,
+    String? name,
+    LxAsyncConcurrency concurrency = LxAsyncConcurrency.latest,
+  }) => own(
+    LxAsyncComputed<T>(
+      compute,
+      equals: equals,
+      showWaiting: showWaiting,
+      staticDeps: staticDeps,
+      initial: initial,
+      name: name,
+      concurrency: concurrency,
+    ),
+  );
 
   R _runInitialization<R>(R Function() initialize) {
     final execution = _OwnerInitialization(this);

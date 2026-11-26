@@ -61,16 +61,18 @@ Both mixins own one `LevitTaskEngine` and drain active runners during
 
 ## Named Work & Conflict Policies
 
-Use a stable logical `id` whenever callers can overlap within the same group:
+Use a stable logical `id` whenever callers can overlap within the same group,
+either via `conflictPolicy:` or the shorthand helpers on `LevitTasksMixin` and
+`LevitReactiveTasksMixin`:
 
-| Policy | Behavior |
-| :-- | :-- |
-| `reject` | Default. Fail the new submission with `LevitTaskConflictException`. |
-| `join` | Share the result of the latest outstanding execution. |
-| `drop` | Complete with `LevitTaskDroppedException` without running the submission. |
-| `restart` | Cooperatively cancel outstanding work and admit the replacement. |
-| `enqueue` | Preserve every submission in FIFO order for that logical ID. |
-| `coalesceLatest` | Keep one trailing execution and replace its work with the latest submission. |
+| Policy | Shorthand helper | Behavior |
+| :-- | :-- | :-- |
+| `reject` | `runTask(..., id: id)` | Default. Fail the new submission with `LevitTaskConflictException`. |
+| `join` | `runJoin(id, task)` | Share the result of the latest outstanding execution. |
+| `drop` | `runDrop(id, task)` | Complete with `LevitTaskDroppedException` without running the submission. |
+| `restart` | `runLatest(id, task)` | Cooperatively cancel outstanding work and admit the replacement. |
+| `enqueue` | `runQueued(id, task)` | Preserve every submission in FIFO order for that logical ID. |
+| `coalesceLatest` | `runCoalesceLatest(id, task)` | Keep one trailing execution and replace its work with the latest submission. |
 
 ```dart
 final execution = controller.taskEngine.submit(

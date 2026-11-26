@@ -389,14 +389,21 @@ class Levit {
   //    Internal utils
   // -------------------------------------------------------------
 
-  static bool _canDisposeItem(Object item) =>
-      item is LxReactive ||
-      item is LevitScopeDisposable ||
-      item is LevitDisposable ||
-      item is StreamSubscription ||
-      item is Timer ||
-      item is Sink ||
-      item is FutureOr<void> Function();
+  static bool _canDisposeItem(Object item) {
+    if (item is LxReactive ||
+        item is LevitScopeDisposable ||
+        item is LevitDisposable ||
+        item is StreamSubscription ||
+        item is Timer ||
+        item is Sink ||
+        item is FutureOr<void> Function()) {
+      return true;
+    }
+    for (final adapter in LevitResourceDisposerSpi._adapters) {
+      if (adapter.matches(item)) return true;
+    }
+    return false;
+  }
 
   /// Runs a supported typed cleanup operation. Other resources need an adapter.
   static FutureOr<void> _levitDisposeItem(Object? item) {
@@ -414,10 +421,67 @@ class Levit {
       item.close();
       return null;
     }
-    // own() validates supported resources before admission. After the resource
-    // adapters above, the only remaining supported type is a cleanup callback.
-    return (item as FutureOr<void> Function())();
+    if (item is FutureOr<void> Function()) return item();
+    for (final adapter in LevitResourceDisposerSpi._adapters) {
+      if (adapter.matches(item)) return adapter.dispose(item);
+    }
+    return null;
   }
+}
+
+final class _LevitResourceAdapter {
+  final Object token;
+  final bool Function(Object resource) matches;
+  final FutureOr<void> Function(Object resource) dispose;
+
+  const _LevitResourceAdapter({
+    required this.token,
+    required this.matches,
+    required this.dispose,
+  });
+}
+
+/// Service Provider Interface for registering external resource disposal
+/// adapters with [LevitController.own] and [LevitRef.own].
+///
+/// Platform packages such as `levit_flutter_core` use this SPI to teach
+/// `own(...)` how to dispose platform-specific types (for example Flutter's
+/// `ChangeNotifier`) without coupling `levit_dart_core` to platform SDKs.
+abstract final class LevitResourceDisposerSpi {
+  static final List<_LevitResourceAdapter> _adapters = [];
+
+  /// Registers a resource disposal adapter keyed by [token].
+  ///
+  /// Re-registering the same [token] replaces the existing adapter entry,
+  /// keeping registration idempotent.
+  static void registerAdapter({
+    required Object token,
+    required bool Function(Object resource) matches,
+    required FutureOr<void> Function(Object resource) dispose,
+  }) {
+    final entry = _LevitResourceAdapter(
+      token: token,
+      matches: matches,
+      dispose: dispose,
+    );
+    final existingIndex = _adapters.indexWhere((a) => a.token == token);
+    if (existingIndex >= 0) {
+      _adapters[existingIndex] = entry;
+    } else {
+      _adapters.add(entry);
+    }
+  }
+
+  /// Removes the adapter registered under [token], if any.
+  static bool unregisterAdapter(Object token) {
+    final initialLength = _adapters.length;
+    _adapters.removeWhere((a) => a.token == token);
+    return _adapters.length != initialLength;
+  }
+
+  /// Returns `true` when an adapter is registered under [token].
+  static bool hasAdapter(Object token) =>
+      _adapters.any((a) => a.token == token);
 }
 
 /// Fluent extensions for naming and configuring reactive objects.

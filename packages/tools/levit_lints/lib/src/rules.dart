@@ -397,7 +397,9 @@ Expression _unwrapParentheses(Expression expression) {
 
 bool _isOwnedExpression(Expression expression) {
   final current = _unwrapParentheses(expression);
-  return current is MethodInvocation && current.methodName.name == 'own';
+  if (current is! MethodInvocation) return false;
+  final name = current.methodName.name;
+  return name == 'own' || name == 'computed' || name == 'asyncComputed';
 }
 
 bool _endsInStatusRead(Expression expression) {

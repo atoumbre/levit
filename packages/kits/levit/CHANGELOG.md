@@ -1,7 +1,7 @@
 ## 0.1.0-beta.1
 
-- **Breaking:** Requires Dart 3.12+.
-- Re-export the `0.1.0-beta.1` ownership, async disposal, `LxReadable`, structured task group, `LevitAsyncMap`, and monotonic countdown APIs from `levit_dart`, `levit_dart_core`, `levit_scope`, and `levit_reactive`.
+- **Breaking:** Requires Dart 3.7+.
+- Re-export the `0.1.0-beta.1` ownership, async disposal, `LxReadable`, `LxStatus.when`/`maybeWhen`, controller/store `computed`/`asyncComputed`, structured task group and conflict-policy shorthand helpers (`runLatest`, `runDrop`, `runQueued`, `runJoin`, `runCoalesceLatest`), `LevitAsyncMap`, and monotonic countdown APIs from `levit_dart`, `levit_dart_core`, `levit_scope`, and `levit_reactive`.
 - Expose `package:levit/levit_testing.dart` (`LevitTestScope`) for isolated testing.
 - Updated internal package constraints to `^0.1.0-beta.1`.
 

@@ -85,6 +85,26 @@ abstract class LevitRef {
 
   /// Registers [object] for automatic cleanup when the store closes.
   T own<T>(T object, {FutureOr<void> Function(T object)? dispose});
+
+  /// Creates a synchronous [LxComputed] and registers it with [own].
+  LxComputed<T> computed<T>(
+    T Function() compute, {
+    bool Function(T previous, T current)? equals,
+    bool staticDeps = false,
+    bool eager = false,
+    String? name,
+  });
+
+  /// Creates an asynchronous [LxAsyncComputed] and registers it with [own].
+  LxAsyncComputed<T> asyncComputed<T>(
+    Future<T> Function() compute, {
+    bool Function(T previous, T current)? equals,
+    bool showWaiting = false,
+    bool staticDeps = false,
+    T? initial,
+    String? name,
+    LxAsyncConcurrency concurrency = LxAsyncConcurrency.latest,
+  });
 }
 
 /// A portable container definition for managing reusable state.

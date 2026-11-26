@@ -1,12 +1,12 @@
 ## 0.1.0-beta.1
 
-- **Breaking:** Requires Dart 3.12+.
+- **Breaking:** Requires Dart 3.7+.
 - **Breaking:** Reactive `close()` now returns `Future<void>`, drains admitted work and subscriptions, and aggregates cleanup failures in `LxCleanupException`.
 - **Breaking:** Replace `LxFamily` with borrowing map/list entries (`entry(...)`); keyed async caching lives in `LevitAsyncMap` (`levit_dart` / `levit`).
 - Add `LxWorker.withContext` for cooperative cancellation (`isCancelled`, `cancelled`, `throwIfCancelled`).
 - Add `LxReadable<T>` observation-only interface and `asReadable` across reactive values (`LxBase<T>`), replacing `LxState<T>`.
 - Define `LxBool`, `LxInt`, and `LxDouble` as type aliases of `LxVar<bool|int|double>` with typed helper extensions (`LxBoolOperations`, `LxIntOperations`, `LxDoubleOperations`), and standardize named `{initial, name, isSensitive}` parameters on `LxList`, `LxMap`, and `LxSet` (and `.from(...)` factories).
-- Add `LxStatus.hasLastValue`, `.fromPrevious(...)`, and `.retained(...)` constructors to preserve nullable retained values cleanly.
+- Add `LxStatus.hasLastValue`, `.fromPrevious(...)`, `.retained(...)`, `when(...)`, and `maybeWhen(...)` (on both `LxStatus<T>` and `LxReadable<LxStatus<T>>`) to preserve nullable retained values and pattern-match async states cleanly.
 - Reconnect static computed dependencies, including asynchronous reads, when observation resumes.
 - Default `Lx.enableWatchMonitoring` off and add optional `LevitReactiveMetadataObserver` for name, owner, and sensitivity changes.
 

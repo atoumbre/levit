@@ -40,8 +40,8 @@ class CounterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LScopedView<CounterController>.put(
-      () => CounterController(),
+    return LScopedView.put(
+      CounterController.new,
       // autoWatch is true by default — read reactives directly; no outer LWatch.
       builder: (context, controller) => Scaffold(
         body: Center(

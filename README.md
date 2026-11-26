@@ -70,7 +70,7 @@ Future<void> main() async {
   final scope = Levit.createScope('app');
 
   try {
-    final controller = scope.put(() => CounterController());
+    final controller = scope.put(CounterController.new);
     controller.increment();
     print(controller.count.value);
   } finally {
@@ -95,8 +95,8 @@ class CounterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LScopedView<CounterController>.put(
-      () => CounterController(),
+    return LScopedView.put(
+      CounterController.new,
       autoWatch: false,
       builder: (context, controller) => Scaffold(
         body: Center(

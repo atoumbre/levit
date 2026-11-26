@@ -139,7 +139,7 @@ class _ScopeDetailPane extends StatelessWidget {
             .where((v) => v.scopeId == scope.id)
             .toList()
           ..sort((a, b) => a.name.compareTo(b.name));
-    final progressRegs =
+    final progressRegistrations =
         (scope.progress['registrations'] as List<dynamic>?)
             ?.cast<Map<String, dynamic>>() ??
         const <Map<String, dynamic>>[];
@@ -181,11 +181,11 @@ class _ScopeDetailPane extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Registrations (${deps.isNotEmpty ? deps.length : progressRegs.length})',
+          'Registrations (${deps.isNotEmpty ? deps.length : progressRegistrations.length})',
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: 8),
-        if (deps.isEmpty && progressRegs.isEmpty)
+        if (deps.isEmpty && progressRegistrations.isEmpty)
           const Text('No registrations in this scope.')
         else if (deps.isNotEmpty)
           ...deps.map(
@@ -204,7 +204,7 @@ class _ScopeDetailPane extends StatelessWidget {
             ),
           )
         else
-          ...progressRegs.map(
+          ...progressRegistrations.map(
             (reg) => Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(

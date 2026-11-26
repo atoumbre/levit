@@ -225,6 +225,8 @@ import 'package:flutter/material.dart';
 import 'package:levit_flutter/levit_flutter.dart';
 
 class Page extends StatelessWidget {
+  Widget wrap(Widget child) => child;
+
   void open(BuildContext context) {
     showLevitDialog<void>(
       context: context,
@@ -236,7 +238,8 @@ class Page extends StatelessWidget {
     );
     showDialog<void>(
       context: context,
-      builder: (ctx) => LScope.capture(context, child: const Text('captured')),
+      builder: (ctx) =>
+          wrap(LScope.capture(context, child: const Text('captured'))),
     );
   }
 }

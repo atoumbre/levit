@@ -1,6 +1,6 @@
 # Migrating to Levit 0.1.0
 
-Levit `0.1.0` is a coordinated breaking release (Dart 3.12+, Flutter 3.44+) with no compatibility aliases. Upgrade all Levit packages together.
+Levit `0.1.0` is a coordinated breaking release (Dart 3.7+, Flutter 3.29+; Dart 3.12+ for `levit_lints`) with no compatibility aliases. Upgrade all Levit packages together.
 
 ## High-Impact Renames & Surface Changes
 
@@ -24,7 +24,7 @@ Levit `0.1.0` is a coordinated breaking release (Dart 3.12+, Flutter 3.44+) with
 | `package:logger` `Level` in `levit_monitor` | `LevitLogLevel` |
 | Unprefixed monitor transports/events | `Levit*` prefixed (`LevitConsoleTransport`, `LevitWebSocketTransport`, `LevitFileTransport`, `LevitMultiTransport`, `LevitMonitorEvent`, etc.) |
 | Advanced task engine/groups/cache/middleware from default kit barrel | Import `package:levit_flutter/tasks.dart` or `package:levit/tasks.dart` |
-| `levit_devtools` / `levit_devtools_ui` | Removed — use `levit_mcp` + `levit_lints` + `skills/levit` |
+| Legacy `levit_devtools_ui` / custom server DevTools | Use the read-only `levit_devtools` (`LevitDevTools.attach()` over Dart VM Service), `levit_mcp`, and `levit_lints` |
 
 ## Behavioral Contracts to Audit During Migration
 

@@ -139,9 +139,7 @@ class LevitVmServiceTransport extends LevitTransport {
       LevitDevToolsProtocol.getDiagnosticsExtension: _handleGetDiagnostics,
     };
     for (final entry in handlers.entries) {
-      if (customRegistrar) {
-        _registerExtension(entry.key, entry.value);
-      } else if (_registeredExtensions.add(entry.key)) {
+      if (customRegistrar || _registeredExtensions.add(entry.key)) {
         try {
           _registerExtension(entry.key, entry.value);
         } on ArgumentError {

@@ -129,11 +129,115 @@ void main() {
         await LevitMonitor.attach(transport: transport);
         LevitMonitor.logInfo('first');
         await LevitMonitor.flush();
-        expect(transport.droppedEvents, greaterThanOrEqualTo(1));
+        final dropsBeforeClose = transport.droppedEvents;
+        expect(dropsBeforeClose, greaterThanOrEqualTo(1));
 
         shouldThrow = false;
         await transport.close();
         expect(LevitDevTools.isAttached, isFalse);
+
+        // Direct send after close increments droppedEvents without posting.
+        transport.send(
+          LevitLogEvent(
+            sessionId: 'test',
+            level: LevitLogLevel.info,
+            data: 'after-close',
+          ),
+        );
+        expect(transport.droppedEvents, dropsBeforeClose + 1);
+      },
+    );
+
+    test(
+      'validates maxRecentErrors, evicts oldest errors, and ignores duplicate extension registration',
+      () async {
+        expect(
+          () => LevitVmServiceTransport(
+            maxRecentErrors: 0,
+            postEvent: (_, _) {},
+            registerExtension: (_, _) {},
+          ),
+          throwsRangeError,
+        );
+
+        final transport = LevitVmServiceTransport(
+          maxRecentErrors: 1,
+          postEvent: (_, _) {},
+          registerExtension: (method, _) {
+            throw ArgumentError('Extension already registered: $method');
+          },
+        );
+        await LevitMonitor.attach(transport: transport, historyCapacity: 10);
+
+        LevitMonitor.logError('first error', error: 'E1');
+        LevitMonitor.logError('second error', error: 'E2');
+        await LevitMonitor.flush();
+
+        expect(transport.recentErrors, hasLength(1));
+        expect(transport.recentErrors.single['error'], 'E2');
+      },
+    );
+
+    test(
+      'filters history by sinceSeq, type, and limit, and reports detached responses',
+      () async {
+        final handlers = <String, developer.ServiceExtensionHandler>{};
+        Map<String, dynamic>? currentSnapshot;
+        final transport = LevitVmServiceTransport(
+          postEvent: (_, _) {},
+          registerExtension: (method, handler) => handlers[method] = handler,
+          readSnapshot: () => currentSnapshot,
+        );
+        await LevitMonitor.attach(transport: transport, historyCapacity: 50);
+
+        // Attached transport with null snapshot reports attached: false for diagnostics.
+        final nullSnapDiag = await handlers[LevitDevToolsProtocol
+            .getDiagnosticsExtension]!('ext.levit.getDiagnostics', const {});
+        final nullSnapPayload =
+            jsonDecode(nullSnapDiag.result!) as Map<String, dynamic>;
+        expect(nullSnapPayload['attached'], isFalse);
+        expect(nullSnapPayload['findings'], isEmpty);
+
+        LevitMonitor.logInfo('msg-1');
+        LevitMonitor.logInfo('msg-2');
+        LevitMonitor.logInfo('msg-3');
+        await LevitMonitor.flush();
+
+        final allHistory = LevitMonitor.history;
+        final firstLogSeq = allHistory.firstWhere((e) => e.type == 'log').seq;
+
+        // Filter by sinceSeq, type, and slice to limit: 1.
+        final filteredResp = await handlers[LevitDevToolsProtocol
+            .getHistoryExtension]!('ext.levit.getHistory', {
+          'sinceSeq': '$firstLogSeq',
+          'type': 'log',
+          'limit': '1',
+        });
+        final filteredPayload =
+            jsonDecode(filteredResp.result!) as Map<String, dynamic>;
+        expect(filteredPayload['attached'], isTrue);
+        final filteredEvents =
+            (filteredPayload['events'] as List).cast<Map<String, dynamic>>();
+        expect(filteredEvents, hasLength(1));
+        expect(filteredEvents.single['type'], 'log');
+        expect((filteredEvents.single['seq'] as int) > firstLogSeq, isTrue);
+
+        // Detach and verify history and diagnostics both report attached: false.
+        await LevitDevTools.detach();
+
+        final detachedHistory = await handlers[LevitDevToolsProtocol
+            .getHistoryExtension]!('ext.levit.getHistory', const {});
+        final detachedHistoryPayload =
+            jsonDecode(detachedHistory.result!) as Map<String, dynamic>;
+        expect(detachedHistoryPayload['attached'], isFalse);
+        expect(detachedHistoryPayload['events'], isEmpty);
+
+        final detachedDiag = await handlers[LevitDevToolsProtocol
+            .getDiagnosticsExtension]!('ext.levit.getDiagnostics', const {});
+        final detachedDiagPayload =
+            jsonDecode(detachedDiag.result!) as Map<String, dynamic>;
+        expect(detachedDiagPayload['attached'], isFalse);
+        expect(detachedDiagPayload['findings'], isEmpty);
       },
     );
   });

@@ -276,16 +276,24 @@ class Controller extends LevitController {
   }
 
   Future<void> test_lazyReactiveMustBeExplicitlyOwned() async {
-    final source =
-        '''
-$_ownerStub
+    final source = '''
+abstract class LevitController {
+  T own<T>(T resource) => resource;
+  LxComputed<T> computed<T>(T Function() compute) => LxComputed<T>();
+  LxAsyncComputed<T> asyncComputed<T>(Future<T> Function() compute) =>
+      LxAsyncComputed<T>();
+}
 class LxReactive<T> {}
+class LxComputed<T> extends LxReactive<T> {}
+class LxAsyncComputed<T> extends LxReactive<T> {}
 extension ReactiveExtension<T> on T {
   LxReactive<T> get lx => LxReactive<T>();
 }
 class Controller extends LevitController {
   late final state = 0.lx;
   late final owned = own(1.lx);
+  late final derived = computed(() => 2);
+  late final asyncDerived = asyncComputed(() async => 3);
 }
 ''';
 

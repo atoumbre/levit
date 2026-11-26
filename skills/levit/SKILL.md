@@ -5,7 +5,7 @@ description: Build, refactor, debug, test, and migrate Dart and Flutter applicat
 
 # Levit 0.1.0 Development Guide
 
-Levit is an ownership-first reactive and dependency-injection runtime for Dart 3.12+ and Flutter 3.44+:
+Levit is an ownership-first reactive and dependency-injection runtime for Dart 3.7+ and Flutter 3.29+ (Dart 3.12+ for the optional `levit_lints` native analyzer plugin):
 
 ```text
 scope (lifetime) -> controller / store (owner) -> reactive state -> Flutter bindings
@@ -97,7 +97,7 @@ void main() {
 - Mutating state or performing async work directly inside `build`.
 - Creating imperative dialogs/sheets without `showLevitDialog` / `showLevitModalBottomSheet` / `LScope.capture`.
 - Replacing an instantiated registration without first `await`ing `delete`.
-- Forgetting `dispose:` adapter when calling `own(...)` on non-Levit objects (e.g., `own(TextEditingController(), dispose: (c) => c.dispose())`).
+- Forgetting `dispose:` adapter when calling `own(...)` on third-party objects (Flutter `ChangeNotifier` subclasses like `TextEditingController`, `FocusNode`, and `ScrollController` dispose automatically via `own(...)`; third-party resources still need `own(client, dispose: (c) => c.close())`).
 
 ## Deep-Dive References
 

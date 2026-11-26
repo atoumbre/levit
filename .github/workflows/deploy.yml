@@ -24,6 +24,9 @@ jobs:
           bootstrap: 'true'
           pub-cache-suffix: ${{ hashFiles('**/pubspec.yaml', 'melos.yaml') }}
 
+      - name: Build DevTools web extension
+        run: dart run melos run build:devtools
+
       - name: Setup Pub Credentials
         run: |
           mkdir -p $HOME/.config/dart

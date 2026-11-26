@@ -22,6 +22,7 @@ jobs:
           - { name: "levit_flutter", path: "packages/kits/levit_flutter" }
           - { name: "levit_lints", path: "packages/tools/levit_lints" }
           - { name: "levit_mcp", path: "packages/tools/levit_mcp" }
+          - { name: "levit_devtools", path: "packages/tools/levit_devtools" }
 
     steps:
       - uses: actions/checkout@v4

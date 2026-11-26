@@ -16,5 +16,8 @@ jobs:
         with:
           pub-cache-suffix: ${{ hashFiles('**/pubspec.yaml', 'melos.yaml') }}
 
+      - name: Build DevTools web extension
+        run: dart run melos run build:devtools
+
       - name: Publish dry-run
         run: dart run scripts/publish_dry_run.dart --quiet

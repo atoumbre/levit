@@ -13,8 +13,8 @@ this guide. For deeper architectural rationale, see [Why Levit](WHY_LEVIT.md).
 | Concern | Riverpod | Bloc / Cubit | GetX | Levit |
 | :--- | :--- | :--- | :--- | :--- |
 | Mutable reactive value | `Notifier` / `StateProvider` | `Cubit<T>` | `0.obs` (`Rx<T>`) | `0.lx` (`LxVar<T>`) |
-| Derived / computed state | `Provider((ref) => ...)` | `BlocSelector` / getter | `Obx` / getter | `LxComputed(() => ...)` |
-| Async derived state | `FutureProvider` / `AsyncNotifier` | `Bloc` + loading/error state | `StateMixin` / manual `Rx` | `LxComputed.async(() async => ...)` + `await computed.wait` |
+| Derived / computed state | `Provider((ref) => ...)` | `BlocSelector` / getter | `Obx` / getter | `computed(() => ...)` / `LxComputed` |
+| Async derived state | `FutureProvider` / `AsyncNotifier` | `Bloc` + loading/error state | `StateMixin` / manual `Rx` | `asyncComputed(() async => ...)` + `await computed.wait` |
 | Stream state | `StreamProvider` | `emit.forEach(...)` | `Rx.bindStream` | `LxStream` / `LxStream.defer` |
 | Keyed cached queries | `FutureProvider.family.autoDispose` | Custom repository cache | Manual map of controllers | `LevitAsyncMap<K, V>` |
 | Business logic owner | `Notifier` / `AsyncNotifier` | `Bloc` / `Cubit` | `GetxController` | `LevitController` |
@@ -23,9 +23,9 @@ this guide. For deeper architectural rationale, see [Why Levit](WHY_LEVIT.md).
 | Route-bound scope | `autoDispose` | Route-local `BlocProvider` | `GetPage(binding:)` | `LRouteScope` / `LAsyncRouteScope` |
 | Resolve in widget | `ref.read` / `ref.watch` | `context.read<T>()` | `Get.find<T>()` | `context.levit.find<T>()` |
 | Focused widget rebuild | `Consumer` / `ref.watch(p.select(...))` | `BlocBuilder` / `BlocSelector` | `Obx(() => ...)` | `LWatch`, `LBuilder`, `LSelectorBuilder` |
-| Async UI states | `asyncValue.when(...)` | `switch (state)` in `BlocBuilder` | `controller.obx(...)` | `LStatusBuilder` |
+| Async UI states | `asyncValue.when(...)` | `switch (state)` in `BlocBuilder` | `controller.obx(...)` | `status.when(...)` / `LStatusBuilder` |
 | Side effects / reactions | `ref.listen(...)` | `BlocListener` | `ever` / `debounce` / `interval` | `LxWorker(...)`, `LevitTimeMixin` |
-| Concurrency & double-taps | Manual / custom | `bloc_concurrency` transformers | Manual | `LevitTasksMixin` + `LevitTaskConflictPolicy` |
+| Concurrency & double-taps | Manual / custom | `bloc_concurrency` transformers | Manual | `LevitTasksMixin` (`runLatest`, `runDrop`, `runQueued`, ...) |
 | Scoped dialogs / sheets | Works via root `ProviderScope` | `BlocProvider.value` manually | `Get.dialog` (`GetMaterialApp`) | `showLevitDialog` / `showLevitModalBottomSheet` |
 | Test overrides & cleanup | `ProviderContainer(overrides:)` | Mock `Bloc` / `bloc_test` | `Get.testMode` / `Get.reset()` | `LevitTestScope(overrides:)` + `addTearDown(harness.close)` |
 | Diagnostics & tooling | `ProviderObserver` + `riverpod_lint` | `BlocObserver` + `bloc_lint` | `Get.log` | `levit_monitor`, `levit_lints`, `levit_devtools`, `levit_mcp` |
@@ -77,13 +77,7 @@ class CatalogController extends LevitController {
   final CatalogRepository repo;
 
   final query = ''.lx;
-  late final LxAsyncComputed<List<Product>> results;
-
-  @override
-  void onInit() {
-    super.onInit();
-    results = LxComputed.async(() => repo.search(query()));
-  }
+  late final results = asyncComputed(() => repo.search(query()));
 
   void setQuery(String value) => query.value = value;
 }
@@ -94,17 +88,17 @@ class ResultsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.levit.find<CatalogController>();
-    return LStatusBuilder<List<Product>>(
-      controller.results,
-      onWaiting: (status) => status.hasLastValue
-          ? ProductList(items: status.lastValue!)
-          : const CircularProgressIndicator(),
-      onError: (status) => Text('Error: ${status.error}'),
-      onSuccess: (items) => ProductList(items: items),
+    return LWatch(
+      () => controller.results.when(
+        onWaiting: () => const CircularProgressIndicator(),
+        onError: (err, _) => Text('Error: $err'),
+        onSuccess: (items) => ProductList(items: items),
+      ),
     );
   }
 }
 ```
+*(Need stale-while-revalidate UI that keeps previous items visible while refreshing? Use `LStatusBuilder` and check `status.hasLastValue`.)*
 
 - **Awaiting a computed value in logic/tests:** Replace `await ref.read(resultsProvider.future)` with `await controller.results.wait`.
 - **Keyed `.family.autoDispose` caching:** Use [`LevitAsyncMap`](ADVANCED.md#2-caching-queries-refreshing-data-and-reconnecting-streams) for per-key caching, deduplication, stale-while-revalidate, and automatic unused-key eviction.
@@ -132,7 +126,7 @@ addTearDown(harness.close);
 ### Riverpod Gotchas to Watch For
 - **Fine-grained mutation vs. whole-state copying:** In Levit, reactive fields (`count.value++`, `LxList.add(...)`, `map.entry(key)`) notify only their direct readers—you do not need `copyWith` on a monolithic state class just to update one counter.
 - **`LevitStore` inherits by default:** Reading a `LevitStore` in a child scope reuses an ancestor instance unless overridden or resolved with `localOnly: true`.
-- **Explicit disposal of non-reactives:** Always wrap `TextEditingController`, `StreamSubscription`, `Timer`, or `LevitAsyncMap` in `own(...)` (pass `dispose:` for Flutter/third-party objects).
+- **Explicit disposal of non-reactives:** Always wrap `TextEditingController`, `FocusNode`, `StreamSubscription`, `Timer`, or `LevitAsyncMap` in `own(...)`. Flutter `ChangeNotifier` controllers dispose automatically with `own(TextEditingController())` (pass `dispose:` for other third-party objects).
 
 ---
 
@@ -194,8 +188,8 @@ class CounterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LScopedView<CounterController>.put(
-      () => CounterController(),
+    return LScopedView.put(
+      CounterController.new,
       autoWatch: false,
       builder: (context, controller) => Scaffold(
         body: LWatch(() => Text('${controller.count()}')),
@@ -209,16 +203,16 @@ class CounterPage extends StatelessWidget {
 }
 ```
 
-### Concurrency (`bloc_concurrency` → `LevitTaskConflictPolicy`)
+### Concurrency (`bloc_concurrency` → `LevitTasksMixin`)
 
-| `bloc_concurrency` | Levit (`LevitTaskConflictPolicy`) | Behavior |
-| :--- | :--- | :--- |
-| `droppable()` | `LevitTaskConflictPolicy.drop` | Ignores overlapping submissions (e.g. double-taps). |
-| `restartable()` | `LevitTaskConflictPolicy.restart` | Cancels in-flight task cooperatively and starts the new one. |
-| `sequential()` | `LevitTaskConflictPolicy.enqueue` | Runs submissions strictly in FIFO order. |
-| *(manual)* | `LevitTaskConflictPolicy.coalesceLatest` | Finishes current run, then runs once more with the latest input. |
-| *(manual)* | `LevitTaskConflictPolicy.join` | Shares the in-flight `Future` result across concurrent callers. |
-| *(manual)* | `LevitTaskConflictPolicy.reject` *(default)* | Rejects overlapping calls with `LevitTaskConflictException`. |
+| `bloc_concurrency` | Levit helper | Policy (`LevitTaskConflictPolicy`) | Behavior |
+| :--- | :--- | :--- | :--- |
+| `droppable()` | `runDrop('id', ...)` | `drop` | Ignores overlapping submissions (e.g. double-taps). |
+| `restartable()` | `runLatest('id', ...)` | `restart` | Cancels in-flight task cooperatively and starts the new one. |
+| `sequential()` | `runQueued('id', ...)` | `enqueue` | Runs submissions strictly in FIFO order. |
+| *(manual)* | `runCoalesceLatest('id', ...)` | `coalesceLatest` | Finishes current run, then runs once more with the latest input. |
+| *(manual)* | `runJoin('id', ...)` | `join` | Shares the in-flight `Future` result across concurrent callers. |
+| *(manual)* | `runTask(..., id: 'id')` | `reject` *(default)* | Rejects overlapping calls with `LevitTaskConflictException`. |
 
 ### Side Effects (`BlocListener` → `LxWorker`)
 Instead of `BlocListener` widgets scattered across the tree, register reactive
@@ -284,8 +278,8 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LScopedView<ProfileController>.put(
-      () => ProfileController(),
+    return LScopedView.put(
+      ProfileController.new,
       autoWatch: false,
       builder: (context, c) => Scaffold(
         body: LWatch(() => Text(c.name())),

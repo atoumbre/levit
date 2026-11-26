@@ -1,6 +1,6 @@
 ## 0.1.0-beta.1
 
-- **Breaking:** Requires Dart 3.12+.
+- **Breaking:** Requires Dart 3.7+.
 - **Breaking:** Await `attach`, `flush`, `detach`, `updateTransport`, and transport `close`; aggregate delivery and cleanup failures in `LevitMonitorException`.
 - **Breaking:** Keep browser imports free of `dart:io`; move `LevitFileTransport` to `package:levit_monitor/levit_monitor_io.dart`.
 - Freeze redacted envelopes before bounded queues/history; default history (`historyCapacity: 0`) and worker statistics off.

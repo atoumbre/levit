@@ -37,6 +37,7 @@ import 'package:flutter/widgets.dart';
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_dart_core/spi.dart';
 
+part 'src/flutter_bindings.dart';
 part 'src/scope_provider.dart';
 part 'src/scope.dart';
 part 'src/scope_lifecycle.dart';

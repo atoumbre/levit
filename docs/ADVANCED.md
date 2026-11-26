@@ -56,16 +56,18 @@ class UploadController extends LevitController with LevitReactiveTasksMixin {
 ### Handling overlapping calls (`conflictPolicy`)
 
 When two calls submit the same `id` inside the same group, `conflictPolicy`
-controls what happens:
+controls what happens. On `LevitTasksMixin` and `LevitReactiveTasksMixin`, you
+can either pass `conflictPolicy:` to `runTask(...)` or use the keyed shorthand
+helpers:
 
-| Policy | What happens | Typical use |
-| :-- | :-- | :-- |
-| `reject` *(default)* | Fails the new call with `LevitTaskConflictException`. | Exclusive operations that shouldn't overlap. |
-| `join` | Shares the result of the already-running call. | Two widgets requesting the same refresh. |
-| `restart` | Cancels the running call and starts the new one. | Search-as-you-type or filter changes. |
-| `coalesceLatest` | Lets the current call finish, then runs once more with the latest arguments. | Auto-saving after rapid edits. |
-| `enqueue` | Queues every submission in FIFO order. | Ordered writes or mutations. |
-| `drop` | Ignores the new call with `LevitTaskDroppedException`. | Preventing double-tap form submits. |
+| Policy | Shorthand helper | What happens | Typical use |
+| :-- | :-- | :-- | :-- |
+| `reject` *(default)* | `runTask(..., id: id)` | Fails the new call with `LevitTaskConflictException`. | Exclusive operations that shouldn't overlap. |
+| `join` | `runJoin(id, task)` | Shares the result of the already-running call. | Two widgets requesting the same refresh. |
+| `restart` | `runLatest(id, task)` | Cancels the running call and starts the new one. | Search-as-you-type or filter changes. |
+| `coalesceLatest` | `runCoalesceLatest(id, task)` | Lets the current call finish, then runs once more with the latest arguments. | Auto-saving after rapid edits. |
+| `enqueue` | `runQueued(id, task)` | Queues every submission in FIFO order. | Ordered writes or mutations. |
+| `drop` | `runDrop(id, task)` | Ignores the new call with `LevitTaskDroppedException`. | Preventing double-tap form submits. |
 
 **How it behaves:**
 - **Cooperative cancellation:** Dart `Future`s cannot be forcefully killed from
@@ -318,19 +320,27 @@ whenever auto-linking cannot capture a resource:
 
 ```dart
 class SearchController extends LevitController {
-  // Flutter & third-party objects take an explicit dispose callback:
-  late final textController = own(
-    TextEditingController(),
-    dispose: (c) => c.dispose(),
-  );
+  // Flutter ChangeNotifiers (TextEditingController, FocusNode, ScrollController, ...)
+  // are disposed automatically via own(...) once any Levit Flutter widget mounts
+  // (or via LevitTestScope / LevitFlutter.ensureInitialized() in non-widget tests):
+  late final textController = own(TextEditingController());
 
   // Built-in adapters handle StreamSubscription, Timer, Sink, and reactives:
   late final pollTimer = own(
     Timer.periodic(const Duration(seconds: 30), (_) => refresh()),
   );
 
-  // Lazy reactive fields initialized on first read should be wrapped in own():
+  // Third-party objects that are neither ChangeNotifier nor LevitDisposable take
+  // an explicit dispose callback:
+  late final externalClient = own(
+    ExternalSocket(),
+    dispose: (client) => client.shutdown(),
+  );
+
+  // Lazy reactive fields initialized on first read should be wrapped in own()
+  // (or declared with computed(...) / asyncComputed(...)):
   late final filter = own(''.lx);
+  late final trimmedFilter = computed(() => filter().trim());
 
   void refresh() {}
 }

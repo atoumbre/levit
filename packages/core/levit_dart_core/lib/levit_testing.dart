@@ -38,7 +38,7 @@ export 'levit_dart_core.dart';
 /// ```
 ///
 /// {@category Testing}
-final class LevitTestScope {
+base class LevitTestScope {
   /// The isolated root [LevitScope] owned by this test boundary.
   final LevitScope scope;
   final Set<Future<void>> _pending = {};

@@ -38,11 +38,13 @@ Bootstrap (Flutter)
 -------------------
 
 Call Levit.enableAutoLinking() in main() before runApp (mounting an LScope or
-LAsyncScope also enables auto-linking automatically unless Levit.disableAutoLinking()
-was called; check Levit.isAutoLinkingEnabled). Monitoring never enables
-auto-linking. Still call own(...) explicitly for non-reactive resources (pass
-`dispose:` for third-party objects; no reflective method-name guessing) and
-reactives/workers created outside controller init.
+LAsyncScope also enables auto-linking and registers the Flutter ChangeNotifier
+disposal adapter automatically unless Levit.disableAutoLinking() was called;
+check Levit.isAutoLinkingEnabled, or call LevitFlutter.ensureInitialized() in
+non-widget Flutter tests). Monitoring never enables auto-linking. Call own(...)
+for non-reactive resources (Flutter ChangeNotifiers like TextEditingController,
+FocusNode, ScrollController dispose automatically with own(...); pass `dispose:`
+for third-party objects) and reactives/workers created outside controller init.
 
 
 Dependency Injection
@@ -75,12 +77,15 @@ Reactive State
 - .named('label') — diagnostics; mark isSensitive at construction
 - LxList / LxMap / LxSet or <T>[].lx — collections (borrow contents)
 - LxComputed(() => ...) / LxComputed.async(() async => ...) — derived state
-  (await computed.wait for the next settled async value/error)
+  (inside controllers/stores prefer `late final x = computed(() => ...)` /
+  `asyncComputed(() async => ...)`; await `computed.wait` for the next settled
+  async value/error)
 - LxAsyncConcurrency.exhaustLatest — one running + one coalesced trailing run
 - LxStream completionPolicy: retain — preserve/rebind a completed source
 - LxMap/LxList.entry — borrowed address; LevitAsyncMap — keyed task-backed queries
 - LxReadable<T> / state.asReadable — observation-only interface
-- LxStatus<T> + LStatusBuilder — async UI states (check status.hasLastValue)
+- LxStatus<T> + LStatusBuilder / status.when(...) / status.maybeWhen(...) —
+  async UI states (check status.hasLastValue)
 - LxWorker / LxWorker.withContext — side effects (prefer own(LxWorker(...)))
 - Levit.batch / Levit.batchAsync — context-local notification coalescing
 - Reactive close() returns Future<void> and aggregates errors in LxCleanupException
@@ -135,7 +140,8 @@ Tasks & Utilities (levit_dart)
   (coordinate in group bodies; only leaf tasks occupy worker slots)
 - LevitRetryPolicy(shouldRetry: ..., maxRetries: ...) — bounded backoff retries
 - LevitTaskConflictPolicy — reject (default), join, drop, restart, enqueue,
-  coalesceLatest
+  coalesceLatest (or shorthand runLatest / runDrop / runQueued / runJoin /
+  runCoalesceLatest on LevitTasksMixin & LevitReactiveTasksMixin)
 - LevitTaskContext — cooperative cancellation, progress, execution metadata
 - LevitTaskMiddleware / LevitTaskTracker — structured events / aggregate state
 - scheduleIsolate / submitIsolate / runIsolateTask — explicit isolate work

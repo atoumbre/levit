@@ -1,8 +1,9 @@
 ## 0.1.0-beta.1
 
-- **Breaking:** Requires Dart 3.12+ and Flutter 3.44+.
+- **Breaking:** Requires Dart 3.7+ and Flutter 3.29+.
 - **Breaking:** `LStatusBuilder.onWaiting`, `onError`, and `onIdle` receive their complete `LxStatus<T>` objects, and builders/selectors observe `LxReadable<T>`.
 - **Breaking:** Removed `LAsyncScopedView`; compose `LScope` / `LAsyncScope` explicitly with `LView` / `LAsyncView`.
+- Add `LevitFlutter.ensureInitialized()` (called automatically by Flutter scope and view widgets) to enable default Flutter auto-linking unless opted out and register automatic `ChangeNotifier` disposal for `own(...)` (`TextEditingController`, `FocusNode`, `ScrollController`, `AnimationController`, `ValueNotifier`, and custom `ChangeNotifier` subclasses).
 - Add serialized `LScope` / `LAsyncScope` replacement with coalesced rapid updates, reentrant replacement serialization, and `LevitScopeLifecycleController` (`settled`, `error`, `retry()`, `close()`).
 - Add borrowing `LevitValueListenable` and `asValueListenable()` interoperability with listener-scoped subscriptions and idempotent disposal.
 - Add typed `context.levit.findStore` and `context.levit.findAsyncStore` lookups.

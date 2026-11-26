@@ -21,4 +21,5 @@ library;
 
 export 'package:levit_reactive/levit_reactive.dart';
 export 'package:levit_scope/levit_scope.dart';
-export 'src/dart_core_library.dart' hide LevitAutoLinkSpi;
+export 'src/dart_core_library.dart'
+    hide LevitAutoLinkSpi, LevitResourceDisposerSpi;

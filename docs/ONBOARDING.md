@@ -58,7 +58,7 @@ void main() {
     LScope(
       configure: (scope) {
         // Lazy services are created on first use:
-        scope.lazyPut(() => ApiClient());
+        scope.lazyPut(ApiClient.new);
         scope.lazyPut(() => CatalogRepository(scope.find<ApiClient>()));
 
         // Eager app-wide controllers initialize immediately:
@@ -97,8 +97,8 @@ class CounterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LScopedView<CounterController>.put(
-      () => CounterController(),
+    return LScopedView.put(
+      CounterController.new,
       builder: (context, controller) => Scaffold(
         appBar: AppBar(title: const Text('Counter')),
         body: Center(
@@ -123,26 +123,20 @@ class CounterPage extends StatelessWidget {
 
 `LScopedView` has `autoWatch: true` by default, which is convenient for compact
 screens. On larger screens, set `autoWatch: false` and wrap only the widgets
-that should rebuild in `LWatch`:
+that should rebuild in `LWatch`. Use `computed(...)` to declare owned derived
+fields without an `onInit()` override:
 
 ```dart
 class CounterController extends LevitController {
   final count = 0.lx;
-  late final LxComputed<int> doubled;
-
-  @override
-  void onInit() {
-    super.onInit();
-    // Created during onInit(), so auto-linking owns doubled too:
-    doubled = LxComputed(() => count() * 2);
-  }
+  late final doubled = computed(() => count() * 2);
 
   void increment() => count.value++;
 }
 
 // Inside build():
-LScopedView<CounterController>.put(
-  () => CounterController(),
+LScopedView.put(
+  CounterController.new,
   autoWatch: false,
   builder: (context, controller) => Scaffold(
     appBar: AppBar(title: const Text('Counter')), // Never rebuilds on count change
@@ -204,9 +198,10 @@ child subtree needs its own isolated copy.
 
 ## Step 4: Load Async Data Cleanly
 
-Use `LxComputed.async` on your controller and `LStatusBuilder` in the UI.
-Whenever an observed reactive input (like `query`) changes, `results`
-re-fetches automatically and publishes loading, error, and success states:
+Use `asyncComputed(...)` on your controller and `LStatusBuilder` (or
+`results.when(...)` inside `LWatch`) in the UI. Whenever an observed reactive
+input (like `query`) changes, `results` re-fetches automatically and publishes
+loading, error, and success states:
 
 ```dart
 class CatalogController extends LevitController {
@@ -214,13 +209,7 @@ class CatalogController extends LevitController {
   final CatalogRepository repository;
 
   final query = ''.lx;
-  late final LxAsyncComputed<List<Product>> results;
-
-  @override
-  void onInit() {
-    super.onInit();
-    results = LxComputed.async(() => repository.search(query()));
-  }
+  late final results = asyncComputed(() => repository.search(query()));
 
   void setQuery(String value) => query.value = value;
 }
@@ -241,6 +230,19 @@ class CatalogResults extends StatelessWidget {
     );
   }
 }
+```
+
+For quick inline status matching inside an `LWatch` (when you don't need
+stale-while-revalidate `status.lastValue`), you can also use `.when(...)`:
+
+```dart
+LWatch(
+  () => controller.results.when(
+    onWaiting: () => const CircularProgressIndicator(),
+    onError: (error, _) => Text('Could not load: $error'),
+    onSuccess: (items) => ProductList(items: items),
+  ),
+)
 ```
 
 Need keyed caching, pagination, or cooperative cancellation? See

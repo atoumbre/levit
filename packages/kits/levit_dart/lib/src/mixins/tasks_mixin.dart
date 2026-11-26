@@ -168,6 +168,142 @@ mixin LevitTasksMixin on LevitController {
     );
   }
 
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.restart], cancelling
+  /// any in-flight execution for [id].
+  Future<T> runLatest<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    void Function(Object, StackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.restart,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
+
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.drop], dropping new
+  /// submissions while [id] is already active.
+  Future<T> runDrop<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    void Function(Object, StackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.drop,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
+
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.enqueue], queuing new
+  /// submissions behind active executions for [id].
+  Future<T> runQueued<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    void Function(Object, StackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.enqueue,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
+
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.join], sharing the
+  /// result of any already-running execution for [id].
+  Future<T> runJoin<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    void Function(Object, StackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.join,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
+
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.coalesceLatest],
+  /// letting the current execution finish and coalescing subsequent calls into
+  /// at most one trailing run for [id].
+  Future<T> runCoalesceLatest<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    void Function(Object, StackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
+
   /// Runs a top-level/static task in a new isolate.
   Future<T> runIsolateTask<I, T>(
     LevitIsolateTask<I, T> task,
@@ -544,6 +680,155 @@ mixin LevitReactiveTasksMixin on LevitController {
           ),
     );
   }
+
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.restart], cancelling
+  /// any in-flight execution for [id] while tracking reactive state in [tasks].
+  Future<T> runLatest<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    double weight = 1.0,
+    void Function(Object error, StackTrace stackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.restart,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    weight: weight,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
+
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.drop], dropping new
+  /// submissions while [id] is active and tracking reactive state in [tasks].
+  Future<T> runDrop<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    double weight = 1.0,
+    void Function(Object error, StackTrace stackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.drop,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    weight: weight,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
+
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.enqueue], queuing new
+  /// submissions behind active executions for [id] while tracking reactive
+  /// state in [tasks].
+  Future<T> runQueued<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    double weight = 1.0,
+    void Function(Object error, StackTrace stackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.enqueue,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    weight: weight,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
+
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.join], sharing any
+  /// already-running execution for [id] while tracking reactive state in
+  /// [tasks].
+  Future<T> runJoin<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    double weight = 1.0,
+    void Function(Object error, StackTrace stackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.join,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    weight: weight,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
+
+  /// Runs a keyed [task] under [LevitTaskConflictPolicy.coalesceLatest],
+  /// letting the current execution finish and coalescing subsequent calls into
+  /// at most one trailing run for [id] while tracking reactive state in
+  /// [tasks].
+  Future<T> runCoalesceLatest<T>(
+    String id,
+    FutureOr<T> Function(LevitTaskContext context) task, {
+    LevitTaskPriority priority = LevitTaskPriority.normal,
+    LevitRetryPolicy? retryPolicy,
+    LevitTaskGroup? group,
+    DateTime? deadline,
+    double weight = 1.0,
+    void Function(Object error, StackTrace stackTrace)? onError,
+    LevitTaskCachePolicy<T>? cachePolicy,
+    LevitTaskMetadata? metadata,
+    String? debugName,
+  }) => runTask<T>(
+    task,
+    id: id,
+    priority: priority,
+    conflictPolicy: LevitTaskConflictPolicy.coalesceLatest,
+    retryPolicy: retryPolicy,
+    group: group,
+    deadline: deadline,
+    weight: weight,
+    onError: onError,
+    cachePolicy: cachePolicy,
+    metadata: metadata,
+    debugName: debugName,
+  );
 
   /// Executes a top-level or static isolate [task] with [input] and tracks its
   /// reactive state in [tasks].

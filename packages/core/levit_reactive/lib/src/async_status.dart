@@ -44,6 +44,41 @@ sealed class LxStatus<T> {
     LxError<T>(:final stackTrace) => stackTrace,
     _ => null,
   };
+
+  /// Pattern-matches this status into a value of type [R].
+  ///
+  /// When [onIdle] is omitted, [LxIdle] falls back to [onWaiting], matching
+  /// `LStatusBuilder` behavior.
+  R when<R>({
+    required R Function(T value) onSuccess,
+    required R Function() onWaiting,
+    required R Function(Object error, StackTrace? stackTrace) onError,
+    R Function()? onIdle,
+  }) => switch (this) {
+    LxSuccess<T>(:final value) => onSuccess(value),
+    LxWaiting<T>() => onWaiting(),
+    LxError<T>(:final error, :final stackTrace) => onError(error, stackTrace),
+    LxIdle<T>() => (onIdle ?? onWaiting)(),
+  };
+
+  /// Pattern-matches selected status variants, falling back to [orElse] for
+  /// any unhandled state.
+  R maybeWhen<R>({
+    R Function(T value)? onSuccess,
+    R Function()? onWaiting,
+    R Function(Object error, StackTrace? stackTrace)? onError,
+    R Function()? onIdle,
+    required R Function() orElse,
+  }) => switch (this) {
+    LxSuccess<T>(:final value) when onSuccess != null => onSuccess(value),
+    LxWaiting<T>() when onWaiting != null => onWaiting(),
+    LxError<T>(:final error, :final stackTrace) when onError != null => onError(
+      error,
+      stackTrace,
+    ),
+    LxIdle<T>() when onIdle != null => onIdle(),
+    _ => orElse(),
+  };
 }
 
 /// Status: Idle (the operation has not been initiated).
@@ -261,6 +296,42 @@ extension LxStatusReactiveExtensions<T> on LxReadable<LxStatus<T>> {
     if (terminalStatus is LxSuccess<T>) return terminalStatus.value;
     throw (terminalStatus as LxError<T>).error;
   }
+
+  /// Pattern-matches the current [value] into a result of type [R].
+  ///
+  /// Reading [value] registers a reactive dependency when called inside
+  /// `LWatch` or [LxComputed]. When [onIdle] is omitted, [LxIdle] falls back
+  /// to [onWaiting].
+  R when<R>({
+    required R Function(T value) onSuccess,
+    required R Function() onWaiting,
+    required R Function(Object error, StackTrace? stackTrace) onError,
+    R Function()? onIdle,
+  }) => value.when<R>(
+    onSuccess: onSuccess,
+    onWaiting: onWaiting,
+    onError: onError,
+    onIdle: onIdle,
+  );
+
+  /// Pattern-matches selected variants of the current [value], falling back to
+  /// [orElse] for any unhandled state.
+  ///
+  /// Reading [value] registers a reactive dependency when called inside
+  /// `LWatch` or [LxComputed].
+  R maybeWhen<R>({
+    R Function(T value)? onSuccess,
+    R Function()? onWaiting,
+    R Function(Object error, StackTrace? stackTrace)? onError,
+    R Function()? onIdle,
+    required R Function() orElse,
+  }) => value.maybeWhen<R>(
+    onSuccess: onSuccess,
+    onWaiting: onWaiting,
+    onError: onError,
+    onIdle: onIdle,
+    orElse: orElse,
+  );
 
   /// Creates an [LxWorker] dispatching callbacks by [LxStatus] variant.
   ///

@@ -128,6 +128,7 @@ class _LViewState<T> extends State<LView<T>> {
   @override
   void initState() {
     super.initState();
+    LevitFlutter.ensureInitialized();
     // Resolver is memoized per widget lifecycle to avoid rebuild-driven side effects.
     controller = _resolveController();
     _boundScope = LScope.of(context);
@@ -299,6 +300,7 @@ class _LAsyncViewState<T> extends State<LAsyncView<T>> {
   @override
   void initState() {
     super.initState();
+    LevitFlutter.ensureInitialized();
     // Future is memoized per lifecycle to avoid repeated asynchronous resolution.
     future = _resolveFuture();
     _boundScope = LScope.of(context);

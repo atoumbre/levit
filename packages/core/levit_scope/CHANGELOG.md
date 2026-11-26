@@ -1,6 +1,6 @@
 ## 0.1.0-beta.1
 
-- **Breaking:** Requires Dart 3.12+.
+- **Breaking:** Requires Dart 3.7+.
 - **Breaking:** Child scopes created via `createScope` are owned by their parent by default (`ownedByParent: true`) and dispose before parent dependencies.
 - **Breaking:** Factory registrations are no longer implicitly permanent; pass `permanent: true` when needed and await `releaseFactoryInstance(instance)` for early release.
 - **Breaking:** `delete`, `reset`, and `releaseFactoryInstance` reject self-disposal with `StateError` instead of deadlocking.
