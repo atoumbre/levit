@@ -353,7 +353,7 @@ class _LoopService implements LevitLoopService, LevitDrainable {
 }
 
 typedef _IsolateSpawner =
-    Future<Isolate> Function(
+    Future<void> Function(
       void Function(_IsolateConfig) entryPoint,
       _IsolateConfig message, {
       String? debugName,
@@ -365,7 +365,7 @@ _IsolateSpawner _spawnIsolate =
       _IsolateConfig message, {
       String? debugName,
     }) {
-      return Isolate.spawn(
+      return spawnDartIsolate(
         entryPoint,
         message,
         onError: message.mainSendPort,
@@ -381,8 +381,8 @@ class _IsolateLoopService implements LevitLoopService, LevitDrainable {
   final String? _debugName;
   final _status = LxVar<LxStatus<dynamic>>(LxIdle());
 
-  SendPort? _commandPort;
-  ReceivePort? _receivePort;
+  LevitIsolateSendPort? _commandPort;
+  LevitIsolateReceivePort? _receivePort;
   StreamSubscription<dynamic>? _receiveSubscription;
   String? _pendingCommand;
   bool _desiredPaused = false;
@@ -413,7 +413,7 @@ class _IsolateLoopService implements LevitLoopService, LevitDrainable {
       return;
     }
     try {
-      _receivePort = ReceivePort();
+      _receivePort = createIsolateReceivePort();
       _receiveSubscription = _receivePort!.listen((message) {
         if (message == null) {
           if (!_finished.isCompleted) _finished.complete();
@@ -426,12 +426,12 @@ class _IsolateLoopService implements LevitLoopService, LevitDrainable {
                 ? message[1].toString()
                 : '';
             _status.value = LxError(
-              RemoteError(errText, stackText),
+              createIsolateRemoteError(errText, stackText),
               StackTrace.fromString(stackText),
             );
           }
           if (!_finished.isCompleted) _finished.complete();
-        } else if (message is SendPort) {
+        } else if (message is LevitIsolateSendPort) {
           _commandPort = message;
           final pendingCommand = _stopping ? 'stop' : _pendingCommand;
           if (pendingCommand != null) {
@@ -527,7 +527,7 @@ class _IsolateLoopService implements LevitLoopService, LevitDrainable {
   }
 
   static void _isolateEntry(_IsolateConfig config) async {
-    final commandPort = ReceivePort();
+    final commandPort = createIsolateReceivePort();
     config.mainSendPort.send(commandPort.sendPort);
 
     final executor = _LoopExecutor(config.body, config.delay, (status) {
@@ -538,7 +538,7 @@ class _IsolateLoopService implements LevitLoopService, LevitDrainable {
           final stackText = status.stackTrace?.toString() ?? '';
           config.mainSendPort.send(
             LxError<dynamic>(
-              RemoteError(status.error.toString(), stackText),
+              createIsolateRemoteError(status.error.toString(), stackText),
               StackTrace.fromString(stackText),
             ),
           );
@@ -550,7 +550,7 @@ class _IsolateLoopService implements LevitLoopService, LevitDrainable {
     commandSubscription = commandPort.listen((message) {
       _handleCommand(message, executor, commandSubscription, commandPort, () {
         config.mainSendPort.send('stopped');
-        Isolate.exit();
+        exitCurrentIsolate();
       });
     });
 
@@ -565,7 +565,7 @@ class _IsolateLoopService implements LevitLoopService, LevitDrainable {
     dynamic message,
     _LoopExecutor executor,
     StreamSubscription<dynamic> commandSubscription,
-    ReceivePort commandPort,
+    LevitIsolateReceivePort commandPort,
     void Function() exit,
   ) {
     if (message == 'pause') {
@@ -586,7 +586,7 @@ class _IsolateLoopService implements LevitLoopService, LevitDrainable {
 
 class _IsolateConfig {
   final FutureOr<void> Function() body;
-  final SendPort mainSendPort;
+  final LevitIsolateSendPort mainSendPort;
   final Duration? delay;
   final bool startPaused;
 

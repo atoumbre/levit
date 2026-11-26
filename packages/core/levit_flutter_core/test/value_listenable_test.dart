@@ -89,18 +89,25 @@ void main() {
     },
   );
 
-  test('a resource handle stays connected through refresh', () async {
+  test('a deferred stream handle stays connected through restart', () async {
     var generation = 0;
-    final resource = LxResource<int, LxVar<int>>(() => (++generation).lx);
-    final adapter = resource.asValueListenable();
-    final values = <int>[];
-    adapter.addListener(() => values.add(adapter.value));
-    expect(adapter.value, 1);
-    await resource.refresh();
-    expect(adapter.value, 2);
-    expect(values, contains(2));
+    final stream = LxStream<int>.defer(
+      () => Stream.value(++generation),
+      completionPolicy: LxStreamCompletionPolicy.retain,
+    );
+    final adapter = stream.asValueListenable();
+    final statuses = <LxStatus<int>>[];
+    adapter.addListener(() => statuses.add(adapter.value));
+    await Future<void>.delayed(Duration.zero);
+    expect(adapter.value, isA<LxSuccess<int>>());
+    expect((adapter.value as LxSuccess<int>).value, 1);
+    stream.restartDeferred(() => Stream.value(++generation));
+    await Future<void>.delayed(Duration.zero);
+    expect(adapter.value, isA<LxSuccess<int>>());
+    expect((adapter.value as LxSuccess<int>).value, 2);
+    expect(statuses.any((s) => s is LxSuccess<int> && s.value == 2), isTrue);
     adapter.dispose();
-    await resource.close();
+    await stream.close();
   });
 
   testWidgets(

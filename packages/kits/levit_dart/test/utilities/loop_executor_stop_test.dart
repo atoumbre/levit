@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:isolate';
 import 'dart:mirrors';
 
 import 'package:levit_dart/levit_dart.dart';
+import 'package:levit_dart/src/utilities/isolate_bridge.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -47,7 +47,7 @@ void main() {
       final lib = reflectClass(LevitLoopEngine).owner as LibraryMirror;
       final isPausedSymbol = MirrorSystem.getSymbol('_isPaused', lib);
       final executor = _newLoopExecutor(lib);
-      final receivePort = ReceivePort();
+      final receivePort = createIsolateReceivePort();
       final subscription = receivePort.listen((_) {});
 
       _invokeIsolateCommandHandler(
@@ -69,7 +69,7 @@ void main() {
       final lib = reflectClass(LevitLoopEngine).owner as LibraryMirror;
       final isPausedSymbol = MirrorSystem.getSymbol('_isPaused', lib);
       final executor = _newLoopExecutor(lib);
-      final receivePort = ReceivePort();
+      final receivePort = createIsolateReceivePort();
       final subscription = receivePort.listen((_) {});
 
       executor.setField(isPausedSymbol, true);
@@ -92,7 +92,7 @@ void main() {
       final lib = reflectClass(LevitLoopEngine).owner as LibraryMirror;
       final isStoppedSymbol = MirrorSystem.getSymbol('_isStopped', lib);
       final executor = _newLoopExecutor(lib);
-      final receivePort = ReceivePort();
+      final receivePort = createIsolateReceivePort();
       final subscription = receivePort.listen((_) {});
       var exited = false;
 
@@ -129,7 +129,7 @@ void _invokeIsolateCommandHandler(
   dynamic message,
   Object executor,
   StreamSubscription<dynamic> subscription,
-  ReceivePort receivePort,
+  LevitIsolateReceivePort receivePort,
   void Function() exit,
 ) {
   final serviceSymbol = MirrorSystem.getSymbol('_IsolateLoopService', lib);

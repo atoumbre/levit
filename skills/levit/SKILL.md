@@ -39,7 +39,7 @@ scope (lifetime) -> controller / store (owner) -> reactive state -> Flutter bind
 | Mutable reactive value / collection | `0.lx`, `<T>[].lx`, `<K, V>{}.lx`, `<T>{}.lx` |
 | Derived synchronous / async state | `LxComputed(() => ...)` / `LxComputed.async(() async => ...)` |
 | Single keyed entry without rebuilding whole collection | `map.entry(key)` / `list.entry(index)` |
-| Owned replaceable reactive producer | `LxResource(() => createProducer())` |
+| Reconnectable live stream | `LxStream.defer(..., completionPolicy: retain)` + `restartDeferred` |
 | Keyed task-backed async loading | `LevitAsyncMap<K, T>` + `LStatusBuilder(queries.entry(k), ...)` |
 | Side effects reacting to state changes | `own(LxWorker(source, (value) async { ... }))` |
 | Controller task orchestration / retries / isolates | `LevitReactiveTasksMixin` / `LevitTasksMixin` |

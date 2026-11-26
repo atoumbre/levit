@@ -15,8 +15,7 @@ Levit `0.1.0` is a coordinated breaking release (Dart 3.12+, Flutter 3.44+) with
 | `initialized` | `isInitialized` |
 | `computedValue` | `requireValue` |
 | `runGuardedAsync(cancelOnClose:)` | `runGuardedAsync(discardResultOnClose:)` |
-| `LevitQueryFamily<K, T>` | `LevitAsyncMap<K, T>` (`queries.entry(k)`, `await queries.refresh(k)`, `await queries.fetch(k)`) |
-| `LxFamilyHandle<T, R>` | `LxResource<T, R>` (`resource.producer`, `await resource.refresh()`) |
+| `LevitQueryFamily<K, T>` / `LxFamilyHandle<T, R>` | `LevitAsyncMap<K, T>` (`queries.entry(k)`, `await queries.refresh(k)`, `await queries.fetch(k)`) or `LxStream.defer` + `restartDeferred` |
 | Plain value families | `map.entry(key)` or `list.entry(index)` |
 | `LStatusBuilder` `onWaiting: () => ...` | `onWaiting: (status) => ...` |
 | `LStatusBuilder` `onError: (e, st) => ...` | `onError: (status) => ...` (`status.error`, `status.stackTrace`) |

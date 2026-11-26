@@ -2,7 +2,7 @@
 
 - **Breaking:** Requires Dart 3.12+.
 - **Breaking:** Reactive `close()` now returns `Future<void>`, drains admitted work and subscriptions, and aggregates cleanup failures in `LxCleanupException`.
-- **Breaking:** Replace `LxFamily` with borrowing map/list entries (`entry(...)`) and lazy, exclusively owned `LxResource` whose `refresh()` drains cleanup and validates replacement before completing.
+- **Breaking:** Replace `LxFamily` with borrowing map/list entries (`entry(...)`); keyed async caching lives in `LevitAsyncMap` (`levit_dart` / `levit`).
 - Add `LxWorker.withContext` for cooperative cancellation (`isCancelled`, `cancelled`, `throwIfCancelled`).
 - Add `LxReadable<T>` observation-only interface and `LxState.asReadable`.
 - Add `LxStatus.hasLastValue`, `.fromPrevious(...)`, and `.retained(...)` constructors to preserve nullable retained values cleanly.

@@ -19,12 +19,20 @@ class LxList<E> extends LxVar<List<E>>
   /// Creates a reactive list.
   ///
   /// Backed by [initial] if provided, otherwise an empty list.
-  LxList([List<E>? initial, String? name, bool isSensitive = false])
+  LxList({List<E>? initial, String? name, bool isSensitive = false})
     : super(initial ?? <E>[], name: name, isSensitive: isSensitive);
 
   /// Creates an [LxList] containing all [elements].
-  factory LxList.from(Iterable<E> elements) {
-    return LxList<E>(List<E>.from(elements));
+  factory LxList.from(
+    Iterable<E> elements, {
+    String? name,
+    bool isSensitive = false,
+  }) {
+    return LxList<E>(
+      initial: List<E>.from(elements),
+      name: name,
+      isSensitive: isSensitive,
+    );
   }
 
   @override
@@ -424,13 +432,18 @@ class LxMap<K, V> extends LxVar<Map<K, V>>
   /// Creates a reactive map.
   ///
   /// Backed by [initial] if provided, otherwise an empty map.
-  LxMap([Map<K, V>? initial, String? name, bool isSensitive = false])
+  LxMap({Map<K, V>? initial, String? name, bool isSensitive = false})
     : _defaultBacking = initial == null,
       super(initial ?? <K, V>{}, name: name, isSensitive: isSensitive);
 
   /// Creates an [LxMap] from an existing [Map].
-  factory LxMap.from(Map<K, V> other) {
-    return LxMap<K, V>().._value.addAll(other);
+  factory LxMap.from(
+    Map<K, V> other, {
+    String? name,
+    bool isSensitive = false,
+  }) {
+    return LxMap<K, V>(name: name, isSensitive: isSensitive)
+      .._value.addAll(other);
   }
 
   bool _defaultBacking;
@@ -602,12 +615,20 @@ class LxSet<E> extends LxVar<Set<E>> implements Set<E> {
   /// Creates a reactive set.
   ///
   /// Backed by [initial] if provided, otherwise an empty set.
-  LxSet([Set<E>? initial, String? name, bool isSensitive = false])
+  LxSet({Set<E>? initial, String? name, bool isSensitive = false})
     : super(initial ?? <E>{}, name: name, isSensitive: isSensitive);
 
   /// Creates an [LxSet] from an existing [Iterable].
-  factory LxSet.from(Iterable<E> elements) {
-    return LxSet<E>(Set<E>.from(elements));
+  factory LxSet.from(
+    Iterable<E> elements, {
+    String? name,
+    bool isSensitive = false,
+  }) {
+    return LxSet<E>(
+      initial: Set<E>.from(elements),
+      name: name,
+      isSensitive: isSensitive,
+    );
   }
 
   @override

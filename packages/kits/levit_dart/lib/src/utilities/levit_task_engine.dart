@@ -314,7 +314,7 @@ class LevitTaskEngine
     );
   }
 
-  /// Schedules a top-level or static [task] in a spawned [Isolate] and returns
+  /// Schedules a top-level or static [task] in a spawned `Isolate` and returns
   /// its eventual result [Future].
   ///
   /// Both [input] and the returned [T] must be sendable across isolate
@@ -359,7 +359,7 @@ class LevitTaskEngine
     ).result;
   }
 
-  /// Submits a top-level or static [task] to run in a spawned [Isolate] and
+  /// Submits a top-level or static [task] to run in a spawned `Isolate` and
   /// returns its [LevitTaskExecution] handle.
   ///
   /// [task] must be a top-level function or static method, and both [input] and
@@ -1291,10 +1291,10 @@ Future<T> _runInTaskIsolate<I, T>({
   required LevitTaskContext context,
   required _LevitTaskCancellation cancellation,
 }) async {
-  final events = ReceivePort();
+  final events = createIsolateReceivePort();
   final exited = Completer<void>();
   final result = Completer<T>();
-  SendPort? cancellationPort;
+  LevitIsolateSendPort? cancellationPort;
 
   void sendCancellation() => cancellationPort?.send(cancellation.reason);
   if (cancellation.isCancelled) sendCancellation();
@@ -1309,11 +1309,12 @@ Future<T> _runInTaskIsolate<I, T>({
   eventSubscription = events.listen((dynamic raw) {
     if (raw == null) {
       if (!exited.isCompleted) exited.complete();
-      if (!result.isCompleted)
+      if (!result.isCompleted) {
         completeError(
           StateError('Task isolate exited without a result.'),
           StackTrace.current,
         );
+      }
       return;
     }
     if (raw is List<dynamic>) {
@@ -1322,7 +1323,7 @@ Future<T> _runInTaskIsolate<I, T>({
           ? raw[1].toString()
           : '';
       completeError(
-        RemoteError(errText, stackText),
+        createIsolateRemoteError(errText, stackText),
         StackTrace.fromString(stackText),
       );
       return;
@@ -1330,7 +1331,7 @@ Future<T> _runInTaskIsolate<I, T>({
     final message = raw as (Object, Object?);
     switch (message.$1) {
       case _IsolateTaskMessage.cancellationPort:
-        cancellationPort = message.$2! as SendPort;
+        cancellationPort = message.$2! as LevitIsolateSendPort;
         if (cancellation.isCancelled) sendCancellation();
       case _IsolateTaskMessage.progress:
         if (!cancellation.isCancelled) {
@@ -1354,13 +1355,13 @@ Future<T> _runInTaskIsolate<I, T>({
       case _IsolateTaskMessage.error:
         final errorParts = message.$2! as (String, String);
         completeError(
-          RemoteError(errorParts.$1, errorParts.$2),
+          createIsolateRemoteError(errorParts.$1, errorParts.$2),
           StackTrace.fromString(errorParts.$2),
         );
     }
   });
   try {
-    await Isolate.spawn<List<Object?>>(
+    await spawnDartIsolate<List<Object?>>(
       _levitTaskIsolateEntry,
       <Object?>[
         task,
@@ -1389,11 +1390,11 @@ Future<T> _runInTaskIsolate<I, T>({
 void _levitTaskIsolateEntry(List<Object?> message) async {
   final task = message[0] as Function;
   final input = message[1];
-  final eventPort = message[2]! as SendPort;
+  final eventPort = message[2]! as LevitIsolateSendPort;
   final taskId = message[3]! as String;
   final executionId = message[4]! as String;
   final attempt = message[5]! as int;
-  final cancellationPort = ReceivePort();
+  final cancellationPort = createIsolateReceivePort();
   final context = LevitIsolateTaskContext._(
     taskId: taskId,
     executionId: executionId,

@@ -9,8 +9,7 @@
   - `LxState.asReadable` exposes `LxReadable<T>` (observation-only without setters or disposal).
 - **`LxComputed<T>`**: Synchronous derived state with automatic dependency tracking.
 - **`LxComputed.async<T>`**: Async derived state producing `LxStatus<T>`. Supports `LxAsyncConcurrency.exhaustLatest` (one running + one coalesced trailing run).
-- **`LxStream<T>`**: Reactive stream wrapper (`completionPolicy: retain` preserves/rebinds completed sources).
-- **`LxResource<T, R>`**: Owned, replaceable reactive producer (`resource.producer`, `await resource.refresh()`).
+- **`LxStream<T>`**: Reactive stream wrapper (`LxStream.defer` + `restartDeferred` + `completionPolicy: retain` preserves and rebinds completed or reconnectable sources).
 - **`LxWorker`**: Side effects on reactive changes. Prefer `LxWorker.withContext` for cooperative cancellation (`latest` cancels superseded runs and drains `finally`).
 
 ## Batching & Untracked Reads (`Levit` Facade)

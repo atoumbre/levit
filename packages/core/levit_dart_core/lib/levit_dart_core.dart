@@ -14,13 +14,11 @@
 ///   diagnostics helpers.
 ///
 /// Isolated test helpers live in `package:levit_dart_core/levit_testing.dart`;
-/// cross-package SPI hooks (including `LevitResourceOwnership`) live in
-/// `package:levit_dart_core/spi.dart`.
+/// cross-package SPI hooks live in `package:levit_dart_core/spi.dart`.
 ///
 /// @docImport 'src/dart_core_library.dart';
 library;
 
 export 'package:levit_reactive/levit_reactive.dart';
 export 'package:levit_scope/levit_scope.dart';
-export 'src/dart_core_library.dart'
-    hide LevitAutoLinkSpi, LevitResourceOwner, LevitResourceOwnership;
+export 'src/dart_core_library.dart' hide LevitAutoLinkSpi;

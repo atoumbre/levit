@@ -680,6 +680,12 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   @override
   final int id = _nextId++;
 
+  /// Exposes this reactive object as a read-only [LxReadable] interface.
+  ///
+  /// Useful for exposing public state from a controller while keeping setters
+  /// and disposal private.
+  LxReadable<T> get asReadable => this;
+
   String? _name;
   @override
   String? get name => _name;
@@ -722,7 +728,6 @@ abstract class LxBase<T> extends LevitReactiveNotifier
   final void Function()? onCancel;
 
   bool _isActive = false;
-  Set<void Function(bool active)>? _activityObservers;
 
   String? _ownerId;
   @override
@@ -767,23 +772,9 @@ abstract class LxBase<T> extends LevitReactiveNotifier
     if (shouldBeActive && !_isActive) {
       _isActive = true;
       _protectedOnActive();
-      _notifyActivityObservers(true);
     } else if (!shouldBeActive && _isActive) {
       _isActive = false;
       _protectedOnInactive();
-      _notifyActivityObservers(false);
-    }
-  }
-
-  void _addActivityObserver(void Function(bool active) observer) {
-    (_activityObservers ??= <void Function(bool active)>{}).add(observer);
-  }
-
-  void _notifyActivityObservers(bool active) {
-    final observers = _activityObservers;
-    if (observers == null) return;
-    for (final observer in observers.toList(growable: false)) {
-      observer(active);
     }
   }
 

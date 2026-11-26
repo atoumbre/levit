@@ -342,12 +342,11 @@ class Levit {
   static LevitReactiveMiddleware? _autoLinkMiddleware;
   static LevitScopeMiddleware? _autoDisposeMiddleware;
 
-  /// Enables automatic linking of reactive state to controller and resource-owner lifecycles.
+  /// Enables automatic linking of reactive state to [LevitController] lifecycles.
   ///
   /// When enabled, [LxReactive] objects created while instantiating or
-  /// initializing a [LevitController] (or any SPI `LevitResourceOwner`) are
-  /// automatically registered through [LevitController.own] and closed when
-  /// that owner closes.
+  /// initializing a [LevitController] are automatically registered through
+  /// [LevitController.own] and closed when that controller closes.
   ///
   /// Call this once during startup (for example in Flutter `main()` before
   /// `runApp`). Monitoring (`levit_monitor`) does not enable auto-linking.
@@ -380,7 +379,6 @@ class Levit {
 
   static bool _canDisposeItem(Object item) =>
       item is LxReactive ||
-      item is LxResource ||
       item is LevitScopeDisposable ||
       item is LevitDisposable ||
       item is StreamSubscription ||
@@ -392,7 +390,6 @@ class Levit {
   static Future<void> _levitDisposeItem(Object? item) async {
     if (item == null) return;
     if (item is LxReactive) return item.close();
-    if (item is LxResource) return item.close();
     if (item is LevitScopeDisposable) return item.onClose();
     if (item is LevitDisposable) return item.dispose();
     if (item is StreamSubscription) return item.cancel();

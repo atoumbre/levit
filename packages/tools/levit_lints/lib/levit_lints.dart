@@ -33,8 +33,7 @@
 ///   returned by known Levit disposal, scope, task, loop, and reactive cleanup
 ///   APIs.
 /// - [MustCallSuperLevitLifecycle] (`must_call_super_levit_lifecycle`): Require
-///   `LevitResourceOwner` / `LevitController` lifecycle overrides to delegate
-///   to `super`.
+///   `LevitController` lifecycle overrides to delegate to `super`.
 /// - [UnownedLevitResource] (`unowned_levit_resource`): Detect discarded
 ///   `StreamSubscription`/`Timer` handles and unowned `late` reactive fields.
 /// - [AvoidPlainLxStatusFields] (`avoid_plain_lx_status_fields`): Flag mutable

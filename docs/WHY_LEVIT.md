@@ -102,7 +102,7 @@ That eliminates bugs where state or background work silently outlives the featur
 ### 2. Fine-grained reactive updates
 
 The reactive model tracks what was actually read, then recomputes or rebuilds only where needed.
-Read-only consumers observe `LxReadable<T>` without receiving mutation or close capabilities; collections borrow per-key/per-position entries, and `LxResource` preserves observers across producer replacement.
+Read-only consumers observe `LxReadable<T>` without receiving mutation or close capabilities, and collections borrow per-key/per-position entries so updates stay localized.
 
 In Flutter, that shows up through widgets such as:
 

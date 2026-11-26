@@ -4,13 +4,12 @@ import 'package:levit_reactive/levit_reactive.dart';
 
 Future<void> main() async {
   var generation = 0;
-  final updates = LxResource<LxStatus<int>, LxStream<int>>(
-    () => LxStream(
-      Stream.value(++generation),
-      completionPolicy: LxStreamCompletionPolicy.retain,
-    ),
+  final updates = LxStream<int>.defer(
+    () => Stream.value(++generation),
+    completionPolicy: LxStreamCompletionPolicy.retain,
   );
-  final first = Completer<void>(), second = Completer<void>();
+  final first = Completer<void>();
+  final second = Completer<void>();
   final subscription = updates.stream.listen((status) {
     if (status is LxSuccess<int>) {
       print(status.value);
@@ -19,7 +18,7 @@ Future<void> main() async {
     }
   });
   await first.future;
-  await updates.refresh();
+  updates.restartDeferred(() => Stream.value(++generation));
   await second.future;
   await subscription.cancel();
   await updates.close();

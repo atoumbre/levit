@@ -12,12 +12,7 @@ void main() {
 }
 
 const _ownerStub = r'''
-abstract class LevitResourceOwner {
-  T own<T>(T resource) => resource;
-}
-
-abstract class LevitController implements LevitResourceOwner {
-  @override
+abstract class LevitController {
   T own<T>(T resource) => resource;
   void onInit() {}
   void onBeforeClose() {}

@@ -2,14 +2,12 @@ import 'dart:async';
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:test/test.dart';
-import 'package:levit_dart_core/spi.dart';
 
-final class _Owner extends LevitScopeDisposable with LevitResourceOwnership {
+final class _Owner extends LevitController {
   Iterable<Object> get resources => ownedResources;
 }
 
-final class _DrainingOwner extends LevitScopeDisposable
-    with LevitResourceOwnership {
+final class _DrainingOwner extends LevitController {
   _DrainingOwner(this.release, this.events, {this.fail = false});
   final Completer<void> release;
   final List<String> events;

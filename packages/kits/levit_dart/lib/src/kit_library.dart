@@ -7,11 +7,12 @@ library;
 
 import 'dart:async';
 import 'dart:collection';
-import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:levit_dart_core/levit_dart_core.dart';
 import 'package:levit_dart_core/spi.dart';
+
+import 'utilities/isolate_bridge.dart';
 
 part 'mixins/tasks_mixin.dart';
 part 'mixins/time_mixin.dart';

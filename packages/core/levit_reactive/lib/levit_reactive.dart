@@ -12,8 +12,7 @@
 ///   collections with fine-grained entry observation.
 /// * [LxComputed] / [LxAsyncComputed]: Synchronous and asynchronous derived
 ///   state with automatic dependency tracking and [LxAsyncConcurrency].
-/// * [LxFuture], [LxStream], [LxStatus], [LxResource]: Async reactive sources
-///   and replaceable owned producers.
+/// * [LxFuture], [LxStream], [LxStatus]: Async reactive sources and statuses.
 /// * [LxWorker]: Reactive side-effect observers with cooperative cancellation.
 /// * [Lx] & [LevitReactiveMiddleware]: Batching, untracked reads, and state
 ///   middleware hooks.

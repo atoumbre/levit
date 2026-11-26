@@ -72,7 +72,7 @@ final class LxExecutionContext {
   static LxExecutionContext? get current => Zone.current[_zoneKey];
 
   /// Whether [resource] is executing in the current asynchronous context.
-  static bool isExecuting(Object resource) {
+  static bool _isExecuting(Object resource) {
     var context = current;
     while (context != null) {
       if (!context._completed && identical(context._owner, resource)) {
@@ -155,7 +155,7 @@ mixin _LxAsyncLifecycle<T> on LxBase<T> implements LxAsyncResource {
 
   @override
   Future<void> drain() async {
-    if (LxExecutionContext.isExecuting(this)) {
+    if (LxExecutionContext._isExecuting(this)) {
       throw StateError(
         'An execution cannot await disposal of its own producer.',
       );
@@ -170,7 +170,7 @@ mixin _LxAsyncLifecycle<T> on LxBase<T> implements LxAsyncResource {
 
   @override
   Future<void> close() {
-    if (LxExecutionContext.isExecuting(this)) {
+    if (LxExecutionContext._isExecuting(this)) {
       throw StateError(
         'An execution cannot close its own producer; request cancellation instead.',
       );

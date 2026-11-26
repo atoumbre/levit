@@ -78,12 +78,6 @@ class LxState<T> extends LxBase<T> {
   void update(T Function(T state) reducer) {
     _setValueInternal(reducer(value));
   }
-
-  /// Exposes this state as a read-only [LxReadable] interface.
-  ///
-  /// Useful for exposing public API from a controller while keeping the
-  /// mutation logic private.
-  LxReadable<T> get asReadable => this;
 }
 
 /// A reactive boolean with specialized toggling methods.
@@ -92,9 +86,8 @@ class LxState<T> extends LxBase<T> {
 ///
 /// {@category Reactive State}
 class LxBool extends LxVar<bool> {
-  /// Creates a reactive boolean. [initial] defaults to `false`.
-  LxBool([super.initial = false, String? name, bool isSensitive = false])
-    : super(name: name, isSensitive: isSensitive);
+  /// Creates a reactive boolean with an [initial] value.
+  LxBool(super.initial, {super.name, super.isSensitive});
 
   /// Toggles the current value.
   void toggle() => value = !value;

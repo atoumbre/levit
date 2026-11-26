@@ -18,8 +18,7 @@ This package owns:
 - Mutable and read-only reactive values (`.lx`, `LxVar`, `LxReadable<T>`).
 - Derived state (`LxComputed`, `LxComputed.async`) and `LxStatus<T>`.
 - Side-effect workers (`LxWorker`, `LxWorker.withContext`).
-- Borrowing collection entries (`LxMap.entry`, `LxList.entry`) and replaceable
-  producers (`LxResource`).
+- Borrowing collection entries (`LxMap.entry`, `LxList.entry`).
 - Context-local batching (`Lx.batch`, `Lx.batchAsync`) and reactive middleware.
 
 Dependency injection lives in `levit_scope`; Flutter bindings live in
@@ -112,30 +111,14 @@ Use `LxWaiting<T>.fromPrevious(status)`, `LxError<T>.fromPrevious(error, stack, 
 or `.retained(value)` to preserve nullable prior data (future, stream, and
 async computed transitions do this automatically).
 
-## Collection Entries & Replaceable Producers
+## Collection Entries
 
 Read `favorites[id]` or pass `favorites.entry(id)` to observe a single key
 (`entry.exists` distinguishes a missing key from a present `null`). A list entry
 follows a position through insertions/removals; use a keyed map when identity
 must survive reordering. Collections borrow their contents—removing an item
-does not close it.
-
-Use `LxResource` to replace an owned producer while keeping observers attached:
-
-```dart
-final updates = LxResource<LxStatus<int>, LxStream<int>>(
-  () => LxStream(repository.watchUpdates()),
-);
-final listener = updates.stream.listen(render);
-await updates.refresh(); // Drains the old stream before connecting the new one.
-await listener.cancel();
-await updates.close();
-```
-
-`LxResource` starts lazily on first observation, preserves `hasLastValue` /
-`lastValue` across failed refreshes (exposing `refreshError`), and never
-constructs its producer if closed unused. For keyed task-backed queries with
-automatic eviction, use `LevitAsyncMap` in `levit_dart` / `levit`.
+does not close it. For keyed task-backed queries with automatic caching and
+eviction, use `LevitAsyncMap` in `levit_dart` / `levit`.
 
 ## Asynchronous Lifetimes & Diagnostics
 

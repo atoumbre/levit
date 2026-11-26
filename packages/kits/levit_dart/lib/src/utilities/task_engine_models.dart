@@ -322,8 +322,8 @@ class LevitIsolateTaskContext {
   /// The one-based attempt number.
   final int attempt;
 
-  final ReceivePort _cancellationPort;
-  final SendPort _eventPort;
+  final LevitIsolateReceivePort _cancellationPort;
+  final LevitIsolateSendPort _eventPort;
   bool _isCancelled = false;
 
   /// Structured cancellation reason received by the isolate, or `null` if not
@@ -335,8 +335,8 @@ class LevitIsolateTaskContext {
     required this.taskId,
     required this.executionId,
     required this.attempt,
-    required ReceivePort cancellationPort,
-    required SendPort eventPort,
+    required LevitIsolateReceivePort cancellationPort,
+    required LevitIsolateSendPort eventPort,
   }) : _cancellationPort = cancellationPort,
        _eventPort = eventPort {
     _cancellationPort.listen((reason) {
@@ -469,7 +469,7 @@ class LevitTaskEvent {
   /// Stack trace associated with [error], if available.
   final StackTrace? stackTrace;
 
-  /// Whether this execution runs in a spawned [Isolate].
+  /// Whether this execution runs in a spawned `Isolate`.
   final bool runsInIsolate;
 
   /// Compatibility view of [LevitTaskMetadata.debugName].

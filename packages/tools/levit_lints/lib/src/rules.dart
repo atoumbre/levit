@@ -33,9 +33,8 @@ part 'async_rules.dart';
 /// }
 /// ```
 ///
-/// Only checks non-static fields declared inside `LevitResourceOwner` or
-/// `LevitController` subtypes. Suppress with
-/// `// ignore: levit_lints/avoid_plain_lx_status_fields`.
+/// Only checks non-static fields declared inside `LevitController` subtypes.
+/// Suppress with `// ignore: levit_lints/avoid_plain_lx_status_fields`.
 ///
 /// {@category Reactive Rules}
 class AvoidPlainLxStatusFields extends AnalysisRule {
@@ -92,10 +91,9 @@ class _StatusFieldVisitor extends SimpleAstVisitor<void> {
 /// Flags `Levit.put(() => existingOwner)` registrations that return an already
 /// constructed resource owner (`avoid_preconstructed_levit_put`).
 ///
-/// Constructing a `LevitController` or `LevitResourceOwner` outside the
-/// `Levit.put` builder prevents auto-linking from capturing reactive fields
-/// created in the constructor and risks sharing or re-registering a disposed
-/// instance.
+/// Constructing a `LevitController` outside the `Levit.put` builder prevents
+/// auto-linking from capturing reactive fields created in the constructor and
+/// risks sharing or re-registering a disposed instance.
 ///
 /// **Bad:**
 /// ```dart
@@ -109,9 +107,8 @@ class _StatusFieldVisitor extends SimpleAstVisitor<void> {
 /// ```
 ///
 /// This local rule inspects `Levit.put` calls whose zero-argument builder
-/// directly returns an identifier or property of a `LevitResourceOwner` /
-/// `LevitController` subtype. Suppress with
-/// `// ignore: levit_lints/avoid_preconstructed_levit_put`.
+/// directly returns an identifier or property of a `LevitController` subtype.
+/// Suppress with `// ignore: levit_lints/avoid_preconstructed_levit_put`.
 ///
 /// {@category Lifecycle Rules}
 class AvoidPreconstructedLevitPut extends AnalysisRule {
@@ -201,10 +198,10 @@ class _PreconstructedPutVisitor extends SimpleAstVisitor<void> {
 /// }
 /// ```
 ///
-/// Applies to `LevitResourceOwner` and `LevitController` subtypes (excluding
-/// `LevitController` itself). This is a local AST check that verifies a
-/// matching `super.<hook>()` call exists in the method body; it does not prove
-/// that every control-flow branch reaches it. Suppress with
+/// Applies to `LevitController` subtypes (excluding `LevitController` itself).
+/// This is a local AST check that verifies a matching `super.<hook>()` call
+/// exists in the method body; it does not prove that every control-flow branch
+/// reaches it. Suppress with
 /// `// ignore: levit_lints/must_call_super_levit_lifecycle`.
 ///
 /// {@category Lifecycle Rules}
@@ -282,8 +279,7 @@ class _SuperLifecycleCallVisitor extends RecursiveAstVisitor<void> {
 /// Flags unowned subscriptions, timers, and `late` reactive fields inside Levit
 /// resource owners (`unowned_levit_resource`).
 ///
-/// Reports two resource-leak patterns inside `LevitResourceOwner` and
-/// `LevitController` subtypes:
+/// Reports two resource-leak patterns inside `LevitController` subtypes:
 /// 1. Statement-level discarded `StreamSubscription` or `Timer` expressions not
 ///    wrapped in `own(...)`.
 /// 2. Non-static `late` fields initialized with an `LxReactive`/`LxBase`
@@ -445,8 +441,7 @@ InterfaceElement? _enclosingInterfaceElement(AstNode node) {
 }
 
 bool _isResourceOwnerType(DartType? type) {
-  return _isTypeNamed(type, 'LevitResourceOwner') ||
-      _isTypeNamed(type, 'LevitController');
+  return _isTypeNamed(type, 'LevitController');
 }
 
 bool _isReactiveType(DartType? type) =>

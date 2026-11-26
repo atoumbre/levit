@@ -89,9 +89,8 @@ void main() {
 ```
 
 Auto-linking registers reactive values created during controller construction
-or initialization with the returned LevitResourceOwner lifecycle. With it
-enabled, field-level reactives on a LevitController or other owner are often
-cleaned up automatically.
+or initialization with the returned LevitController lifecycle. With it enabled,
+field-level reactives on a LevitController are cleaned up automatically.
 
 Still call own(...) explicitly for:
 
@@ -257,9 +256,9 @@ LxStream defaults to LxStreamCompletionPolicy.close. Use retain for sources
 that complete but must preserve their status and later restart/rebind.
 
 Observe an address with LxMap.entry(key) or LxList.entry(index). Collections
-borrow their contents. Own LxResource for one replaceable producer. For keyed
-async data own LevitAsyncMap, observe queries.entry(key), await fetch(key) to
-reuse fresh results or refresh(key) to join or reload. No async list is needed.
+borrow their contents. For keyed async data own LevitAsyncMap, observe
+queries.entry(key), await fetch(key) to reuse fresh results or refresh(key) to
+join or reload. No async list is needed.
 
 Use workers for side effects. Prefer LxWorker + own on controllers
 over raw .stream.listen for reload / reaction glue:
@@ -446,9 +445,8 @@ await scope.dispose();
 Dispose scopes explicitly. Child scopes should own feature-specific overrides
 and clean them up when the feature ends.
 
-Controllers, stores, and custom LevitScopeDisposable resources may implement
-LevitResourceOwner via LevitResourceOwnership. Register timers,
-subscriptions, reactives, and disposable helpers through own.
+Extend LevitController for services or controllers that own resources via own(),
+and implement LevitDisposable when a plain service only needs a dispose() method.
 Cleanup is awaited, LIFO, and idempotent. Lifecycle overrides must call
 super.onInit and await/return super.onBeforeClose and super.onClose.
 

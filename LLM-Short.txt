@@ -75,8 +75,7 @@ Reactive State
 - LxComputed(() => ...) / LxComputed.async(() async => ...) — derived state
 - LxAsyncConcurrency.exhaustLatest — one running + one coalesced trailing run
 - LxStream completionPolicy: retain — preserve/rebind a completed source
-- LxMap/LxList.entry — borrowed address; LxResource — replaceable producer;
-  LevitAsyncMap — keyed task-backed queries
+- LxMap/LxList.entry — borrowed address; LevitAsyncMap — keyed task-backed queries
 - LxReadable<T> / state.asReadable — observation-only interface
 - LxStatus<T> + LStatusBuilder — async UI states (check status.hasLastValue)
 - LxWorker / LxWorker.withContext — side effects (prefer own(LxWorker(...)))
@@ -87,9 +86,9 @@ Reactive State
 Controllers
 -----------
 
-Extend LevitController for feature/screen logic. Keep widgets thin.
+Extend LevitController for feature/screen logic (or services that own resources).
+Implement LevitDisposable for simple 1-method dispose() services. Keep widgets thin.
 Use own(...) for resources; cleanup is awaited, LIFO, and idempotent.
-Use LevitResourceOwnership on non-controller LevitScopeDisposable resources.
 Always delegate super.onInit and await/return super.onBeforeClose / super.onClose.
 Reload on context changes:
 

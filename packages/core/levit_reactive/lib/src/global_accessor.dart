@@ -221,4 +221,9 @@ abstract final class LxSpi {
   static void setGraphDepth(LevitReactiveNotifier notifier, int value) {
     notifier._graphDepth = value;
   }
+
+  /// Whether [resource] is currently executing in the active reactive context.
+  static bool isExecuting(Object resource) {
+    return LxExecutionContext._isExecuting(resource);
+  }
 }

@@ -69,7 +69,7 @@ void main() {
   });
 
   test(
-    'resolving an app owner inside a page resource preserves ownership',
+    'resolving an app owner inside a page async-map loader preserves ownership',
     () async {
       Levit.enableAutoLinking();
       addTearDown(Levit.disableAutoLinking);
@@ -79,12 +79,12 @@ void main() {
       app.lazyPut(_AppController.new);
       late _AppController shared;
       final owner = page.put(() {
-        final resource = LxResource<int, LxInt>(() {
+        final queries = LevitAsyncMap<String, int>((key, _) async {
           shared = page.find<_AppController>();
-          return 3.lx;
+          return 3;
         });
-        resource.value;
-        return _PageController(shared)..own(resource);
+        shared = page.find<_AppController>();
+        return _PageController(shared)..own(queries);
       });
       await page.dispose();
       expect(owner.local.isDisposed, isTrue);

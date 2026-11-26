@@ -18,7 +18,6 @@ part 'collection_entries.dart';
 part 'collections.dart';
 part 'computed.dart';
 part 'core.dart';
-part 'resource.dart';
 part 'global_accessor.dart';
 part 'middlewares.dart';
 part 'workers.dart';

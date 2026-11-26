@@ -18,7 +18,7 @@ kit keeps observability opt-in.
 
 | Entry point | Provides |
 | :-- | :-- |
-| `package:levit/levit.dart` | `Levit` facade, hierarchical `LevitScope`, `LevitController`, `LevitStore` / `LevitAsyncStore`, reactive values (`LxVar`, `LxComputed`, `LxWorker`, `LxResource`, collections), `LevitAsyncMap`, and controller mixins (`LevitTasksMixin`, `LevitReactiveTasksMixin`, `LevitTimeMixin`, `LevitSelectionMixin`, `LevitLoopMixin`). |
+| `package:levit/levit.dart` | `Levit` facade, hierarchical `LevitScope`, `LevitController`, `LevitStore` / `LevitAsyncStore`, reactive values (`LxVar`, `LxComputed`, `LxFuture`, `LxStream`, `LxWorker`, collections), `LevitAsyncMap`, and controller mixins (`LevitTasksMixin`, `LevitReactiveTasksMixin`, `LevitTimeMixin`, `LevitSelectionMixin`, `LevitLoopMixin`). |
 | `package:levit/tasks.dart` | Advanced task orchestration types: `LevitTaskGroup`, `LevitRetryPolicy`, `LevitTaskMiddleware`, `LevitTaskTracker`, and task cache/engine APIs. |
 | `package:levit/levit_testing.dart` | `LevitTestScope` for isolated store overrides, explicit async tracking (`track` / `settle`), and awaited teardown. |
 

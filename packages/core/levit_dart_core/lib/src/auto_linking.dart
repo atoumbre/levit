@@ -138,9 +138,9 @@ class _AutoLinkScope {
     LevitDependency info,
   ) {
     return () {
-      // Resource owners use live capture so async onInit allocations are linked immediately.
+      // Controllers use live capture so async onInit allocations are linked immediately.
       List<LxReactive> captured;
-      if (instance is LevitResourceOwner) {
+      if (instance is LevitController) {
         captured = _LiveCaptureList(instance);
       } else {
         captured = <LxReactive>[];
@@ -153,7 +153,7 @@ class _AutoLinkScope {
         final dynamic result = LxSpi.runWithOwner(
           key,
           () => runZoned(
-            () => instance is LevitResourceOwnership
+            () => instance is LevitController
                 ? instance._runInitialization(() => (onInit as dynamic)())
                 : (onInit as dynamic)(),
             zoneValues: {
@@ -171,7 +171,7 @@ class _AutoLinkScope {
                 _AutoLinkScope._activeCaptureScopes--;
               })
               .then<void>((_) {});
-          if (instance is LevitResourceOwnership) {
+          if (instance is LevitController) {
             instance._trackCapturedInitialization(initialization);
             info.trackInitialization(
               initialization.then<void>(
@@ -195,7 +195,7 @@ class _AutoLinkScope {
   }
 
   static void _processInstance(dynamic instance, List<LxReactive> captured) {
-    if (instance is LevitResourceOwner) {
+    if (instance is LevitController) {
       for (final reactive in captured) {
         instance.own(reactive);
       }
@@ -312,7 +312,7 @@ class _AutoDisposeMiddleware extends LevitScopeMiddleware {
 
 class _LiveCaptureList extends ListBase<LxReactive> {
   final List<LxReactive> _inner = [];
-  final LevitResourceOwner _owner;
+  final LevitController _owner;
 
   _LiveCaptureList(this._owner);
 
@@ -335,12 +335,7 @@ class _LiveCaptureList extends ListBase<LxReactive> {
     _inner.add(element);
 
     // Register on insert so capture order cannot race with async init logic.
-    final owner = _owner;
-    if (owner is LevitResourceOwnership) {
-      owner._adoptCaptured(element);
-    } else {
-      owner.own(element);
-    }
+    _owner._adoptCaptured(element);
   }
 }
 

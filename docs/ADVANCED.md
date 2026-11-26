@@ -1,306 +1,509 @@
-# Advanced Levit patterns
+# Advanced Levit Recipes
 
-Start with [scopes, owners, state and widgets](ONBOARDING.md). These patterns use
-the same ownership rules and the normal `levit` or `levit_flutter` kit.
-Choose them for a concrete feature need; keep application policy in controllers
-and stores.
+New to Levit? Start with [Getting Started](ONBOARDING.md) first.
 
-Construct the controller examples through registration builders, such as
-`scope.put(() => SelectionController())` or `LScopedView.put`. Registration
-runs initialization and assigns the lifetime; do not call `onInit()` manually.
+Pick the recipe for the problem you're solving—you don't need to read this guide
+top to bottom. Every recipe uses the standard kit import
+(`package:levit/levit.dart` or `package:levit_flutter/levit_flutter.dart`), plus
+`tasks.dart` when using advanced task orchestration types.
 
-## Selection and time helpers
+---
 
-`LevitSelectionMixin<T>` owns its selection state when the controller initializes.
-Use stable domain IDs for `T` so replacing loaded objects preserves selection
-identity. Multi-selection is the default; override `allowMultiSelect` for a
-single selection:
+## 1. Coordinated Async Workflows, Retries & Double-Taps
 
-```dart
-import 'package:levit/levit.dart';
+**Use when:** A user action triggers multi-step async work (such as saving a
+record and uploading attachments) that must prevent duplicate runs, retry
+transient network errors, and cancel cleanly if the screen closes.
 
-class SelectionController extends LevitController
-    with LevitSelectionMixin<String> {
-  @override
-  bool get allowMultiSelect => false;
-}
-```
-
-Call `select`, `deselect`, `toggle` or `clearSelection` from application methods.
-When the available items change, reconcile removed IDs according to your domain
-rules. The mixin does not know which selections are still valid.
-
-`LevitTimeMixin` owns debounce, throttle and interval timers, plus countdowns.
-Timer IDs share a namespace within the controller. Debounce replaces the pending
-callback; throttle runs immediately and ignores calls during its cooldown.
-Their callbacks are synchronous: put async operations in managed tasks when
-cancellation and draining matter.
+Add `LevitTasksMixin` to a controller when you need background scheduling and
+cancellation, or `LevitReactiveTasksMixin` when your UI also needs reactive
+`isBusy`, `totalProgress`, and `hasBlockingTasks` indicators:
 
 ```dart
 import 'package:levit/levit.dart';
+import 'package:levit/tasks.dart';
 
-class CountdownController extends LevitController with LevitTimeMixin {
-  late final LevitCountdown countdown;
+class UploadController extends LevitController with LevitReactiveTasksMixin {
+  UploadController(this.repository);
+  final UploadRepository repository;
 
-  @override
-  void onInit() {
-    super.onInit();
-    countdown = startCountdown(duration: const Duration(seconds: 30));
-  }
-}
-```
-
-`startCountdown` starts immediately and is owned by the mixin. `pause()` freezes
-the precise remainder; `resume()` excludes paused time; `stop()` resets without
-finishing; `start()` begins a fresh run. The clock is monotonic, so delayed ticks
-catch up. App suspension does not automatically pause it. Control the countdown
-through these methods rather than assigning `remaining.value`.
-
-A standalone `LevitCountdown` starts idle. Register it with an owner or await its
-`dispose()` yourself. See [countdown semantics](../packages/kits/levit_dart/README.md#elapsed-time-countdowns)
-for timing and callback details.
-
-## Computed dependencies and batching
-
-Dynamic dependency tracking is the default. Use `staticDeps: true` only when
-every execution reads the same reactive dependencies:
-
-```dart
-import 'package:levit/levit.dart';
-
-class PriceController extends LevitController {
-  late final quantity = own(1.lx);
-  late final unitPrice = own(250.lx); // Minor currency units.
-  late final total = own(
-    LxComputed(() => quantity.value * unitPrice.value, staticDeps: true),
+  static final _retry = LevitRetryPolicy(
+    maxRetries: 3,
+    initialDelay: const Duration(milliseconds: 200),
+    shouldRetry: (error, _) => error is TransientNetworkException,
   );
-}
-```
 
-Changing dependency values is fine; changing which dependencies are read is not.
-Keep dynamic tracking for conditional branches, changing collection addresses,
-or computations that reach into replaceable producers. Measure before opting
-into a static graph. Numeric reactive helpers are conveniences; validation,
-rounding and units still belong in application methods.
-
-Use `Levit.batch` for a short synchronous group of state changes. `batchAsync`
-extends notification coalescing across awaited work in the current async context.
-Writes remain immediately readable, unrelated contexts remain independent, and
-exceptions do not roll changes back. Await all work belonging to the batch;
-detached work can outlive it. Prefer fetching data first, then committing related
-state changes in a short synchronous batch inside the operation's managed lifetime.
-
-## Stores, aliases and factories
-
-Store definitions are stable recipes. Identity is the definition object plus
-the optional variant tag; labels and result types do not determine identity.
-A child lookup borrows an ancestor instance unless it has a local registration
-or requests `localOnly: true`.
-
-Install typed builder overrides before the first local resolution. The receiving
-scope owns resources created by the override:
-
-```dart
-import 'package:levit/levit.dart';
-
-final counterStore = LevitStore((ref) => ref.own(0.lx));
-
-Future<void> main() async {
-  final parent = Levit.createScope('parent');
-  try {
-    final inherited = counterStore.findIn(parent);
-    final child = parent.createScope('child');
-    child.applyOverrides([counterStore.overrideWith((ref) => ref.own(10.lx))]);
-
-    final local = counterStore.findIn(child);
-    print('${inherited.value}, ${local.value}'); // 0, 10
-  } finally {
-    await parent
-        .dispose(); // Includes its owned child and both store instances.
+  Future<void> syncAll(List<Document> docs) async {
+    // If any upload fails, sibling uploads are cancelled automatically and
+    // every running upload's `finally` block finishes before runGroup returns.
+    await taskGroup.runGroup((uploads) async {
+      final futures = docs
+          .map(
+            (doc) => uploads.schedule(
+              (task) => repository.upload(doc, cancelled: task.cancelled),
+              id: doc.id,
+              conflictPolicy: LevitTaskConflictPolicy.restart,
+              retryPolicy: _retry,
+            ),
+          )
+          .toList();
+      await Future.wait(futures);
+    }, name: 'document-sync');
   }
 }
 ```
 
-Use `ref.findStore` or `ref.findAsyncStore` to compose typed
-stores. Override the matching variant tag when targeting a particular instance.
-An optional DI lookup returns null only for absence; builder and type errors
-still propagate.
+### Handling overlapping calls (`conflictPolicy`)
 
-`bindExisting<Port, Implementation>` creates a non-owning alias of a local
-singleton registration. Register the concrete implementation first. Aliasing
-does not create another lifetime or make a factory into a singleton.
+When two calls submit the same `id` inside the same group, `conflictPolicy`
+controls what happens:
 
-With `isFactory: true`, the registering scope owns disposable results, including
-async results arriving during removal. Await `scope.releaseFactoryInstance(value)`
-for early release. Await deletion before replacing an instantiated registration.
-See the [scope API guide](../packages/core/levit_scope/README.md) for registration
-and alias contracts.
+| Policy | What happens | Typical use |
+| :-- | :-- | :-- |
+| `reject` *(default)* | Fails the new call with `LevitTaskConflictException`. | Exclusive operations that shouldn't overlap. |
+| `join` | Shares the result of the already-running call. | Two widgets requesting the same refresh. |
+| `restart` | Cancels the running call and starts the new one. | Search-as-you-type or filter changes. |
+| `coalesceLatest` | Lets the current call finish, then runs once more with the latest arguments. | Auto-saving after rapid edits. |
+| `enqueue` | Queues every submission in FIFO order. | Ordered writes or mutations. |
+| `drop` | Ignores the new call with `LevitTaskDroppedException`. | Preventing double-tap form submits. |
 
-## Choose the async abstraction by its lifetime
+**How it behaves:**
+- **Cooperative cancellation:** Dart `Future`s cannot be forcefully killed from
+  outside, so pass `task.cancelled` to your HTTP/IO client or call
+  `task.throwIfCancelled()` between steps, and release handles in `finally`.
+  When the controller closes, Levit cancels all active tasks and waits for them
+  to finish before closing your repositories or other owned resources.
+- **Concurrency & deadlines:** A parent group can safely wait on child tasks
+  without deadlocking the worker pool—only individual scheduled tasks use
+  concurrency slots (default `8` at a time, up to `256` queued). If you set a
+  deadline on a parent group, every child task inherits it.
+- **CPU-heavy work in isolates:** Use `scheduleIsolate`, `submitIsolate`, or
+  `runIsolateTask` with a top-level or static function (pass `group:` so
+  cancelling the group stops the isolate and waits for it to exit).
+- See [examples/task_board/lib/save_upload.dart](../examples/task_board/lib/save_upload.dart)
+  for a complete working workflow.
 
-| Need | API and responsibility |
-| --- | --- |
-| Observe a future or stream as waiting/success/error | Own an `LxFuture` or `LxStream` wrapper. A plain future does not provide an IO cancellation mechanism. |
-| Derive async state from reactive inputs | Own `LxComputed.async`. The default `latest` policy can overlap executions and publishes only the latest result. `exhaustLatest` permits one running computation plus one coalesced trailing run. |
-| Replace an owned producer while preserving the observer handle | Own `LxResource` and await `refresh()`. The resource drains the previous producer before replacement. |
-| Load and refresh data by key | Own `LevitAsyncMap`; entries are observation handles. Keep mutation, pagination and optimistic-update policy in application code. |
-| Coordinate cancellable work and its descendants | Use a task mixin and child groups. Await workflow completion and owner cleanup. |
-| Discard a simple operation's result after owner closure | `runGuardedAsync` returns null after closure by default. It does not register, drain or cancel that operation. |
+---
 
-A guarded action can also succeed with null, and its errors still propagate.
-Use task outcomes when callers need to distinguish successful nullable data
-from cancellation or supersession.
+## 2. Caching Queries, Refreshing Data, and Reconnecting Streams
 
-For keyed async loading, own a `LevitAsyncMap` and pass `entry(key)` directly to
-`LStatusBuilder`:
+In [Getting Started](ONBOARDING.md), `LxComputed.async` covered a single reactive
+fetch. When your app needs more control over how async data is cached,
+refreshed, or reconnected, pick the tool that matches your scenario:
+
+| Scenario | Use | Why |
+| :-- | :-- | :-- |
+| Wrap one `Future` as loading/data/error | `LxFuture` | Simplest wrapper when inputs don't change (supports `restart(...)`). |
+| Wrap or reconnect a live `Stream` / WebSocket | `LxStream` (`defer` + `restartDeferred`) | Lazy subscription, keeps listeners connected across reconnects, and supports `completionPolicy: retain`. |
+| Auto-refetch whenever reactive state changes | `LxComputed.async` | Supports `latest` (ignore older runs) or `exhaustLatest` (finish the current run, then run once more with the latest input). |
+| Cache and refresh data per ID or search query | `LevitAsyncMap` | Keeps one cached entry per key, deduplicates concurrent fetches, and cleans up unused entries automatically. |
+
+### Caching & refreshing by key (`LevitAsyncMap`)
+
+**Use when:** A screen fetches data by key (a search string, user ID, or filter)
+and you want automatic caching, pull-to-refresh, and stale-while-revalidate UI.
+
+You give `LevitAsyncMap` a loader function once on your controller. After that:
+- Watching `byQuery.entry(query)` in the UI automatically starts loading on
+  first read and keeps the widget subscribed even across refreshes.
+- Calling `await byQuery.fetch(query)` returns cached data if it is still fresh,
+  or joins an already-running request for that key.
+- Calling `await byQuery.refresh(query)` forces a fresh reload (great for
+  pull-to-refresh) while keeping the previous list visible on screen.
 
 ```dart
-late final products = own(
-  LevitAsyncMap<String, List<Product>>(
-    (query, task) => repository.search(query, cancelled: task.cancelled),
-    engine: taskEngine,
-  ),
-);
+class ProductsController extends LevitController with LevitTasksMixin {
+  ProductsController(this.repo);
+  final ProductRepository repo;
 
-// In Flutter:
+  late final byQuery = own(
+    LevitAsyncMap<String, List<Product>>(
+      (query, task) => repo.search(query, cancelled: task.cancelled),
+      engine: taskEngine,
+    ),
+  );
+
+  // Pull-to-refresh triggers a reload while keeping current items visible:
+  Future<void> reload(String query) => byQuery.refresh(query);
+}
+
+// In Flutter — pass entry(query) directly to LStatusBuilder:
 LStatusBuilder<List<Product>>(
-  controller.products.entry(query),
+  controller.byQuery.entry(query),
   onWaiting: (status) => status.hasLastValue
-      ? ProductList(status.lastValue!)
+      ? ProductList(status.lastValue!) // Show previous results while refreshing
       : const CircularProgressIndicator(),
   onError: (status) => Text('Refresh failed: ${status.error}'),
   onSuccess: ProductList.new,
 );
 ```
 
-`LxStreamCompletionPolicy.close` is the default. Choose `retain` when source
-completion should preserve the wrapper's last state and allow an explicit later
-restart. A retained wrapper still needs an owner. Use `status.hasLastValue` when
-successful nullable data must be distinguished from no previous value.
+**How caching and memory cleanup work by default:**
+- **Cache freshness (30s):** Calling `fetch(key)` within 30 seconds returns the
+  cached value immediately without hitting the network again.
+- **Automatic cleanup (30s / 128 entries):** Once no widget is watching a key,
+  it stays in memory for 30 seconds in case the user navigates back, then gets
+  evicted (up to 128 unused entries kept). Anything currently visible on screen
+  or still loading is never evicted.
+- **Nullable values:** Always check `status.hasLastValue` instead of
+  `status.lastValue != null` if your loader can validly return `null`.
 
-Both task mixins expose a supervisor root. Workflow groups default to
-`cancelOnError` and await descendant cleanup. Coordinate in group bodies; only
-leaf tasks consume worker slots. Controller mixins default to 8 slots, while
-the engine defaults to 256 pending submissions. Set `maxPending: null` only
-when intentionally allowing an unbounded queue. Choose a conflict policy for
-repeated logical IDs within a group:
+### Reconnecting a live stream without breaking listeners (`LxStream.defer`)
+
+**Use when:** You have a live stream (like a WebSocket or chat feed) that needs
+to disconnect and reconnect on demand—for example, after a network drop or auth
+token refresh—without making every listening widget resubscribe.
+
+Use `LxStream.defer` with `LxStreamCompletionPolicy.retain`, then call
+`restartDeferred(...)` whenever you want to bind a fresh stream:
 
 ```dart
-import 'package:levit/levit.dart';
-import 'package:levit/tasks.dart';
+class FeedController extends LevitController {
+  FeedController(this.socket);
+  final SocketClient socket;
 
-Future<void> syncDocuments(
-  LevitTaskGroup taskGroup,
-  List<Document> documents,
-) async {
-  final retry = LevitRetryPolicy(
-    maxRetries: 3,
-    initialDelay: const Duration(milliseconds: 200),
-    shouldRetry: (error, _) => error is TransientNetworkException,
+  late final LxStream<Event> feed;
+
+  @override
+  void onInit() {
+    super.onInit();
+    feed = LxStream<Event>.defer(
+      () => socket.watchEvents(),
+      completionPolicy: LxStreamCompletionPolicy.retain,
+    );
+  }
+
+  void reconnect() {
+    feed.restartDeferred(() => socket.watchEvents());
+  }
+}
+```
+
+- **Lazy & auto-linked:** Because `LxStream` is created in `onInit()`,
+  auto-linking disposes it when `FeedController` closes, and the underlying
+  stream only subscribes while something is listening.
+- **Why `completionPolicy: retain`?** By default, an `LxStream` closes when its
+  source stream ends. Setting `retain` keeps its last value visible so you can
+  call `restartDeferred(...)` later to start a fresh run.
+
+---
+
+## 3. Async Scope Setup, Session Switching & Route Lifetimes
+
+**Use when:** Switching a logged-in user, workspace, or route parameter must
+finish tearing down the old scope (and its connections/controllers) completely
+before initializing the next one.
+
+Attach a stable `LevitScopeLifecycleController` to `LAsyncScope` (or `LScope`)
+to render loading/error states, retry failed setup, and await cleanup in tests:
+
+```dart
+class SessionHost extends StatefulWidget {
+  const SessionHost({super.key, required this.sessionId});
+  final String sessionId;
+
+  @override
+  State<SessionHost> createState() => _SessionHostState();
+}
+
+class _SessionHostState extends State<SessionHost> {
+  final lifecycle = LevitScopeLifecycleController();
+
+  @override
+  Widget build(BuildContext context) {
+    return LAsyncScope(
+      lifecycle: lifecycle,
+      args: [widget.sessionId], // Changing args closes the old scope before opening the new one
+      configure: (scope) async {
+        final conn = await SessionConnection.open(widget.sessionId);
+        scope.put(() => conn);
+      },
+      loading: (_) => const Center(child: CircularProgressIndicator()),
+      error: (_, error) => TextButton(
+        onPressed: lifecycle.retry,
+        child: Text('Retry ($error)'),
+      ),
+      child: const SessionBody(),
+    );
+  }
+}
+```
+
+**How it behaves:**
+- **Fast switches skip stale work:** If `sessionId` changes `A → B → C` while
+  `A` is still shutting down, Levit finishes closing `A`, skips `B`, and opens
+  `C` directly—stale work from `A` can never accidentally close `C`.
+- **Route-tied lifetimes (`LRouteScope` / `LAsyncRouteScope`):** Use these
+  instead of `LScope` when a `Navigator` route owns the state and you want to
+  react when another screen covers or uncovers this route via
+  `LRouteScope.visibilityOf(context)` (for example, pausing video playback or
+  refreshing data on return).
+- See [examples/scope_playground/lib/session_replacement.dart](../examples/scope_playground/lib/session_replacement.dart).
+
+---
+
+## 4. Scoped Overrides, Interface Aliases & Factories
+
+### Overriding a `LevitStore` for a subtree or test
+
+**Use when:** A feature subtree, preview mode, or test should swap out a
+`LevitStore` without affecting the rest of the app.
+
+Install overrides before the store is first read in that scope—the child scope
+owns the overridden value and cleans it up when it closes:
+
+```dart
+final counterStore = LevitStore((ref) => ref.own(0.lx));
+
+final child = parent.createScope('feature');
+child.applyOverrides([
+  counterStore.overrideWith((ref) => ref.own(10.lx)),
+]);
+
+final parentCount = counterStore.findIn(parent); // 0
+final childCount = counterStore.findIn(child);   // 10
+```
+
+Inside a store builder, resolve other stores with `ref.findStore` /
+`ref.findAsyncStore` and register async cleanup callbacks with `ref.onDispose`.
+
+### Exposing multiple interfaces for one singleton (`bindExisting`)
+
+**Use when:** One concrete class implements separate read/write interfaces and
+both should resolve to the exact same instance.
+
+Register the concrete class once, then point each interface to it with
+`bindExisting`:
+
+```dart
+scope.put(() => UserRepository());
+scope.bindExisting<UserReader, UserRepository>();
+scope.bindExisting<UserWriter, UserRepository>();
+```
+
+Both interfaces return the same `UserRepository`, and disposal still runs only
+once when `UserRepository` (or its scope) is closed.
+
+### Creating a fresh instance per lookup (`isFactory: true`)
+
+**Use when:** Every `find()` call needs a new instance (such as a per-request
+helper or disposable form session) rather than a shared singleton:
+
+```dart
+scope.lazyPut(() => RequestSession(), isFactory: true);
+```
+
+Levit still tracks every disposable instance created by that factory and closes
+them automatically when the scope disposes. To release one instance early, call
+`await scope.releaseFactoryInstance(instance)`.
+
+---
+
+## 5. Explicit Resource Ownership (`own`), Custom Owners & `onBeforeClose`
+
+### When to use `own(...)`
+
+With `Levit.enableAutoLinking()` enabled, reactive values (`0.lx`, `LxComputed`,
+`LxWorker`, etc.) created during controller construction or `onInit()` are
+disposed automatically. Reach for `own(...)` (or `ref.own(...)` in `LevitStore`)
+whenever auto-linking cannot capture a resource:
+
+1. **Non-reactive resources** — Flutter objects (`TextEditingController`,
+   `ScrollController`), `StreamSubscription`, `Timer`, `Sink`, `LevitAsyncMap`,
+   or custom `LevitDisposable` objects.
+2. **Lazily or dynamically created reactives** — `late final x = ...` fields
+   evaluated after `onInit()`, or reactives allocated later inside event
+   handlers.
+3. **Pure Dart code running without `Levit.enableAutoLinking()`**.
+
+```dart
+class SearchController extends LevitController {
+  // Flutter & third-party objects take an explicit dispose callback:
+  late final textController = own(
+    TextEditingController(),
+    dispose: (c) => c.dispose(),
   );
 
-  await taskGroup.runGroup((uploads) async {
-    final futures = documents
-        .map(
-          (doc) => uploads.schedule(
-            (task) => repository.upload(doc, cancelled: task.cancelled),
-            id: doc.id,
-            retryPolicy: retry,
-          ),
-        )
-        .toList();
-    await Future.wait(futures);
-  }, name: 'document-sync');
+  // Built-in adapters handle StreamSubscription, Timer, Sink, and reactives:
+  late final pollTimer = own(
+    Timer.periodic(const Duration(seconds: 30), (_) => refresh()),
+  );
+
+  // Lazy reactive fields initialized on first read should be wrapped in own():
+  late final filter = own(''.lx);
+
+  void refresh() {}
 }
 ```
 
-Deadlines include queue time and inherit the earliest limit. Cancellation is
-cooperative; connect it to the underlying IO and finish cleanup in `finally`.
-`LevitRetryPolicy` requires an error classifier and caps its backoff. Successful
-null values, failures, cancellation, dropping and supersession have distinct
-outcomes. See [structured workflows](../packages/kits/levit_dart/README.md#structured-workflows)
-and the [save/upload example](../examples/task_board/lib/save_upload.dart).
+### Choosing between `LevitController` and `LevitDisposable`
 
-For isolate work, use `submitIsolate`, `scheduleIsolate` or `runIsolateTask` with
-a top-level/static entrypoint and sendable arguments. These entrypoints bridge
-group cancellation and progress and wait for isolate exit. Moving work to an
-isolate does not make it a durable job across application restarts.
-
-## Flutter interoperability and retained widgets
-
-Create a `ValueListenable` adapter once at an owner boundary, then reuse it:
+- **Need `own(...)`, auto-linking, `onBeforeClose`, monitoring identity, or
+  task/time/loop mixins?** Extend `LevitController`—even for non-UI services or
+  repositories (it is pure Dart with no Flutter dependency).
+- **Only need one cleanup method (or extending a third-party base class)?**
+  Implement `LevitDisposable` so the owning scope awaits your `dispose()`
+  method automatically:
 
 ```dart
-import 'package:levit_flutter/levit_flutter.dart';
+final class DatabasePool implements LevitDisposable {
+  DatabasePool(this._connection);
+  final Connection _connection;
 
-class CounterAdapterController extends LevitController {
-  late final count = own(0.lx);
+  @override
+  Future<void> dispose() => _connection.close();
+}
+```
+
+### Flushing work before owned resources close (`onBeforeClose`)
+
+**Use when:** Your controller needs to flush buffered analytics or send a last
+API call *while its repository and other owned resources are still open*. Always
+await `super.onBeforeClose()`:
+
+```dart
+@override
+Future<void> onBeforeClose() async {
+  await super.onBeforeClose();
+  await flushBufferedEvents();
+}
+```
+
+---
+
+## 6. Flutter Interop & Built-In Controller Mixins
+
+### Bridging to `ValueListenable<T>` (`asValueListenable`)
+
+**Use when:** A Flutter widget or third-party package only accepts a
+`ValueListenable<T>` (such as `ValueListenableBuilder`, animations, or map
+controllers). Create the adapter once on your controller—never inside `build()`:
+
+```dart
+class CounterController extends LevitController {
+  final count = 0.lx;
   late final listenable = own(count.asValueListenable());
 }
-```
 
-The adapter subscribes while it has listeners. Its disposal only detaches from
-the source; the source owner must keep that state alive for the consumer's
-lifetime. Avoid allocating adapters during every widget build.
-
-`LKeepAlive` requests retention from an ancestor that supports automatic
-keep-alive, such as the usual `ListView`/`PageView` child machinery. Retaining a
-subtree also retains its scope and work. It neither survives removal from the
-owning tree nor pauses background activity. Mount/unmount callbacks describe
-widget lifetime, not viewport visibility. The
-[Flutter kit example](../packages/kits/levit_flutter/example) includes a local
-mount observer and countdown/listenable integration.
-
-## Resource composition and replacement
-
-A non-controller `LevitScopeDisposable` can mix in `LevitResourceOwnership` to
-own resources with the same cleanup rules. Use `own(resource, dispose: ...)`
-for third-party types without a supported disposable contract. There is no
-method-name guessing. Delegate lifecycle hooks and await async cleanup.
-
-For replacing a Flutter scope, keep one `LevitScopeLifecycleController` stable
-while its scope widget is mounted. Replacement requests serialize and coalesce
-to the latest configuration. Use `settled` plus `error` to inspect a transition,
-`retry()` after a failure, and awaited `close()` to observe terminal cleanup
-errors. An obsolete initializer cannot close a newer scope:
-
-```dart
-LAsyncScope(
-  lifecycle: lifecycle,
-  args: [sessionId],
-  configure: (scope) async {
-    scope.put(() => SessionConnection(sessionId));
-  },
-  loading: (_) => const Center(child: CircularProgressIndicator()),
-  error: (_, error) => TextButton(
-    onPressed: lifecycle.retry,
-    child: Text('Retry ($error)'),
-  ),
-  child: const SessionBody(),
+ValueListenableBuilder<int>(
+  valueListenable: controller.listenable,
+  builder: (_, value, __) => Text('$value'),
 );
 ```
 
-The [session example](../examples/scope_playground/lib/session_replacement.dart)
-demonstrates the full loading, coalescing, and retry UI.
+The adapter subscribes only while Flutter widgets are listening, and disposing
+the adapter unsubscribes without closing `count`.
 
-## Diagnostics and ecosystem boundaries
+### Keeping scroll-view children alive (`LKeepAlive`)
 
-`scope.describe()` returns immutable ancestry, registration and lifecycle
-metadata without dependency values or raw tags. For runtime events, explicitly
-attach [levit_monitor](../packages/core/levit_monitor) and await detachment after
-application owners finish. Monitor attachment does not enable auto-linking.
+**Use when:** A tab or `ListView` / `PageView` item should keep its scope and
+controller mounted while scrolled offscreen. Wrap the item in `LKeepAlive`—it
+still disposes when the scroll view itself unmounts, and does not pause
+background timers or tasks.
 
-Use `package:levit_monitor/levit_monitor.dart` for browser-compatible monitoring
-and `levit_monitor_protocol.dart` for protocol/model consumers. File transport
-requires the separate `levit_monitor_io.dart` entrypoint and an IO platform.
+### Debouncing, throttling & countdowns (`LevitTimeMixin`)
 
-History and worker statistics are opt-in. Mark sensitive values at construction,
-before their first event; custom attributes and names should not contain secrets.
-Reconnect snapshots recover current state, while dropped events still mean
-incomplete history. Task events reach monitoring through an explicit
-[application adapter](../packages/core/levit_monitor/example/task_adapter.dart).
+**Use when:** You want search-input debouncing, button throttling, or a
+pause/resume countdown timer that cancels automatically when the controller
+closes:
 
-The lint plugin (`levit_lints`) and MCP server (`levit_mcp`) are currently
-unpublished workspace tools; see [onboarding](ONBOARDING.md#continue-from-a-working-feature).
-Persistent storage, codecs, storage adapters, and persistent task-result caches
-remain intentionally outside the core runtime dependencies.
+```dart
+class QuizController extends LevitController with LevitTimeMixin {
+  late final LevitCountdown timer;
+
+  @override
+  void onInit() {
+    super.onInit();
+    timer = startCountdown(
+      duration: const Duration(seconds: 30),
+      onFinish: submitAnswers,
+    );
+  }
+
+  void onSearchChanged(String text) {
+    debounce('search', const Duration(milliseconds: 300), () {
+      runSearch(text);
+    });
+  }
+}
+```
+
+Control the countdown with `timer.pause()`, `resume()`, `stop()`, and `start()`.
+Countdown and timer callbacks are synchronous; launch async work through
+`LevitTasksMixin`. See
+[countdown semantics](../packages/kits/levit_dart/README.md#elapsed-time-countdowns).
+
+### Selection state & managed background loops
+
+- **`LevitSelectionMixin<T>`:** Use when a list or grid needs single- or
+  multi-selection tracked by stable item IDs (`select`, `deselect`, `toggle`,
+  `clearSelection`; override `allowMultiSelect => false` for single selection).
+- **`LevitLoopMixin` / `LevitLoopLifecycleMixin`:** Use when a controller runs a
+  periodic polling loop or continuous background worker tied to its lifecycle
+  (and optionally paused when the Flutter app goes to the background). Always
+  await `stopService` / `dispose` so the active iteration finishes cleanly.
+
+---
+
+## 7. Performance Tuning (When Needed)
+
+Levit's defaults are fast enough for most apps. Reach for these tools only when
+profiling shows a specific hotspot:
+
+- **Updating several fields at once?** Wrap the writes in `Levit.batch(() { ... })`
+  (or `Levit.batchAsync` across awaits) so dependent widgets rebuild once
+  instead of once per write. Note that `batchAsync` only groups notifications
+  for the current async flow—it does not roll back writes if an error occurs.
+- **Large map or list rebuilding too many rows?** Observe a single item with
+  `map.entry(key)` or `list.entry(index)` so row #42 rebuilds only when item #42
+  changes.
+- **Tight hot-path computed with fixed inputs?** Pass `staticDeps: true` to
+  `LxComputed` *only* when every evaluation reads the exact same fields (no `if`
+  branches skipping a read):
+
+```dart
+final quantity = 1.lx;
+final unitPrice = 250.lx;
+late final total = own(
+  LxComputed(() => quantity.value * unitPrice.value, staticDeps: true),
+);
+```
+
+---
+
+## 8. Runtime Observability & Diagnostics
+
+**Use when:** You want to inspect which scopes and controllers are currently
+alive, log reactive changes with sensitive fields redacted, or stream live
+runtime state to an AI coding agent.
+
+Add `levit_monitor` separately (it is opt-in and never bundled into `levit` or
+`levit_flutter`):
+
+```dart
+import 'package:levit/levit.dart';
+import 'package:levit_monitor/levit_monitor.dart';
+
+Future<void> main() async {
+  Levit.enableAutoLinking(); // Monitoring never enables auto-linking implicitly.
+  await LevitMonitor.attach(transport: LevitConsoleTransport());
+}
+```
+
+- **Redact secrets from the start:** Mark sensitive values at construction
+  (`LxVar(token, isSensitive: true)`) so even the initial creation event is
+  redacted before logging or buffering.
+- **Lightweight snapshots without `levit_monitor`:** Call `scope.describe()`
+  anywhere to get a read-only snapshot of scope ancestry, registrations, and
+  cleanup progress without exposing values.
+- **Web vs. IO imports:** `package:levit_monitor/levit_monitor.dart` works on
+  all platforms including Web; import `package:levit_monitor/levit_monitor_io.dart`
+  for `LevitFileTransport`.
+- **Workspace tools (currently unpublished):**
+  - [levit_lints](../packages/tools/levit_lints) — Dart analyzer plugin that
+    flags missing `super` lifecycle calls, unowned resources, discarded Levit
+    futures, and global `Levit.find` inside widgets.
+  - [levit_mcp](../packages/tools/levit_mcp) — read-only MCP server over
+    authenticated loopback WebSockets for live runtime inspection by AI agents.
+- **Storage boundary:** Persistence codecs, storage adapters, and persistent
+  task caches are intentionally kept outside core runtime dependencies.

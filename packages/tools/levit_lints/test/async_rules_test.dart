@@ -29,7 +29,6 @@ class Levit {
 ''');
     newPackage('levit_reactive').addFile('lib/levit_reactive.dart', '''
 class LxWorker { Future<void> close() async {} }
-class LxResource { Future<void> refresh() async {} }
 ''');
     newPackage('levit_dart').addFile('lib/levit_dart.dart', '''
 class LevitAsyncMap { Future<void> invalidateAll() async {} }
@@ -172,19 +171,15 @@ class View extends Widget { int build() => Levit.find(); }
 
 @reflectiveTest
 class DiscardedFutureTest extends AnalysisRuleTest with ApiFixtures {
-  Future<void> test_resourceAndAsyncMapLifecycle() async {
+  Future<void> test_asyncMapLifecycle() async {
     const source = '''
-import 'package:levit_reactive/levit_reactive.dart';
 import 'package:levit_dart/levit_dart.dart';
-Future<void> example(LxResource r, LevitAsyncMap m) async {
-  r.refresh();
+Future<void> example(LevitAsyncMap m) async {
   m.invalidateAll();
-  await r.refresh();
   await m.invalidateAll();
 }
 ''';
     await assertDiagnostics(source, [
-      lint(source.indexOf('r.refresh()'), 'r.refresh()'.length),
       lint(source.indexOf('m.invalidateAll()'), 'm.invalidateAll()'.length),
     ]);
   }

@@ -4,9 +4,8 @@ part of 'rules.dart';
 /// calls to be awaited or directly returned (`await_levit_lifecycle`).
 ///
 /// Applies to `Future`/`FutureOr`-returning `super` lifecycle calls resolved on
-/// `LevitController`, `LevitResourceOwner`, or `LevitResourceOwnership`.
-/// Wrapping the call in `unawaited(...)` is not accepted for lifecycle
-/// delegation because teardown ordering depends on completion.
+/// `LevitController`. Wrapping the call in `unawaited(...)` is not accepted for
+/// lifecycle delegation because teardown ordering depends on completion.
 ///
 /// **Bad:**
 /// ```dart
@@ -72,13 +71,7 @@ class _AwaitLifecycleVisitor extends SimpleAstVisitor<void> {
           'onBeforeClose',
           'onClose',
         }.contains(node.methodName.name) ||
-        !_declaringLevitTypes(node).any(
-          (name) => const {
-            'LevitController',
-            'LevitResourceOwner',
-            'LevitResourceOwnership',
-          }.contains(name),
-        ) ||
+        !_declaringLevitTypes(node).any((name) => name == 'LevitController') ||
         !_isAsync(node.staticType)) {
       return;
     }
@@ -192,9 +185,9 @@ class _GlobalLookupVisitor extends SimpleAstVisitor<void> {
 ///
 /// Checks resolved calls on `Levit` (`delete`, `reset`, `runInScope`),
 /// `LevitScope`, `LevitScopeDisposable`, `LevitController`,
-/// `LevitScopeLifecycleController`, `LevitResourceOwnership`, `LxReactive`,
-/// `LxBase`, `LxWorker`, `LxResource`, `LevitAsyncMap`, `LevitLoopService`,
-/// `LevitLoopEngine`, `LevitTaskEngine`, and `LevitTaskGroup`.
+/// `LevitScopeLifecycleController`, `LxReactive`, `LxBase`, `LxWorker`,
+/// `LevitAsyncMap`, `LevitLoopService`, `LevitLoopEngine`, `LevitTaskEngine`,
+/// and `LevitTaskGroup`.
 ///
 /// `super.*` lifecycle invocations are intentionally excluded here and handled
 /// by [AwaitLevitLifecycle]. Awaiting, returning, storing, or explicitly
@@ -278,7 +271,6 @@ class _DiscardedFutureVisitor extends SimpleAstVisitor<void> {
       'LevitLoopEngine': {'stopService', 'stopAllServices', 'dispose'},
       'LevitTaskEngine': {'dispose'},
       'LevitTaskGroup': {'dispose', 'drain'},
-      'LxResource': {'refresh', 'drain', 'close'},
       'LevitAsyncMap': {
         'fetch',
         'refresh',
@@ -289,7 +281,6 @@ class _DiscardedFutureVisitor extends SimpleAstVisitor<void> {
         'close',
         'dispose',
       },
-      'LevitResourceOwnership': {'onClose', 'onBeforeClose'},
     };
     if (owners.any((owner) => operations[owner]?.contains(method) ?? false)) {
       rule.reportAtNode(expression);

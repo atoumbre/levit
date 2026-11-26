@@ -3,7 +3,7 @@ import 'package:levit_dart_core/levit_testing.dart';
 import 'package:test/test.dart';
 import 'package:levit_dart_core/spi.dart';
 
-class Owner extends LevitScopeDisposable with LevitResourceOwnership {
+class Owner extends LevitController {
   Owner({this.before});
   final FutureOr<void> Function()? before;
   @override
@@ -74,35 +74,6 @@ class AsyncOwner extends LevitController {
   }
 }
 
-class HandOwner extends LevitScopeDisposable implements LevitResourceOwner {
-  final resources = <LxReactive>[];
-  final completion = Completer<void>();
-  @override
-  bool isDisposed = false;
-  @override
-  Future<void> get disposed => completion.future;
-  @override
-  T own<T>(T resource, {FutureOr<void> Function(T)? dispose}) {
-    resources.add(resource as LxReactive);
-    return resource;
-  }
-
-  @override
-  Future<void> onInit() async {
-    await Future<void>.value();
-    1.lx;
-  }
-
-  @override
-  Future<void> onClose() async {
-    for (final resource in resources) {
-      await resource.close();
-    }
-    isDisposed = true;
-    completion.complete();
-  }
-}
-
 class CallbackOwner extends LevitController {
   late void Function() callback;
   @override
@@ -114,45 +85,7 @@ class CallbackOwner extends LevitController {
   }
 }
 
-class CountingProducer extends LxVar<int> {
-  CountingProducer() : super(1);
-  int closes = 0;
-  @override
-  Future<void> close() {
-    closes++;
-    return super.close();
-  }
-}
-
-class ProducerOwner extends LevitController {
-  late final CountingProducer producer;
-  late final LxVar<int> sibling;
-  @override
-  void onInit() {
-    super.onInit();
-    final resource = own(
-      LxResource<int, CountingProducer>(() {
-        sibling = 2.lx;
-        return CountingProducer();
-      }),
-    );
-    producer = resource.producer;
-  }
-}
-
 void main() {
-  test(
-    'auto-link captures sibling state but resource alone closes its producer',
-    () async {
-      Levit.enableAutoLinking();
-      addTearDown(Levit.disableAutoLinking);
-      final scope = Levit.createScope('exclusive producer');
-      final owner = scope.put(ProducerOwner.new);
-      await scope.dispose();
-      expect(owner.producer.closes, 1);
-      expect(owner.sibling.isDisposed, true);
-    },
-  );
   test(
     'expired initialization capture cannot adopt late callback state',
     () async {
@@ -235,20 +168,13 @@ void main() {
     await owner.disposed;
   });
 
-  test(
-    'family and plain sink ownership use their supported adapters',
-    () async {
-      final owner = Owner();
-      final resource = owner.own(LxResource<int, LxVar<int>>(() => 5.lx));
-      final handle = resource;
-      expect(handle.value, 5);
-      final sink = owner.own(MemorySink());
-      expect(() => owner.own(Object()), throwsArgumentError);
-      await owner.onClose();
-      expect(handle.isClosed, isTrue);
-      expect(sink.closed, isTrue);
-    },
-  );
+  test('plain sink ownership uses its supported adapter', () async {
+    final owner = Owner();
+    final sink = owner.own(MemorySink());
+    expect(() => owner.own(Object()), throwsArgumentError);
+    await owner.onClose();
+    expect(sink.closed, isTrue);
+  });
 
   test(
     'test scope drains tracked work and reports task plus teardown failures',
@@ -322,20 +248,6 @@ void main() {
     );
     await owner.disposed;
   });
-
-  test(
-    'custom owners receive live allocations and async initialization tracking',
-    () async {
-      Levit.enableAutoLinking();
-      addTearDown(Levit.disableAutoLinking);
-      final scope = Levit.createScope('custom owner');
-      final owner = scope.put(HandOwner.new);
-      await scope.waitForInitialization();
-      expect(owner.resources, hasLength(1));
-      await scope.dispose();
-      expect((owner.resources.single as LxVar<int>).isDisposed, isTrue);
-    },
-  );
 
   test(
     'failed captured construction drains reactives and surfaces cleanup error',

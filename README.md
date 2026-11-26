@@ -145,7 +145,7 @@ The proposition is not just conceptual. This repo includes:
 | Flutter bindings without the higher-level Flutter kit | [`levit_flutter_core`](./packages/core/levit_flutter_core) | Owns `LScope`, `LWatch`, `LView`, builders, and `ValueListenable` interop; re-exports `levit_dart_core`. |
 | Core composition APIs only | [`levit_dart_core`](./packages/core/levit_dart_core) | Owns `Levit`, `LevitController`, `LevitStore`, and resource ownership contracts. |
 | Task, query, loop, and timer utilities on Dart core | [`levit_dart`](./packages/kits/levit_dart) | Adds `LevitTaskGroup`, `LevitAsyncMap`, countdowns, loops, and controller mixins without Flutter. |
-| Reactive primitives only | [`levit_reactive`](./packages/core/levit_reactive) | Owns `LxVar`, `LxComputed`, `LxWorker`, `LxResource`, and batch propagation. |
+| Reactive primitives only | [`levit_reactive`](./packages/core/levit_reactive) | Owns `LxVar`, `LxComputed`, `LxFuture`, `LxStream`, `LxWorker`, and batch propagation. |
 | Scoped DI & lifecycle only | [`levit_scope`](./packages/core/levit_scope) | Owns hierarchical `LevitScope`, aliases, factories, and deterministic LIFO disposal. |
 | Runtime telemetry and diagnostics | [`levit_monitor`](./packages/core/levit_monitor) | Opt-in; add separately when you need redaction, snapshots, or event export. |
 | Lifecycle & reactive analyzer rules *(workspace tool)* | [`levit_lints`](./packages/tools/levit_lints) | Native Dart analyzer plugin; no runtime dependency. |
@@ -207,7 +207,7 @@ final harness = LevitTestScope(
 addTearDown(harness.close);
 ```
 
-See [docs/ONBOARDING.md](docs/ONBOARDING.md#5-test-ownership-and-cleanup) for both pure Dart and Flutter widget teardown tests.
+See [docs/ONBOARDING.md](docs/ONBOARDING.md#step-5-test-your-feature) for both pure Dart and Flutter widget teardown tests.
 
 ## Middleware Lifecycle
 

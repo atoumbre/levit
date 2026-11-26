@@ -19,8 +19,8 @@ Flutter convenience.
 This package owns:
 
 - `Levit`: unified facade over scoped DI, reactive batching, and middleware.
-- `LevitController`, `LevitResourceOwner`, and `LevitResourceOwnership`:
-  lifecycle-aware ownership units.
+- `LevitController`: lifecycle-aware ownership unit with `own(...)`,
+  `onInit`, `onBeforeClose`, and `onClose`.
 - `LevitStore` and `LevitAsyncStore`: portable, typed per-scope state recipes.
 - `package:levit_dart_core/levit_testing.dart`: `LevitTestScope` for isolated
   override testing and awaited teardown.
@@ -62,27 +62,30 @@ Future<void> main() async {
 
 ## Resource Ownership & Lifecycle Hooks
 
-Controllers, stores, and custom `LevitScopeDisposable` classes share one
-ownership contract via `LevitResourceOwnership`:
+Extend `LevitController` whenever a controller or service owns reactives,
+timers, subscriptions, or custom disposables (or implement `LevitDisposable`
+for simple 1-method `dispose()` services):
 
 ```dart
-final class SessionResource extends LevitScopeDisposable
-    with LevitResourceOwnership {
-  late final subscription = own(events.listen(handleEvent));
-  late final refreshTimer = own(
-    Timer.periodic(const Duration(minutes: 1), (_) => refresh()),
-  );
+final class SessionService extends LevitController {
+  SessionService(Stream<Event> events) {
+    own(events.listen(handleEvent));
+    own(Timer.periodic(const Duration(minutes: 1), (_) => refresh()));
+  }
+
+  void handleEvent(Event event) {}
+  void refresh() {}
 }
 ```
 
-- **Typed `own(...)`:** Built-in reactives, Levit resources, `StreamSubscription`,
+- **Typed `own(...)`:** Built-in reactives, Levit disposables, `StreamSubscription`,
   `Timer`, `Sink`, and cleanup callbacks are adapted automatically. For
   third-party types, pass an explicit disposer:
   `own(resource, dispose: (r) => r.dispose())` (no reflective method-name
   guessing).
 - **Auto-linking:** When `Levit.enableAutoLinking()` is enabled, reactives
-  created during construction/init of any returned `LevitResourceOwner` link to
-  that owner, while nested dependency lookups keep their own registration's
+  created during construction/init of any returned `LevitController` link to
+  that controller, while nested dependency lookups keep their own registration's
   lifetime.
 - **Ordered cleanup (`onBeforeClose` → LIFO `onClose`):** Override
   `onBeforeClose` for async preparation that must complete before owned
